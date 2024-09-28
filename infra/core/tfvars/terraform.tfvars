@@ -17,3 +17,5 @@ aca_subnet_address_prefixes = [
 ]
 app_insights_name = "ai-biotrackr-prod-ae"
 aca_env_name = "env-biotrackr-prod-ae"
+acr_name = "acrbiotrackrprodae"
+user_assigned_identity_name = "uai-biotrackr-prod-ae"
