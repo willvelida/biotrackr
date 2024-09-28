@@ -54,10 +54,9 @@ variable "account_replication_type" {
   default     = "LRS"
 }
 
-variable "container_name" {
-  type        = string
+variable "container_names" {
+  type        = set(string)
   description = "The name of the storage container"
-  default     = "biotrackrcore-tfstate"
 }
 
 variable "owner_role_name" {

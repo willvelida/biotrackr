@@ -8,3 +8,7 @@ tags = {
   owner = "willvelida"
   application = "biotrackr"
 }
+container_names = [
+  "biotrackrcore-tfstate",
+  "biotrack-auth-tfstate"
+]
