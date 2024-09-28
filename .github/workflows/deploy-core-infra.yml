@@ -1,4 +1,4 @@
-name: Deploy AKS Cluster Infra
+name: Deploy Biotrackr Core Infrastructure
 on:
   push:
     branches:
