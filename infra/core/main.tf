@@ -45,7 +45,7 @@ module "aca_env" {
   location                                    = var.location
   resource_group_name                         = module.resource_group.name
   log_analytics_workspace_id                  = module.law.id
-  dapr_application_insights_connection_string = module.ai.app_insights_connection_string
+  dapr_application_insights_connection_string = module.ai.connection_string
   infrastructure_subnet_id                    = module.aca_subnet.subnet_id
   tags                                        = var.tags
 
