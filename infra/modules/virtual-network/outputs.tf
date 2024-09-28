@@ -1,4 +1,4 @@
-variable "vnet_name" {
+output "vnet_name" {
   description = "Name of the virtual network"
-  type = string
+  value = azurerm_virtual_network.vnet.name
 }
