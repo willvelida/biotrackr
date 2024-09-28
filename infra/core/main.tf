@@ -75,3 +75,21 @@ module "acr_pull_role" {
   principal_id = module.usi.user_assinged_identity_principal_id
   scope_id     = module.acr.acr_id
 }
+
+module "mag" {
+  source              = "../modules/monitor-action-group"
+  amg_name            = var.monitor_action_group_name
+  amg_short_name      = var.monitor_action_group_short_name
+  rg_name             = module.resource_group.name
+  tags                = var.tags
+  email_address       = var.email_address
+  email_receiver_name = var.email_receiver_name
+}
+
+module "budget" {
+  source                  = "../modules/budgets"
+  budget_name             = var.budget_name
+  resource_group_name     = module.resource_group.name
+  resource_group_id       = module.resource_group.id
+  monitor_action_group_id = module.mag.amg_id
+}
