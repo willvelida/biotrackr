@@ -1,0 +1,52 @@
+module "resource_group" {
+  source   = "../modules/resource-group"
+  name     = var.resource_group_name
+  location = var.location
+  tags     = var.tags
+}
+
+module "law" {
+  source              = "../modules/log-analytics"
+  law_name            = var.law_name
+  location            = var.location
+  resource_group_name = module.resource_group.name
+  tags                = var.tags
+}
+
+module "ai" {
+  source              = "../modules/app-insights"
+  app_insights_name   = var.app_insights_name
+  location            = var.location
+  resource_group_name = module.resource_group.name
+  workspace_id        = module.law.workspace_id
+  tags                = var.tags
+}
+
+module "vnet" {
+  source              = "../modules/virtual-network"
+  location            = var.location
+  resource_group_name = module.resource_group.name
+  tags                = var.tags
+  vnet_name           = var.vnet_name
+  address_space       = var.vnet_address_space
+}
+
+module "aca_subnet" {
+  source                  = "../modules/virutal-network-subnet"
+  resource_group_name     = module.resource_group.name
+  vnet_name               = module.vnet.name
+  subnet_name             = var.aca_subnet_name
+  subnet_address_prefixes = var.aca_subnet_address_prefixes
+}
+
+module "aca_env" {
+  source                                      = "../modules/container-app-environment"
+  env_name                                    = var.aca_env_name
+  location                                    = var.location
+  resource_group_name                         = module.resource_group.name
+  log_analytics_workspace_id                  = module.law.workspace_id
+  dapr_application_insights_connection_string = module.ai.app_insights_connection_string
+  infrastructure_subnet_id                    = module.aca_subnet.subnet_id
+  tags                                        = var.tags
+
+}
