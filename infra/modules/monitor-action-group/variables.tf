@@ -3,7 +3,7 @@ variable "amg_name" {
   type        = string
 }
 
-variable "resource_group_name" {
+variable "rg_name" {
   description = "The name of the resource group in which the resources should be created"
   type        = string
 }
