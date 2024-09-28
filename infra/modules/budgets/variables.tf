@@ -17,13 +17,13 @@ variable "amount" {
 variable "start_date" {
   description = "The start date of the budget"
   type = string
-  default = "01/09/2024"
+  default = "2024-09-01T00:00:00Z"
 }
 
 variable "end_date" {
   description = "The end date of the budget"
   type = string
-  default = "01/09/2094"
+  default = "2094-09-01T00:00:00Z"
 }
 
 variable "resource_group_name" {
