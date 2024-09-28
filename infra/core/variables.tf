@@ -48,3 +48,31 @@ variable "aca_env_name" {
   type        = string
 
 }
+
+variable "acr_name" {
+  description = "The name of the Azure Container Registry"
+  type        = string
+}
+
+variable "acr_admin_enabled" {
+  description = "Enable admin user for the Azure Container Registry"
+  type        = bool
+  default     = true
+}
+
+variable "acr_sku" {
+  description = "The SKU of the Azure Container Registry"
+  type        = string
+  default     = "Basic"
+}
+
+variable "user_assigned_identity_name" {
+  description = "The name of the user-assigned managed identity that's used by the AKS cluster"
+  type        = string
+}
+
+variable "acr_pull_role_name" {
+  type        = string
+  description = "The name of the AcrPull role given to the user-assigned identity"
+  default     = "AcrPull"
+}

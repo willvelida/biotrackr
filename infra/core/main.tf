@@ -48,5 +48,30 @@ module "aca_env" {
   dapr_application_insights_connection_string = module.ai.connection_string
   infrastructure_subnet_id                    = module.aca_subnet.subnet_id
   tags                                        = var.tags
+}
 
+module "usi" {
+  source   = "../modules/user-assigned-identity"
+  name     = var.user_assigned_identity_name
+  location = var.location
+  rg_name  = module.resource_group.name
+  tags     = var.tags
+}
+
+module "acr" {
+  source                    = "../modules/container-registry"
+  name                      = var.acr_name
+  location                  = var.location
+  rg_name                   = module.resource_group.name
+  sku                       = var.acr_sku
+  admin_enabled             = var.acr_admin_enabled
+  user_assigned_identity_id = module.usi.id
+  tags                      = var.tags
+}
+
+module "acr_pull_role" {
+  source       = "../modules/role-assignment"
+  role_name    = var.acr_pull_role_name
+  principal_id = module.usi.principal_id
+  scope_id     = module.acr.acr_id
 }
