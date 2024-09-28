@@ -20,7 +20,7 @@ resource "azurerm_consumption_budget_resource_group" "budget" {
         enabled = true
         threshold = var.threshold_one
         operator = "EqualTo"
-        threshold_type = "ActualCost"
+        threshold_type = "Actual"
       contact_groups = [ 
         var.monitor_action_group_id
        ]
@@ -30,7 +30,7 @@ resource "azurerm_consumption_budget_resource_group" "budget" {
         enabled = true
         threshold = var.threshold_two
         operator = "GreaterThan"
-        threshold_type = "ActualCost"
+        threshold_type = "Actual"
       contact_groups = [ 
         var.monitor_action_group_id
        ]
