@@ -65,13 +65,13 @@ module "acr" {
   rg_name                   = module.resource_group.name
   sku                       = var.acr_sku
   admin_enabled             = var.acr_admin_enabled
-  user_assigned_identity_id = module.usi.id
+  user_assigned_identity_id = module.usi.user_assinged_identity_id
   tags                      = var.tags
 }
 
 module "acr_pull_role" {
   source       = "../modules/role-assignment"
   role_name    = var.acr_pull_role_name
-  principal_id = module.usi.principal_id
+  principal_id = module.usi.user_assinged_identity_principal_id
   scope_id     = module.acr.acr_id
 }
