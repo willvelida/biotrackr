@@ -18,7 +18,7 @@ module "ai" {
   app_insights_name   = var.app_insights_name
   location            = var.location
   resource_group_name = module.resource_group.name
-  workspace_id        = module.law.workspace_id
+  workspace_id        = module.law.id
   tags                = var.tags
 }
 
@@ -34,7 +34,7 @@ module "vnet" {
 module "aca_subnet" {
   source                  = "../modules/virutal-network-subnet"
   resource_group_name     = module.resource_group.name
-  vnet_name               = module.vnet.name
+  vnet_name               = module.vnet.vnet_name
   subnet_name             = var.aca_subnet_name
   subnet_address_prefixes = var.aca_subnet_address_prefixes
 }
@@ -44,7 +44,7 @@ module "aca_env" {
   env_name                                    = var.aca_env_name
   location                                    = var.location
   resource_group_name                         = module.resource_group.name
-  log_analytics_workspace_id                  = module.law.workspace_id
+  log_analytics_workspace_id                  = module.law.id
   dapr_application_insights_connection_string = module.ai.app_insights_connection_string
   infrastructure_subnet_id                    = module.aca_subnet.subnet_id
   tags                                        = var.tags
