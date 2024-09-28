@@ -76,3 +76,33 @@ variable "acr_pull_role_name" {
   description = "The name of the AcrPull role given to the user-assigned identity"
   default     = "AcrPull"
 }
+
+variable "email_address" {
+  description = "The email address of the user that will be assigned the AcrPull role"
+  type        = string
+  default     = "willvelida@hotmail.co.uk"
+}
+
+variable "email_receiver_name" {
+  description = "The name of the user that will be assigned the AcrPull role"
+  type        = string
+  default     = "Will Velida (Biotrackr)"
+}
+
+variable "monitor_action_group_name" {
+  description = "The name of the Monitor Action Group"
+  type        = string
+  default     = "Biotrackr-Action-Group"
+}
+
+variable "monitor_action_group_short_name" {
+  description = "The short name of the Monitor Action Group"
+  type        = string
+  default     = "BAG"
+}
+
+variable "budget_name" {
+  description = "The name of the budget"
+  type        = string
+  default     = "Biotrackr-Budget"
+}
