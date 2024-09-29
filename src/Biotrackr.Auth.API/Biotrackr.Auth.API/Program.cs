@@ -1,4 +1,5 @@
 using Dapr.Client;
+using Microsoft.AspNetCore.Mvc;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -17,7 +18,7 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
-app.MapGet("/sayhello", (DaprClient daprClient, ILogger logger) =>
+app.MapGet("/sayhello", ([FromServices] DaprClient daprClient, ILogger<Program> logger) =>
 {
     logger.LogInformation($"Hello Dapr Cron Job! The time is now {DateTime.Now.ToString("dd-MM-yyyy HH:mm:ss")}");
 });
