@@ -64,3 +64,13 @@ variable "owner_role_name" {
   default     = "Owner"
   description = "The name of the Owner role given to the user-assigned identity"
 }
+
+variable "acr_name" {
+  type        = string
+  description = "The name of the Azure Container Registry"
+}
+
+variable "resource_group_name" {
+  type        = string
+  description = "The name of the resource group in which the resources will be created."
+}

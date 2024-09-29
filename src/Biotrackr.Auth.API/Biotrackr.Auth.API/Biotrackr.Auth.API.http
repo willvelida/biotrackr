@@ -1,0 +1,6 @@
+@Biotrackr.Auth.API_HostAddress = http://localhost:5069
+
+GET {{Biotrackr.Auth.API_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

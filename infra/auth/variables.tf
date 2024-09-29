@@ -27,3 +27,14 @@ variable "acr_name" {
   description = "The name of the Azure Container Registry."
   type        = string
 }
+
+variable "cron_job_name" {
+  description = "The name of the Dapr component for the cron job."
+  type        = string
+  default = "sayHello"
+}
+
+variable "image_name" {
+  description = "The name of the image to use for the container."
+  type        = string
+}

@@ -17,6 +17,18 @@ data "azurerm_container_registry" "acr" {
   resource_group_name = data.azurerm_resource_group.rg.name
 }
 
+resource "azurerm_container_app_environment_dapr_component" "cron" {
+  name = var.cron_job_name
+  container_app_environment_id = data.azurerm_container_app_environment.env.id
+  component_type = "bindings.cron"
+  version = "v1"
+  metadata {
+    name = "schedule"
+    value = "@every 10m"
+  }
+  scopes = [ azurerm_container_app.app.name ]
+}
+
 resource "azurerm_container_app" "app" {
   name                         = var.aca_app_name
   resource_group_name          = data.azurerm_resource_group.rg.name
@@ -27,7 +39,7 @@ resource "azurerm_container_app" "app" {
   template {
     container {
       name   = var.aca_app_name
-      image  = "mcr.microsoft.com/k8se/quickstart:latest"
+      image  = var.image_name
       cpu    = 0.25
       memory = "0.5Gi"
     }
