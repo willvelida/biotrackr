@@ -18,15 +18,15 @@ data "azurerm_container_registry" "acr" {
 }
 
 resource "azurerm_container_app_environment_dapr_component" "cron" {
-  name = var.cron_job_name
+  name                         = var.cron_job_name
   container_app_environment_id = data.azurerm_container_app_environment.env.id
-  component_type = "bindings.cron"
-  version = "v1"
+  component_type               = "bindings.cron"
+  version                      = "v1"
   metadata {
-    name = "schedule"
+    name  = "schedule"
     value = "@every 10m"
   }
-  scopes = [ azurerm_container_app.app.name ]
+  scopes = [azurerm_container_app.app.name]
 }
 
 resource "azurerm_container_app" "app" {
