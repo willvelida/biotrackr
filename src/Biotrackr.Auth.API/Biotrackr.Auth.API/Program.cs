@@ -17,7 +17,7 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
-app.MapGet("/sayHello", (DaprClient daprClient, ILogger logger) =>
+app.MapGet("/sayhello", (DaprClient daprClient, ILogger logger) =>
 {
     logger.LogInformation($"Hello Dapr Cron Job! The time is now {DateTime.Now.ToString("dd-MM-yyyy HH:mm:ss")}");
 });
