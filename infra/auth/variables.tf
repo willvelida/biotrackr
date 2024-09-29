@@ -28,12 +28,6 @@ variable "acr_name" {
   type        = string
 }
 
-variable "cron_job_name" {
-  description = "The name of the Dapr component for the cron job."
-  type        = string
-  default     = "sayhello"
-}
-
 variable "image_name" {
   description = "The name of the image to use for the container."
   type        = string

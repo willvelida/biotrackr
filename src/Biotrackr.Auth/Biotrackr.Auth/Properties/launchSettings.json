@@ -1,0 +1,10 @@
+{
+  "profiles": {
+    "Biotrackr.Auth": {
+      "commandName": "Project"
+    },
+    "Container (Dockerfile)": {
+      "commandName": "Docker"
+    }
+  }
+}

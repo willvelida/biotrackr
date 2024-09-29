@@ -17,48 +17,26 @@ data "azurerm_container_registry" "acr" {
   resource_group_name = data.azurerm_resource_group.rg.name
 }
 
-resource "azurerm_container_app_environment_dapr_component" "cron" {
-  name                         = var.cron_job_name
+resource "azurerm_container_app_job" "job" {
+  name = var.aca_app_name
+  location = data.azurerm_resource_group.rg.location
+  resource_group_name = data.azurerm_resource_group.rg.name
+  tags = var.tags
   container_app_environment_id = data.azurerm_container_app_environment.env.id
-  component_type               = "bindings.cron"
-  version                      = "v1"
-  metadata {
-    name  = "schedule"
-    value = "@every 10m"
-  }
-  scopes = [azurerm_container_app.app.name]
-}
-
-resource "azurerm_container_app" "app" {
-  name                         = var.aca_app_name
-  resource_group_name          = data.azurerm_resource_group.rg.name
-  tags                         = var.tags
-  revision_mode                = "Multiple"
-  container_app_environment_id = data.azurerm_container_app_environment.env.id
-
   template {
     container {
-      name   = var.aca_app_name
-      image  = var.image_name
-      cpu    = 0.25
+      name = var.aca_app_name
+      image = var.image_name
+      cpu = 0.25
       memory = "0.5Gi"
     }
-    min_replicas = 1
-    max_replicas = 3
   }
-
-  dapr {
-    app_id   = var.aca_app_name
-    app_port = 8080
-  }
-
-  ingress {
-    external_enabled = true
-    target_port      = 8080
-    traffic_weight {
-      percentage      = 100
-      latest_revision = true
-    }
+  replica_timeout_in_seconds = 60
+  replica_retry_limit = 3
+  schedule_trigger_config {
+    cron_expression = "*/15 * * * *"
+    parallelism = 1
+    replica_completion_count = 1
   }
 
   registry {
@@ -67,7 +45,7 @@ resource "azurerm_container_app" "app" {
   }
 
   identity {
-    type         = "UserAssigned"
+    type = "UserAssigned"
     identity_ids = [data.azurerm_user_assigned_identity.msi.id]
   }
 }

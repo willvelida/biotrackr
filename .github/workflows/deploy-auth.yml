@@ -25,7 +25,7 @@ jobs:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: ./src/Biotrackr.Auth.API
+        working-directory: ./src/Biotrackr.Auth
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
@@ -57,7 +57,7 @@ jobs:
 
       - name: Build and push Docker image
         run: |
-          docker buildx build --push --tag ${{ steps.getacrserver.outputs.loginServer }}/biotrackr-auth-api:${{ github.sha }} .
+          docker buildx build --push --tag ${{ steps.getacrserver.outputs.loginServer }}/biotrackr-auth:${{ github.sha }} .
 
   terraform-plan:
     needs: build-container-image
@@ -108,7 +108,7 @@ jobs:
         id: plan
         run: |
           export exitcode=0
-          terraform plan -no-color -var-file="./tfvars/terraform.tfvars" -var="image_name=${{ steps.getacrserver.outputs.loginServer }}/biotrackr-auth-api:${{ github.sha }}" -out main.tfplan || export exitcode=$?
+          terraform plan -no-color -var-file="./tfvars/terraform.tfvars" -var="image_name=${{ steps.getacrserver.outputs.loginServer }}/biotrackr-auth:${{ github.sha }}" -out main.tfplan || export exitcode=$?
 
           echo "exitcode=$exitcode" >> $GITHUB_OUTPUT
 
