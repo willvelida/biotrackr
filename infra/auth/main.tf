@@ -49,6 +49,7 @@ resource "azurerm_container_app" "app" {
 
   dapr {
     app_id = var.aca_app_name
+    app_port = 8080
   }
 
   ingress {
