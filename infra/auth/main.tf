@@ -47,6 +47,10 @@ resource "azurerm_container_app" "app" {
     max_replicas = 3
   }
 
+  dapr {
+    app_id = var.aca_app_name
+  }
+
   ingress {
     external_enabled = true
     target_port      = 8080
