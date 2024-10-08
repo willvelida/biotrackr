@@ -8,7 +8,8 @@ resource "azurerm_storage_account" "account" {
 }
 
 resource "azurerm_storage_container" "container" {
-  name = var.container_name
+  for_each = toset(var.container_names)
+  name = each.value
   storage_account_name = azurerm_storage_account.account.name
   container_access_type = "private"
 }

@@ -93,3 +93,12 @@ module "budget" {
   resource_group_id       = module.resource_group.id
   monitor_action_group_id = module.mag.amg_id
 }
+
+module "kv" {
+  source      = "../modules/key-vault"
+  kv_name     = var.kv_name
+  location    = var.location
+  rg_name     = module.resource_group.name
+  tags        = var.tags
+  kv_sku_name = var.kv_sku_name
+}
