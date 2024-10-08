@@ -29,7 +29,11 @@ namespace Biotrackr.Auth
             catch (Exception ex)
             {
                 _logger.LogError($"Exception thrown: {ex.Message}");
-                throw;
+                return 1;
+            }
+            finally
+            {
+                _appLifetime.StopApplication();
             }
         }
     }
