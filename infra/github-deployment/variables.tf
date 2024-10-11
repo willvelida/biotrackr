@@ -54,14 +54,23 @@ variable "account_replication_type" {
   default     = "LRS"
 }
 
-variable "container_name" {
-  type        = string
+variable "container_names" {
+  type        = set(string)
   description = "The name of the storage container"
-  default     = "biotrackrcore-tfstate"
 }
 
 variable "owner_role_name" {
   type        = string
   default     = "Owner"
   description = "The name of the Owner role given to the user-assigned identity"
+}
+
+variable "acr_name" {
+  type        = string
+  description = "The name of the Azure Container Registry"
+}
+
+variable "resource_group_name" {
+  type        = string
+  description = "The name of the resource group in which the resources will be created."
 }

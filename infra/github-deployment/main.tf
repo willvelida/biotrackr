@@ -2,6 +2,11 @@ data "azurerm_subscription" "sub" {
 
 }
 
+data "azurerm_container_registry" "acr" {
+  name = var.acr_name
+  resource_group_name = var.resource_group_name
+}
+
 module "tf-resource-group" {
   source   = "../modules/resource-group"
   name     = var.tf_state_rg_name
@@ -24,7 +29,7 @@ module "tf-state-storage" {
   tags                     = var.tags
   account_replication_type = var.account_replication_type
   account_tier             = var.account_tier
-  container_name           = var.container_name
+  container_names          = var.container_names
 }
 
 module "gh_usi" {
@@ -67,4 +72,18 @@ module "sub_owner_role_assignment" {
   principal_id = module.gh_usi.user_assinged_identity_principal_id
   role_name    = var.owner_role_name
   scope_id     = data.azurerm_subscription.sub.id
+}
+
+module "acr_pull_role_assignment" {
+  source       = "../modules/role-assignment"
+  principal_id = module.gh_usi.user_assinged_identity_principal_id
+  role_name    = "AcrPull"
+  scope_id     = data.azurerm_container_registry.acr.id
+}
+
+module "acr_push_role_assignment" {
+  source       = "../modules/role-assignment"
+  principal_id = module.gh_usi.user_assinged_identity_principal_id
+  role_name    = "AcrPush"
+  scope_id     = data.azurerm_container_registry.acr.id
 }
