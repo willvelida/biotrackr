@@ -17,11 +17,57 @@ env:
   ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
   ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
   ARM_USE_AZUREAD: true
+  DOTNET_VERSION: 8.0.x
+  OUTPUT_PATH: ${{ github.workspace }}/.output
+  COVERAGE_PATH: ${{ github.workspace }}/coverage
+  COVERAGE_LOCATION: ${{ github.workspace }}/.coverage
 
 jobs:
+  run-unit-tests:
+    name: Run Unit Tests
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./src/Biotrackr.Auth
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup .NET ${{ env.DOTNET_VERSION }}
+        uses: actions/setup-dotnet@v3
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Install dependencies
+        run: dotnet restore
+
+      - name: Build
+        run: dotnet build --no-restore --verbosity normal
+
+      - name: Run unit tests
+        run: dotnet test --no-build --verbosity normal --collect:"XPlat Code Coverage" --logger trx --results-directory ${{ env.COVERAGE_PATH }}
+
+      - name: Merge Code Coverage reports
+        run: |
+          dotnet tool install -g dotnet-reportgenerator-globaltool
+          reportgenerator "-reports:${{ env.COVERAGE_PATH }}/**/coverage.cobertura.xml" "-targetdir:${{ env.COVERAGE_PATH }}" -reporttypes:Cobertura
+
+      - name: Code Coverage Report
+        uses: irongut/CodeCoverageSummary@v1.3.0
+        with:
+          filename: coverage/Cobertura.xml
+          badge: true
+          fail_below_min: false
+          format: markdown
+          hide_branch_rate: false
+          hide_complexity: true
+          indicators: true
+          output: both
+          thresholds: '60 80'
+
   build-container-image:
-    if: github.event_name == 'pull_request'
     name: Build Container Image
+    needs: run-unit-tests
     runs-on: ubuntu-latest
     defaults:
       run:

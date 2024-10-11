@@ -32,3 +32,8 @@ variable "image_name" {
   description = "The name of the image to use for the container."
   type        = string
 }
+
+variable "key_vault_name" {
+  description = "The name of the key vault."
+  type        = string
+}

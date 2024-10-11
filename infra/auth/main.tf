@@ -17,6 +17,11 @@ data "azurerm_container_registry" "acr" {
   resource_group_name = data.azurerm_resource_group.rg.name
 }
 
+data "azurerm_key_vault" "kv" {
+  name = var.key_vault_name
+  resource_group_name = data.azurerm_resource_group.rg.name
+}
+
 resource "azurerm_container_app_job" "job" {
   name                         = var.aca_app_name
   location                     = data.azurerm_resource_group.rg.location
@@ -29,6 +34,10 @@ resource "azurerm_container_app_job" "job" {
       image  = var.image_name
       cpu    = 0.25
       memory = "0.5Gi"
+      env {
+        name  = "keyvaulturl"
+        value = data.azurerm_key_vault.kv.vault_uri
+      }
     }
   }
   replica_timeout_in_seconds = 600
@@ -48,4 +57,11 @@ resource "azurerm_container_app_job" "job" {
     type         = "UserAssigned"
     identity_ids = [data.azurerm_user_assigned_identity.msi.id]
   }
+}
+
+module "key_vault_secrets_officer_role" {
+  source = "../modules/role-assignment"
+  principal_id = data.azurerm_user_assigned_identity.msi.principal_id
+  role_name = "Key Vault Secrets Officer"
+  scope_id = data.azurerm_key_vault.kv.id
 }

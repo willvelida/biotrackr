@@ -1,20 +1,19 @@
-﻿using Microsoft.Extensions.Hosting;
+﻿using Biotrackr.Auth.Models;
+using Biotrackr.Auth.Services.Interfaces;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Biotrackr.Auth
 {
     public class AuthWorker : BackgroundService
     {
+        private readonly IRefreshTokenService _refreshTokenService;
         private readonly ILogger<AuthWorker> _logger;
         private readonly IHostApplicationLifetime _appLifetime;
 
-        public AuthWorker(ILogger<AuthWorker> logger, IHostApplicationLifetime appLifetime)
+        public AuthWorker(IRefreshTokenService refreshTokenService, ILogger<AuthWorker> logger, IHostApplicationLifetime appLifetime)
         {
+            _refreshTokenService = refreshTokenService;
             _logger = logger;
             _appLifetime = appLifetime;
         }
@@ -23,7 +22,11 @@ namespace Biotrackr.Auth
         {
             try
             {
-                _logger.LogInformation($"Hello there! Biotrackr.Auth running at {DateTime.Now}");
+                _logger.LogInformation($"Attempting to refresh FitBit Tokens: {DateTime.Now}");
+                RefreshTokenResponse refreshTokenResponse = await _refreshTokenService.RefreshTokens();
+                _logger.LogInformation($"FitBit Tokens refresh successful. Saving to Secret Store: {DateTime.Now}");
+                await _refreshTokenService.SaveTokens(refreshTokenResponse);
+                _logger.LogInformation($"FitBit Tokens saved successfully: {DateTime.Now}");
                 return 0;
             }
             catch (Exception ex)

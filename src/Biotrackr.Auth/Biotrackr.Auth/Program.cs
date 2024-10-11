@@ -1,10 +1,27 @@
-﻿using Biotrackr.Auth;
+﻿using Azure.Identity;
+using Azure.Security.KeyVault.Secrets;
+using Biotrackr.Auth;
+using Biotrackr.Auth.Services;
+using Biotrackr.Auth.Services.Interfaces;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 
 IHost host = Host.CreateDefaultBuilder(args)
-    .ConfigureServices(services =>
+    .ConfigureAppConfiguration(config =>
     {
+        config.AddEnvironmentVariables();
+    })
+    .ConfigureServices((context, services) =>
+    {
+        var keyVaultUrl = context.Configuration["keyvaulturl"];
+        services.AddSingleton(new SecretClient(new Uri(keyVaultUrl), new DefaultAzureCredential()));
+
+        services.AddScoped<IRefreshTokenService, RefreshTokenService>();
+
+        services.AddHttpClient<IRefreshTokenService, RefreshTokenService>()
+            .AddStandardResilienceHandler();
+
         services.AddHostedService<AuthWorker>();
     })
     .Build();
