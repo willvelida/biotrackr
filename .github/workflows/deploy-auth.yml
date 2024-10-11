@@ -18,9 +18,7 @@ env:
   ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
   ARM_USE_AZUREAD: true
   DOTNET_VERSION: 8.0.x
-  OUTPUT_PATH: ${{ github.workspace }}/.output
   COVERAGE_PATH: ${{ github.workspace }}/coverage
-  COVERAGE_LOCATION: ${{ github.workspace }}/.coverage
 
 jobs:
   run-unit-tests:

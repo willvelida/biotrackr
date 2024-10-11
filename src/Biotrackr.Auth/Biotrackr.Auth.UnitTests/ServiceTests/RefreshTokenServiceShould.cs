@@ -7,35 +7,29 @@ using FluentAssertions;
 using Microsoft.Extensions.Logging;
 using Moq;
 using Moq.Protected;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Net;
-using System.Text;
 using System.Text.Json;
-using System.Threading.Tasks;
 
 namespace Biotrackr.Auth.UnitTests.ServiceTests
 {
     public class RefreshTokenServiceShould
     {
-        private Mock<SecretClient> _mockSecretClient;
-        private Mock<HttpMessageHandler> _mockHttpMessageHandler;
-        private Mock<HttpClient> _mockHttpClient;
-        private Mock<ILogger<RefreshTokenService>> _mockLogger;
+        private readonly Mock<SecretClient> _mockSecretClient;
+        private readonly Mock<HttpMessageHandler> _mockHttpMessageHandler;
+        private readonly Mock<ILogger<RefreshTokenService>> _mockLogger;
+        private readonly RefreshTokenService _sut;
 
-        private RefreshTokenService _sut;
+        private const string RefreshTokenSecretName = "RefreshToken";
+        private const string FitbitCredentialsSecretName = "FitbitCredentials";
+
         public RefreshTokenServiceShould()
         {
             _mockSecretClient = new Mock<SecretClient>();
             _mockHttpMessageHandler = new Mock<HttpMessageHandler>();
-            _mockHttpClient = new Mock<HttpClient>(_mockHttpMessageHandler.Object);
             _mockLogger = new Mock<ILogger<RefreshTokenService>>();
 
-            _sut = new RefreshTokenService(
-                _mockSecretClient.Object,
-                _mockHttpClient.Object,
-                _mockLogger.Object);
+            var httpClient = new HttpClient(_mockHttpMessageHandler.Object);
+            _sut = new RefreshTokenService(_mockSecretClient.Object, httpClient, _mockLogger.Object);
         }
 
         [Fact]
@@ -47,25 +41,15 @@ namespace Biotrackr.Auth.UnitTests.ServiceTests
             var mockFitbitRefreshToken = "testFitbitRefreshToken";
             var mockFitbitCredential = "testFitbitCredential";
 
-            _mockSecretClient.Setup(x => x.GetSecretAsync("RefreshToken", null, It.IsAny<CancellationToken>()))
-                .ReturnsAsync(Response.FromValue(new KeyVaultSecret("RefreshToken", mockFitbitRefreshToken), new Mock<Response>().Object));
-            _mockSecretClient.Setup(x => x.GetSecretAsync("FitbitCredentials", null, It.IsAny<CancellationToken>()))
-                .ReturnsAsync(Response.FromValue(new KeyVaultSecret("FitbitCredentials", mockFitbitCredential), new Mock<Response>().Object));
-
-            _mockHttpMessageHandler.Protected()
-                .Setup<Task<HttpResponseMessage>>("SendAsync", ItExpr.IsAny<HttpRequestMessage>(), ItExpr.IsAny<System.Threading.CancellationToken>())
-                .ReturnsAsync(new HttpResponseMessage
-                {
-                    StatusCode = System.Net.HttpStatusCode.OK,
-                    Content = new StringContent(JsonSerializer.Serialize(mockRefreshTokenResponse))
-                });
+            SetupSecretClientMocks(mockFitbitRefreshToken, mockFitbitCredential);
+            SetupHttpMessageHandlerMock(mockRefreshTokenResponse);
 
             // ACT
             var result = await _sut.RefreshTokens();
 
             // ASSERT
-            Assert.Equal(mockRefreshTokenResponse.AccessToken, result.AccessToken);
-            Assert.Equal(mockRefreshTokenResponse.RefreshToken, result.RefreshToken);
+            result.AccessToken.Should().Be(mockRefreshTokenResponse.AccessToken);
+            result.RefreshToken.Should().Be(mockRefreshTokenResponse.RefreshToken);
         }
 
         [Fact]
@@ -75,10 +59,7 @@ namespace Biotrackr.Auth.UnitTests.ServiceTests
             var fixture = new Fixture();
             var mockTokenResponse = fixture.Create<RefreshTokenResponse>();
 
-            _mockSecretClient.Setup(x => x.SetSecretAsync("RefreshToken", mockTokenResponse.RefreshToken, It.IsAny<CancellationToken>()))
-                .ReturnsAsync(new Mock<Response<KeyVaultSecret>>().Object);
-
-            _mockSecretClient.Setup(x => x.SetSecretAsync("AccessToken", mockTokenResponse.AccessToken, It.IsAny<CancellationToken>()))
+            _mockSecretClient.Setup(x => x.SetSecretAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(new Mock<Response<KeyVaultSecret>>().Object);
 
             // ACT
@@ -116,6 +97,25 @@ namespace Biotrackr.Auth.UnitTests.ServiceTests
 
             // ASSERT
             await refreshTokenAction.Should().ThrowAsync<Exception>();
+        }
+
+        private void SetupSecretClientMocks(string mockFitbitRefreshToken, string mockFitbitCredential)
+        {
+            _mockSecretClient.Setup(x => x.GetSecretAsync(RefreshTokenSecretName, null, It.IsAny<CancellationToken>()))
+                .ReturnsAsync(Response.FromValue(new KeyVaultSecret(RefreshTokenSecretName, mockFitbitRefreshToken), new Mock<Response>().Object));
+            _mockSecretClient.Setup(x => x.GetSecretAsync(FitbitCredentialsSecretName, null, It.IsAny<CancellationToken>()))
+                .ReturnsAsync(Response.FromValue(new KeyVaultSecret(FitbitCredentialsSecretName, mockFitbitCredential), new Mock<Response>().Object));
+        }
+
+        private void SetupHttpMessageHandlerMock(RefreshTokenResponse mockRefreshTokenResponse)
+        {
+            _mockHttpMessageHandler.Protected()
+                .Setup<Task<HttpResponseMessage>>("SendAsync", ItExpr.IsAny<HttpRequestMessage>(), ItExpr.IsAny<CancellationToken>())
+                .ReturnsAsync(new HttpResponseMessage
+                {
+                    StatusCode = HttpStatusCode.OK,
+                    Content = new StringContent(JsonSerializer.Serialize(mockRefreshTokenResponse))
+                });
         }
     }
 }
