@@ -38,6 +38,10 @@ resource "azurerm_container_app_job" "job" {
         name  = "keyvaulturl"
         value = data.azurerm_key_vault.kv.vault_uri
       }
+      env {
+        name  = "managedidentityclientid"
+        value = data.azurerm_user_assigned_identity.msi.client_id
+      }
     }
   }
   replica_timeout_in_seconds = 600

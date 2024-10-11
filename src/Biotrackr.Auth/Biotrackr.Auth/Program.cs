@@ -15,7 +15,12 @@ IHost host = Host.CreateDefaultBuilder(args)
     .ConfigureServices((context, services) =>
     {
         var keyVaultUrl = context.Configuration["keyvaulturl"];
-        services.AddSingleton(new SecretClient(new Uri(keyVaultUrl), new DefaultAzureCredential()));
+        var defaultCredentialOptions = new DefaultAzureCredentialOptions()
+        {
+            ManagedIdentityClientId = context.Configuration["managedidentityclientid"]
+        };
+
+        services.AddSingleton(new SecretClient(new Uri(keyVaultUrl), new DefaultAzureCredential(defaultCredentialOptions)));
 
         services.AddScoped<IRefreshTokenService, RefreshTokenService>();
 
