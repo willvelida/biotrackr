@@ -34,11 +34,11 @@ namespace Biotrackr.Auth.Services
 
                 _httpClient.DefaultRequestHeaders.Clear();
                 UriBuilder uri = new UriBuilder("https://api.fitbit.com/oauth2/token");
-                uri.Query = $"grant_type=refresh_token&refresh_token={fitbitRefreshTokenSecret.Value}";
+                uri.Query = $"grant_type=refresh_token&refresh_token={fitbitRefreshTokenSecret.Value.Value}";
                 var request = new HttpRequestMessage(HttpMethod.Post, uri.Uri);
                 request.Content = new StringContent("");
                 request.Content.Headers.ContentType = new MediaTypeHeaderValue("application/x-www-form-urlencoded");
-                request.Headers.Authorization = new AuthenticationHeaderValue("Basic", fitbitClientCredentials.Value.ToString());
+                request.Headers.Authorization = new AuthenticationHeaderValue("Basic", fitbitClientCredentials.Value.Value);
 
                 var response = await _httpClient.SendAsync(request);
                 response.EnsureSuccessStatusCode();
