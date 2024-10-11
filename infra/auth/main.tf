@@ -18,7 +18,7 @@ data "azurerm_container_registry" "acr" {
 }
 
 data "azurerm_key_vault" "kv" {
-  name = var.key_vault_name
+  name                = var.key_vault_name
   resource_group_name = data.azurerm_resource_group.rg.name
 }
 
@@ -60,8 +60,8 @@ resource "azurerm_container_app_job" "job" {
 }
 
 module "key_vault_secrets_officer_role" {
-  source = "../modules/role-assignment"
+  source       = "../modules/role-assignment"
   principal_id = data.azurerm_user_assigned_identity.msi.principal_id
-  role_name = "Key Vault Secrets Officer"
-  scope_id = data.azurerm_key_vault.kv.id
+  role_name    = "Key Vault Secrets Officer"
+  scope_id     = data.azurerm_key_vault.kv.id
 }
