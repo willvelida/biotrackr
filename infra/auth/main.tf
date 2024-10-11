@@ -47,7 +47,7 @@ resource "azurerm_container_app_job" "job" {
   replica_timeout_in_seconds = 600
   replica_retry_limit        = 3
   schedule_trigger_config {
-    cron_expression          = "*/60 * * * *"
+    cron_expression          = "0 */6 * * *"
     parallelism              = 1
     replica_completion_count = 1
   }
