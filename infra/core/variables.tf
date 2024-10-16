@@ -117,3 +117,8 @@ variable "kv_sku_name" {
   type        = string
   default     = "standard"
 }
+
+variable "sb_name" {
+  description = "The name of the Service Bus"
+  type        = string
+}

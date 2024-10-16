@@ -97,8 +97,17 @@ module "budget" {
 module "kv" {
   source      = "../modules/key-vault"
   kv_name     = var.kv_name
-  location    = var.location
+  location    = module.resource_group.location
   rg_name     = module.resource_group.name
   tags        = var.tags
   kv_sku_name = var.kv_sku_name
+}
+
+module "sb" {
+  source      = "../modules/service-bus"
+  sb_name     = var.sb_name
+  location    = module.resource_group.location
+  rg_name     = module.resource_group.name
+  tags        = var.tags
+  identity_id = module.usi.user_assinged_identity_id
 }
