@@ -122,3 +122,8 @@ variable "sb_name" {
   description = "The name of the Service Bus"
   type        = string
 }
+
+variable "app_configuration_name" {
+  description = "The name of the App Configuration instance"
+  type        = string
+}
