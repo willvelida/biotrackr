@@ -127,3 +127,17 @@ module "appconfig_data_reader_role" {
   principal_id = module.usi.user_assinged_identity_principal_id
   scope_id     = module.appconfig.id
 }
+
+module "sb_sender_role" {
+  source       = "../modules/role-assignment"
+  role_name    = "Azure Service Bus Data Sender"
+  principal_id = module.usi.user_assinged_identity_principal_id
+  scope_id     = module.sb.id
+}
+
+module "sb_receiver_role" {
+  source       = "../modules/role-assignment"
+  role_name    = "Azure Service Bus Data Receiver"
+  principal_id = module.usi.user_assinged_identity_principal_id
+  scope_id     = module.sb.id
+}
