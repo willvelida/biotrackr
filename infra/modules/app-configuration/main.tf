@@ -4,7 +4,7 @@ resource "azurerm_app_configuration" "appconfig" {
   resource_group_name = var.resource_group_name
   tags = var.tags
   sku = {
-    name = var.sku
+    name = "free"
   }
   identity {
     type = "UserAssigned"

@@ -18,12 +18,6 @@ variable "tags" {
   type        = map(string)
 }
 
-variable "sku" {
-  description = "The SKU of the App Configuration instance"
-  type        = string
-  default = "free"
-}
-
 variable "identity_id" {
   description = "The ID of the user-assigned identity to assign to the App Configuration instance"
   type        = string
