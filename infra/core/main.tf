@@ -113,17 +113,17 @@ module "sb" {
 }
 
 module "appconfig" {
-  source = "../modules/app-configuration"
+  source                 = "../modules/app-configuration"
   app_configuration_name = var.app_configuration_name
-  location = module.resource_group.location
-  resource_group_name = module.resource_group.name
-  tags = var.tags
-  identity_id = module.usi.user_assinged_identity_id
+  location               = module.resource_group.location
+  resource_group_name    = module.resource_group.name
+  tags                   = var.tags
+  identity_id            = module.usi.user_assinged_identity_id
 }
 
 module "appconfig_data_reader_role" {
-  source = "../modules/role-assignment"
-  role_name = "App Configuration Data Reader"
+  source       = "../modules/role-assignment"
+  role_name    = "App Configuration Data Reader"
   principal_id = module.usi.user_assinged_identity_principal_id
-  scope_id = module.appconfig.appconfig_id
+  scope_id     = module.appconfig.appconfig_id
 }
