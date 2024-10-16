@@ -125,5 +125,5 @@ module "appconfig_data_reader_role" {
   source       = "../modules/role-assignment"
   role_name    = "App Configuration Data Reader"
   principal_id = module.usi.user_assinged_identity_principal_id
-  scope_id     = module.appconfig.appconfig_id
+  scope_id     = module.appconfig.id
 }
