@@ -117,3 +117,23 @@ variable "kv_sku_name" {
   type        = string
   default     = "standard"
 }
+
+variable "sb_name" {
+  description = "The name of the Service Bus"
+  type        = string
+}
+
+variable "app_configuration_name" {
+  description = "The name of the App Configuration instance"
+  type        = string
+}
+
+variable "activity_queue_name" {
+  description = "The name of the Activity Queue in Service Bus"
+  type        = string
+}
+
+variable "activity_queue_key_name" {
+  description = "The name of the Key in App Configuration for the Activity Queue"
+  type        = string
+}

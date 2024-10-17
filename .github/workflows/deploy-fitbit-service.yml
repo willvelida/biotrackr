@@ -1,11 +1,11 @@
-name: Deploy Auth Service
+name: Deploy Fitbit Service
 on:
   pull_request:
     branches:
       - main
     paths:
-      - 'infra/auth/**'
-      - 'src/Biotrackr.Auth/**'
+      - 'infra/fitbit-service/**'
+      - 'src/Biotrackr.FitbitApi/**'
   workflow_dispatch:
 
 permissions:
@@ -41,7 +41,7 @@ jobs:
     uses: willvelida/biotrackr/.github/workflows/run-unit-tests-dotnet.yml@feature/activity-service
     with:
       dotnet-version: ${{ needs.env-setup.outputs.dotnet-version }}
-      working-directory: ./src/Biotrackr.Auth
+      working-directory: ./src/Biotrackr.FitbitApi
       coverage-path: ${{ needs.env-setup.outputs.coverage-path }}
 
   build-container-image:
@@ -49,7 +49,7 @@ jobs:
     needs: run-unit-tests
     uses: willvelida/biotrackr/.github/workflows/build-and-push-container-image.yml@feature/activity-service
     with:
-      working-directory: ./src/Biotrackr.Auth
+      working-directory: ./src/Biotrackr.FitbitApi
     secrets:
       client-id: ${{ secrets.AZURE_CLIENT_ID }}
       tenant-id: ${{ secrets.AZURE_TENANT_ID }}
@@ -60,7 +60,7 @@ jobs:
     needs: build-container-image
     defaults:
       run:
-        working-directory: ./infra/auth
+        working-directory: ./infra/fitbit-service
     name: Terraform Plan
     runs-on: ubuntu-latest
     steps:
@@ -89,7 +89,7 @@ jobs:
 
       - name: Terraform Init
         id: init
-        run: terraform init -backend-config="resource_group_name=${{secrets.BACKEND_AZURE_RESOURCE_GROUP_NAME}}" -backend-config="storage_account_name=${{secrets.BACKEND_AZURE_STORAGE_ACCOUNT_NAME}}" -backend-config="container_name=${{secrets.BACKEND_AUTH_TFSTATE_CONTAINER_NAME}}"
+        run: terraform init -backend-config="resource_group_name=${{secrets.BACKEND_AZURE_RESOURCE_GROUP_NAME}}" -backend-config="storage_account_name=${{secrets.BACKEND_AZURE_STORAGE_ACCOUNT_NAME}}" -backend-config="container_name=${{secrets.BACKEND_FITBIT_TFSTATE_CONTAINER_NAME}}"
 
       - name: Terraform Validate
         id: validate
@@ -105,7 +105,7 @@ jobs:
         id: plan
         run: |
           export exitcode=0
-          terraform plan -no-color -var-file="./tfvars/terraform.tfvars" -var="image_name=${{ steps.getacrserver.outputs.loginServer }}/biotrackr-auth:${{ github.sha }}" -out main.tfplan || export exitcode=$?
+          terraform plan -no-color -var-file="./tfvars/terraform.tfvars" -var="image_name=${{ steps.getacrserver.outputs.loginServer }}/biotrackr-fitbitapi-svc:${{ github.sha }}" -out main.tfplan || export exitcode=$?
 
           echo "exitcode=$exitcode" >> $GITHUB_OUTPUT
 
@@ -121,7 +121,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: tfplan
-          path: ./infra/auth/main.tfplan
+          path: ./infra/fitbit-service/main.tfplan
 
       - name: Update Pull Request
         uses: actions/github-script@v6
@@ -201,7 +201,7 @@ jobs:
     environment: Production
     defaults:
       run:
-        working-directory: ./infra/auth
+        working-directory: ./infra/fitbit-service
 
     steps:
       - name: Checkout code
@@ -212,13 +212,13 @@ jobs:
 
       - name: Terraform Init
         id: init
-        run: terraform init -backend-config="resource_group_name=${{secrets.BACKEND_AZURE_RESOURCE_GROUP_NAME}}" -backend-config="storage_account_name=${{secrets.BACKEND_AZURE_STORAGE_ACCOUNT_NAME}}" -backend-config="container_name=${{secrets.BACKEND_AZURE_STORAGE_ACCOUNT_CONTAINER_NAME}}"
+        run: terraform init -backend-config="resource_group_name=${{secrets.BACKEND_AZURE_RESOURCE_GROUP_NAME}}" -backend-config="storage_account_name=${{secrets.BACKEND_AZURE_STORAGE_ACCOUNT_NAME}}" -backend-config="container_name=${{secrets.BACKEND_FITBIT_TFSTATE_CONTAINER_NAME}}"
 
       - name: Download Terraform Plan
         uses: actions/download-artifact@v4
         with:
           name: tfplan
-          path: ./infra/auth
+          path: ./infra/fitbit-service
 
       - name: Terraform Apply
-        run: terraform apply -auto-approve "./main.tfplan"
+        run: terraform apply -auto-approve "./main.tfplan"        

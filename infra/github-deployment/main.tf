@@ -7,6 +7,11 @@ data "azurerm_container_registry" "acr" {
   resource_group_name = var.resource_group_name
 }
 
+data "azurerm_app_configuration" "appconfig" {
+  name = var.app_configuration_name
+  resource_group_name = var.resource_group_name
+}
+
 module "tf-resource-group" {
   source   = "../modules/resource-group"
   name     = var.tf_state_rg_name
@@ -86,4 +91,11 @@ module "acr_push_role_assignment" {
   principal_id = module.gh_usi.user_assinged_identity_principal_id
   role_name    = "AcrPush"
   scope_id     = data.azurerm_container_registry.acr.id
+}
+
+module "app_configuration_data_owner_role_assignment" {
+  source = "../modules/role-assignment"
+  principal_id = module.gh_usi.user_assinged_identity_principal_id
+  role_name = "App Configuration Data Owner"
+  scope_id = data.azurerm_app_configuration.appconfig.id
 }
