@@ -137,3 +137,8 @@ variable "activity_queue_key_name" {
   description = "The name of the Key in App Configuration for the Activity Queue"
   type        = string
 }
+
+variable "sb_pubsub_component_name" {
+  description = "The name of the PubSub component in Service Bus"
+  type        = string
+}
