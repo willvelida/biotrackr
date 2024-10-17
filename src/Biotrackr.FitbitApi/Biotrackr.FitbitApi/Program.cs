@@ -25,7 +25,7 @@ IHost host = Host.CreateDefaultBuilder(args)
     })
     .ConfigureServices((context, services) =>
     {
-        var keyVaultUri = context.Configuration["keyvaulturi"];
+        var keyVaultUrl = context.Configuration["keyvaulturl"];
         var serviceBusEndpoint = context.Configuration["servicebusendpoint"];
         var managedIdentityClientId = context.Configuration["managedidentityclientid"];
         var defaultCredentialOptions = new DefaultAzureCredentialOptions()
@@ -40,7 +40,7 @@ IHost host = Host.CreateDefaultBuilder(args)
 
         services.AddApplicationInsightsTelemetryWorkerService();
 
-        services.AddSingleton(new SecretClient(new Uri(keyVaultUri), new DefaultAzureCredential(defaultCredentialOptions)));
+        services.AddSingleton(new SecretClient(new Uri(keyVaultUrl), new DefaultAzureCredential(defaultCredentialOptions)));
         services.AddSingleton(new ServiceBusClient(serviceBusEndpoint, new DefaultAzureCredential(defaultCredentialOptions)));
 
         services.AddScoped<ISecretService, SecretService>();
