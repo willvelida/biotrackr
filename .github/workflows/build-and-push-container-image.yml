@@ -18,7 +18,7 @@ on:
         required: false
 
 jobs:
-    build-container-image:
+  build-container-image:
     name: Build Container Image
     runs-on: ubuntu-latest
     defaults:
