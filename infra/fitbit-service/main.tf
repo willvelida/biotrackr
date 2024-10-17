@@ -78,4 +78,14 @@ resource "azurerm_container_app_job" "job" {
     parallelism              = 1
     replica_completion_count = 1
   }
+
+  registry {
+    server   = data.azurerm_container_registry.acr.login_server
+    identity = data.azurerm_user_assigned_identity.msi.id
+  }
+
+  identity {
+    type         = "UserAssigned"
+    identity_ids = [data.azurerm_user_assigned_identity.msi.id]
+  }
 }
