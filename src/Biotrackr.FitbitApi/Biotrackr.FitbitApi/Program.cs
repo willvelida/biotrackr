@@ -11,16 +11,15 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 
 IHost host = Host.CreateDefaultBuilder(args)
-    .ConfigureAppConfiguration((context, config) =>
+    .ConfigureAppConfiguration(config =>
     {
         config.AddEnvironmentVariables();        
         config.AddAzureAppConfiguration(options =>
         {
-            var managedIdentityClientId = context.Configuration["managedidentityclientid"];
             options
             .Connect(
-                new Uri(Environment.GetEnvironmentVariable("azureappconfigendpoint")), 
-                new ManagedIdentityCredential(managedIdentityClientId))
+                new Uri(Environment.GetEnvironmentVariable("azureappconfigendpoint")),
+                new ManagedIdentityCredential(Environment.GetEnvironmentVariable("managedidentityclientid")))
             .Select(KeyFilter.Any, LabelFilter.Null);
         });
     })
