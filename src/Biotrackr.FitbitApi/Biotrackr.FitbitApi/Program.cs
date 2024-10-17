@@ -13,14 +13,14 @@ using Microsoft.Extensions.Hosting;
 IHost host = Host.CreateDefaultBuilder(args)
     .ConfigureAppConfiguration((context, config) =>
     {
-        config.AddEnvironmentVariables();
-        var managedIdentityClientId = context.Configuration["managedidentityclientid"];
-        var defaultCredentialOptions = new DefaultAzureCredentialOptions()
-        {
-            ManagedIdentityClientId = managedIdentityClientId
-        };
+        config.AddEnvironmentVariables();        
         config.AddAzureAppConfiguration(options =>
         {
+            var managedIdentityClientId = context.Configuration["managedidentityclientid"];
+            var defaultCredentialOptions = new DefaultAzureCredentialOptions()
+            {
+                ManagedIdentityClientId = managedIdentityClientId
+            };
             options
             .Connect(new Uri(Environment.GetEnvironmentVariable("azureappconfigendpoint")), new DefaultAzureCredential(defaultCredentialOptions))
             .Select(KeyFilter.Any, LabelFilter.Null);
