@@ -5,6 +5,7 @@ on:
       - main
     paths:
       - 'infra/auth/**'
+      - 'src/Biotrackr.Auth/**'
   workflow_dispatch:
 
 permissions:
@@ -21,88 +22,40 @@ env:
   COVERAGE_PATH: ${{ github.workspace }}/coverage
 
 jobs:
+  env-setup:
+    name: Setup Environment
+    runs-on: ubuntu-latest
+    outputs:
+      dotnet-version: ${{ steps.set-output-defaults.outputs.dotnet-version }}
+      coverage-path: ${{ steps.set-output-defaults.outputs.coverage-path }}
+    steps:
+      - name: set outputs with default values
+        id: set-output-defaults
+        run: |
+          echo "::set-output name=dotnet-version::${{ env.DOTNET_VERSION }}"
+          echo "::set-output name=coverage-path::${{ env.COVERAGE_PATH }}"
+
   run-unit-tests:
     name: Run Unit Tests
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: ./src/Biotrackr.Auth
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Setup .NET ${{ env.DOTNET_VERSION }}
-        uses: actions/setup-dotnet@v3
-        with:
-          dotnet-version: ${{ env.DOTNET_VERSION }}
-
-      - name: Install dependencies
-        run: dotnet restore
-
-      - name: Build
-        run: dotnet build --no-restore --verbosity normal
-
-      - name: Run unit tests
-        run: dotnet test --no-build --verbosity normal --collect:"XPlat Code Coverage" --logger trx --results-directory ${{ env.COVERAGE_PATH }}
-
-      - name: Merge Code Coverage reports
-        run: |
-          dotnet tool install -g dotnet-reportgenerator-globaltool
-          reportgenerator "-reports:${{ env.COVERAGE_PATH }}/**/coverage.cobertura.xml" "-targetdir:${{ env.COVERAGE_PATH }}" -reporttypes:Cobertura
-
-      - name: Code Coverage Report
-        uses: irongut/CodeCoverageSummary@v1.3.0
-        with:
-          filename: coverage/Cobertura.xml
-          badge: true
-          fail_below_min: false
-          format: markdown
-          hide_branch_rate: false
-          hide_complexity: true
-          indicators: true
-          output: both
-          thresholds: '60 80'
+    needs: env-setup
+    uses: willvelida/biotrackr/.github/workflows/templates/run-unit-tests-dotnet.yml@feature/activity-service
+    with:
+      dotnet-version: ${{ needs.env-setup.outputs.dotnet-version }}
+      working-directory: ./src/Biotrackr.Auth
+      coverage-path: ${{ needs.env-setup.outputs.coverage-path }}
 
   build-container-image:
     name: Build Container Image
     needs: run-unit-tests
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: ./src/Biotrackr.Auth
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
-
-      - name: Azure login
-        uses: azure/login@v2
-        with:
-          client-id: ${{ secrets.AZURE_CLIENT_ID }}
-          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
-          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v1
-
-      - name: Get ACR name
-        id: getacrname
-        run: |
-          acrName=$(az acr list --resource-group ${{ secrets.BIOTRACKR_APP_RG }} --query "[0].name" -o tsv)
-          echo "::set-output name=acrName::$acrName"
-
-      - name: Get ACR Server
-        id: getacrserver
-        run: |
-          loginServer=$(az acr list --resource-group ${{ secrets.BIOTRACKR_APP_RG }} --query "[0].loginServer" -o tsv)
-          echo "::set-output name=loginServer::$loginServer"
-
-      - name: Login to Azure Container Registry
-        run: az acr login --name ${{ steps.getacrname.outputs.acrName }}
-
-      - name: Build and push Docker image
-        run: |
-          docker buildx build --push --tag ${{ steps.getacrserver.outputs.loginServer }}/biotrackr-auth:${{ github.sha }} .
-
+    uses: willvelida/biotrackr/.github/workflows/templates/build-and-push-container-image.yml@feature/activity-service
+    with:
+      working-directory: ./src/Biotrackr.Auth
+    secrets:
+      client-id: ${{ secrets.AZURE_CLIENT_ID }}
+      tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+      subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+      resource-group-name: ${{ secrets.BIOTRACKR_APP_RG }}
+    
   terraform-plan:
     needs: build-container-image
     defaults:

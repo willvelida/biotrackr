@@ -1,62 +1,40 @@
-name: Deploy Fitbit Service
+name: Create Terraform Plan
+
 on:
-  pull_request:
-    branches:
-      - main
-    paths:
-      - 'infra/fitbit-service/**'
-      - 'src/Biotrackr.FitbitApi/**'
-  workflow_dispatch:
-
-permissions:
-  contents: read
-  id-token: write
-  pull-requests: write
-
-env:
-  ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
-  ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-  ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
-  ARM_USE_AZUREAD: true
-  DOTNET_VERSION: 8.0.x
-  COVERAGE_PATH: ${{ github.workspace }}/coverage
+  workflow_call:
+    inputs:
+      working-directory:
+        description: 'The working directory to run Terraform in'
+        required: true
+        type: string
+      terraform-plan-location:
+        description: 'The location to save the Terraform plan'
+        required: true
+        type: string
+      tf-vars-file:
+        description: 'The location of the Terraform variables file'
+        required: true
+        type: string
+    secrets:
+      client-id:
+        required: true
+      tenant-id:
+        required: true
+      subscription-id:
+        required: true
+      resource-group-name:
+        required: true
+      backend-storage-resource-group-name:
+        required: true
+      backend-storage-account-name:
+        required: true
+      backend-storage-container-name:
+        required: true
+      github-token:
+        required: true
 
 jobs:
-  env-setup:
-    name: Setup Environment
-    runs-on: ubuntu-latest
-    outputs:
-      dotnet-version: ${{ steps.set-output-defaults.outputs.dotnet-version }}
-      coverage-path: ${{ steps.set-output-defaults.outputs.coverage-path }}
-    steps:
-      - name: set outputs with default values
-        id: set-output-defaults
-        run: |
-          echo "::set-output name=dotnet-version::${{ env.DOTNET_VERSION }}"
-          echo "::set-output name=coverage-path::${{ env.COVERAGE_PATH }}"
-
-  run-unit-tests:
-    name: Run Unit Tests
-    needs: env-setup
-    uses: willvelida/biotrackr/.github/workflows/templates/run-unit-tests-dotnet.yml@feature/activity-service
-    with:
-      dotnet-version: ${{ needs.env-setup.outputs.dotnet-version }}
-      working-directory: ./src/Biotrackr.FitbitApi
-      coverage-path: ${{ needs.env-setup.outputs.coverage-path }}
-
-  build-container-image:
-    name: Build Container Image
-    needs: run-unit-tests
-    uses: willvelida/biotrackr/.github/workflows/templates/build-and-push-container-image.yml@feature/activity-service
-    with:
-      working-directory: ./src/Biotrackr.FitbitApi
-    secrets:
-      client-id: ${{ secrets.AZURE_CLIENT_ID }}
-      tenant-id: ${{ secrets.AZURE_TENANT_ID }}
-      subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-      resource-group-name: ${{ secrets.BIOTRACKR_APP_RG }}
-    
-  terraform-plan:
+    terraform-plan:
     needs: build-container-image
     defaults:
       run:
@@ -70,14 +48,14 @@ jobs:
       - name: Azure login
         uses: azure/login@v2
         with:
-          client-id: ${{ secrets.AZURE_CLIENT_ID }}
-          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
-          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+          client-id: ${{ secrets.client-id }}
+          tenant-id: ${{ secrets.tenant-id }}
+          subscription-id: ${{ secrets.subscription-id }}
 
       - name: Get ACR Server
         id: getacrserver
         run: |
-          loginServer=$(az acr list --resource-group ${{ secrets.BIOTRACKR_APP_RG }} --query "[0].loginServer" -o tsv)
+          loginServer=$(az acr list --resource-group ${{ secrets.resource-group-name }} --query "[0].loginServer" -o tsv)
           echo "::set-output name=loginServer::$loginServer"
 
       - name: Setup Terraform
@@ -89,7 +67,7 @@ jobs:
 
       - name: Terraform Init
         id: init
-        run: terraform init -backend-config="resource_group_name=${{secrets.BACKEND_AZURE_RESOURCE_GROUP_NAME}}" -backend-config="storage_account_name=${{secrets.BACKEND_AZURE_STORAGE_ACCOUNT_NAME}}" -backend-config="container_name=${{secrets.BACKEND_FITBIT_TFSTATE_CONTAINER_NAME}}"
+        run: terraform init -backend-config="resource_group_name=${{secrets.backend-storage-resource-group-name}}" -backend-config="storage_account_name=${{secrets.backend-storage-account-name }}" -backend-config="container_name=${{secrets.backend-storage-container-name }}"
 
       - name: Terraform Validate
         id: validate
@@ -121,7 +99,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: tfplan
-          path: ./infra/fitbit-service/main.tfplan
+          path: ${{ inputs.terraform-plan-location }}
 
       - name: Update Pull Request
         uses: actions/github-script@v6
@@ -184,7 +162,7 @@ jobs:
         env:
           SUMMARY: "${{ steps.tf-plan-string.outputs.summary }}"
         with:
-            github-token: ${{ secrets.GITHUB_TOKEN }}
+            github-token: ${{ secrets.github-token }}
             script: |
                 const body = `${process.env.SUMMARY}`;
                 github.rest.issues.createComment({
@@ -193,32 +171,3 @@ jobs:
                     repo: context.repo.repo,
                     body: body
                 })
-
-  terraform-apply:
-    needs: terraform-plan
-    name: Terraform Apply
-    runs-on: ubuntu-latest
-    environment: Production
-    defaults:
-      run:
-        working-directory: ./infra/fitbit-service
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
-
-      - name: Setup Terraform
-        uses: hashicorp/setup-terraform@v2
-
-      - name: Terraform Init
-        id: init
-        run: terraform init -backend-config="resource_group_name=${{secrets.BACKEND_AZURE_RESOURCE_GROUP_NAME}}" -backend-config="storage_account_name=${{secrets.BACKEND_AZURE_STORAGE_ACCOUNT_NAME}}" -backend-config="container_name=${{secrets.BACKEND_FITBIT_TFSTATE_CONTAINER_NAME}}"
-
-      - name: Download Terraform Plan
-        uses: actions/download-artifact@v4
-        with:
-          name: tfplan
-          path: ./infra/fitbit-service
-
-      - name: Terraform Apply
-        run: terraform apply -auto-approve "./main.tfplan"        
