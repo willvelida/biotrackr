@@ -133,7 +133,7 @@ variable "activity_queue_name" {
   type        = string
 }
 
-variable "activity_key_name" {
+variable "activity_queue_key_name" {
   description = "The name of the Key in App Configuration for the Activity Queue"
   type        = string
 }

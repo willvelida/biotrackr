@@ -150,6 +150,6 @@ module "sb_receiver_role" {
 
 resource "azurerm_app_configuration_key" "activity_queue_key" {
   configuration_store_id = module.appconfig.id
-  key                    = var.activity_key_name
+  key                    = var.activity_queue_key_name
   value                  = module.activity_queue.queue_name
 }
