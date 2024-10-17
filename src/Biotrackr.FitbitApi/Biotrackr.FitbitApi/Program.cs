@@ -17,12 +17,10 @@ IHost host = Host.CreateDefaultBuilder(args)
         config.AddAzureAppConfiguration(options =>
         {
             var managedIdentityClientId = context.Configuration["managedidentityclientid"];
-            var defaultCredentialOptions = new DefaultAzureCredentialOptions()
-            {
-                ManagedIdentityClientId = managedIdentityClientId
-            };
             options
-            .Connect(new Uri(Environment.GetEnvironmentVariable("azureappconfigendpoint")), new DefaultAzureCredential(defaultCredentialOptions))
+            .Connect(
+                new Uri(Environment.GetEnvironmentVariable("azureappconfigendpoint")), 
+                new ManagedIdentityCredential(managedIdentityClientId))
             .Select(KeyFilter.Any, LabelFilter.Null);
         });
     })
