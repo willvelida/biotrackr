@@ -11,6 +11,8 @@ tags = {
 }
 container_names = [
   "biotrackrcore-tfstate",
-  "biotrack-auth-tfstate"
+  "biotrack-auth-tfstate",
+  "biotrackr-fitbitsvc-tfstate",
 ]
 resource_group_name = "rg-biotrackr-prod-ae"
+app_configuration_name = "appconfig-biotrackr-prod-ae"

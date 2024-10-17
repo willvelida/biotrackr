@@ -1,0 +1,10 @@
+{
+  "profiles": {
+    "Biotrackr.FitbitApi": {
+      "commandName": "Project"
+    },
+    "Container (Dockerfile)": {
+      "commandName": "Docker"
+    }
+  }
+}

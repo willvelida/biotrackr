@@ -1,0 +1,272 @@
+name: Deploy Fitbit Service
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'infra/fitbit-service/**'
+      - 'src/Biotrackr.FitbitApi/**'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write
+  pull-requests: write
+
+env:
+  ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+  ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+  ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+  ARM_USE_AZUREAD: true
+  DOTNET_VERSION: 8.0.x
+  COVERAGE_PATH: ${{ github.workspace }}/coverage
+
+jobs:
+  run-unit-tests:
+    name: Run Unit Tests
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./src/Biotrackr.FitbitApi
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup .NET ${{ env.DOTNET_VERSION }}
+        uses: actions/setup-dotnet@v3
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Install dependencies
+        run: dotnet restore
+
+      - name: Build
+        run: dotnet build --no-restore --verbosity normal
+
+      - name: Run unit tests
+        run: dotnet test --no-build --verbosity normal --collect:"XPlat Code Coverage" --logger trx --results-directory ${{ env.COVERAGE_PATH }}
+
+      - name: Merge Code Coverage reports
+        run: |
+          dotnet tool install -g dotnet-reportgenerator-globaltool
+          reportgenerator "-reports:${{ env.COVERAGE_PATH }}/**/coverage.cobertura.xml" "-targetdir:${{ env.COVERAGE_PATH }}" -reporttypes:Cobertura
+
+      - name: Code Coverage Report
+        uses: irongut/CodeCoverageSummary@v1.3.0
+        with:
+          filename: coverage/Cobertura.xml
+          badge: true
+          fail_below_min: false
+          format: markdown
+          hide_branch_rate: false
+          hide_complexity: true
+          indicators: true
+          output: both
+          thresholds: '60 80'
+
+  build-container-image:
+    name: Build Container Image
+    needs: run-unit-tests
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./src/Biotrackr.FitbitApi
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Azure login
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v1
+
+      - name: Get ACR name
+        id: getacrname
+        run: |
+          acrName=$(az acr list --resource-group ${{ secrets.BIOTRACKR_APP_RG }} --query "[0].name" -o tsv)
+          echo "::set-output name=acrName::$acrName"
+
+      - name: Get ACR Server
+        id: getacrserver
+        run: |
+          loginServer=$(az acr list --resource-group ${{ secrets.BIOTRACKR_APP_RG }} --query "[0].loginServer" -o tsv)
+          echo "::set-output name=loginServer::$loginServer"
+
+      - name: Login to Azure Container Registry
+        run: az acr login --name ${{ steps.getacrname.outputs.acrName }}
+
+      - name: Build and push Docker image
+        run: |
+          docker buildx build --push --tag ${{ steps.getacrserver.outputs.loginServer }}/biotrackr-fitbitapi-svc:${{ github.sha }} .
+          
+  terraform-plan:
+    needs: build-container-image
+    defaults:
+      run:
+        working-directory: ./infra/fitbit-service
+    name: Terraform Plan
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Azure login
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Get ACR Server
+        id: getacrserver
+        run: |
+          loginServer=$(az acr list --resource-group ${{ secrets.BIOTRACKR_APP_RG }} --query "[0].loginServer" -o tsv)
+          echo "::set-output name=loginServer::$loginServer"
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v2
+
+      - name: Terraform Fmt
+        id: fmt
+        run: terraform fmt -check
+
+      - name: Terraform Init
+        id: init
+        run: terraform init -backend-config="resource_group_name=${{secrets.BACKEND_AZURE_RESOURCE_GROUP_NAME}}" -backend-config="storage_account_name=${{secrets.BACKEND_AZURE_STORAGE_ACCOUNT_NAME}}" -backend-config="container_name=${{secrets.BACKEND_FITBIT_TFSTATE_CONTAINER_NAME}}"
+
+      - name: Terraform Validate
+        id: validate
+        run: terraform validate -no-color
+
+      - name: tfsec
+        uses: aquasecurity/tfsec-pr-commenter-action@v1.2.0
+        with:
+          tfsec_args: --soft-fail
+          github_token: ${{ github.token }}
+
+      - name: Terraform Plan
+        id: plan
+        run: |
+          export exitcode=0
+          terraform plan -no-color -var-file="./tfvars/terraform.tfvars" -var="image_name=${{ steps.getacrserver.outputs.loginServer }}/biotrackr-fitbitapi-svc:${{ github.sha }}" -out main.tfplan || export exitcode=$?
+
+          echo "exitcode=$exitcode" >> $GITHUB_OUTPUT
+
+          if [ $exitcode -eq 1 ]; then
+            echo "Error: Terraform plan failed"
+            exit 1
+          else
+            echo "Terraform plan was successful"
+            exit 0
+          fi
+        
+      - name: Publish Terraform Plan
+        uses: actions/upload-artifact@v4
+        with:
+          name: tfplan
+          path: ./infra/fitbit-service/main.tfplan
+
+      - name: Update Pull Request
+        uses: actions/github-script@v6
+        env:
+          PLAN: "terraform\n${{ steps.plan.outputs.stdout }}"
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const output = `#### Terraform Format and Style 🖌\`${{ steps.fmt.outcome }}\`
+            #### Terraform Initialization ⚙️\`${{ steps.init.outcome }}\`
+            #### Terraform Plan 📖\`${{ steps.plan.outcome }}\`
+            #### Terraform Validation 🤖\`${{ steps.validate.outcome }}\`
+  
+            <details><summary>Show Plan</summary>
+  
+            \`\`\`\n
+            ${process.env.PLAN}
+            \`\`\`
+  
+            </details>
+  
+            *Pushed by: @${{ github.actor }}, Action: \`${{ github.event_name }}\`*`;
+  
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: output
+            })
+      
+      - name: Terraform Plan Status
+        if: steps.plan.outcome == 'failure'
+        run: exit 1
+
+      - name: Create String Output
+        id: tf-plan-string
+        run: |
+            TERRAFORM_PLAN=$(terraform show -no-color main.tfplan)
+            
+            delimiter="$(openssl rand -hex 8)"
+            echo "summary<<${delimiter}" >> $GITHUB_OUTPUT
+            echo "## Terraform Plan Output" >> $GITHUB_OUTPUT
+            echo "<details><summary>Click to expand</summary>" >> $GITHUB_OUTPUT
+            echo "" >> $GITHUB_OUTPUT
+            echo '```terraform' >> $GITHUB_OUTPUT
+            echo "$TERRAFORM_PLAN" >> $GITHUB_OUTPUT
+            echo '```' >> $GITHUB_OUTPUT
+            echo "</details>" >> $GITHUB_OUTPUT
+            echo "${delimiter}" >> $GITHUB_OUTPUT
+
+      - name: Publish Terraform Plan to Task Summary
+        env:
+          SUMMARY: ${{ steps.tf-plan-string.outputs.summary }}
+        run: |
+          echo "$SUMMARY" >> $GITHUB_STEP_SUMMARY
+
+      - name: Push Terraform Output to PR
+        if: github.ref != 'refs/heads/main'
+        uses: actions/github-script@v7
+        env:
+          SUMMARY: "${{ steps.tf-plan-string.outputs.summary }}"
+        with:
+            github-token: ${{ secrets.GITHUB_TOKEN }}
+            script: |
+                const body = `${process.env.SUMMARY}`;
+                github.rest.issues.createComment({
+                    issue_number: context.issue.number,
+                    owner: context.repo.owner,
+                    repo: context.repo.repo,
+                    body: body
+                })
+
+  terraform-apply:
+    needs: terraform-plan
+    name: Terraform Apply
+    runs-on: ubuntu-latest
+    environment: Production
+    defaults:
+      run:
+        working-directory: ./infra/fitbit-service
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v2
+
+      - name: Terraform Init
+        id: init
+        run: terraform init -backend-config="resource_group_name=${{secrets.BACKEND_AZURE_RESOURCE_GROUP_NAME}}" -backend-config="storage_account_name=${{secrets.BACKEND_AZURE_STORAGE_ACCOUNT_NAME}}" -backend-config="container_name=${{secrets.BACKEND_FITBIT_TFSTATE_CONTAINER_NAME}}"
+
+      - name: Download Terraform Plan
+        uses: actions/download-artifact@v4
+        with:
+          name: tfplan
+          path: ./infra/fitbit-service
+
+      - name: Terraform Apply
+        run: terraform apply -auto-approve "./main.tfplan"        

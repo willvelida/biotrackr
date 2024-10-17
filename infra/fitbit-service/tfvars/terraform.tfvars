@@ -1,0 +1,16 @@
+resource_group_name = "rg-biotrackr-prod-ae"
+env_name = "env-biotrackr-prod-ae"
+uai_name = "uai-biotrackr-prod-ae"
+acr_name = "acrbiotrackrprodae"
+aca_app_name = "biotrackr-fitbitapi-svc"
+key_vault_name = "kv-biotrackr-prod-ae"
+tags = {
+  environment = "Production"
+  owner = "willvelida"
+  Application = "biotrackr"
+  Component = "FitBitApi"
+}
+image_name = ""
+sb_namespace_name = "sb-biotrackr-prod-ae"
+appconfig_name = "appconfig-biotrackr-prod-ae"
+app_insights_name = "ai-biotrackr-prod-ae"
