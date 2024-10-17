@@ -34,8 +34,7 @@ on:
         required: true
 
 jobs:
-    terraform-plan:
-    needs: build-container-image
+  terraform-plan:
     defaults:
       run:
         working-directory: ./infra/fitbit-service
