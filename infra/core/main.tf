@@ -52,11 +52,11 @@ module "aca_env" {
 
 resource "azurerm_container_app_environment_dapr_component" "pubsub" {
   container_app_environment_id = module.aca_env.id
-  name = var.sb_pubsub_component_name
-  version = "v1"
-  component_type = "pubsub.azure.servicebus.queues"
+  name                         = var.sb_pubsub_component_name
+  version                      = "v1"
+  component_type               = "pubsub.azure.servicebus.queues"
   metadata {
-    name = "azureClientId"
+    name  = "azureClientId"
     value = module.usi.user_assinged_identity_client_id
   }
 }
