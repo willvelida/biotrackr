@@ -112,6 +112,12 @@ module "sb" {
   identity_id = module.usi.user_assinged_identity_id
 }
 
+module "activity_queue" {
+  source       = "../modules/service-bus-queue"
+  namespace_id = module.sb.id
+  queue_name   = var.activity_queue_name
+}
+
 module "appconfig" {
   source                 = "../modules/app-configuration"
   app_configuration_name = var.app_configuration_name
@@ -140,4 +146,10 @@ module "sb_receiver_role" {
   role_name    = "Azure Service Bus Data Receiver"
   principal_id = module.usi.user_assinged_identity_principal_id
   scope_id     = module.sb.id
+}
+
+resource "azurerm_app_configuration_key" "activity_queue_key" {
+  configuration_store_id = module.appconfig.id
+  key                    = var.activity_key_name
+  value                  = module.activity_queue.queue_name
 }
