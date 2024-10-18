@@ -50,6 +50,21 @@ module "aca_env" {
   tags                                        = var.tags
 }
 
+resource "azurerm_container_app_environment_dapr_component" "pubsub" {
+  container_app_environment_id = module.aca_env.id
+  name                         = var.sb_pubsub_component_name
+  version                      = "v1"
+  component_type               = "pubsub.azure.servicebus.queues"
+  metadata {
+    name  = "azureClientId"
+    value = module.usi.user_assinged_identity_client_id
+  }
+  metadata {
+    name  = "namespaceName"
+    value = module.sb.endpoint
+  }
+}
+
 module "usi" {
   source   = "../modules/user-assigned-identity"
   name     = var.user_assigned_identity_name
@@ -101,6 +116,16 @@ module "kv" {
   rg_name     = module.resource_group.name
   tags        = var.tags
   kv_sku_name = var.kv_sku_name
+}
+
+module "cosmosdb" {
+  source              = "../modules/cosmos-db"
+  account_name        = var.cosmos_db_account_name
+  tags                = var.tags
+  location            = module.resource_group.location
+  resource_group_name = module.resource_group.name
+  database_name       = var.cosmos_db_database_name
+  container_name      = var.cosmos_db_container_name
 }
 
 module "sb" {

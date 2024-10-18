@@ -137,3 +137,23 @@ variable "activity_queue_key_name" {
   description = "The name of the Key in App Configuration for the Activity Queue"
   type        = string
 }
+
+variable "sb_pubsub_component_name" {
+  description = "The name of the PubSub component in Service Bus"
+  type        = string
+}
+
+variable "cosmos_db_account_name" {
+  description = "The name of the Cosmos DB account"
+  type        = string
+}
+
+variable "cosmos_db_database_name" {
+  description = "The name of the Cosmos DB database"
+  type        = string
+}
+
+variable "cosmos_db_container_name" {
+  description = "The name of the Cosmos DB container"
+  type        = string
+}

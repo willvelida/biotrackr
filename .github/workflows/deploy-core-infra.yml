@@ -1,10 +1,5 @@
 name: Deploy Biotrackr Core Infrastructure
 on:
-  push:
-    branches:
-      - main
-    paths:
-      - 'infra/core/**'
   pull_request:
     branches:
       - main
