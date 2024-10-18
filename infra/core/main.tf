@@ -59,6 +59,10 @@ resource "azurerm_container_app_environment_dapr_component" "pubsub" {
     name  = "azureClientId"
     value = module.usi.user_assinged_identity_client_id
   }
+  metadata {
+    name  = "namespaceName"
+    value = module.sb.endpoint
+  }
 }
 
 module "usi" {
@@ -112,6 +116,16 @@ module "kv" {
   rg_name     = module.resource_group.name
   tags        = var.tags
   kv_sku_name = var.kv_sku_name
+}
+
+module "cosmosdb" {
+  source              = "../modules/cosmos-db"
+  account_name        = var.cosmosdb_account_name
+  tags                = var.tags
+  location            = module.resource_group.location
+  resource_group_name = module.resource_group.name
+  database_name       = var.cosmosdb_database_name
+  container_name      = var.cosmosdb_container_name
 }
 
 module "sb" {

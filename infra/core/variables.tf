@@ -142,3 +142,18 @@ variable "sb_pubsub_component_name" {
   description = "The name of the PubSub component in Service Bus"
   type        = string
 }
+
+variable "cosmosdb_account_name" {
+  description = "The name of the Cosmos DB account"
+  type        = string
+}
+
+variable "cosmosdb_database_name" {
+  description = "The name of the Cosmos DB database"
+  type        = string
+}
+
+variable "cosmosdb_container_name" {
+  description = "The name of the Cosmos DB container"
+  type        = string
+}
