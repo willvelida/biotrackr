@@ -120,12 +120,12 @@ module "kv" {
 
 module "cosmosdb" {
   source              = "../modules/cosmos-db"
-  account_name        = var.cosmosdb_account_name
+  account_name        = var.cosmos_db_account_name
   tags                = var.tags
   location            = module.resource_group.location
   resource_group_name = module.resource_group.name
-  database_name       = var.cosmosdb_database_name
-  container_name      = var.cosmosdb_container_name
+  database_name       = var.cosmos_db_database_name
+  container_name      = var.cosmos_db_container_name
 }
 
 module "sb" {

@@ -143,17 +143,17 @@ variable "sb_pubsub_component_name" {
   type        = string
 }
 
-variable "cosmosdb_account_name" {
+variable "cosmos_db_account_name" {
   description = "The name of the Cosmos DB account"
   type        = string
 }
 
-variable "cosmosdb_database_name" {
+variable "cosmos_db_database_name" {
   description = "The name of the Cosmos DB database"
   type        = string
 }
 
-variable "cosmosdb_container_name" {
+variable "cosmos_db_container_name" {
   description = "The name of the Cosmos DB container"
   type        = string
 }
