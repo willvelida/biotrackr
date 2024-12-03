@@ -14,83 +14,49 @@ permissions:
 
 jobs:
     lint:
-        name: Run Linter
-        runs-on: ubuntu-latest
-        steps:
-            - uses: actions/checkout@v4
-              name: Checkout repository code
-
-            - name: Run Bicep Linter
-              run: az bicep build --file ./infra/core/main.bicep
+        name: Run Bicep Linter
+        uses: willvelida/biotrackr/.github/workflows/template-bicep-linter.yml@feature/init-infra
+        with:
+          template-file: './infra/core/main.bicep'
 
     validate:
         needs: lint
         name: Validate Template
-        runs-on: ubuntu-latest
-        steps:
-            - uses: actions/checkout@v4
-              name: Checkout repository code
-
-            - uses: azure/login@v2
-              name: Login to Azure
-              with:
-                client-id: ${{ secrets.AZURE_CLIENT_ID }}
-                tenant-id: ${{ secrets.AZURE_TENANT_ID }}
-                subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-
-            - uses: azure/arm-deploy@v2
-              name: Run preflight validation
-              with:
-                scope: 'resourcegroup'
-                resourceGroupName: ${{ secrets.AZURE_RG_NAME_DEV }}
-                deploymentName: ${{ github.run_number }}
-                template: './infra/core/main.bicep'
-                parameters: './infra/core/main.dev.bicepparam'
-                deploymentMode: Validate
+        uses: willvelida/biotrackr/.github/workflows/template-bicep-validate.yml@feature/init-infra
+        with:
+          template-file: './infra/core/main.bicep'
+          parameters-file: './infra/core/main.dev.bicepparam'
+          scope: resourcegroup
+        secrets:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+          resource-group-name: ${{ secrets.AZURE_RG_NAME_DEV }}
 
     preview:
         needs: validate
         name: Preview Changes
-        runs-on: ubuntu-latest
-        steps:
-            - uses: actions/checkout@v4
-              name: Checkout repository code
-
-            - uses: azure/login@v2
-              name: Login to Azure
-              with:
-                client-id: ${{ secrets.AZURE_CLIENT_ID }}
-                tenant-id: ${{ secrets.AZURE_TENANT_ID }}
-                subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-
-            - uses: Azure/cli@v2
-              name: Run what-if
-              with:
-                inlineScript: |
-                    az deployment group what-if --resource-group ${{ secrets.AZURE_RG_NAME_DEV }} --template-file ./infra/core/main.bicep --parameters ./infra/core/main.dev.bicepparam
+        uses: willvelida/biotrackr/.github/workflows/template-bicep-whatif.yml@feature/init-infra
+        with:
+          template-file: './infra/core/main.bicep'
+          parameters-file: './infra/core/main.dev.bicepparam'
+        secrets:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+          resource-group-name: ${{ secrets.AZURE_RG_NAME_DEV }}
 
     deploy-dev:
         needs: preview
         name: Deploy Template to Dev
-        runs-on: ubuntu-latest
-        environment: dev
-        steps:
-            - uses: actions/checkout@v4
-              name: Checkout repository code
-
-            - uses: azure/login@v2
-              name: Login to Azure
-              with:
-                client-id: ${{ secrets.AZURE_CLIENT_ID }}
-                tenant-id: ${{ secrets.AZURE_TENANT_ID }}
-                subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-        
-            - uses: azure/arm-deploy@v2
-              name: Deploy Template to Dev
-              with:
-                scope: 'resourcegroup'
-                resourceGroupName: ${{ secrets.AZURE_RG_NAME_DEV }}
-                deploymentName: ${{ github.run_number }}
-                template: './infra/core/main.bicep'
-                parameters: './infra/core/main.dev.bicepparam'
-                failOnStdErr: false
+        uses: willvelida/biotrackr/.github/workflows/template-bicep-deploy.yml@feature/init-infra
+        with:
+          template-file: './infra/core/main.bicep'
+          parameters-file: './infra/core/main.dev.bicepparam'
+          scope: resourcegroup
+          environment: dev
+        secrets:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+          resource-group-name: ${{ secrets.AZURE_RG_NAME_DEV }}

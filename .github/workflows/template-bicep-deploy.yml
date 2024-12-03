@@ -3,13 +3,16 @@ name: Deploy Bicep Template
 on:
     workflow_call:
         inputs:
-            bicep-template-file:
+            template-file:
                 required: true
                 type: string
             parameters-file:
                 required: true
                 type: string
             scope:
+                required: true
+                type: string
+            environment:
                 required: true
                 type: string
         secrets:
@@ -26,6 +29,7 @@ jobs:
     deploy:
         name: Deploy Bicep Template
         runs-on: ubuntu-latest
+        environment: ${{ inputs.environment }}
         steps:
         - uses: actions/checkout@v4
           name: Checkout Repository Code
@@ -42,6 +46,6 @@ jobs:
           with:
             scope: ${{ inputs.scope }}
             resourceGroupName: ${{ secrets.resource-group-name }}
-            template: ${{ inputs.bicep-template-file }}
+            template: ${{ inputs.template-file }}
             parameters: ${{ inputs.parameters-file }}
             deploymentName: ${{ github.run_number }} 
