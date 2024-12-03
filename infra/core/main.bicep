@@ -17,7 +17,7 @@ module logAnalytics '../modules/monitoring/log-analytics.bicep' = {
   name: 'log-analytics'
   params: {
     name: logAnalyticsName
-    location: logAnalyticsName
+    location: location
     tags: tags
   }
 }
