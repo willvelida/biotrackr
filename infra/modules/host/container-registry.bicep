@@ -12,7 +12,7 @@ param uaiName string
 
 var acrPullRoleDefintionId = subscriptionResourceId('Microsoft.Authorization/roleDefinitions', '7f951dda-4ed3-4680-a7ca-43fe172d538d')
 
-resource uai 'Microsoft.ManagedIdentity/identities@2023-01-31' existing = {
+resource uai 'Microsoft.ManagedIdentity/userAssignedIdentities@2023-01-31' existing = {
   name: uaiName
 }
 
