@@ -19,6 +19,12 @@ param containerRegistryName string
 @description('The name of the User Assigned Identity')
 param uaiName string
 
+@description('The name of the Key Vault')
+param keyVaultName string
+
+@description('The name of the App Configuration')
+param appConfigName string
+
 module logAnalytics '../modules/monitoring/log-analytics.bicep' = {
   name: 'log-analytics'
   params: {
@@ -61,6 +67,26 @@ module acr '../modules/host/container-registry.bicep' = {
   name: 'acr'
   params: {
     name: containerRegistryName
+    location: location
+    tags: tags
+    uaiName: uai.outputs.uaiName
+  }
+}
+
+module keyVault '../modules/security/key-vault.bicep' = {
+  name: 'key-vault'
+  params: {
+    name: keyVaultName
+    location: location
+    tags: tags
+    uaiName: uai.outputs.uaiName
+  }
+}
+
+module appConfig '../modules/configuration/azure-app-config.bicep' = {
+  name: 'app-config'
+  params: {
+    name: appConfigName
     location: location
     tags: tags
     uaiName: uai.outputs.uaiName
