@@ -1,0 +1,47 @@
+name: Deploy Bicep Template
+
+on:
+    workflow_call:
+        inputs:
+            bicep-template-file:
+                required: true
+                type: string
+            parameters-file:
+                required: true
+                type: string
+            scope:
+                required: true
+                type: string
+        secrets:
+            client-id:
+                required: true
+            tenant-id:
+                required: true
+            subscription-id:
+                required: true
+            resource-group-name:
+                required: false
+
+jobs:
+    deploy:
+        name: Deploy Bicep Template
+        runs-on: ubuntu-latest
+        steps:
+        - uses: actions/checkout@v4
+          name: Checkout Repository Code
+
+        - uses: azure/login@v1
+          name: Login to Azure
+          with:
+            client-id: ${{ secrets.client-id }}
+            tenant-id: ${{ secrets.tenant-id }}
+            subscription-id: ${{ secrets.subscription-id }}
+
+        - uses: azure/arm-deploy@v2
+          name: Deploy Bicep Template
+          with:
+            scope: ${{ inputs.scope }}
+            resourceGroupName: ${{ secrets.resource-group-name }}
+            template: ${{ inputs.bicep-template-file }}
+            parameters: ${{ inputs.parameters-file }}
+            deploymentName: ${{ github.run_number }} 

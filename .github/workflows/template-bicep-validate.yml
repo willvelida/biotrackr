@@ -1,0 +1,48 @@
+name: Validate Bicep Template
+
+on:
+    workflow_call:
+        inputs:
+            template-file:
+                required: true
+                type: string
+            parameters-file:
+                required: true
+                type: string
+            scope:
+                required: true
+                type: string
+        secrets:
+            client-id:
+                required: true
+            tenant-id:
+                required: true
+            subscription-id:
+                required: true
+            resource-group-name:
+                required: false
+
+jobs:
+    validate:
+        name: Validate Bicep Template
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v4
+              name: Checkout Repository Code
+
+            - uses: azure/login@v2
+              name: Login to Azure
+              with:
+                client-id: ${{ secrets.client-id }}
+                tenant-id: ${{ secrets.tenant-id }}
+                subscription-id: ${{ secrets.subscription-id }}
+
+            - uses: azure/arm-deploy@v2
+              name: Run preflight validation
+              with:
+                scope: ${{ inputs.scope }}
+                resourceGroupName: ${{ secrets.resource-group-name }}
+                deploymentName: ${{ github.run_number }}
+                template: ${{ inputs.template-file }}
+                parameters: ${{ inputs.parameters-file }}
+                deploymentMode: Validate
