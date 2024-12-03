@@ -73,6 +73,7 @@ jobs:
         needs: preview
         name: Deploy Template
         runs-on: ubuntu-latest
+        environment: production
         steps:
             - uses: actions/checkout@v4
               name: Checkout repository code
