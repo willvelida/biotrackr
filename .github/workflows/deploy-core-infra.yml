@@ -41,7 +41,8 @@ jobs:
             - uses: azure/arm-deploy@v2
               name: Run preflight validation
               with:
-                scope: 'subscription'
+                scope: 'resourcegroup'
+                resourceGroupName: ${{ secrets.AZURE_RG_NAME_DEV }}
                 deploymentName: ${{ github.run_number }}
                 template: './infra/core/main.bicep'
                 parameters: './infra/core/main.dev.bicepparam'
@@ -66,7 +67,7 @@ jobs:
               name: Run what-if
               with:
                 inlineScript: |
-                    az deployment sub what-if --location australiaeast --template-file ./infra/core/main.bicep --parameters ./infra/core/main.dev.bicepparam
+                    az deployment group what-if --resource-group ${{ secrets.AZURE_RG_NAME_DEV }} --template-file ./infra/core/main.bicep --parameters ./infra/core/main.dev.bicepparam
 
     deploy:
         needs: preview
@@ -86,7 +87,8 @@ jobs:
             - uses: azure/arm-deploy@v2
               name: Run preflight validation
               with:
-                scope: 'subscription'
+                scope: 'resourcegroup'
+                resourceGroupName: ${{ secrets.AZURE_RG_NAME_DEV }}
                 deploymentName: ${{ github.run_number }}
                 template: './infra/core/main.bicep'
                 parameters: './infra/core/main.dev.bicepparam'

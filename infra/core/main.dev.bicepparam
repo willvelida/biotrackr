@@ -1,7 +1,5 @@
 using 'main.bicep'
 
-param rgName = 'rg-biotrackr-dev'
-param location = 'australiaeast'
 param tags = {
   ApplicationName: 'Biotrackr'
   Component: 'Core-Infra'
