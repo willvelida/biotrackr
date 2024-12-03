@@ -13,6 +13,12 @@ param logAnalyticsName string
 @description('The name of the Container App Environment')
 param containerAppEnvName string
 
+@description('The name of the Container Registry')
+param containerRegistryName string
+
+@description('The name of the User Assigned Identity')
+param uaiName string
+
 module logAnalytics '../modules/monitoring/log-analytics.bicep' = {
   name: 'log-analytics'
   params: {
@@ -39,5 +45,24 @@ module containerAppEnv '../modules/host/container-app-environment.bicep' = {
     location: location
     tags: tags
     logAnalyticsName: logAnalytics.outputs.logAnalyticsName
+  }
+}
+
+module uai '../modules/identity/user-assigned-identity.bicep' = {
+  name: 'uai'
+  params: {
+    name: uaiName
+    location: location
+    tags: tags
+  }
+}
+
+module acr '../modules/host/container-registry.bicep' = {
+  name: 'acr'
+  params: {
+    name: containerRegistryName
+    location: location
+    tags: tags
+    uaiName: uai.outputs.uaiName
   }
 }

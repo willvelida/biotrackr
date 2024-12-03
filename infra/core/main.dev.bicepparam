@@ -8,3 +8,5 @@ param tags = {
 param appInsightsName = 'appins-biotrackr-dev'
 param logAnalyticsName = 'law-biotrackr-dev'
 param containerAppEnvName = 'env-biotrackr-dev'
+param containerRegistryName = 'acrbiotrackrdev'
+param uaiName = 'uai-biotrackr-dev'

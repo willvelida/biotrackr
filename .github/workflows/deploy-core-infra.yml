@@ -69,9 +69,9 @@ jobs:
                 inlineScript: |
                     az deployment group what-if --resource-group ${{ secrets.AZURE_RG_NAME_DEV }} --template-file ./infra/core/main.bicep --parameters ./infra/core/main.dev.bicepparam
 
-    deploy:
+    deploy-dev:
         needs: preview
-        name: Deploy Template
+        name: Deploy Template to Dev
         runs-on: ubuntu-latest
         environment: dev
         steps:
@@ -86,7 +86,7 @@ jobs:
                 subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
         
             - uses: azure/arm-deploy@v2
-              name: Run preflight validation
+              name: Deploy Template to Dev
               with:
                 scope: 'resourcegroup'
                 resourceGroupName: ${{ secrets.AZURE_RG_NAME_DEV }}
