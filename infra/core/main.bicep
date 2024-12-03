@@ -49,7 +49,7 @@ module containerAppEnv '../modules/host/container-app-environment.bicep' = {
 }
 
 module uai '../modules/identity/user-assigned-identity.bicep' = {
-  name: 'uai'
+  name: 'user-assigned-identity'
   params: {
     name: uaiName
     location: location
