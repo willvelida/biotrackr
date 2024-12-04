@@ -100,42 +100,22 @@ resource diagnosticLogs 'Microsoft.Insights/diagnosticSettings@2021-05-01-previe
       {
         category: 'DataPlaneRequests'
         enabled: true
-        retentionPolicy: {
-          days: 7
-          enabled: true 
-        }
       }
       {
         category: 'QueryRuntimeStatistics'
         enabled: true
-        retentionPolicy: {
-          days: 7
-          enabled: true 
-        }
       }
       {
         category: 'PartitionKeyStatistics'
         enabled: true
-        retentionPolicy: {
-          days: 7
-          enabled: true 
-        }
       }
       {
         category: 'PartitionKeyRUConsumption'
         enabled: true
-        retentionPolicy: {
-          days: 7
-          enabled: true 
-        }
       }
       {
         category: 'ControlPlaneRequests'
         enabled: true
-        retentionPolicy: {
-          days: 7
-          enabled: true 
-        }
       }
     ]
   }
