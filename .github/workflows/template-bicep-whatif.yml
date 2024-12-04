@@ -38,4 +38,4 @@ jobs:
           name: Run What-If Preview
           with:
             inlineScript: |
-                az deployment group what-if --resource-group ${{ secrets.resource-group }} --template-file ${{ inputs.template-file }} --parameters ${{ inputs.parameters-file }}
+                az deployment group what-if --resource-group ${{ secrets.resource-group-name }} --template-file ${{ inputs.template-file }} --parameters ${{ inputs.parameters-file }}
