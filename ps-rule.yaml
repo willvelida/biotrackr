@@ -1,0 +1,21 @@
+#
+# PSRule configuration
+#
+
+# Please see the documentation for all configuration options:
+# https://aka.ms/ps-rule-azure/options
+
+# Require a minimum version of PSRule for Azure.
+requires:
+  PSRule.Rules.Azure: '>=1.34.0' # (1)
+
+# Automatically use rules for Azure.
+include:
+  module:
+  - PSRule.Rules.Azure # (2)
+
+# Ignore all files except .bicepparam files.
+input:
+  pathIgnore:
+  - '**' # (3)
+  - '!**/*.bicepparam' # (4)
