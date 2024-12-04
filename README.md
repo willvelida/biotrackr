@@ -2,6 +2,12 @@
 
 Welcome to my personal health platform! I use a Fitbit to log my workouts, so this application uses the API that Fitbit provides to run some analysis on that data, and provide me insights.
 
+## Documentation
+
+Check out the following markdown files that explains decisions made in this project:
+
+- [GitHub Actions Workflow Templates](./docs/github-workflow-templates.md)
+
 ## Tech Stack Used
 
 - Bicep
