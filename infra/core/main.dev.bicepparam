@@ -18,3 +18,5 @@ param budgetLimit = 200
 param firstBudgetThreshold = 100
 param secondBudgetThreshold = 175
 param budgetStartDate = '2024-12-01'
+param cosmosAccountName = 'cosmos-biotrackr-dev'
+param cosmosDatabaseName = 'BiotrackrDB'
