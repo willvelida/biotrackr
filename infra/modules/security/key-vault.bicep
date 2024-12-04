@@ -41,3 +41,6 @@ resource keyVaultSecretsOfficerRole 'Microsoft.Authorization/roleAssignments@202
     principalType: 'ServicePrincipal'
   }
 }
+
+@description('The name of the deployed Key Vault')
+output keyVaultName string = keyVault.name

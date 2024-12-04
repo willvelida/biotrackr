@@ -40,3 +40,6 @@ resource appConfigDataReaderRole 'Microsoft.Authorization/roleAssignments@2022-0
     principalType: 'ServicePrincipal'
   }
 }
+
+@description('The name of the deployed App Configuration')
+output appConfigName string = appConfig.name
