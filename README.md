@@ -7,6 +7,7 @@ Welcome to my personal health platform! I use a Fitbit to log my workouts, so th
 Check out the following markdown files that explains decisions made in this project:
 
 - [GitHub Actions Workflow Templates](./docs/github-workflow-templates.md)
+- [Bicep Modules Structure](./docs/bicep-modules-structure.md)
 
 ## Tech Stack Used
 
