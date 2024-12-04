@@ -25,6 +25,24 @@ param keyVaultName string
 @description('The name of the App Configuration')
 param appConfigName string
 
+@description('The name of the budget')
+param budgetName string
+
+@description('The start date of the budget')
+param budgetStartDate string
+
+@description('The email address to use for resources')
+param emailAddress string
+
+@description('The limit of the budget')
+param budgetLimit int
+
+@description('The first budget threshold')
+param firstBudgetThreshold int
+
+@description('The second budget threshold')
+param secondBudgetThreshold int
+
 module logAnalytics '../modules/monitoring/log-analytics.bicep' = {
   name: 'log-analytics'
   params: {
@@ -90,5 +108,17 @@ module appConfig '../modules/configuration/azure-app-config.bicep' = {
     location: location
     tags: tags
     uaiName: uai.outputs.uaiName
+  }
+}
+
+module budget '../modules/monitoring/budget.bicep' = {
+  name: 'budget'
+  params: {
+    name: budgetName
+    amount: budgetLimit
+    firstThreshold: firstBudgetThreshold
+    ownerEmail: emailAddress
+    secondThreshold: secondBudgetThreshold
+    startDate: budgetStartDate
   }
 }
