@@ -138,5 +138,6 @@ module cosmos '../modules/database/serverless-cosmos-db.bicep' = {
     appConfigName: appConfig.outputs.appConfigName
     databaseName: cosmosDatabaseName
     uaiName: uai.outputs.uaiName
+    logAnalyticsName: logAnalytics.outputs.logAnalyticsName
   }
 }
