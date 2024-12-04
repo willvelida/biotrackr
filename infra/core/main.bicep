@@ -43,6 +43,12 @@ param firstBudgetThreshold int
 @description('The second budget threshold')
 param secondBudgetThreshold int
 
+@description('The name of the Cosmos DB account')
+param cosmosAccountName string
+
+@description('The name of the Cosmos DB database')
+param cosmosDatabaseName string
+
 module logAnalytics '../modules/monitoring/log-analytics.bicep' = {
   name: 'log-analytics'
   params: {
@@ -120,5 +126,18 @@ module budget '../modules/monitoring/budget.bicep' = {
     ownerEmail: emailAddress
     secondThreshold: secondBudgetThreshold
     startDate: budgetStartDate
+  }
+}
+
+module cosmos '../modules/database/serverless-cosmos-db.bicep' = {
+  name: 'cosmos'
+  params: {
+    location: location
+    tags: tags
+    accountName: cosmosAccountName 
+    appConfigName: appConfig.outputs.appConfigName
+    databaseName: cosmosDatabaseName
+    uaiName: uai.outputs.uaiName
+    logAnalyticsName: logAnalytics.outputs.logAnalyticsName
   }
 }
