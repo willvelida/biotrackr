@@ -19,3 +19,18 @@ input:
   pathIgnore:
   - '**' # (3)
   - '!**/*.bicepparam' # (4)
+  - '!**/*.bicep'
+
+configuration:
+  # Enable automatic expansion of Azure parameter files.
+  AZURE_PARAMETER_FILE_EXPANSION: true
+
+  # Enable automatic expansion of Azure Bicep source files.
+  AZURE_BICEP_FILE_EXPANSION: true
+  AZURE_BICEP_PARAMS_FILE_EXPANSION: true
+
+  # Configures the number of seconds to wait for build Bicep files.
+  AZURE_BICEP_FILE_EXPANSION_TIMEOUT: 10
+
+  # Enable Bicep CLI checks.
+  AZURE_BICEP_CHECK_TOOL: true
