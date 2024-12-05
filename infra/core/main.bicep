@@ -94,6 +94,7 @@ module acr '../modules/host/container-registry.bicep' = {
     location: location
     tags: tags
     uaiName: uai.outputs.uaiName
+    logAnalyticsName: logAnalytics.outputs.logAnalyticsName
   }
 }
 
@@ -104,6 +105,7 @@ module keyVault '../modules/security/key-vault.bicep' = {
     location: location
     tags: tags
     uaiName: uai.outputs.uaiName
+    logAnalyticsName: logAnalytics.outputs.logAnalyticsName
   }
 }
 
@@ -114,6 +116,7 @@ module appConfig '../modules/configuration/azure-app-config.bicep' = {
     location: location
     tags: tags
     uaiName: uai.outputs.uaiName
+    logAnalyticsName: logAnalytics.outputs.logAnalyticsName
   }
 }
 
