@@ -67,11 +67,13 @@ jobs:
       name: Post Deployment Actions
       runs-on: ubuntu-latest
       steps:
+        - name: Checkout Repository Code
+          uses: actions/checkout@v4
+
         - name: Generate Docs for modules
           uses: microsoft/ps-docs@main
           with:
             conventions: Azure.NameByParentPath
             modules: PSDocs, PSDocs.Azure
-            inputPath: ./infra/modules
-            outputPath: ./docs
-            prerelease: true
+            inputPath: './infra/modules/**'
+            outputPath: './docs/**'
