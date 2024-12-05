@@ -15,7 +15,6 @@ permissions:
 env:
   DOTNET_VERSION: 8.0.x
   COVERAGE_PATH: ${{ github.workspace }}/coverage
-  APP_NAME: biotrackr-auth-svc
 
 jobs:
   env-setup:
@@ -46,7 +45,7 @@ jobs:
       uses: willvelida/biotrackr/.github/workflows/template-acr-push-image.yml@feature/auth-service
       with:
         working-directory: ./src/Biotrackr.Auth.Svc
-        app-name: ${{ env.APP_NAME }}
+        app-name: biotrackr-auth-svc
       secrets:
         client-id: ${{ secrets.AZURE_CLIENT_ID }}
         tenant-id: ${{ secrets.AZURE_TENANT_ID }}
@@ -86,7 +85,7 @@ jobs:
         uses: willvelida/biotrackr/.github/workflows/template-bicep-validate.yml@main
         with:
           template-file: './infra/apps/auth-service/main.bicep'
-          parameters-file: ./infra/apps/auth-service/main.dev.bicepparam imageName=${{ needs.retrieve-container-image-dev.outputs.loginServer }}/${{ env.APP_NAME }}:${{ github.sha }}
+          parameters-file: ./infra/apps/auth-service/main.dev.bicepparam imageName=${{ needs.retrieve-container-image-dev.outputs.loginServer }}/biotrackr-auth-svc:${{ github.sha }}
           scope: resourcegroup
         secrets:
           client-id: ${{ secrets.AZURE_CLIENT_ID }}
@@ -100,7 +99,7 @@ jobs:
         uses: willvelida/biotrackr/.github/workflows/template-bicep-whatif.yml@main
         with:
           template-file: './infra/apps/auth-service/main.bicep'
-          parameters-file: ./infra/apps/auth-service/main.dev.bicepparam imageName=${{ needs.retrieve-container-image-dev.outputs.loginServer }}/${{ env.APP_NAME }}:${{ github.sha }}
+          parameters-file: ./infra/apps/auth-service/main.dev.bicepparam imageName=${{ needs.retrieve-container-image-dev.outputs.loginServer }}/biotrackr-auth-svc:${{ github.sha }}
         secrets:
           client-id: ${{ secrets.AZURE_CLIENT_ID }}
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
@@ -113,7 +112,7 @@ jobs:
         uses: willvelida/biotrackr/.github/workflows/template-bicep-deploy.yml@main
         with:
           template-file: './infra/apps/auth-service/main.bicep'
-          parameters-file: ./infra/apps/auth-service/main.dev.bicepparam imageName=${{ needs.retrieve-container-image-dev.outputs.loginServer }}/${{ env.APP_NAME }}:${{ github.sha }}
+          parameters-file: ./infra/apps/auth-service/main.dev.bicepparam imageName=${{ needs.retrieve-container-image-dev.outputs.loginServer }}/biotrackr-auth-svc:${{ github.sha }}
           scope: resourcegroup
           environment: dev
         secrets:
