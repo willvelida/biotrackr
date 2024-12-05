@@ -2,7 +2,7 @@ metadata name = 'Log Analytics Workspace'
 metadata description = 'This module deploys a Log Analytics workspace.'
 
 @description('The name of the Log Analytics workspace')
-@minLength(3)
+@minLength(4)
 @maxLength(63)
 param name string
 
