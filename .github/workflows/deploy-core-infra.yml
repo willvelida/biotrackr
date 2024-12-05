@@ -74,3 +74,5 @@ jobs:
           uses: microsoft/ps-docs@main
           with:
             modules: PSDocs,PSDocs.Azure
+            inputPath: infra/modules/
+            outputPath: docs/
