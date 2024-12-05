@@ -57,7 +57,21 @@ jobs:
         - name: Login to Azure Container Registry
           run: az acr login --name ${{ steps.getacrname.outputs.acrName }}
   
-        - name: Build and push Docker image
+        - name: Build Docker image
           run: |
-            docker buildx build --push --tag ${{ steps.getacrserver.outputs.loginServer }}/${{ inputs.app-name }}:${{ github.sha }} .
+            docker build --t ${{ steps.getacrserver.outputs.loginServer }}/${{ inputs.app-name }}:${{ github.sha }} .
+
+        - name: Run Trivy vulnerability scanner
+          uses: aquasecurity/trivy-action@0.28.0
+          with:
+            image-ref: ${{ steps.getacrserver.outputs.loginServer }}/${{ inputs.app-name }}:${{ github.sha }}
+            format: 'table'
+            exit-code: '1'
+            ignore-unfixed: true
+            vuln-type: 'os,library'
+            severity: 'CRITICAL,HIGH'
+          
+        - name: Push Docker image
+          run: |
+            docker push ${{ steps.getacrserver.outputs.loginServer }}/${{ inputs.app-name }}:${{ github.sha }}
             
