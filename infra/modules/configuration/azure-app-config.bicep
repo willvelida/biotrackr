@@ -2,7 +2,7 @@ metadata name = 'Azure App Configuration Store module'
 metadata description = 'This module deploys an Azure App Configuration Store that grants a supplied user-assigned identity with the "App Config Data Reader" role'
 
 @description('The name given to the App Configuration')
-@minLength(3)
+@minLength(5)
 @maxLength(50)
 param name string
 
@@ -17,7 +17,7 @@ param tags object
 
 @description('The name of the User-Assigned Identity that will be granted RBAC roles over the App Configuration')
 @minLength(3)
-@maxLength(50)
+@maxLength(128)
 param uaiName string
 
 var appConfigDataReaderRoleId = subscriptionResourceId('Microsoft.Authorization/roleDefinitions','516239f1-63e1-4d78-a4de-a74fb236a071')

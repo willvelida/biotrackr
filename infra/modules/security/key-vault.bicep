@@ -17,7 +17,7 @@ param tags object
 
 @description('The name of the user-assigned identity that will be granted RBAC roles over the Key Vault')
 @minLength(3)
-@maxLength(50)
+@maxLength(128)
 param uaiName string
 
 var keyVaultSecretsOfficerRoleDefinitionId = subscriptionResourceId('Microsoft.Authorization/roleDefinitions','b86a8fe4-44ce-4948-aee5-eccb2c155cd7')

@@ -13,8 +13,8 @@ param name string
 param location string
 
 @description('The name of the Log Analytics workspace that this Application Insights will integrate with')
-@minLength(3)
-@maxLength(50)
+@minLength(4)
+@maxLength(63)
 param logAnalyticsName string
 
 @description('The tags that will be applied to the Application Insights instance')

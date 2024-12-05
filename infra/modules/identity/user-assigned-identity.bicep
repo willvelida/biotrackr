@@ -3,7 +3,7 @@ metadata description = 'This module deploys a User Assigned Identity.'
 
 @description('The name of the user-assigned identity')
 @minLength(3)
-@maxLength(50)
+@maxLength(128)
 param name string
 
 @description('The region that the user-assigned identity will be deployed to')

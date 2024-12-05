@@ -16,8 +16,8 @@ param location string
 param tags object
 
 @description('The name of the Log Analytics workspace that this Container App Environment will send logs to')
-@minLength(3)
-@maxLength(50)
+@minLength(4)
+@maxLength(63)
 param logAnalyticsName string
 
 resource logAnalytics 'Microsoft.OperationalInsights/workspaces@2023-09-01' existing = {

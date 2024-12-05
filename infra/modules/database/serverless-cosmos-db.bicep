@@ -22,17 +22,17 @@ param tags object
 
 @description('The user-assigned identity that this will be granted RBAC roles over the Cosmos DB account')
 @minLength(3)
-@maxLength(50)
+@maxLength(128)
 param uaiName string
 
 @description('The name of the App Configuration store that will store values related to this Cosmos DB account')
-@minLength(3)
+@minLength(5)
 @maxLength(50)
 param appConfigName string
 
 @description('The name of the Log Analytics workspace that Cosmos DB will send diagnostic settings to')
-@minLength(3)
-@maxLength(50)
+@minLength(4)
+@maxLength(63)
 param logAnalyticsName string
 
 var cosmosDbEndpointSettingName = 'Biotrackr:CosmosDbEndpoint'

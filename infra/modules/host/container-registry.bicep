@@ -17,7 +17,7 @@ param tags object
 
 @description('The name of the user-assigned identity that this Container Registry will use')
 @minLength(3)
-@maxLength(50)
+@maxLength(128)
 param uaiName string
 
 var acrPullRoleDefintionId = subscriptionResourceId('Microsoft.Authorization/roleDefinitions', '7f951dda-4ed3-4680-a7ca-43fe172d538d')
