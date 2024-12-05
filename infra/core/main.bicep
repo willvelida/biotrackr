@@ -49,7 +49,6 @@ param cosmosAccountName string
 @description('The name of the Cosmos DB database')
 param cosmosDatabaseName string
 
-// Main Modules
 module logAnalytics '../modules/monitoring/log-analytics.bicep' = {
   name: 'log-analytics'
   params: {
@@ -95,6 +94,7 @@ module acr '../modules/host/container-registry.bicep' = {
     location: location
     tags: tags
     uaiName: uai.outputs.uaiName
+    logAnalyticsName: logAnalytics.outputs.logAnalyticsName
   }
 }
 
@@ -105,6 +105,7 @@ module keyVault '../modules/security/key-vault.bicep' = {
     location: location
     tags: tags
     uaiName: uai.outputs.uaiName
+    logAnalyticsName: logAnalytics.outputs.logAnalyticsName
   }
 }
 

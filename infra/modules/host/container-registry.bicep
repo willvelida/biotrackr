@@ -20,10 +20,19 @@ param tags object
 @maxLength(128)
 param uaiName string
 
+@description('The name of the Log Analytics workspace that Cosmos DB will send diagnostic settings to')
+@minLength(4)
+@maxLength(63)
+param logAnalyticsName string
+
 var acrPullRoleDefintionId = subscriptionResourceId('Microsoft.Authorization/roleDefinitions', '7f951dda-4ed3-4680-a7ca-43fe172d538d')
 
 resource uai 'Microsoft.ManagedIdentity/userAssignedIdentities@2023-01-31' existing = {
   name: uaiName
+}
+
+resource logAnalytics 'Microsoft.OperationalInsights/workspaces@2023-09-01' existing = {
+  name: logAnalyticsName
 }
 
 resource acr 'Microsoft.ContainerRegistry/registries@2023-07-01' = {
@@ -35,6 +44,30 @@ resource acr 'Microsoft.ContainerRegistry/registries@2023-07-01' = {
   }
   properties: {
     adminUserEnabled: true
+  }
+}
+
+resource diagnosticLogs 'Microsoft.Insights/diagnosticSettings@2021-05-01-preview' = {
+  name: acr.name
+  scope: acr
+  properties: {
+    workspaceId: logAnalytics.id
+    logs: [
+      {
+        category: 'ContainerRegistryRepositoryEvents'
+        enabled: true
+      }
+      {
+        category: 'ContainerRegistryLoginEvents'
+        enabled: true
+      }
+    ]
+    metrics: [
+      {
+        category: 'AllMetrics'
+        enabled: true
+      }
+    ]
   }
 }
 
