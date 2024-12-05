@@ -1,7 +1,7 @@
 using 'main.bicep'
 
-param name = 'biotrackr-auth-svc'
-param imageName = 'mcr.microsoft.com/k8se/quickstart-jobs:latest'
+param name = 'biotrackr-auth-svc-dev'
+param imageName = ''
 param location = 'australiaeast'
 param tags = {
   ApplicationName: 'Biotrackr'
