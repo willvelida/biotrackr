@@ -2,7 +2,7 @@ metadata name = 'Serverless Cosmos DB Account and Database'
 metadata description = 'This module deploys a Serverless Cosmos DB account and database. It also send diagnostic logs to a supplied Log Analytics workspace, and stores the document endpoint and database name in a supplied Azure App Configuration store'
 
 @description('The name of the Cosmos DB account')
-@minLength(3)
+@minLength(5)
 @maxLength(50)
 param accountName string
 

@@ -2,7 +2,7 @@ metadata name = 'Application Insights instance'
 metadata description = 'This module deploys an Application Insights instance. It also integrates with a provided Log Analytics workspace'
 
 @description('The name of the Application Insights instance')
-@minLength(3)
+@minLength(4)
 @maxLength(50)
 param name string
 
