@@ -61,6 +61,11 @@ jobs:
           run: |
             docker build -t ${{ steps.getacrserver.outputs.loginServer }}/${{ inputs.app-name }}:${{ github.sha }} .
 
+        - name: Run Dockle
+          uses: erzz/dockle-action@v1
+          with:
+            image: ${{ steps.getacrserver.outputs.loginServer }}/${{ inputs.app-name }}:${{ github.sha }}
+
         - name: Run Trivy vulnerability scanner
           uses: aquasecurity/trivy-action@0.28.0
           with:
