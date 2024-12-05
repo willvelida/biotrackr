@@ -72,6 +72,3 @@ jobs:
 
         - name: Generate Docs for modules
           uses: microsoft/ps-docs@main
-          with:
-            inputPath: 'infra/modules/*'
-            outputPath: 'docs/*'
