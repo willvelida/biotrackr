@@ -20,10 +20,19 @@ param tags object
 @maxLength(128)
 param uaiName string
 
+@description('The name of the Log Analytics workspace that Cosmos DB will send diagnostic settings to')
+@minLength(4)
+@maxLength(63)
+param logAnalyticsName string
+
 var appConfigDataReaderRoleId = subscriptionResourceId('Microsoft.Authorization/roleDefinitions','516239f1-63e1-4d78-a4de-a74fb236a071')
 
 resource uai 'Microsoft.ManagedIdentity/userAssignedIdentities@2023-01-31' existing = {
   name: uaiName
+}
+
+resource logAnalytics 'Microsoft.OperationalInsights/workspaces@2023-09-01' existing = {
+  name: logAnalyticsName
 }
 
 resource appConfig 'Microsoft.AppConfiguration/configurationStores@2024-05-01' = {
@@ -41,6 +50,29 @@ resource appConfig 'Microsoft.AppConfiguration/configurationStores@2024-05-01' =
   }
 }
 
+resource diagnosticLogs 'Microsoft.Insights/diagnosticSettings@2021-05-01-preview' = {
+  name: appConfig.name
+  scope: appConfig
+  properties: {
+    workspaceId: logAnalytics.id
+    logs: [
+      {
+        category: 'HttpRequest'
+        enabled: true
+      }
+      { 
+        category: 'Audit'
+        enabled: true
+      }
+    ]
+    metrics: [
+      {
+        enabled: true
+        category: 'AllMetrics'
+      }
+    ]
+  }
+}
 
 resource appConfigDataReaderRole 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
   name: guid(subscription().id, resourceGroup().id, appConfig.id)

@@ -116,6 +116,7 @@ module appConfig '../modules/configuration/azure-app-config.bicep' = {
     location: location
     tags: tags
     uaiName: uai.outputs.uaiName
+    logAnalyticsName: logAnalytics.outputs.logAnalyticsName
   }
 }
 
