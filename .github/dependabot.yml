@@ -12,3 +12,17 @@ updates:
       interval: "weekly"
     assignees:
       - "willvelida"
+  # NuGet packages
+  - package-ecosystem: "nuget"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    assignees:
+      - "willvelida"
+  # Maintain dependencies for Docker
+  - package-ecosystem: "docker"
+    directory: "/" # Location of package manifests
+    schedule:
+      interval: "weekly"
+    assignees:
+      - "willvelida"

@@ -26,7 +26,10 @@ IHost host = Host.CreateDefaultBuilder(args)
 
         services.AddHostedService<AuthWorker>();
 
-        services.AddApplicationInsightsTelemetryWorkerService();
+        services.AddApplicationInsightsTelemetryWorkerService(options =>
+        {
+            options.ConnectionString = context.Configuration["applicationinsightsconnectionstring"];
+        });
     })
     .Build();
 
