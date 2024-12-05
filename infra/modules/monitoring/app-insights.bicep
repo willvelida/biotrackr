@@ -1,10 +1,20 @@
+metadata name = 'Application Insights instance'
+metadata description = 'This module deploys an Application Insights instance. It also integrates with a provided Log Analytics workspace'
+
 @description('The name of the Application Insights instance')
+@minLength(3)
+@maxLength(50)
 param name string
 
 @description('The location that our Application Insights will be deployed to')
+@allowed([
+  'australiaeast'
+])
 param location string
 
 @description('The name of the Log Analytics workspace that this Application Insights will integrate with')
+@minLength(3)
+@maxLength(50)
 param logAnalyticsName string
 
 @description('The tags that will be applied to the Application Insights instance')

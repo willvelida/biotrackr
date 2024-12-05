@@ -60,3 +60,17 @@ jobs:
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
           resource-group-name: ${{ secrets.AZURE_RG_NAME_DEV }}
+
+    post-deploy:
+      needs: deploy-dev
+      name: Post Deployment Actions
+      runs-on: ubuntu-latest
+      steps:
+        - name: Generate Docs for modules
+          uses: microsoft/ps-docs@main
+          with:
+            conventions: Azure.NameByParentPath
+            modules: PSDocs, PSDocs.Azure
+            inputPath: ./infra/modules
+            outputPath: ./docs
+            prerelease: true

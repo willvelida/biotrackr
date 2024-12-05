@@ -1,7 +1,15 @@
+metadata name = 'User Assigned Identity'
+metadata description = 'This module deploys a User Assigned Identity.'
+
 @description('The name of the user-assigned identity')
+@minLength(3)
+@maxLength(50)
 param name string
 
 @description('The region that the user-assigned identity will be deployed to')
+@allowed([
+  'australiaeast'
+])
 param location string
 
 @description('The tags that will be applied to the user-assigned identity')

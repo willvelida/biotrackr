@@ -1,13 +1,23 @@
+metadata name = 'Azure Key Vault'
+metadata description = 'This module deploys a Key Vault, and assigns the "Key Vault Secrets Officer" role to a provided user-assigned identity.'
+
 @description('The name of the Key Vault')
+@minLength(3)
+@maxLength(24)
 param name string
 
 @description('The region that the Key Vault will be deployed to')
+@allowed([
+  'australiaeast'
+])
 param location string
 
 @description('The tags that will be applied to the Key Vault resource')
 param tags object
 
 @description('The name of the user-assigned identity that will be granted RBAC roles over the Key Vault')
+@minLength(3)
+@maxLength(50)
 param uaiName string
 
 var keyVaultSecretsOfficerRoleDefinitionId = subscriptionResourceId('Microsoft.Authorization/roleDefinitions','b86a8fe4-44ce-4948-aee5-eccb2c155cd7')
