@@ -49,6 +49,7 @@ param cosmosAccountName string
 @description('The name of the Cosmos DB database')
 param cosmosDatabaseName string
 
+// Main Modules
 module logAnalytics '../modules/monitoring/log-analytics.bicep' = {
   name: 'log-analytics'
   params: {
