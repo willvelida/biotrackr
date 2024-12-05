@@ -72,3 +72,5 @@ jobs:
 
         - name: Generate Docs for modules
           uses: microsoft/ps-docs@main
+          with:
+            modules: PSDocs,PSDocs.Azure
