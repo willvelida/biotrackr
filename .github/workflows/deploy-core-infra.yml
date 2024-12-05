@@ -73,7 +73,5 @@ jobs:
         - name: Generate Docs for modules
           uses: microsoft/ps-docs@main
           with:
-            conventions: Azure.NameByParentPath
-            modules: PSDocs, PSDocs.Azure
-            inputPath: './infra/modules/**'
-            outputPath: './docs/**'
+            inputPath: 'infra/modules/*'
+            outputPath: 'docs/*'
