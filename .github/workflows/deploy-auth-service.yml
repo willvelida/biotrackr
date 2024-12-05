@@ -59,6 +59,13 @@ jobs:
       outputs:
         loginServer: ${{ steps.get-acr-server.outputs.loginServer }}
       steps:
+        - name: Azure login
+          uses: azure/login@v2
+          with:
+            client-id: ${{ secrets.client-id }}
+            tenant-id: ${{ secrets.tenant-id }}
+            subscription-id: ${{ secrets.subscription-id }}
+            
         - name: Get ACR server
           id: get-acr-server
           run: |
