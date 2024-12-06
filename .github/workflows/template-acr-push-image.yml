@@ -1,0 +1,82 @@
+name: Build and Push Container Image to ACR
+
+on:
+    workflow_call:
+      inputs:
+            working-directory:
+                description: 'The working directory to build the container image in'
+                required: true
+                type: string
+            app-name:
+                description: 'The name of the application. Used in the container image name'
+                required: true
+                type: string
+      secrets:
+            client-id:
+                required: true
+            tenant-id:
+                required: true
+            subscription-id:
+                required: true
+            resource-group-name:
+                required: false
+    
+jobs:
+    build-container-image:
+      name: Build Container Image
+      runs-on: ubuntu-latest
+      defaults:
+        run:
+          working-directory: ${{ inputs.working-directory }}
+      steps:
+        - name: Checkout code
+          uses: actions/checkout@v2
+  
+        - name: Azure login
+          uses: azure/login@v2
+          with:
+            client-id: ${{ secrets.client-id }}
+            tenant-id: ${{ secrets.tenant-id }}
+            subscription-id: ${{ secrets.subscription-id }}
+  
+        - name: Set up Docker Buildx
+          uses: docker/setup-buildx-action@v1
+  
+        - name: Get ACR name
+          id: getacrname
+          run: |
+            acrName=$(az acr list --resource-group ${{ secrets.resource-group-name }} --query "[0].name" -o tsv)
+            echo "::set-output name=acrName::$acrName"
+  
+        - name: Get ACR Server
+          id: getacrserver
+          run: |
+            loginServer=$(az acr list --resource-group ${{ secrets.resource-group-name }} --query "[0].loginServer" -o tsv)
+            echo "::set-output name=loginServer::$loginServer"
+  
+        - name: Login to Azure Container Registry
+          run: az acr login --name ${{ steps.getacrname.outputs.acrName }}
+  
+        - name: Build Docker image
+          run: |
+            docker build -t ${{ steps.getacrserver.outputs.loginServer }}/${{ inputs.app-name }}:${{ github.sha }} .
+
+        - name: Run Dockle
+          uses: erzz/dockle-action@v1
+          with:
+            image: ${{ steps.getacrserver.outputs.loginServer }}/${{ inputs.app-name }}:${{ github.sha }}
+
+        - name: Run Trivy vulnerability scanner
+          uses: aquasecurity/trivy-action@0.28.0
+          with:
+            image-ref: ${{ steps.getacrserver.outputs.loginServer }}/${{ inputs.app-name }}:${{ github.sha }}
+            format: 'table'
+            exit-code: '1'
+            ignore-unfixed: true
+            vuln-type: 'os,library'
+            severity: 'CRITICAL,HIGH'
+          
+        - name: Push Docker image
+          run: |
+            docker push ${{ steps.getacrserver.outputs.loginServer }}/${{ inputs.app-name }}:${{ github.sha }}
+            

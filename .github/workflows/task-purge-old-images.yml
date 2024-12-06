@@ -1,0 +1,44 @@
+name: Purge Old Container Images from ACR
+
+on:
+    schedule:
+        - cron: '0 0 * * *' # Run daily at midnight
+    workflow_dispatch:
+
+permissions:
+    contents: read
+    id-token: write
+    pull-requests: write
+
+jobs:
+    purge:
+        runs-on: ubuntu-latest
+
+        steps:
+            - name: Checkout repository code
+              uses: actions/checkout@v4
+
+            - name: Azure login
+              uses: azure/login@v2
+              with:
+                client-id: ${{ secrets.AZURE_CLIENT_ID }}
+                tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+                subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+            - name: Get ACR name
+              id: getacrname
+              run: |
+                  acrName=$(az acr list --resource-group ${{ secrets.AZURE_RG_NAME_DEV }} --query "[0].name" -o tsv)
+                  echo "::set-output name=acrName::$acrName"    
+
+            - name: Login to Azure Container Registry
+              run: az acr login --name ${{ steps.getacrname.outputs.acrName }}
+
+            - name: Run Purge Script
+              env:
+                ACR_NAME: ${{ steps.getacrname.outputs.acrName }}
+                RESOURCE_GROUP: ${{ secrets.AZURE_RG_NAME_DEV }}
+              run: |
+                chmod +x infra/scripts/purge-old-images.sh
+                ./infra/scripts/purge-old-images.sh
+          

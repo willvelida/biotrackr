@@ -1,0 +1,60 @@
+name: Run .NET Unit Tests
+
+on:
+    workflow_call:
+        inputs:
+            dotnet-version:
+                description: 'The version of .NET to use'
+                required: true
+                type: string
+            working-directory:
+                description: 'The working directory to run the tests'
+                required: true
+                type: string
+            coverage-path:
+                description: 'The path to store the coverage reports'
+                required: true
+                type: string
+
+jobs:
+    run-unit-tests:
+        name: Run Unit Tests
+        runs-on: ubuntu-latest
+        defaults:
+            run:
+                working-directory: ${{ inputs.working-directory }}
+        steps:
+            - name: Checkout Repository code
+              uses: actions/checkout@v4
+
+            - name: Setup .NET ${{ inputs.dotnet-version }}
+              uses: actions/setup-dotnet@v3
+              with:
+                dotnet-version: ${{ inputs.dotnet-version }}
+            
+            - name: Install dependencies
+              run: dotnet restore
+
+            - name: Build
+              run: dotnet build --no-restore --verbosity normal
+
+            - name: Run unit tests
+              run: dotnet test --no-build --verbosity normal --collect:"XPlat Code Coverage" --logger trx --results-directory ${{ inputs.coverage-path }}
+
+            - name: Merge Code Coverage reports
+              run: |
+                  dotnet tool install -g dotnet-reportgenerator-globaltool
+                  reportgenerator "-reports:${{ inputs.coverage-path }}/**/coverage.cobertura.xml" "-targetdir:${{ inputs.coverage-path }}" -reporttypes:Cobertura
+
+            - name: Code Coverage Report
+              uses: irongut/CodeCoverageSummary@v1.3.0
+              with:
+                  filename: coverage/Cobertura.xml
+                  badge: true
+                  fail_below_min: false
+                  format: markdown
+                  hide_branch_rate: false
+                  hide_complexity: true
+                  indicators: true
+                  output: both
+                  thresholds: '60 80'
