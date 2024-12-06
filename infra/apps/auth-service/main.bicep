@@ -56,7 +56,7 @@ resource authService 'Microsoft.App/jobs@2024-03-01' = {
       replicaRetryLimit: 3
       triggerType: 'Schedule'
       scheduleTriggerConfig: {
-        cronExpression: '*/15 * * * *'
+        cronExpression: '0 */6 * * *'
         parallelism: 1
         replicaCompletionCount: 1
       }
