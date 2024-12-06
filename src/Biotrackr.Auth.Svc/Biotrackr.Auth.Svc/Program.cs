@@ -24,12 +24,12 @@ IHost host = Host.CreateDefaultBuilder(args)
         services.AddHttpClient<IRefreshTokenService, RefreshTokenService>()
             .AddStandardResilienceHandler();
 
-        services.AddHostedService<AuthWorker>();
-
         services.AddApplicationInsightsTelemetryWorkerService(options =>
         {
             options.ConnectionString = context.Configuration["applicationinsightsconnectionstring"];
         });
+
+        services.AddHostedService<AuthWorker>();
     })
     .Build();
 
