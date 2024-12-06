@@ -62,7 +62,7 @@ jobs:
             docker build -t ${{ steps.getacrserver.outputs.loginServer }}/${{ inputs.app-name }}:${{ github.sha }} .
 
         - name: Run Dockle
-          uses: goodwithtech/dockle-action@main
+          uses: erzz/dockle-action@v1
           with:
             image: ${{ steps.getacrserver.outputs.loginServer }}/${{ inputs.app-name }}:${{ github.sha }}
 
