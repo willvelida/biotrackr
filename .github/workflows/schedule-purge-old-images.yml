@@ -23,7 +23,7 @@ jobs:
             - name: Get ACR name
               id: getacrname
               run: |
-                  acrName=$(az acr list --resource-group ${{ secrets.resource-group-name }} --query "[0].name" -o tsv)
+                  acrName=$(az acr list --resource-group ${{ secrets.AZURE_RG_NAME_DEV }} --query "[0].name" -o tsv)
                   echo "::set-output name=acrName::$acrName"    
 
             - name: Login to Azure Container Registry
