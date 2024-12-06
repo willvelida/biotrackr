@@ -10,5 +10,5 @@ repositories=$(az acr repository list --name $ACR_NAME --resource-group $RESOURC
 # Loop through each repository and purge old images
 for repository in $repositories; do
     echo "Purging old images in repository: $repository"
-    az acr run --registry $ACR_NAME --cmd "acr purge --filter '$repository:.*' --ago 0d --keep 3" /dev/null
+    az acr run --registry $ACR_NAME --cmd "acr purge --filter '$repository:.*' --ago 0d --keep 3 --untagged" /dev/null
 done
