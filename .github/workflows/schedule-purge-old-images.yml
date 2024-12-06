@@ -1,9 +1,12 @@
 name: Purge Old Container Images from ACR
 
 on:
-    schedule:
-        - cron: '0 0 * * *' # Run daily at midnight
     workflow_dispatch:
+
+permissions:
+    contents: read
+    id-token: write
+    pull-requests: write
 
 jobs:
     purge:
