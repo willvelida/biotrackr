@@ -34,11 +34,7 @@ jobs:
             - name: Login to Azure Container Registry
               run: az acr login --name ${{ steps.getacrname.outputs.acrName }}
 
-            - name: Run Purge Script
-              env:
-                ACR_NAME: ${{ steps.getacrname.outputs.acrName }}
-                RESOURCE_GROUP: ${{ secrets.AZURE_RG_NAME_DEV }}
+            - name: Purge old images from ACR            
               run: |
-                chmod +x infra/scripts/purge-old-images.sh
-                ./infra/scripts/purge-old-images.sh
+                az acr run --registry ${{ steps.getacrname.outputs.acrName }} --cmd "acr purge --filter '*:.*' --ago 0d --keep 3 --untagged" /dev/null
           
