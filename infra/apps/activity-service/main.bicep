@@ -80,7 +80,7 @@ resource activityService 'Microsoft.App/jobs@2024-03-01' = {
       replicaRetryLimit: 3
       triggerType: 'Schedule'
       scheduleTriggerConfig: {
-        cronExpression: '0 15 5 * * *'
+        cronExpression: '15 5 * * *'
         parallelism: 1
         replicaCompletionCount: 1
       }
