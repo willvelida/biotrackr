@@ -33,7 +33,7 @@ jobs:
   run-unit-tests:
       name: Run Unit Tests
       needs: env-setup
-      uses: willvelida/biotrackr/.github/workflows/template-dotnet-run-unit-tests.yml@feature/auth-service
+      uses: willvelida/biotrackr/.github/workflows/template-dotnet-run-unit-tests.yml@main
       with:
         dotnet-version: ${{ needs.env-setup.outputs.dotnet-version }}
         working-directory: ./src/Biotrackr.Auth.Svc
@@ -42,7 +42,7 @@ jobs:
   build-container-image-dev:
       name: Build and Push Container Image
       needs: run-unit-tests
-      uses: willvelida/biotrackr/.github/workflows/template-acr-push-image.yml@feature/auth-service
+      uses: willvelida/biotrackr/.github/workflows/template-acr-push-image.yml@main
       with:
         working-directory: ./src/Biotrackr.Auth.Svc
         app-name: biotrackr-auth-svc
