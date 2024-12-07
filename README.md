@@ -19,3 +19,4 @@ Check out the following markdown files that explains decisions made in this proj
 | Component | Status |
 | --------- | ------ |
 | Biotrackr.Infra | [![Deploy Core Biotrackr Infrastructure](https://github.com/willvelida/biotrackr/actions/workflows/deploy-core-infra.yml/badge.svg)](https://github.com/willvelida/biotrackr/actions/workflows/deploy-core-infra.yml) |
+| Biotrackr.Auth.Svc| [![Deploy Auth Service](https://github.com/willvelida/biotrackr/actions/workflows/deploy-auth-service.yml/badge.svg)](https://github.com/willvelida/biotrackr/actions/workflows/deploy-auth-service.yml) |
