@@ -28,6 +28,9 @@ param appInsightsName string
 @description('The name of the App Configuration Store that the Activity Service will use')
 param appConfigName string
 
+@description('The name of the Cosmos DB Account that this Activity Service will use')
+param cosmosDbAccountName string
+
 @description('The database that this Activity Service will use to create the Activity Container')
 param databaseName string
 
@@ -56,6 +59,10 @@ resource appInsights 'Microsoft.Insights/components@2020-02-02' existing = {
 
 resource appConfig 'Microsoft.AppConfiguration/configurationStores@2024-05-01' existing = {
   name: appConfigName
+}
+
+resource cosmosDbAccount 'Microsoft.DocumentDB/databaseAccounts@2024-08-15' existing = {
+  name: cosmosDbAccountName
 }
 
 resource database 'Microsoft.DocumentDB/databaseAccounts/sqlDatabases@2024-08-15' existing = {
@@ -118,11 +125,24 @@ resource activityService 'Microsoft.App/jobs@2024-03-01' = {
 }
 
 resource activityContainer 'Microsoft.DocumentDB/databaseAccounts/sqlDatabases/containers@2024-08-15' = {
-  name: activityContainerName
-  parent: database
+  name: '${cosmosDbAccount.name}/${database.name}/${activityContainerName}'
   properties: {
     resource: {
       id: activityContainerName
+      partitionKey: {
+        paths: [
+          '/date'
+        ]
+        kind: 'Hash'
+      }
+      indexingPolicy: {
+        indexingMode: 'consistent'
+        includedPaths: [
+          {
+            path: '/*'
+          }
+        ]
+      }
     }
   }
 }
