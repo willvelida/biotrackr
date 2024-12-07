@@ -5,7 +5,7 @@ on:
         branches:
             - main
         paths:
-            - 'infra/apps/activity-service'
+            - 'infra/apps/activity-service/*'
 
 permissions:
     contents: read
