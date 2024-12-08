@@ -6,6 +6,7 @@ on:
             - main
         paths:
             - 'infra/apps/auth-service/*'
+            - 'src/Biotrackr.Auth.Svc/*'
 
 permissions:
     contents: read

@@ -151,6 +151,6 @@ resource activityContainerSetting 'Microsoft.AppConfiguration/configurationStore
   name: containerSettingName
   parent: appConfig
   properties: {
-    value: activityContainer.name
+    value: activityContainerName
   }
 }
