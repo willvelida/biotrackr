@@ -23,7 +23,7 @@ namespace Biotrackr.Activity.Svc.Workers
             {
                 _logger.LogInformation($"{nameof(ActivityWorker)} executed at: {DateTime.Now}");
 
-                var date = DateTime.Now.ToString("yyyy-MM-dd");
+                var date = DateTime.Now.AddDays(-1).ToString("yyyy-MM-dd");
 
                 var activityResponse = await _fitbitService.GetActivityResponse(date);
 
