@@ -5,8 +5,8 @@ on:
         branches:
             - main
         paths:
-            - 'infra/apps/activity-service/*'
-            - 'src/Biotrackr.Activity.Svc/*'
+            - 'infra/apps/activity-service/**'
+            - 'src/Biotrackr.Activity.Svc/**'
 
 permissions:
     contents: read
