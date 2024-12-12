@@ -132,6 +132,7 @@ module budget '../modules/monitoring/budget.bicep' = {
   }
 }
 
+// Updating RBAC flag
 module cosmos '../modules/database/serverless-cosmos-db.bicep' = {
   name: 'cosmos'
   params: {
