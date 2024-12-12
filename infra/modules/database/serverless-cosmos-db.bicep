@@ -11,6 +11,9 @@ param accountName string
 @maxLength(255)
 param databaseName string
 
+@description('The name of the Container that will be provisioned in the Database')
+param containerName string
+
 @description('The region that the Cosmos DB account will be deployed to')
 @allowed([
   'australiaeast'
@@ -37,6 +40,7 @@ param logAnalyticsName string
 
 var cosmosDbEndpointSettingName = 'Biotrackr:CosmosDbEndpoint'
 var cosmosDatabaseSettingName = 'Biotrackr:DatabaseName'
+var containerSettingName = 'Biotrackr:ContainerName'
 var cosmosDbDataContributorRole = '00000000-0000-0000-0000-000000000002'
 
 resource uai 'Microsoft.ManagedIdentity/userAssignedIdentities@2023-01-31' existing = {
@@ -105,6 +109,38 @@ resource databaseConfigSetting 'Microsoft.AppConfiguration/configurationStores/k
   parent: appConfig
   properties: {
     value: database.name
+  }
+}
+
+resource activityContainer 'Microsoft.DocumentDB/databaseAccounts/sqlDatabases/containers@2024-08-15' = {
+  name: containerName
+  parent: database
+  properties: {
+    resource: {
+      id: containerName
+      partitionKey: {
+        paths: [
+          '/documentType'
+        ]
+        kind: 'Hash'
+      }
+      indexingPolicy: {
+        indexingMode: 'consistent'
+        includedPaths: [
+          {
+            path: '/*'
+          }
+        ]
+      }
+    }
+  }
+}
+
+resource activityContainerSetting 'Microsoft.AppConfiguration/configurationStores/keyValues@2024-05-01' = {
+  name: containerSettingName
+  parent: appConfig
+  properties: {
+    value: containerName
   }
 }
 

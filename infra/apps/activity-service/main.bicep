@@ -31,20 +31,6 @@ param appConfigName string
 @description('The name of the Cosmos DB Account that this Activity Service will use')
 param cosmosDbAccountName string
 
-@description('The database that this Activity Service will use to create the Activity Container')
-param databaseName string
-
-var activityContainerName = 'activity'
-var containerSettingName = 'Biotrackr:ActivityContainer'
-
-resource containerAppEnv 'Microsoft.App/managedEnvironments@2024-03-01' existing = {
-  name: containerAppEnvironmentName
-}
-
-resource acr 'Microsoft.ContainerRegistry/registries@2023-07-01' existing = {
-  name: containerRegistryName
-}
-
 resource uai 'Microsoft.ManagedIdentity/userAssignedIdentities@2023-01-31' existing = {
   name: uaiName
 }
@@ -65,43 +51,16 @@ resource cosmosDbAccount 'Microsoft.DocumentDB/databaseAccounts@2024-08-15' exis
   name: cosmosDbAccountName
 }
 
-resource database 'Microsoft.DocumentDB/databaseAccounts/sqlDatabases@2024-08-15' existing = {
-  name: databaseName
-  parent: cosmosDbAccount
-}
-
-resource activityService 'Microsoft.App/jobs@2024-03-01' = {
-  name: name
-  location: location
-  tags: tags
-  properties: {
-    environmentId: containerAppEnv.id
-    configuration: {
-      replicaTimeout: 600
-      replicaRetryLimit: 3
-      triggerType: 'Schedule'
-      scheduleTriggerConfig: {
-        cronExpression: '15 5 * * *'
-        parallelism: 1
-        replicaCompletionCount: 1
-      }
-      registries: [
-        { 
-          server: acr.properties.loginServer
-          identity: uai.id
-        }
-      ]
-    }
-    template: {
-      containers: [
-        {
-          name: name
-          image: imageName
-          resources: {
-            cpu: json('0.25')
-            memory: '0.5Gi'
-          }
-          env: [
+module activityService '../../modules/host/container-app-jobs.bicep' = {
+  name: 'activity-svc'
+  params: {
+    name: name
+    location: location
+    tags: tags
+    containerAppEnvironmentName: containerAppEnvironmentName
+    containerRegistryName: containerRegistryName
+    cronExpression: '15 5 * * *'
+    envVariables: [
             {
               name: 'keyvaulturl'
               value: keyVault.properties.vaultUri
@@ -123,46 +82,7 @@ resource activityService 'Microsoft.App/jobs@2024-03-01' = {
               value: cosmosDbAccount.properties.documentEndpoint
             }
           ]
-        }
-      ]
-    }
-  }
-  identity: {
-    type: 'UserAssigned'
-    userAssignedIdentities: {
-      '${uai.id}': {}
-    }
-  }
-}
-
-resource activityContainer 'Microsoft.DocumentDB/databaseAccounts/sqlDatabases/containers@2024-08-15' = {
-  name: activityContainerName
-  parent: database
-  properties: {
-    resource: {
-      id: activityContainerName
-      partitionKey: {
-        paths: [
-          '/date'
-        ]
-        kind: 'Hash'
-      }
-      indexingPolicy: {
-        indexingMode: 'consistent'
-        includedPaths: [
-          {
-            path: '/*'
-          }
-        ]
-      }
-    }
-  }
-}
-
-resource activityContainerSetting 'Microsoft.AppConfiguration/configurationStores/keyValues@2024-05-01' = {
-  name: containerSettingName
-  parent: appConfig
-  properties: {
-    value: activityContainerName
+    imageName: imageName
+    uaiName: uaiName
   }
 }

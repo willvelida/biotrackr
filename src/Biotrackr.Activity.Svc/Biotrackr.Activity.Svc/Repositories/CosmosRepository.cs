@@ -18,7 +18,7 @@ namespace Biotrackr.Activity.Svc.Repositories
             _cosmosClient = cosmosClient;
             _settings = settings.Value;
             _logger = logger;
-            _container = _cosmosClient.GetContainer(_settings.DatabaseName, _settings.ActivityContainer);
+            _container = _cosmosClient.GetContainer(_settings.DatabaseName, _settings.ContainerName);
         }
 
         public async Task CreateActivityDocument(ActivityDocument activityDocument)
@@ -30,7 +30,7 @@ namespace Biotrackr.Activity.Svc.Repositories
                     EnableContentResponseOnWrite = false
                 };
 
-                await _container.CreateItemAsync(activityDocument, new PartitionKey(activityDocument.Date), itemRequestOptions);
+                await _container.CreateItemAsync(activityDocument, new PartitionKey(activityDocument.DocumentType), itemRequestOptions);
             }
             catch (Exception ex)
             {

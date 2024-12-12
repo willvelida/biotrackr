@@ -49,6 +49,9 @@ param cosmosAccountName string
 @description('The name of the Cosmos DB database')
 param cosmosDatabaseName string
 
+@description('The name of the Cosmos DB container')
+param cosmosContainerName string
+
 module logAnalytics '../modules/monitoring/log-analytics.bicep' = {
   name: 'log-analytics'
   params: {
@@ -143,5 +146,6 @@ module cosmos '../modules/database/serverless-cosmos-db.bicep' = {
     databaseName: cosmosDatabaseName
     uaiName: uai.outputs.uaiName
     logAnalyticsName: logAnalytics.outputs.logAnalyticsName
+    containerName: cosmosContainerName
   }
 }
