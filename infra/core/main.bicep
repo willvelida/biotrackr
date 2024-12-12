@@ -52,6 +52,12 @@ param cosmosDatabaseName string
 @description('The name of the Cosmos DB container')
 param cosmosContainerName string
 
+@description('The name of the API Management Instance')
+param apimName string
+
+@description('The name of the owner of this API Management instance')
+param publisherName string
+
 module logAnalytics '../modules/monitoring/log-analytics.bicep' = {
   name: 'log-analytics'
   params: {
@@ -147,5 +153,17 @@ module cosmos '../modules/database/serverless-cosmos-db.bicep' = {
     uaiName: uai.outputs.uaiName
     logAnalyticsName: logAnalytics.outputs.logAnalyticsName
     containerName: cosmosContainerName
+  }
+}
+
+module apim '../modules/integration/apim-consumption.bicep' = {
+  name: 'apim'
+  params: {
+    name: apimName
+    location: location
+    tags: tags
+    emailAddress: emailAddress
+    publisherName: publisherName 
+    uaiName: uai.outputs.uaiName
   }
 }
