@@ -38,9 +38,16 @@ IHost host = Host.CreateDefaultBuilder(args)
         services.AddApplicationInsightsTelemetryWorkerService();
 
         var cosmosDbEndpoint = context.Configuration["CosmosDbEndpoint"];
+        var cosmosClientOptions = new CosmosClientOptions()
+        {
+            SerializerOptions = new CosmosSerializationOptions()
+            {
+                PropertyNamingPolicy = CosmosPropertyNamingPolicy.CamelCase
+            }
+        };
 
         services.AddSingleton(new SecretClient(new Uri(keyVaultUrl), new DefaultAzureCredential(defaultCredentialOptions)));
-        services.AddSingleton(new CosmosClient(cosmosDbEndpoint, new DefaultAzureCredential(defaultCredentialOptions)));
+        services.AddSingleton(new CosmosClient(cosmosDbEndpoint, new DefaultAzureCredential(defaultCredentialOptions), cosmosClientOptions));
 
         services.AddScoped<ICosmosRepository, CosmosRepository>();
 

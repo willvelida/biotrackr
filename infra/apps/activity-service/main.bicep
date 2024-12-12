@@ -122,6 +122,12 @@ resource activityService 'Microsoft.App/jobs@2024-03-01' = {
       ]
     }
   }
+  identity: {
+    type: 'UserAssigned'
+    userAssignedIdentities: {
+      '${uai.id}': {}
+    }
+  }
 }
 
 resource activityContainer 'Microsoft.DocumentDB/databaseAccounts/sqlDatabases/containers@2024-08-15' = {
