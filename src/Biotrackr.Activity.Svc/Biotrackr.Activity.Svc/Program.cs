@@ -37,7 +37,7 @@ IHost host = Host.CreateDefaultBuilder(args)
 
         services.AddApplicationInsightsTelemetryWorkerService();
 
-        var cosmosDbEndpoint = context.Configuration["CosmosDbEndpoint"];
+        var cosmosDbEndpoint = context.Configuration["cosmosdbendpoint"];
         var cosmosClientOptions = new CosmosClientOptions()
         {
             SerializerOptions = new CosmosSerializationOptions()

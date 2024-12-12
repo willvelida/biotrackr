@@ -67,6 +67,7 @@ resource cosmosDbAccount 'Microsoft.DocumentDB/databaseAccounts@2024-08-15' exis
 
 resource database 'Microsoft.DocumentDB/databaseAccounts/sqlDatabases@2024-08-15' existing = {
   name: databaseName
+  parent: cosmosDbAccount
 }
 
 resource activityService 'Microsoft.App/jobs@2024-03-01' = {
@@ -117,6 +118,10 @@ resource activityService 'Microsoft.App/jobs@2024-03-01' = {
               name: 'applicationinsightsconnectionstring'
               value: appInsights.properties.ConnectionString
             }
+            {
+              name: 'cosmosdbendpoint'
+              value: cosmosDbAccount.properties.documentEndpoint
+            }
           ]
         }
       ]
@@ -131,7 +136,8 @@ resource activityService 'Microsoft.App/jobs@2024-03-01' = {
 }
 
 resource activityContainer 'Microsoft.DocumentDB/databaseAccounts/sqlDatabases/containers@2024-08-15' = {
-  name: '${cosmosDbAccount.name}/${database.name}/${activityContainerName}'
+  name: activityContainerName
+  parent: database
   properties: {
     resource: {
       id: activityContainerName
