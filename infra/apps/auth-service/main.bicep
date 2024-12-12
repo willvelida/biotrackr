@@ -25,14 +25,6 @@ param keyVaultName string
 @description('The name of the App Insights workspace that the Auth Service sends logs to')
 param appInsightsName string
 
-resource containerAppEnv 'Microsoft.App/managedEnvironments@2024-03-01' existing = {
-  name: containerAppEnvironmentName
-}
-
-resource acr 'Microsoft.ContainerRegistry/registries@2023-07-01' existing = {
-  name: containerRegistryName
-}
-
 resource uai 'Microsoft.ManagedIdentity/userAssignedIdentities@2023-01-31' existing = {
   name: uaiName
 }
@@ -45,38 +37,16 @@ resource appInsights 'Microsoft.Insights/components@2020-02-02' existing = {
   name: appInsightsName
 }
 
-resource authService 'Microsoft.App/jobs@2024-03-01' = {
-  name: name
-  location: location
-  tags: tags
-  properties: {
-    environmentId: containerAppEnv.id
-    configuration: {
-      replicaTimeout: 600
-      replicaRetryLimit: 3
-      triggerType: 'Schedule'
-      scheduleTriggerConfig: {
-        cronExpression: '0 */6 * * *'
-        parallelism: 1
-        replicaCompletionCount: 1
-      }
-      registries: [
-        {
-          server: acr.properties.loginServer
-          identity: uai.id
-        }
-      ]
-    }
-    template: {
-      containers: [
-        {
-          name: name
-          image: imageName
-          resources: {
-            cpu: json('0.25')
-            memory: '0.5Gi'
-          }
-          env: [
+module authService '../../modules/host/container-app-jobs.bicep' = {
+  name: 'auth-svc'
+  params: {
+    name: name
+    location: location
+    tags: tags
+    containerAppEnvironmentName: containerAppEnvironmentName
+    containerRegistryName: containerRegistryName
+    cronExpression: '0 */6 * * *'
+    envVariables: [
             {
               name: 'keyvaulturl'
               value: keyVault.properties.vaultUri
@@ -90,14 +60,7 @@ resource authService 'Microsoft.App/jobs@2024-03-01' = {
               value: appInsights.properties.ConnectionString
             }
           ]
-        }
-      ]
-    }
-  }
-  identity: {
-    type: 'UserAssigned'
-    userAssignedIdentities: {
-      '${uai.id}': {}
-    }
+    imageName: imageName
+    uaiName: uaiName
   }
 }
