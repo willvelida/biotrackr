@@ -24,7 +24,8 @@ namespace Biotrackr.Activity.Svc.Services
                 {
                     Id = Guid.NewGuid().ToString(),
                     Date = date,
-                    Activity = activityResponse
+                    Activity = activityResponse,
+                    DocumentType = "Activity"
                 };
 
                 await _cosmosDbRepository.CreateActivityDocument(activityDocument);

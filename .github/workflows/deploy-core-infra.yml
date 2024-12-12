@@ -5,8 +5,8 @@ on:
         branches:
             - main
         paths:
-            - 'infra/core/*'
-            - 'infra/modules/*'
+            - 'infra/core/**'
+            - 'infra/modules/**'
 
 permissions:
     contents: read

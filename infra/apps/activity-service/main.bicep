@@ -31,12 +31,6 @@ param appConfigName string
 @description('The name of the Cosmos DB Account that this Activity Service will use')
 param cosmosDbAccountName string
 
-@description('The database that this Activity Service will use to create the Activity Container')
-param databaseName string
-
-var activityContainerName = 'activity'
-var containerSettingName = 'Biotrackr:ActivityContainer'
-
 resource uai 'Microsoft.ManagedIdentity/userAssignedIdentities@2023-01-31' existing = {
   name: uaiName
 }
@@ -55,11 +49,6 @@ resource appConfig 'Microsoft.AppConfiguration/configurationStores@2024-05-01' e
 
 resource cosmosDbAccount 'Microsoft.DocumentDB/databaseAccounts@2024-08-15' existing = {
   name: cosmosDbAccountName
-}
-
-resource database 'Microsoft.DocumentDB/databaseAccounts/sqlDatabases@2024-08-15' existing = {
-  name: databaseName
-  parent: cosmosDbAccount
 }
 
 module activityService '../../modules/host/container-app-jobs.bicep' = {
@@ -95,37 +84,5 @@ module activityService '../../modules/host/container-app-jobs.bicep' = {
           ]
     imageName: imageName
     uaiName: uaiName
-  }
-}
-
-resource activityContainer 'Microsoft.DocumentDB/databaseAccounts/sqlDatabases/containers@2024-08-15' = {
-  name: activityContainerName
-  parent: database
-  properties: {
-    resource: {
-      id: activityContainerName
-      partitionKey: {
-        paths: [
-          '/date'
-        ]
-        kind: 'Hash'
-      }
-      indexingPolicy: {
-        indexingMode: 'consistent'
-        includedPaths: [
-          {
-            path: '/*'
-          }
-        ]
-      }
-    }
-  }
-}
-
-resource activityContainerSetting 'Microsoft.AppConfiguration/configurationStores/keyValues@2024-05-01' = {
-  name: containerSettingName
-  parent: appConfig
-  properties: {
-    value: activityContainerName
   }
 }

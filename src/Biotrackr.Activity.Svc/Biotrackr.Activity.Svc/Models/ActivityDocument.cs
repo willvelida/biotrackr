@@ -7,5 +7,6 @@ namespace Biotrackr.Activity.Svc.Models
         public string Id { get; set; }
         public ActivityResponse Activity { get; set; }
         public string Date { get; set; }
+        public string DocumentType { get; set; }
     }
 }

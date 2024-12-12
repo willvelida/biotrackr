@@ -3,6 +3,6 @@
     public class Settings
     {
         public string DatabaseName { get; set; }
-        public string ActivityContainer { get; set; }
+        public string ContainerName { get; set; }
     }
 }

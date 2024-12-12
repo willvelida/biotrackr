@@ -19,7 +19,7 @@
             _optionsMock.Setup(x => x.Value).Returns(new Settings
             {
                 DatabaseName = "DatabaseName",
-                ActivityContainer = "ActivityContainer"
+                ContainerName = "ContainerName"
             });
 
             _cosmosClientMock.Setup(x => x.GetContainer(It.IsAny<string>(), It.IsAny<string>()))
@@ -49,7 +49,7 @@
 
             // Assert
             await repositoryAction.Should().NotThrowAsync<Exception>();
-            _containerMock.Verify(x => x.CreateItemAsync(activityDocument, new PartitionKey(activityDocument.Date), It.IsAny<ItemRequestOptions>(), It.IsAny<CancellationToken>()), Times.Once);
+            _containerMock.Verify(x => x.CreateItemAsync(activityDocument, new PartitionKey(activityDocument.DocumentType), It.IsAny<ItemRequestOptions>(), It.IsAny<CancellationToken>()), Times.Once);
         }
 
         [Fact]
