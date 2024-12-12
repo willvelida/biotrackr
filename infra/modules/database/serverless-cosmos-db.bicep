@@ -37,6 +37,7 @@ param logAnalyticsName string
 
 var cosmosDbEndpointSettingName = 'Biotrackr:CosmosDbEndpoint'
 var cosmosDatabaseSettingName = 'Biotrackr:DatabaseName'
+var cosmosDbDataContributorRole = '00000000-0000-0000-0000-000000000002'
 
 resource uai 'Microsoft.ManagedIdentity/userAssignedIdentities@2023-01-31' existing = {
   name: uaiName
@@ -134,6 +135,16 @@ resource diagnosticLogs 'Microsoft.Insights/diagnosticSettings@2021-05-01-previe
         enabled: true
       }
     ]
+  }
+}
+
+resource sqlRoleAssignment 'Microsoft.DocumentDB/databaseAccounts/sqlRoleAssignments@2024-11-15' = {
+  name: cosmosDbDataContributorRole
+  parent: account
+  properties: {
+    principalId: uai.properties.principalId
+    roleDefinitionId: subscriptionResourceId('Microsoft.DocumentDB/databaseAccounts/sqlRoleDefinitions', cosmosDbDataContributorRole)
+    scope: account.id
   }
 }
 
