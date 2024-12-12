@@ -1,0 +1,11 @@
+﻿global using AutoFixture;
+global using Biotrackr.Activity.Svc.Configuration;
+global using Biotrackr.Activity.Svc.Models;
+global using Biotrackr.Activity.Svc.Models.FitbitEntities;
+global using Biotrackr.Activity.Svc.Repositories;
+global using Biotrackr.Activity.Svc.Services;
+global using FluentAssertions;
+global using Microsoft.Azure.Cosmos;
+global using Microsoft.Extensions.Logging;
+global using Microsoft.Extensions.Options;
+global using Moq;
