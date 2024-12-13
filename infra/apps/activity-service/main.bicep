@@ -59,7 +59,7 @@ module activityService '../../modules/host/container-app-jobs.bicep' = {
     tags: tags
     containerAppEnvironmentName: containerAppEnvironmentName
     containerRegistryName: containerRegistryName
-    cronExpression: '15 5 * * *'
+    cronExpression: '0 1 * * *'
     envVariables: [
             {
               name: 'keyvaulturl'
