@@ -97,3 +97,6 @@ resource httpContainerApp 'Microsoft.App/containerApps@2024-03-01' = {
     }
   }
 }
+
+@description('The FQDN of the deployed Container App')
+output fqdn string = httpContainerApp.properties.configuration.ingress.fqdn

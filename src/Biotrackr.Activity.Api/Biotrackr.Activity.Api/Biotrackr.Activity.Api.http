@@ -1,0 +1,6 @@
+@Biotrackr.Activity.Api_HostAddress = http://localhost:5272
+
+GET {{Biotrackr.Activity.Api_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
