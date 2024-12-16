@@ -165,5 +165,7 @@ module apim '../modules/integration/apim-consumption.bicep' = {
     emailAddress: emailAddress
     publisherName: publisherName 
     uaiName: uai.outputs.uaiName
+    appInsightsName: appInsights.outputs.appInsightsName
+    logAnalyticsName: logAnalytics.outputs.logAnalyticsName
   }
 }
