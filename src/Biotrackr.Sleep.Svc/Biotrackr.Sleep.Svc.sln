@@ -1,0 +1,28 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.12.35514.174 d17.12
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Biotrackr.Sleep.Svc", "Biotrackr.Sleep.Svc\Biotrackr.Sleep.Svc.csproj", "{775D1112-D253-4521-89F2-38EB10FB938E}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Biotrackr.Sleep.Svc.UnitTests", "Biotrackr.Sleep.Svc.UnitTests\Biotrackr.Sleep.Svc.UnitTests.csproj", "{096CD3FB-4EAF-4CB4-A36C-E3579F994176}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{775D1112-D253-4521-89F2-38EB10FB938E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{775D1112-D253-4521-89F2-38EB10FB938E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{775D1112-D253-4521-89F2-38EB10FB938E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{775D1112-D253-4521-89F2-38EB10FB938E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{096CD3FB-4EAF-4CB4-A36C-E3579F994176}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{096CD3FB-4EAF-4CB4-A36C-E3579F994176}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{096CD3FB-4EAF-4CB4-A36C-E3579F994176}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{096CD3FB-4EAF-4CB4-A36C-E3579F994176}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal
