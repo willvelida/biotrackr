@@ -57,7 +57,7 @@ resource apiManagement 'Microsoft.ApiManagement/service@2024-05-01' = {
   }
 }
 
-resource apiLogger 'Microsoft.ApiManagement/service/loggers@2024-05-01' = {
+resource apiLogger 'Microsoft.ApiManagement/service/loggers@2023-09-01-preview' = {
   name: '${appInsightsName}-apim'
   parent: apiManagement
   properties: {
