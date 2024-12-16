@@ -14,5 +14,9 @@ namespace Biotrackr.Weight.Svc.Models.Entities
         public object LogId { get; set; }
         [JsonPropertyName("source")]
         public string Source { get; set; }
+        [JsonPropertyName("time")]
+        public string Time { get; set; }
+        [JsonPropertyName("weight")]
+        public int weight { get; set; }
     }
 }
