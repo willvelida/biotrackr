@@ -17,6 +17,6 @@ namespace Biotrackr.Weight.Svc.Models.Entities
         [JsonPropertyName("time")]
         public string Time { get; set; }
         [JsonPropertyName("weight")]
-        public int weight { get; set; }
+        public double weight { get; set; }
     }
 }
