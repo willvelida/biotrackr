@@ -1,5 +1,6 @@
 using Azure.Identity;
 using Azure.Security.KeyVault.Secrets;
+using Biotrackr.Weight.Svc.Configuration;
 using Biotrackr.Weight.Svc.Repositories;
 using Biotrackr.Weight.Svc.Repositories.Interfaces;
 using Biotrackr.Weight.Svc.Services;
@@ -28,6 +29,11 @@ IHost host = Host.CreateDefaultBuilder(args)
         {
             ManagedIdentityClientId = managedIdentityClientId
         };
+
+        services.AddOptions<Settings>().Configure<IConfiguration>((settings, configuration) =>
+        {
+            configuration.GetSection("Biotrackr").Bind(settings);
+        });
 
         services.AddApplicationInsightsTelemetryWorkerService();
 
