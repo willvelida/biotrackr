@@ -2,27 +2,40 @@ metadata name = 'API Management'
 metadata description = 'Deploys a API Management instance using the Consumption SKU'
 
 @description('The name of the API Management instance')
+@minLength(1)
+@maxLength(50)
 param name string
 
 @description('The region where the API Management instance will be deployed')
+@allowed(['australiaeast'])
 param location string
 
 @description('The tags that will be applied to the API Management Instance')
 param tags object
 
 @description('The email address of the owner of this API Management instance')
+@minLength(5)
+@maxLength(50)
 param emailAddress string
 
 @description('The name of the owner of this API Management instance')
+@minLength(1)
+@maxLength(100)
 param publisherName string
 
 @description('The name of the user-assigned identity that this API Management instance will use')
+@minLength(3)
+@maxLength(128)
 param uaiName string
 
 @description('The name of the App Insights instance that this API Management instance sends logs to')
+@minLength(4)
+@maxLength(50)
 param appInsightsName string
 
 @description('The name of the Log Analytics workspace that will be used for diagnostic logs')
+@minLength(4)
+@maxLength(63)
 param logAnalyticsName string
 
 resource uai 'Microsoft.ManagedIdentity/userAssignedIdentities@2023-01-31' existing = {

@@ -5,11 +5,10 @@ using Biotrackr.Activity.Api.Repositories;
 using Biotrackr.Activity.Api.Repositories.Interfaces;
 using Microsoft.Azure.Cosmos;
 using Microsoft.Extensions.Configuration.AzureAppConfiguration;
+using Microsoft.OpenApi.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Configuration.AddEnvironmentVariables();
 var managedIdentityClientId = builder.Configuration.GetValue<string>("managedidentityclientid");
 var defaultCredentialOptions = new DefaultAzureCredentialOptions()
@@ -41,16 +40,25 @@ builder.Services.AddSingleton(cosmosClient);
 builder.Services.AddTransient<ICosmosRepository, CosmosRepository>();
 
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+builder.Services.AddSwaggerGen(options =>
+{
+    options.SwaggerDoc("v1", new OpenApiInfo
+    {
+        Version = "v1",
+        Title = "Biotrackr Activity API",
+        Description = "Web API for Activity data",
+        Contact = new OpenApiContact
+        {
+            Name = "Biotrackr",
+            Url = new Uri("https://github.com/willvelida/biotrackr")
+        }
+    });
+});
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
-{
-    app.UseSwagger();
-    app.UseSwaggerUI();
-}
+app.UseSwagger();
+app.UseSwaggerUI();
 
 app.RegisterActivityEndpoints();
 

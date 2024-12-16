@@ -25,6 +25,11 @@ param appConfigName string
 @description('The name of the Cosmos DB account that this Activity Api uses')
 param cosmosDbAccountName string
 
+@description('The name of the API Management instance that this Activity uses')
+param apiManagementName string
+
+var activityProductName = 'Activity'
+
 resource uai 'Microsoft.ManagedIdentity/userAssignedIdentities@2023-01-31' existing = {
   name: uaiName
 }
@@ -35,6 +40,10 @@ resource appConfig 'Microsoft.AppConfiguration/configurationStores@2024-05-01' e
 
 resource cosmosDbAccount 'Microsoft.DocumentDB/databaseAccounts@2024-11-15' existing = {
   name: cosmosDbAccountName
+}
+
+resource apiManagement 'Microsoft.ApiManagement/service@2024-05-01' existing = {
+  name: apiManagementName
 }
 
 module activityApi '../../modules/host/container-app-http.bicep' = {
@@ -62,5 +71,14 @@ module activityApi '../../modules/host/container-app-http.bicep' = {
         value: cosmosDbAccount.properties.documentEndpoint
       }
     ]
+  }
+}
+
+resource actitivyApimProduct 'Microsoft.ApiManagement/service/products@2024-05-01' = {
+  name: activityProductName
+  parent: apiManagement
+  properties: {
+    displayName: activityProductName
+    subscriptionRequired: true
   }
 }
