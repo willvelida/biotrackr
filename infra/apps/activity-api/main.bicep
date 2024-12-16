@@ -74,7 +74,7 @@ module activityApi '../../modules/host/container-app-http.bicep' = {
   }
 }
 
-resource actitivyApimProduct 'Microsoft.ApiManagement/service/products@2024-05-01' = {
+resource actitivyApimProduct 'Microsoft.ApiManagement/service/products@2023-09-01-preview' = {
   name: activityProductName
   parent: apiManagement
   properties: {
