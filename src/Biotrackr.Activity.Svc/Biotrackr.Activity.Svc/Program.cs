@@ -35,8 +35,6 @@ IHost host = Host.CreateDefaultBuilder(args)
             configuration.GetSection("Biotrackr").Bind(settings);
         });
 
-        services.AddApplicationInsightsTelemetryWorkerService();
-
         var cosmosDbEndpoint = context.Configuration["cosmosdbendpoint"];
         var cosmosClientOptions = new CosmosClientOptions()
         {
@@ -58,6 +56,11 @@ IHost host = Host.CreateDefaultBuilder(args)
             .AddStandardResilienceHandler();
 
         services.AddHostedService<ActivityWorker>();
+
+        services.AddApplicationInsightsTelemetryWorkerService(logging =>
+        {
+            logging.ConnectionString = context.Configuration["applicationinsightsconnectionstring"];
+        });
     })
     .Build();
 
