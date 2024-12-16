@@ -22,6 +22,9 @@ param uaiName string
 @description('The Container Image that this Container App will use')
 param imageName string
 
+@description('The target port that this Container App uses')
+param targetPort int
+
 @description('The Environment variables for this Container App')
 param envVariables array = []
 
@@ -51,7 +54,7 @@ resource httpContainerApp 'Microsoft.App/containerApps@2024-03-01' = {
       ingress: {
         external: true
         transport: 'http'
-        targetPort: 8080
+        targetPort: targetPort
         allowInsecure: false
       }
       registries: [

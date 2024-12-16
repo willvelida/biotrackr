@@ -11,3 +11,5 @@ param tags = {
 param containerAppEnvironmentName = 'env-biotrackr-dev'
 param containerRegistryName = 'acrbiotrackrdev'
 param uaiName = 'uai-biotrackr-dev'
+param appConfigName = 'config-biotrackr-dev'
+param cosmosDbAccountName = 'cosmos-biotrackr-dev'
