@@ -1,4 +1,5 @@
 using Azure.Identity;
+using Azure.Monitor.OpenTelemetry.Exporter;
 using Azure.Security.KeyVault.Secrets;
 using Biotrackr.Weight.Svc.Configuration;
 using Biotrackr.Weight.Svc.Repositories;
@@ -8,6 +9,17 @@ using Biotrackr.Weight.Svc.Services.Interfaces;
 using Biotrackr.Weight.Svc.Workers;
 using Microsoft.Azure.Cosmos;
 using Microsoft.Extensions.Configuration.AzureAppConfiguration;
+using OpenTelemetry.Metrics;
+using OpenTelemetry.Resources;
+using OpenTelemetry.Trace;
+
+var resourceAttributes = new Dictionary<string, object>
+{
+    { "service.name", "Biotrackr.Weight.Svc" },
+    { "service.version", "1.0.0" }
+};
+
+var resourceBuilder = ResourceBuilder.CreateDefault().AddAttributes(resourceAttributes);
 
 IHost host = Host.CreateDefaultBuilder(args)
     .ConfigureAppConfiguration(config =>
@@ -57,9 +69,34 @@ IHost host = Host.CreateDefaultBuilder(args)
 
         services.AddHostedService<WeightWorker>();
 
-        services.AddApplicationInsightsTelemetryWorkerService(logging =>
+        services.AddOpenTelemetry()
+            .WithTracing(tracing =>
+            {
+                tracing.SetResourceBuilder(resourceBuilder)
+                        .AddAzureMonitorTraceExporter(options =>
+                        {
+                            options.ConnectionString = context.Configuration["applicationinsightsconnectionstring"];
+                        });
+            })
+            .WithMetrics(metrics =>
+            {
+                metrics.SetResourceBuilder(resourceBuilder)
+                        .AddAzureMonitorMetricExporter(options =>
+                        {
+                            options.ConnectionString = context.Configuration["applicationinsightsconnectionstring"];
+                        });
+            });
+    })
+    .ConfigureLogging((context, logging) =>
+    {
+        logging.AddOpenTelemetry(log =>
         {
-            logging.ConnectionString = context.Configuration["applicationinsightsconnectionstring"];
+            log.SetResourceBuilder(resourceBuilder);
+            log.AddAzureMonitorLogExporter(options =>
+            {
+                options.ConnectionString = context.Configuration["applicationinsightsconnectionstring"];
+            });
+
         });
     })
     .Build();

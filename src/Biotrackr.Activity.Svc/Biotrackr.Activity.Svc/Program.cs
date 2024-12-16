@@ -9,7 +9,6 @@ using Biotrackr.Activity.Svc.Services.Interfaces;
 using Biotrackr.Activity.Svc.Workers;
 using Microsoft.Azure.Cosmos;
 using Microsoft.Extensions.Configuration.AzureAppConfiguration;
-using OpenTelemetry;
 using OpenTelemetry.Metrics;
 using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
@@ -97,7 +96,7 @@ IHost host = Host.CreateDefaultBuilder(args)
             {
                 options.ConnectionString = context.Configuration["applicationinsightsconnectionstring"];
             });
-            
+
         });
     })
     .Build();
