@@ -47,7 +47,7 @@ module activityApi '../../modules/host/container-app-http.bicep' = {
     containerRegistryName: containerRegistryName
     imageName: imageName
     uaiName: uai.name
-    targetPort: 80
+    targetPort: 8080
     envVariables: [
       { 
         name: 'azureappconfigendpoint'
