@@ -23,7 +23,7 @@ namespace Biotrackr.Sleep.Svc.Services
                 SleepDocument sleepDocument = new SleepDocument
                 {
                     Id = Guid.NewGuid().ToString(),
-                    SleepResponse = sleepResponse,
+                    Sleep = sleepResponse,
                     Date = date,
                     DocumentType = "Sleep"
                 };

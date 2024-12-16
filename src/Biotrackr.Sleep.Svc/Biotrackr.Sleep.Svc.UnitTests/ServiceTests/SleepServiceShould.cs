@@ -6,11 +6,6 @@ using Biotrackr.Sleep.Svc.Services;
 using FluentAssertions;
 using Microsoft.Extensions.Logging;
 using Moq;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Biotrackr.Sleep.Svc.UnitTests.ServiceTests
 {

@@ -1,18 +1,13 @@
 ﻿using AutoFixture;
+using Azure;
 using Azure.Security.KeyVault.Secrets;
+using Biotrackr.Sleep.Svc.Models.FitbitEntities;
 using Biotrackr.Sleep.Svc.Services;
 using FluentAssertions;
 using Microsoft.Extensions.Logging;
-using Moq.Protected;
 using Moq;
-using System;
-using System.Collections.Generic;
-using System.Linq;
+using Moq.Protected;
 using System.Net;
-using System.Text;
-using System.Threading.Tasks;
-using Biotrackr.Sleep.Svc.Models.FitbitEntities;
-using Azure;
 using System.Text.Json;
 
 namespace Biotrackr.Sleep.Svc.UnitTests.ServiceTests
