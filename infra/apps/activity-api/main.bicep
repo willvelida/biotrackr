@@ -82,3 +82,22 @@ resource actitivyApimProduct 'Microsoft.ApiManagement/service/products@2023-09-0
     subscriptionRequired: true
   }
 }
+
+resource biotrackrActivityApi 'Microsoft.ApiManagement/service/apis@2023-09-01-preview' = {
+  name: activityProductName
+  parent: apiManagement
+  properties: {
+    path: 'activity'
+    apiType: 'http'
+    displayName: 'Activity API'
+    serviceUrl: 'https://${activityApi.outputs.fqdn}/'
+    protocols: [
+      'https'
+    ]
+  }
+}
+
+resource activityApiProductAssociation 'Microsoft.ApiManagement/service/products/apis@2023-09-01-preview' = {
+  name: activityProductName
+  parent: actitivyApimProduct
+}
