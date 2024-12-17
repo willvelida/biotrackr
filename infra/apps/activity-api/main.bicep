@@ -25,11 +25,6 @@ param appConfigName string
 @description('The name of the Cosmos DB account that this Activity Api uses')
 param cosmosDbAccountName string
 
-@description('The name of the API Management instance that this Activity uses')
-param apiManagementName string
-
-var activityProductName = 'Activity'
-
 resource uai 'Microsoft.ManagedIdentity/userAssignedIdentities@2023-01-31' existing = {
   name: uaiName
 }
@@ -40,10 +35,6 @@ resource appConfig 'Microsoft.AppConfiguration/configurationStores@2024-05-01' e
 
 resource cosmosDbAccount 'Microsoft.DocumentDB/databaseAccounts@2024-11-15' existing = {
   name: cosmosDbAccountName
-}
-
-resource apiManagement 'Microsoft.ApiManagement/service@2024-05-01' existing = {
-  name: apiManagementName
 }
 
 module activityApi '../../modules/host/container-app-http.bicep' = {
@@ -72,34 +63,4 @@ module activityApi '../../modules/host/container-app-http.bicep' = {
       }
     ]
   }
-}
-
-resource actitivyApimProduct 'Microsoft.ApiManagement/service/products@2023-09-01-preview' = {
-  name: activityProductName
-  parent: apiManagement
-  properties: {
-    displayName: activityProductName
-    subscriptionRequired: true
-  }
-}
-
-resource biotrackrActivityApi 'Microsoft.ApiManagement/service/apis@2023-09-01-preview' = {
-  name: activityProductName
-  parent: apiManagement
-  properties: {
-    path: 'activity'
-    apiType: 'http'
-    displayName: 'Activity API'
-    serviceUrl: 'https://${activityApi.outputs.fqdn}/'
-    protocols: [
-      'https'
-    ]
-    format: 'swagger-link-json'
-    value: 'https://${activityApi.outputs.fqdn}/swagger/v1/swagger.json'
-  }
-}
-
-resource activityApiProductAssociation 'Microsoft.ApiManagement/service/products/apis@2023-09-01-preview' = {
-  name: activityProductName
-  parent: actitivyApimProduct
 }
