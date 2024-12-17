@@ -10,7 +10,9 @@ namespace Biotrackr.Activity.Api.Extensions
 
             activityEndpoints.MapGet("/{date}", ActivityHandlers.GetActivityByDate)
                 .WithName("GetActivityByDate")
-                .WithOpenApi();
+                .WithOpenApi()
+                .WithSummary("Get an Activity Summary by providing a date")
+                .WithDescription("You can get a specific activity summary via this endpoint by providing the date in the following format (YYYY-MM-DD)");
         }
     }
 }
