@@ -44,7 +44,7 @@ builder.Services.AddSwaggerGen(options =>
 {
     options.SwaggerDoc("v1", new OpenApiInfo
     {
-        Version = "v1",
+        Version = "1.0.0",
         Title = "Biotrackr Activity API",
         Description = "Web API for Activity data",
         Contact = new OpenApiContact
