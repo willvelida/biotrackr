@@ -1,6 +1,4 @@
-﻿using Biotrackr.Activity.Svc.Repositories.Interfaces;
-
-namespace Biotrackr.Activity.Svc.UnitTests.ServiceTests
+﻿namespace Biotrackr.Activity.Svc.UnitTests.ServiceTests
 {
     public class ActivityServiceShould
     {
