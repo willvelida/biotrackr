@@ -94,6 +94,8 @@ resource biotrackrActivityApi 'Microsoft.ApiManagement/service/apis@2023-09-01-p
     protocols: [
       'https'
     ]
+    format: 'swagger-link-json'
+    value: 'https://${activityApi.outputs.fqdn}/swagger/index.html'
   }
 }
 
