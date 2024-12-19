@@ -4,11 +4,11 @@ using System.Net;
 
 namespace Biotrackr.Activity.Api.IntegrationTests.HealthCheckHandlerTests
 {
-    public class HealthChecksShould : IClassFixture<WebApplicationFactory<Program>>
+    public class HealthChecksShould : IClassFixture<CustomWebApplicationFactory<Program>>
     {
-        private readonly WebApplicationFactory<Program> _factory;
+        private readonly CustomWebApplicationFactory<Program> _factory;
 
-        public HealthChecksShould(WebApplicationFactory<Program> factory)
+        public HealthChecksShould(CustomWebApplicationFactory<Program> factory)
         {
             _factory = factory;
         }
