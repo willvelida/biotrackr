@@ -19,7 +19,7 @@ namespace Biotrackr.Activity.Api.Extensions
 
         public static void RegisterHealthCheckEndpoints(this IEndpointRouteBuilder endpointRouteBuilder)
         {
-            var healthEndpoints = endpointRouteBuilder.MapGroup("/health");
+            var healthEndpoints = endpointRouteBuilder.MapGroup("/healthz");
 
             healthEndpoints.MapHealthChecks("/liveness", new HealthCheckOptions
             {
