@@ -50,7 +50,7 @@ jobs:
                 echo "Installing containerapp extension"
                 az extension add -n containerapp --yes
                 apiURL=$(az containerapp revision list -g ${{ secrets.resource-group-name }} -n ${{ inputs.api-name }} --query 'reverse(sort_by([].{Revision:name,Replicas:properties.replicas,Active:properties.active,Created:properties.createdTime,FQDN:properties.fqdn}[?Active!=`false`], &Created))| [0].FQDN' -o tsv)
-                echo "::set-output name apiURL::$apiURL"
+                echo "::set-output name=apiURL::$apiURL"
             
             - name: Setup .NET ${{ inputs.dotnet-version }}
               uses: actions/setup-dotnet@v4
