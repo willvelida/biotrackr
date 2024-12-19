@@ -11,6 +11,10 @@ on:
                 description: 'The working directory to run the tests'
                 required: true
                 type: string
+            test-project:
+                description: 'The Integration Test Project to run'
+                required: true
+                type: string
             api-name:
                 description: 'The name of the Api that will be tested'
                 required: true
@@ -64,4 +68,4 @@ jobs:
               run: dotnet build --no-restore --verbosity normal
 
             - name: Test
-              run: dotnet test --no-build --verbosity normal  --logger trx --environment API_URL="https://${{ steps.getapiurl.outputs.apiURL }}"
+              run: dotnet test --project ${{ inputs.test-project }} --no-build --verbosity normal  --logger trx --environment API_URL="https://${{ steps.getapiurl.outputs.apiURL }}"
