@@ -1,0 +1,67 @@
+name: Run ACA Api Integration Tests
+
+on:
+    workflow_call:
+        inputs:
+            dotnet-version:
+                description: 'The version of .NET to use'
+                required: true
+                type: string
+            working-directory:
+                description: 'The working directory to run the tests'
+                required: true
+                type: string
+            api-name:
+                description: 'The name of the Api that will be tested'
+                required: true
+                type: string
+        secrets:
+            client-id:
+                required: true
+            tenant-id:
+                required: true
+            subscription-id:
+                required: true
+            resource-group-name:
+                required: true
+
+jobs:
+    run-integration-tests:
+        name: Run Integration Tests
+        runs-on: ubuntu-latest
+        defaults:
+            run:
+                working-directory: ${{ inputs.working-directory }}
+
+        steps:
+            - name: Checkout Repository code
+              uses: actions/checkout@v4
+
+            - uses: azure/login@v2
+              name: Login to Azure
+              with:
+                client-id: ${{ secrets.client-id }}
+                tenant-id: ${{ secrets.tenant-id }}
+                subscription-id: ${{ secrets.subscription-id }}
+
+            - name: Get API URL
+              id: getapiurl
+              run: |
+                echo "Installing containerapp extension"
+                az extension add -n containerapp --yes
+                apiURL=$(az containerapp revision list -g ${{ secrets.resource-group-name }} -n ${{ inputs.api-name }} --query 'reverse(sort_by([].{Revision:name,Replicas:properties.replicas,Active:properties.active,Created:properties.createdTime,FQDN:properties.fqdn}[?Active!=`false`], &Created))| [0].FQDN' -o tsv)
+                echo "::set-output name apiURL::$apiURL"
+            
+            - name: Setup .NET ${{ inputs.dotnet-version }}
+              uses: actions/setup-dotnet@v4
+              with:
+                dotnet-version: ${{ inputs.dotnet-version }}
+            
+            - name: Install dependencies
+              run: dotnet restore
+
+            - name: Build
+              run: dotnet build --no-restore --verbosity normal
+
+            - name: Test
+              run: dotnet test --no-build --verbosity normal  --logger trx --environment API_URL="https://${{ steps.getapiurl.outputs.apiURL }}"

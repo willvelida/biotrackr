@@ -66,3 +66,5 @@ app.RegisterActivityEndpoints();
 app.RegisterHealthCheckEndpoints();
 
 app.Run();
+
+public partial class Program { }
