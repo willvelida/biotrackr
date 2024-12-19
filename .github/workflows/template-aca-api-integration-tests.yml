@@ -68,4 +68,4 @@ jobs:
               run: dotnet build --no-restore --verbosity normal
 
             - name: Test
-              run: dotnet test --project ${{ inputs.test-project }} --no-build --verbosity normal  --logger trx --environment API_URL="https://${{ steps.getapiurl.outputs.apiURL }}"
+              run: dotnet test ${{ inputs.test-project }} --no-build --verbosity normal  --logger trx --environment API_URL="https://${{ steps.getapiurl.outputs.apiURL }}"
