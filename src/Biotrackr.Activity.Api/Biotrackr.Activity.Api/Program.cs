@@ -55,11 +55,14 @@ builder.Services.AddSwaggerGen(options =>
     });
 });
 
+builder.Services.AddHealthChecks();
+
 var app = builder.Build();
 
 app.UseSwagger();
 app.UseSwaggerUI();
 
 app.RegisterActivityEndpoints();
+app.RegisterHealthCheckEndpoints();
 
 app.Run();
