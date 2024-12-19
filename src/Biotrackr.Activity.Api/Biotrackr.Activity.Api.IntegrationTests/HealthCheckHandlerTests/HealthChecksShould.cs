@@ -19,7 +19,7 @@ namespace Biotrackr.Activity.Api.IntegrationTests.HealthCheckHandlerTests
             // Arrange
             var client = _factory.CreateClient(new WebApplicationFactoryClientOptions
             {
-                BaseAddress = new Uri(Environment.GetEnvironmentVariable("API_URL"))
+                BaseAddress = new Uri(Environment.GetEnvironmentVariable("apiurl"))
             });
 
             // Act

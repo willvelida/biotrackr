@@ -16,6 +16,7 @@ namespace Biotrackr.Activity.Api.IntegrationTests
         {
             builder.ConfigureAppConfiguration((context, config) =>
             {
+                config.AddEnvironmentVariables();
                 var builtConfig = config.Build();
                 var managedIdentityClientId = builtConfig.GetValue<string>("managedidentityclientid");
                 var defaultCredentialOptions = new DefaultAzureCredentialOptions()
