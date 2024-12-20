@@ -1,4 +1,5 @@
 ﻿using Azure.Identity;
+using Biotrackr.Activity.Api.Configuration;
 using Biotrackr.Activity.Api.Repositories;
 using Biotrackr.Activity.Api.Repositories.Interfaces;
 using Microsoft.AspNetCore.Hosting;
@@ -29,21 +30,18 @@ namespace Biotrackr.Activity.Api.IntegrationTests
                     throw new InvalidOperationException("Required environment variables are not set.");
                 }
 
-                var defaultCredentialOptions = new DefaultAzureCredentialOptions()
-                {
-                    ManagedIdentityClientId = managedIdentityClientId
-                };
-
                 config.AddAzureAppConfiguration(config =>
                 {
                     config.Connect(new Uri(azureAppConfigEndpoint),
-                                   new DefaultAzureCredential(defaultCredentialOptions))
+                                   new ManagedIdentityCredential(managedIdentityClientId))
                           .Select(KeyFilter.Any, LabelFilter.Null);
                 });
             });
 
             builder.ConfigureServices((context, services) =>
             {
+                services.Configure<Settings>(context.Configuration.GetSection("Biotrackr"));
+
                 var cosmosClientOptions = new CosmosClientOptions
                 {
                     SerializerOptions = new CosmosSerializationOptions
@@ -52,10 +50,7 @@ namespace Biotrackr.Activity.Api.IntegrationTests
                     }
                 };
 
-                var credential = new DefaultAzureCredential(new DefaultAzureCredentialOptions
-                {
-                    ManagedIdentityClientId = Environment.GetEnvironmentVariable("managedidentityclientid")
-                });
+                var credential = new ManagedIdentityCredential(Environment.GetEnvironmentVariable("managedidentityclientid"));
 
                 var cosmosClient = new CosmosClient(
                     Environment.GetEnvironmentVariable("cosmosdbendpoint"),
@@ -64,6 +59,8 @@ namespace Biotrackr.Activity.Api.IntegrationTests
 
                 services.AddSingleton(cosmosClient);
                 services.AddTransient<ICosmosRepository, CosmosRepository>();
+
+                services.AddHealthChecks();
             });
 
             builder.UseEnvironment("Development"); // Ensure the environment is set to Development for testing
