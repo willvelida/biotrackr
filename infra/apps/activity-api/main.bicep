@@ -48,6 +48,19 @@ module activityApi '../../modules/host/container-app-http.bicep' = {
     imageName: imageName
     uaiName: uai.name
     targetPort: 8080
+    healthProbes: [
+      {
+        type: 'Liveness'
+        httpGet: {
+          port: 8080
+          path: '/healthz/liveness'
+        }
+        initialDelaySeconds: 15
+        periodSeconds: 30
+        failureThreshold: 3
+        timeoutSeconds: 1
+      }
+    ]
     envVariables: [
       { 
         name: 'azureappconfigendpoint'

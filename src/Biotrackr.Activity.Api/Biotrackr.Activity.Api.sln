@@ -7,6 +7,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Biotrackr.Activity.Api", "B
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Biotrackr.Activity.Api.UnitTests", "Biotrackr.Activity.Api.UnitTests\Biotrackr.Activity.Api.UnitTests.csproj", "{BDEB59D1-F440-4066-B59F-C080459A619E}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Biotrackr.Activity.Api.IntegrationTests", "Biotrackr.Activity.Api.IntegrationTests\Biotrackr.Activity.Api.IntegrationTests.csproj", "{2E886029-D44E-4176-921D-CE1746F3D5FB}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -21,6 +23,10 @@ Global
 		{BDEB59D1-F440-4066-B59F-C080459A619E}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{BDEB59D1-F440-4066-B59F-C080459A619E}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{BDEB59D1-F440-4066-B59F-C080459A619E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2E886029-D44E-4176-921D-CE1746F3D5FB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2E886029-D44E-4176-921D-CE1746F3D5FB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2E886029-D44E-4176-921D-CE1746F3D5FB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2E886029-D44E-4176-921D-CE1746F3D5FB}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
