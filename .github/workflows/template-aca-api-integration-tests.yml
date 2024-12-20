@@ -101,4 +101,7 @@ jobs:
             - name: Test
               run: dotnet test ${{ inputs.test-project }} --no-build --verbosity normal  --logger trx
               env:
-                apiurl: "https://${{ steps.getapiurl.outputs.apiURL }}"               
+                apiurl: "https://${{ steps.getapiurl.outputs.apiURL }}"
+                azureappconfigendpoint: ${{ steps.getappconfigendpoint.outputs.appconfigurl }}
+                managedidentityclientid: ${{ steps.getuamiClientId.outputs.clientId }}
+                cosmosdbendpoint: ${{ steps.getcosmosendpoint.outputs.cosmosurl }}               

@@ -20,9 +20,9 @@ namespace Biotrackr.Activity.Api.IntegrationTests
                       .AddEnvironmentVariables()
                       .AddJsonFile("appsettings.json");
                 var builtConfig = config.Build();
-                var managedIdentityClientId = builtConfig.GetValue<string>("managedidentityclientid");
-                var azureAppConfigEndpoint = builtConfig.GetValue<string>("azureappconfigendpoint");
-                var cosmosDbEndpoint = builtConfig.GetValue<string>("cosmosdbendpoint");
+                var managedIdentityClientId = Environment.GetEnvironmentVariable("managedidentityclientid");
+                var azureAppConfigEndpoint = Environment.GetEnvironmentVariable("azureappconfigendpoint");
+                var cosmosDbEndpoint = Environment.GetEnvironmentVariable("cosmosdbendpoint");
 
                 if (string.IsNullOrEmpty(managedIdentityClientId) || string.IsNullOrEmpty(azureAppConfigEndpoint) || string.IsNullOrEmpty(cosmosDbEndpoint))
                 {
@@ -54,11 +54,11 @@ namespace Biotrackr.Activity.Api.IntegrationTests
 
                 var credential = new DefaultAzureCredential(new DefaultAzureCredentialOptions
                 {
-                    ManagedIdentityClientId = context.Configuration.GetValue<string>("managedidentityclientid")
+                    ManagedIdentityClientId = Environment.GetEnvironmentVariable("managedidentityclientid")
                 });
 
                 var cosmosClient = new CosmosClient(
-                    context.Configuration.GetValue<string>("cosmosdbendpoint"),
+                    Environment.GetEnvironmentVariable("cosmosdbendpoint"),
                     credential,
                     cosmosClientOptions);
 
