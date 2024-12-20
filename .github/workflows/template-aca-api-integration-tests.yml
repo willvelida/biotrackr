@@ -73,6 +73,15 @@ jobs:
               run: |
                 clientId=$(az identity list --resource-group ${{ secrets.resource-group-name }} --query "[0].clientId" --output tsv)
                 echo "::set-output name=clientId::$clientId"
+
+            - name: Variable Substitution appsettings file for tests
+              uses: microsoft/variable-substitution@v1
+              with:
+                files: ./Biotrackr.Activity.Api.IntegrationTests/appsettings.json
+              env:
+                azureappconfigendpoint: ${{ steps.getappconfigendpoint.outputs.appconfigurl }}
+                managedidentityclientid: ${{ steps.getuamiClientId.outputs.clientId }}
+                cosmosdbendpoint: ${{ steps.getcosmosendpoint.outputs.cosmosurl }}
             
             - name: Setup .NET ${{ inputs.dotnet-version }}
               uses: actions/setup-dotnet@v4
@@ -88,7 +97,4 @@ jobs:
             - name: Test
               run: dotnet test ${{ inputs.test-project }} --no-build --verbosity normal  --logger trx
               env:
-                apiurl: "https://${{ steps.getapiurl.outputs.apiURL }}"
-                azureappconfigendpoint: ${{ steps.getappconfigendpoint.outputs.appconfigurl }}
-                managedidentityclientid: ${{ steps.getuamiClientId.outputs.clientId }}
-                cosmosdbendpoint: ${{ steps.getcosmosendpoint.outputs.cosmosurl }}
+                apiurl: "https://${{ steps.getapiurl.outputs.apiURL }}"               

@@ -16,9 +16,19 @@ namespace Biotrackr.Activity.Api.IntegrationTests
         {
             builder.ConfigureAppConfiguration((context, config) =>
             {
-                config.AddEnvironmentVariables();
+                config.SetBasePath(AppContext.BaseDirectory)
+                      .AddEnvironmentVariables()
+                      .AddJsonFile("appsettings.json");
                 var builtConfig = config.Build();
                 var managedIdentityClientId = builtConfig.GetValue<string>("managedidentityclientid");
+                var azureAppConfigEndpoint = builtConfig.GetValue<string>("azureappconfigendpoint");
+                var cosmosDbEndpoint = builtConfig.GetValue<string>("cosmosdbendpoint");
+
+                if (string.IsNullOrEmpty(managedIdentityClientId) || string.IsNullOrEmpty(azureAppConfigEndpoint) || string.IsNullOrEmpty(cosmosDbEndpoint))
+                {
+                    throw new InvalidOperationException("Required environment variables are not set.");
+                }
+
                 var defaultCredentialOptions = new DefaultAzureCredentialOptions()
                 {
                     ManagedIdentityClientId = managedIdentityClientId
@@ -26,8 +36,8 @@ namespace Biotrackr.Activity.Api.IntegrationTests
 
                 config.AddAzureAppConfiguration(config =>
                 {
-                    config.Connect(new Uri(builtConfig.GetValue<string>("azureappconfigendpoint")),
-                                   new ManagedIdentityCredential(managedIdentityClientId))
+                    config.Connect(new Uri(azureAppConfigEndpoint),
+                                   new DefaultAzureCredential(defaultCredentialOptions))
                           .Select(KeyFilter.Any, LabelFilter.Null);
                 });
             });
@@ -41,18 +51,22 @@ namespace Biotrackr.Activity.Api.IntegrationTests
                         PropertyNamingPolicy = CosmosPropertyNamingPolicy.CamelCase
                     }
                 };
+
+                var credential = new DefaultAzureCredential(new DefaultAzureCredentialOptions
+                {
+                    ManagedIdentityClientId = context.Configuration.GetValue<string>("managedidentityclientid")
+                });
+
                 var cosmosClient = new CosmosClient(
                     context.Configuration.GetValue<string>("cosmosdbendpoint"),
-                    new DefaultAzureCredential(new DefaultAzureCredentialOptions
-                    {
-                        ManagedIdentityClientId = context.Configuration.GetValue<string>("managedidentityclientid")
-                    }),
+                    credential,
                     cosmosClientOptions);
+
                 services.AddSingleton(cosmosClient);
                 services.AddTransient<ICosmosRepository, CosmosRepository>();
             });
 
-            builder.UseEnvironment("Development");
+            builder.UseEnvironment("Development"); // Ensure the environment is set to Development for testing
         }
     }
 }
