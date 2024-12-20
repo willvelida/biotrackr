@@ -19,10 +19,6 @@ on:
                 description: 'The name of the Api that will be tested'
                 required: true
                 type: string
-            settings-file:
-                description: 'The file containing app settings that are used by Integration Tests'
-                required: false
-                type: string
         secrets:
             client-id:
                 required: true
@@ -71,21 +67,6 @@ jobs:
               run: |
                 appconfigurl=$(az appconfig list --resource-group ${{ secrets.resource-group-name }} --query "[0].endpoint" --output tsv)
                 echo "::set-output name=appconfigurl::$appconfigurl"
-
-            - name: Get User-Assigned Managed Identity Client ID
-              id: getuamiClientId
-              run: |
-                clientId=$(az identity list --resource-group ${{ secrets.resource-group-name }} --query "[0].clientId" --output tsv)
-                echo "::set-output name=clientId::$clientId"
-
-            - name: Variable Substitution appsettings file for tests
-              uses: microsoft/variable-substitution@v1
-              with:
-                files: ${{ inputs.settings-file }}
-              env:
-                azureappconfigendpoint: ${{ steps.getappconfigendpoint.outputs.appconfigurl }}
-                managedidentityclientid: ${{ steps.getuamiClientId.outputs.clientId }}
-                cosmosdbendpoint: ${{ steps.getcosmosendpoint.outputs.cosmosurl }}
             
             - name: Setup .NET ${{ inputs.dotnet-version }}
               uses: actions/setup-dotnet@v4
@@ -103,5 +84,5 @@ jobs:
               env:
                 apiurl: "https://${{ steps.getapiurl.outputs.apiURL }}"
                 azureappconfigendpoint: ${{ steps.getappconfigendpoint.outputs.appconfigurl }}
-                managedidentityclientid: ${{ steps.getuamiClientId.outputs.clientId }}
+                managedidentityclientid: ${{secrets.client-id }}
                 cosmosdbendpoint: ${{ steps.getcosmosendpoint.outputs.cosmosurl }}               
