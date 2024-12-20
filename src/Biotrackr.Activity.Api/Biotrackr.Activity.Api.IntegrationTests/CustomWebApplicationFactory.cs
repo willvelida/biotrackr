@@ -30,10 +30,15 @@ namespace Biotrackr.Activity.Api.IntegrationTests
                     throw new InvalidOperationException("Required environment variables are not set.");
                 }
 
+                var workloadIdentityCredentialOptions = new WorkloadIdentityCredentialOptions
+                {
+                    ClientId = managedIdentityClientId
+                };
+
                 config.AddAzureAppConfiguration(config =>
                 {
                     config.Connect(new Uri(azureAppConfigEndpoint),
-                                   new ManagedIdentityCredential(managedIdentityClientId))
+                                   new WorkloadIdentityCredential(workloadIdentityCredentialOptions))
                           .Select(KeyFilter.Any, LabelFilter.Null);
                 });
             });
@@ -50,11 +55,14 @@ namespace Biotrackr.Activity.Api.IntegrationTests
                     }
                 };
 
-                var credential = new ManagedIdentityCredential(Environment.GetEnvironmentVariable("managedidentityclientid"));
+                var workloadIdentityCredentialOptions = new WorkloadIdentityCredentialOptions
+                {
+                    ClientId = Environment.GetEnvironmentVariable("managedidentityclientid")
+                };
 
                 var cosmosClient = new CosmosClient(
                     Environment.GetEnvironmentVariable("cosmosdbendpoint"),
-                    credential,
+                    new WorkloadIdentityCredential(workloadIdentityCredentialOptions),
                     cosmosClientOptions);
 
                 services.AddSingleton(cosmosClient);
