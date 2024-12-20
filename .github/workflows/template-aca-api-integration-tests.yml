@@ -56,19 +56,23 @@ jobs:
                 apiURL=$(az containerapp revision list -g ${{ secrets.resource-group-name }} -n ${{ inputs.api-name }} --query 'reverse(sort_by([].{Revision:name,Replicas:properties.replicas,Active:properties.active,Created:properties.createdTime,FQDN:properties.fqdn}[?Active!=`false`], &Created))| [0].FQDN' -o tsv)
                 echo "::set-output name=apiURL::$apiURL"
 
-            - name: Get Cosmos DB Connection String
-              id: getcosmosconnection
+            - name: Get Cosmos DB endpoint
+              id: getcosmosendpoint
               run: |
-                cosmosaccount=$(az cosmosdb list --resource-group ${{ secrets.resource-group-name }} --query "[0].name" --output tsv)
-                cosmosconnectionstring=$(az cosmosdb keys list --name $cosmosaccount --resource-group ${{ secrets.resource-group-name }} --type connection-strings --query "connectionStrings[0].connectionString" --output tsv)
-                echo "::Set-output name=cosmosconnectionstring::$cosmosconnectionstring"
+                cosmosurl=$(az cosmosdb list --resource-group ${{ secrets.resource-group-name }} --query "[0].documentEndpoint" --output tsv)
+                echo "::Set-output name=cosmosurl::$cosmosurl"
 
-            - name: Get App Config connection string
-              id: getappconfigconnection
+            - name: Get App Config endpoint
+              id: getappconfigendpoint
               run: |
-                  appconfigname=$(az appconfig list --resource-group ${{ secrets.resource-group-name }} --query "[0].name" --output tsv)
-                  appconfigconnectionstring=$(az appconfig credential list --name $appconfigname --resource-group ${{ secrets.resource-group-name }} --query "[0].connectionString" --output tsv)
-                  echo "::set-output name=appconfigconnectionstring::$appconfigconnectionstring"
+                appconfigurl=$(az appconfig list --resource-group ${{ secrets.resource-group-name }} --query "[0].endpoint" --output tsv)
+                echo "::set-output name=appconfigurl::$appconfigurl"
+
+            - name: Get User-Assigned Managed Identity Client ID
+              id: getuamiClientId
+              run: |
+                clientId=$(az identity list --resource-group ${{ secrets.resource-group-name }} --query "[0].clientId" --output tsv)
+                echo "::set-output name=clientId::$clientId"
             
             - name: Setup .NET ${{ inputs.dotnet-version }}
               uses: actions/setup-dotnet@v4
@@ -85,5 +89,6 @@ jobs:
               run: dotnet test ${{ inputs.test-project }} --no-build --verbosity normal  --logger trx
               env:
                 apiurl: "https://${{ steps.getapiurl.outputs.apiURL }}"
-                appconfigconnectionstring: ${{ steps.getappconfigconnection.outputs.appconfigconnectionstring }}
-                cosmosconnectionstring: ${{ steps.getcosmosconnection.outputs.cosmosconnectionstring }}
+                azureappconfigendpoint: ${{ steps.getappconfigendpoint.outputs.appconfigurl }}
+                managedidentityclientid: ${{ steps.getuamiClientId.outputs.clientId }}
+                cosmosdbendpoint: ${{ steps.getcosmosendpoint.outputs.cosmosurl }}

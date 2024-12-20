@@ -18,9 +18,16 @@ namespace Biotrackr.Activity.Api.IntegrationTests
             {
                 config.AddEnvironmentVariables();
                 var builtConfig = config.Build();
+                var managedIdentityClientId = builtConfig.GetValue<string>("managedidentityclientid");
+                var defaultCredentialOptions = new DefaultAzureCredentialOptions()
+                {
+                    ManagedIdentityClientId = managedIdentityClientId
+                };
+
                 config.AddAzureAppConfiguration(config =>
                 {
-                    config.Connect(builtConfig.GetValue<string>("appconfigconnectionstring"))
+                    config.Connect(new Uri(builtConfig.GetValue<string>("azureappconfigendpoint")),
+                                   new ManagedIdentityCredential(managedIdentityClientId))
                           .Select(KeyFilter.Any, LabelFilter.Null);
                 });
             });
@@ -35,7 +42,11 @@ namespace Biotrackr.Activity.Api.IntegrationTests
                     }
                 };
                 var cosmosClient = new CosmosClient(
-                    context.Configuration.GetValue<string>("cosmosconnectionstring"),
+                    context.Configuration.GetValue<string>("cosmosdbendpoint"),
+                    new DefaultAzureCredential(new DefaultAzureCredentialOptions
+                    {
+                        ManagedIdentityClientId = context.Configuration.GetValue<string>("managedidentityclientid")
+                    }),
                     cosmosClientOptions);
                 services.AddSingleton(cosmosClient);
                 services.AddTransient<ICosmosRepository, CosmosRepository>();
