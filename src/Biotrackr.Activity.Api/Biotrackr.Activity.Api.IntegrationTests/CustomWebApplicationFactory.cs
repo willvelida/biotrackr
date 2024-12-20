@@ -22,6 +22,7 @@ namespace Biotrackr.Activity.Api.IntegrationTests
                       .AddJsonFile("appsettings.json");
                 var builtConfig = config.Build();
                 var managedIdentityClientId = Environment.GetEnvironmentVariable("managedidentityclientid");
+                var tenantId = Environment.GetEnvironmentVariable("tenantid");
                 var azureAppConfigEndpoint = Environment.GetEnvironmentVariable("azureappconfigendpoint");
                 var cosmosDbEndpoint = Environment.GetEnvironmentVariable("cosmosdbendpoint");
 
@@ -30,15 +31,14 @@ namespace Biotrackr.Activity.Api.IntegrationTests
                     throw new InvalidOperationException("Required environment variables are not set.");
                 }
 
-                var workloadIdentityCredentialOptions = new WorkloadIdentityCredentialOptions
-                {
-                    ClientId = managedIdentityClientId
-                };
-
                 config.AddAzureAppConfiguration(config =>
                 {
                     config.Connect(new Uri(azureAppConfigEndpoint),
-                                   new WorkloadIdentityCredential(workloadIdentityCredentialOptions))
+                                   new WorkloadIdentityCredential(new WorkloadIdentityCredentialOptions
+                                   {
+                                       ClientId = managedIdentityClientId,
+                                       TenantId = tenantId
+                                   }))
                           .Select(KeyFilter.Any, LabelFilter.Null);
                 });
             });
@@ -55,14 +55,16 @@ namespace Biotrackr.Activity.Api.IntegrationTests
                     }
                 };
 
-                var workloadIdentityCredentialOptions = new WorkloadIdentityCredentialOptions
-                {
-                    ClientId = Environment.GetEnvironmentVariable("managedidentityclientid")
-                };
+                var managedIdentityClientId = Environment.GetEnvironmentVariable("managedidentityclientid");
+                var tenantId = Environment.GetEnvironmentVariable("tenantid");
 
                 var cosmosClient = new CosmosClient(
                     Environment.GetEnvironmentVariable("cosmosdbendpoint"),
-                    new WorkloadIdentityCredential(workloadIdentityCredentialOptions),
+                    new WorkloadIdentityCredential(new WorkloadIdentityCredentialOptions
+                    {
+                        ClientId = managedIdentityClientId,
+                        TenantId = tenantId
+                    }),
                     cosmosClientOptions);
 
                 services.AddSingleton(cosmosClient);

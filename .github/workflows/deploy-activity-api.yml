@@ -125,7 +125,7 @@ jobs:
     run-integration-tests:
       name: Run Api Integration Tests
       needs: [env-setup, deploy-dev]
-      uses: willvelida/biotrackr/.github/workflows/template-aca-api-integration-tests.yml@main
+      uses: willvelida/biotrackr/.github/workflows/template-aca-api-integration-tests.yml@feature/activity-api-integration-tests
       with:
         dotnet-version: ${{ needs.env-setup.outputs.dotnet-version }}
         working-directory: ./src/Biotrackr.Activity.Api
