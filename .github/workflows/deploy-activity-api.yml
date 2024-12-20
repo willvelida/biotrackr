@@ -34,10 +34,10 @@ jobs:
     run-unit-tests:
           name: Run Unit Tests
           needs: env-setup
-          uses: willvelida/biotrackr/.github/workflows/template-dotnet-run-unit-tests.yml@main
+          uses: willvelida/biotrackr/.github/workflows/template-dotnet-run-unit-tests.yml@feature/activity-api-healthchecks
           with:
             dotnet-version: ${{ needs.env-setup.outputs.dotnet-version }}
-            working-directory: ./src/Biotrackr.Activity.Api
+            working-directory: ./src/Biotrackr.Activity.Api/Biotrackr.Activity.Api.UnitTests
             coverage-path: ${{ needs.env-setup.outputs.coverage-path }}
 
     build-container-image-dev:
@@ -121,4 +121,3 @@ jobs:
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
           resource-group-name: ${{ secrets.AZURE_RG_NAME_DEV }}
-        
