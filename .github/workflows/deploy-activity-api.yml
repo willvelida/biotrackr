@@ -131,6 +131,7 @@ jobs:
         working-directory: ./src/Biotrackr.Activity.Api
         api-name: biotrackr-activity-api-dev
         test-project: ./Biotrackr.Activity.Api.IntegrationTests/Biotrackr.Activity.Api.IntegrationTests.csproj
+        settings-file: ./src/Biotrackr.Activity.Api/Biotrackr.Activity.Api.IntegrationTests/appsettings.json
       secrets:
         client-id: ${{ secrets.AZURE_CLIENT_ID }}
         tenant-id: ${{ secrets.AZURE_TENANT_ID }}

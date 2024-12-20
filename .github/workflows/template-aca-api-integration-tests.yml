@@ -19,6 +19,10 @@ on:
                 description: 'The name of the Api that will be tested'
                 required: true
                 type: string
+            settings-file:
+                description: 'The file containing app settings that are used by Integration Tests'
+                required: false
+                type: string
         secrets:
             client-id:
                 required: true
@@ -77,7 +81,7 @@ jobs:
             - name: Variable Substitution appsettings file for tests
               uses: microsoft/variable-substitution@v1
               with:
-                files: ./Biotrackr.Activity.Api.IntegrationTests/appsettings.json
+                files: ${{ inputs.settings-file }}
               env:
                 azureappconfigendpoint: ${{ steps.getappconfigendpoint.outputs.appconfigurl }}
                 managedidentityclientid: ${{ steps.getuamiClientId.outputs.clientId }}
