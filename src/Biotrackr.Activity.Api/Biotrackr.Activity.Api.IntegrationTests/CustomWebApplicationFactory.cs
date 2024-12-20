@@ -51,6 +51,8 @@ namespace Biotrackr.Activity.Api.IntegrationTests
                 services.AddSingleton(cosmosClient);
                 services.AddTransient<ICosmosRepository, CosmosRepository>();
             });
+
+            builder.UseEnvironment("Development");
         }
     }
 }
