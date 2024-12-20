@@ -84,5 +84,6 @@ jobs:
               env:
                 apiurl: "https://${{ steps.getapiurl.outputs.apiURL }}"
                 azureappconfigendpoint: ${{ steps.getappconfigendpoint.outputs.appconfigurl }}
-                managedidentityclientid: ${{secrets.client-id }}
-                cosmosdbendpoint: ${{ steps.getcosmosendpoint.outputs.cosmosurl }}               
+                managedidentityclientid: ${{ secrets.client-id }}
+                cosmosdbendpoint: ${{ steps.getcosmosendpoint.outputs.cosmosurl }}
+                tenantid: ${{ secrets.tenant-id }}               
