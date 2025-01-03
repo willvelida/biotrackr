@@ -1,0 +1,6 @@
+@Biotrackr.Sleep.Api_HostAddress = http://localhost:5004
+
+GET {{Biotrackr.Sleep.Api_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
