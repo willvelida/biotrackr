@@ -48,5 +48,34 @@ namespace Biotrackr.Weight.Api.Repositories
                 throw;
             }
         }
+
+        public async Task<WeightDocument> GetWeightDocumentByDate(string date)
+        {
+            try
+            {
+                QueryDefinition queryDefinition = new QueryDefinition("SELECT * FROM c WHERE c.date = @date")
+                    .WithParameter("@date", date);
+                QueryRequestOptions queryRequestOptions = new QueryRequestOptions
+                {
+                    PartitionKey = new PartitionKey("Weight")
+                };
+
+                var iterator = _container.GetItemQueryIterator<WeightDocument>(queryDefinition, requestOptions: queryRequestOptions);
+                var results = new List<WeightDocument>();
+
+                while (iterator.HasMoreResults)
+                {
+                    var response = await iterator.ReadNextAsync();
+                    results.AddRange(response.ToList());
+                }
+
+                return results.FirstOrDefault();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"Exception thrown in {nameof(GetWeightDocumentByDate)}: {ex.Message}");
+                throw;
+            }
+        }
     }
 }

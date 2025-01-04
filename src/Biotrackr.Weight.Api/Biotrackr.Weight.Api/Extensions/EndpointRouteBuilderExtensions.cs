@@ -15,6 +15,12 @@ namespace Biotrackr.Weight.Api.Extensions
                 .WithOpenApi()
                 .WithSummary("Gets all weight documents")
                 .WithDescription("Gets all weight documents from the database");
+
+            weightEndpoints.MapGet("/{date}", WeightHandlers.GetWeightByDate)
+                .WithName("GetWeightByDate")
+                .WithOpenApi()
+                .WithSummary("Gets a weight document by date")
+                .WithDescription("Gets a weight document from the database by date");
         }
 
         public static void RegisterHealthCheckEndpoints(this IEndpointRouteBuilder endpointRouteBuilder)

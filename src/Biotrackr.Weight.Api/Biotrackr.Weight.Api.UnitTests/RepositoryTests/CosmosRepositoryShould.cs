@@ -90,5 +90,89 @@ namespace Biotrackr.Weight.Api.UnitTests.RepositoryTests
                     It.Is<Func<It.IsAnyType, Exception, string>>((v, t) => true)),
                 Times.Once);
         }
+
+        [Fact]
+        public async Task GetWeightDocumentByDate_ShouldReturnWeightDocument()
+        {
+            // Arrange
+            var fixture = new Fixture();
+            var weightDocument = fixture.Create<WeightDocument>();
+            var date = "2022-01-01";
+            weightDocument.Date = date;
+
+            var feedResponse = new Mock<FeedResponse<WeightDocument>>();
+            feedResponse.Setup(f => f.GetEnumerator()).Returns(new List<WeightDocument> { weightDocument }.GetEnumerator());
+
+            var mockFeedIterator = new Mock<FeedIterator<WeightDocument>>();
+            mockFeedIterator.SetupSequence(i => i.HasMoreResults)
+                .Returns(true)
+                .Returns(false);
+            mockFeedIterator.Setup(i => i.ReadNextAsync(default))
+                .ReturnsAsync(feedResponse.Object);
+
+            _mockContainer.Setup(c => c.GetItemQueryIterator<WeightDocument>(It.IsAny<QueryDefinition>(), It.IsAny<string>(), It.IsAny<QueryRequestOptions>()))
+                .Returns(mockFeedIterator.Object);
+
+            // Act
+            var result = await _cosmosRepository.GetWeightDocumentByDate(date);
+
+            // Assert
+            result.Should().BeEquivalentTo(weightDocument);
+            result.Date.Should().Be(date);
+        }
+
+        [Fact]
+        public async Task GetWeightDocumentByDate_ShouldReturnNull_WhenWeightDoesNotExist()
+        {
+            // Arrange
+            var date = "2022-01-01";
+
+            var feedResponse = new Mock<FeedResponse<WeightDocument>>();
+            feedResponse.Setup(f => f.GetEnumerator()).Returns(new List<WeightDocument>().GetEnumerator());
+
+            var mockFeedIterator = new Mock<FeedIterator<WeightDocument>>();
+            mockFeedIterator.SetupSequence(i => i.HasMoreResults)
+                .Returns(true)
+                .Returns(false);
+            mockFeedIterator.Setup(i => i.ReadNextAsync(default))
+                .ReturnsAsync(feedResponse.Object);
+            _mockContainer.Setup(c => c.GetItemQueryIterator<WeightDocument>(It.IsAny<QueryDefinition>(), It.IsAny<string>(), It.IsAny<QueryRequestOptions>()))
+                .Returns(mockFeedIterator.Object);
+
+            // Act
+            var result = await _cosmosRepository.GetWeightDocumentByDate(date);
+
+            // Assert
+            result.Should().BeNull();
+        }
+
+        [Fact]
+        public async Task GetWeightDocumentByDate_ShouldLogErrorAndThrowException_WhenExceptionOccurs()
+        {
+            // Arrange
+            var exceptionMessage = "Test exception";
+            var date = "2022-01-01";
+
+            var mockFeedIterator = new Mock<FeedIterator<WeightDocument>>();
+            mockFeedIterator.Setup(i => i.HasMoreResults).Returns(true);
+            mockFeedIterator.Setup(i => i.ReadNextAsync(default)).ThrowsAsync(new Exception(exceptionMessage));
+
+            _mockContainer.Setup(c => c.GetItemQueryIterator<WeightDocument>(It.IsAny<QueryDefinition>(), It.IsAny<string>(), It.IsAny<QueryRequestOptions>()))
+                .Returns(mockFeedIterator.Object);
+
+            // Act
+            Func<Task> act = async () => await _cosmosRepository.GetWeightDocumentByDate(date);
+
+            // Assert
+            await act.Should().ThrowAsync<Exception>().WithMessage(exceptionMessage);
+            _mockLogger.Verify(
+                x => x.Log(
+                    LogLevel.Error,
+                    It.IsAny<EventId>(),
+                    It.Is<It.IsAnyType>((v, t) => v.ToString().Contains($"Exception thrown in {nameof(CosmosRepository.GetWeightDocumentByDate)}: {exceptionMessage}")),
+                    It.IsAny<Exception>(),
+                    It.Is<Func<It.IsAnyType, Exception, string>>((v, t) => true)),
+                Times.Once);
+        }
     }
 }
