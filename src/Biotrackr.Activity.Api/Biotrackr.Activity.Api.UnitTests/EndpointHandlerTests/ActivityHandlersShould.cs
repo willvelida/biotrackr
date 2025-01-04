@@ -49,5 +49,35 @@ namespace Biotrackr.Activity.Api.UnitTests.EndpointHandlerTests
             // Assert
             result.Result.Should().BeOfType<NotFound>();
         }
+
+        [Fact]
+        public async Task GetAllActivities_ShouldReturnOk_WhenActivitiesAreFound()
+        {
+            // Arrange
+            var fixture = new Fixture();
+            var activityDocuments = fixture.CreateMany<ActivityDocument>().ToList();
+            _cosmosRepositoryMock.Setup(x => x.GetAllActivitySummaries()).ReturnsAsync(activityDocuments);
+
+            // Act
+            var result = await ActivityHandlers.GetAllActivities(_cosmosRepositoryMock.Object);
+
+            // Assert
+            result.Should().BeOfType<Ok<List<ActivityDocument>>>();
+            result.Value.Should().BeEquivalentTo(activityDocuments);
+        }
+
+        [Fact]
+        public async Task GetAllActivities_ShouldReturnOk_WhenActivitiesAreNotFound()
+        {
+            // Arrange
+            _cosmosRepositoryMock.Setup(x => x.GetAllActivitySummaries()).ReturnsAsync(new List<ActivityDocument>());
+
+            // Act
+            var result = await ActivityHandlers.GetAllActivities(_cosmosRepositoryMock.Object);
+
+            // Assert
+            result.Should().BeOfType<Ok<List<ActivityDocument>>>();
+            result.Value.Should().BeEmpty();
+        }
     }
 }

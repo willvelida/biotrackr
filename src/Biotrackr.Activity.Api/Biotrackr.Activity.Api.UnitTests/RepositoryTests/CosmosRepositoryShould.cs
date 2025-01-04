@@ -100,5 +100,64 @@ namespace Biotrackr.Activity.Api.UnitTests.RepositoryTests
             await act.Should().ThrowAsync<Exception>().WithMessage(exceptionMessage);
             _loggerMock.VerifyLog(logger => logger.LogError($"Exception thrown in GetActivitySummaryByDate: Test Exception"));
         }
+
+        [Fact]
+        public async Task GetAllActivitySummaries_ShouldReturnListOfActivityDocuments()
+        {
+            // Arrange
+            var fixture = new Fixture();
+            var activityDocuments = fixture.CreateMany<ActivityDocument>().ToList();
+
+            var feedResponse = new Mock<FeedResponse<ActivityDocument>>();
+            feedResponse.Setup(x => x.GetEnumerator()).Returns(activityDocuments.GetEnumerator());
+
+            var iterator = new Mock<FeedIterator<ActivityDocument>>();
+            iterator.SetupSequence(x => x.HasMoreResults).Returns(true).Returns(false);
+            iterator.Setup(x => x.ReadNextAsync(default)).ReturnsAsync(feedResponse.Object);
+
+            _containerMock.Setup(x => x.GetItemQueryIterator<ActivityDocument>(It.IsAny<QueryDefinition>(), It.IsAny<string>(), It.IsAny<QueryRequestOptions>())).Returns(iterator.Object);
+
+            // Act
+            var result = await _repository.GetAllActivitySummaries();
+
+            // Assert
+            result.Should().BeEquivalentTo(activityDocuments);
+        }
+
+        [Fact]
+        public async Task GetAllActivitySummaries_ShouldReturnEmptyList_WhenActivitiesDoNotExist()
+        {
+            // Arrange
+            var feedResponse = new Mock<FeedResponse<ActivityDocument>>();
+            feedResponse.Setup(x => x.GetEnumerator()).Returns(new List<ActivityDocument>().GetEnumerator());
+
+            var iterator = new Mock<FeedIterator<ActivityDocument>>();
+            iterator.SetupSequence(x => x.HasMoreResults).Returns(true).Returns(false);
+            iterator.Setup(x => x.ReadNextAsync(default)).ReturnsAsync(feedResponse.Object);
+
+            _containerMock.Setup(x => x.GetItemQueryIterator<ActivityDocument>(It.IsAny<QueryDefinition>(), It.IsAny<string>(), It.IsAny<QueryRequestOptions>())).Returns(iterator.Object);
+
+            // Act
+            var result = await _repository.GetAllActivitySummaries();
+
+            // Assert
+            result.Should().BeEmpty();
+        }
+
+        [Fact]
+        public async Task GetAllActivitySummaries_ShouldLogErrorAndThrowException_WhenExceptionOccurs()
+        {
+            // Arrange
+            var exceptionMessage = "Test Exception";
+            _containerMock.Setup(c => c.GetItemQueryIterator<ActivityDocument>(It.IsAny<QueryDefinition>(), It.IsAny<string>(), It.IsAny<QueryRequestOptions>()))
+                          .Throws(new Exception(exceptionMessage));
+
+            // Act
+            Func<Task> act = async () => await _repository.GetAllActivitySummaries();
+
+            // Assert
+            await act.Should().ThrowAsync<Exception>().WithMessage(exceptionMessage);
+            _loggerMock.VerifyLog(logger => logger.LogError($"Exception thrown in GetAllActivitySummaries: Test Exception"));
+        }
     }
 }

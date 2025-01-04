@@ -50,5 +50,33 @@ namespace Biotrackr.Activity.Api.Repositories
                 throw;
             }
         }
+
+        public async Task<List<ActivityDocument>> GetAllActivitySummaries()
+        {
+            try
+            {
+                QueryDefinition queryDefinition = new QueryDefinition("SELECT * FROM c");
+                QueryRequestOptions queryRequestOptions = new QueryRequestOptions
+                {
+                    PartitionKey = new PartitionKey("Activity")
+                };
+
+                var iterator = _container.GetItemQueryIterator<ActivityDocument>(queryDefinition, null, queryRequestOptions);
+                var results = new List<ActivityDocument>();
+
+                while (iterator.HasMoreResults)
+                {
+                    var response = await iterator.ReadNextAsync();
+                    results.AddRange(response);
+                }
+
+                return results;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"Exception thrown in {nameof(GetAllActivitySummaries)}: {ex.Message}");
+                throw;
+            }
+        }
     }
 }

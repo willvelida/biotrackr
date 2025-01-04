@@ -10,6 +10,12 @@ namespace Biotrackr.Activity.Api.Extensions
         {
             var activityEndpoints = endpointRouteBuilder.MapGroup("/activity");
 
+            activityEndpoints.MapGet("/", ActivityHandlers.GetAllActivities)
+                .WithName("GetAllActivities")
+                .WithOpenApi()
+                .WithSummary("Get all Activity Summaries")
+                .WithDescription("You can get all activity summaries via this endpoint");
+
             activityEndpoints.MapGet("/{date}", ActivityHandlers.GetActivityByDate)
                 .WithName("GetActivityByDate")
                 .WithOpenApi()
