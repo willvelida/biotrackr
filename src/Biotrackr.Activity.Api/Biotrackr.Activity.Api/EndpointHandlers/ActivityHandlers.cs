@@ -17,5 +17,11 @@ namespace Biotrackr.Activity.Api.EndpointHandlers
             }
             return TypedResults.Ok(activity);
         }
+
+        public static async Task<Ok<List<ActivityDocument>>> GetAllActivities(ICosmosRepository cosmosRepository)
+        {
+            var activities = await cosmosRepository.GetAllActivitySummaries();
+            return TypedResults.Ok(activities);
+        }
     }
 }
