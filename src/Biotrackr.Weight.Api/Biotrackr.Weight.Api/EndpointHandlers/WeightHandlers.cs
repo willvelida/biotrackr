@@ -12,5 +12,17 @@ namespace Biotrackr.Weight.Api.EndpointHandlers
             var weightDocuments = await cosmosRepository.GetAllWeightDocuments();
             return TypedResults.Ok(weightDocuments);
         }
+
+        public static async Task<Results<NotFound, Ok<WeightDocument>>> GetWeightByDate(
+            ICosmosRepository cosmosRepository,
+            string date)
+        {
+            var weightDocument = await cosmosRepository.GetWeightDocumentByDate(date);
+            if (weightDocument == null)
+            {
+                return TypedResults.NotFound();
+            }
+            return TypedResults.Ok(weightDocument);
+        }
     }
 }
