@@ -19,17 +19,17 @@ env:
 
 jobs:
     env-setup:
-          name: Setup Environment
-          runs-on: ubuntu-latest
-          outputs:
-            dotnet-version: ${{ steps.set-output-defaults.outputs.dotnet-version }}
-            coverage-path: ${{ steps.set-output-defaults.outputs.coverage-path }}
-          steps:
-            - name: set outputs with default values
-              id: set-output-defaults
-              run: |
-                echo "::set-output name=dotnet-version::${{ env.DOTNET_VERSION }}"
-                echo "::set-output name=coverage-path::${{ env.COVERAGE_PATH }}"
+        name: Setup Environment
+        runs-on: ubuntu-latest
+        outputs:
+          dotnet-version: ${{ steps.set-output-defaults.outputs.dotnet-version }}
+          coverage-path: ${{ steps.set-output-defaults.outputs.coverage-path }}
+        steps:
+          - name: set outputs with default values
+            id: set-output-defaults
+            run: |
+              echo "dotnet-version=${{ env.DOTNET_VERSION }}" >> "$GITHUB_OUTPUT"
+              echo "coverage-path=${{ env.COVERAGE_PATH }}" >> "$GITHUB_OUTPUT"
 
     run-unit-tests:
           name: Run Unit Tests
@@ -71,7 +71,7 @@ jobs:
             id: get-acr-server
             run: |
               loginServer=$(az acr list --resource-group ${{ secrets.AZURE_RG_NAME_DEV }} --query "[0].loginServer" -o tsv)
-              echo "::set-output name=loginServer::$loginServer"
+              echo "loginServer=$loginServer" > "$GITHUB_OUTPUT"
 
     lint:
         name: Run Bicep Linter
