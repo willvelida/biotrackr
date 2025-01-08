@@ -1,0 +1,62 @@
+name: Deploy UI
+
+on:
+    pull_request:
+        branches:
+            - main
+        paths:
+            - 'infra/apps/ui/**'
+
+permissions:
+    contents: read
+    id-token: write
+    pull-requests: write
+
+jobs:
+    lint:
+        name: Run Bicep Linter
+        uses: willvelida/biotrackr/.github/workflows/template-bicep-linter.yml@main
+        with:
+            template-file: './infra/apps/ui/main.bicep'
+
+    validate:
+        name: Validate Template
+        needs: lint
+        uses: willvelida/biotrackr/.github/workflows/template-bicep-validate.yml@main
+        with:
+          template-file: './infra/apps/ui/main.bicep'
+          parameters-file: ./infra/apps/ui/main.dev.bicepparam
+          scope: resourcegroup
+        secrets:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+          resource-group-name: ${{ secrets.AZURE_RG_NAME_DEV }}
+
+    preview:
+        name: Preview Changes
+        needs: validate
+        uses: willvelida/biotrackr/.github/workflows/template-bicep-whatif.yml@main
+        with:
+          template-file: './infra/apps/ui/main.bicep'
+          parameters-file: ./infra/apps/ui/main.dev.bicepparam
+        secrets:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+          resource-group-name: ${{ secrets.AZURE_RG_NAME_DEV }}
+
+    deploy-dev:
+        name: Deploy Template to Dev
+        needs: preview
+        uses: willvelida/biotrackr/.github/workflows/template-bicep-deploy.yml@main
+        with:
+          template-file: './infra/apps/ui/main.bicep'
+          parameters-file: ./infra/apps/ui/main.dev.bicepparam
+          scope: resourcegroup
+          environment: dev
+        secrets:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+          resource-group-name: ${{ secrets.AZURE_RG_NAME_DEV }}
