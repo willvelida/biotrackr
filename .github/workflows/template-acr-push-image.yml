@@ -67,7 +67,7 @@ jobs:
             image: ${{ steps.getacrserver.outputs.loginServer }}/${{ inputs.app-name }}:${{ github.sha }}
 
         - name: Run Trivy vulnerability scanner
-          uses: aquasecurity/trivy-action@0.29.0
+          uses: aquasecurity/trivy-action@0.30.0
           with:
             image-ref: ${{ steps.getacrserver.outputs.loginServer }}/${{ inputs.app-name }}:${{ github.sha }}
             format: 'table'
