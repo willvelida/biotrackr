@@ -43,7 +43,7 @@ jobs:
     build-container-image-dev:
         name: Build and Push Container Image
         needs: run-unit-tests
-        uses: willvelida/biotrackr/.github/workflows/template-acr-push-image.yml@main
+        uses: willvelida/biotrackr/.github/workflows/template-acr-push-image.yml@feature/activity-upgrade-to-net9
         with:
           working-directory: ./src/Biotrackr.Activity.Svc
           app-name: biotrackr-activity-svc
