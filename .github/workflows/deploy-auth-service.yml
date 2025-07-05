@@ -5,8 +5,9 @@ on:
         branches:
             - main
         paths:
-            - 'infra/apps/auth-service/*'
-            - 'src/Biotrackr.Auth.Svc/*'
+            - 'infra/apps/auth-service/**'
+            - 'src/Biotrackr.Auth.Svc/**'
+            - '.github/workflows/deploy-auth-service.yml'
 
 permissions:
     contents: read
