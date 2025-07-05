@@ -15,9 +15,19 @@ namespace Biotrackr.Activity.Svc.Repositories
 
         public CosmosRepository(CosmosClient cosmosClient, IOptions<Settings> settings, ILogger<CosmosRepository> logger)
         {
-            _cosmosClient = cosmosClient;
-            _settings = settings.Value;
-            _logger = logger;
+            _cosmosClient = cosmosClient ?? throw new ArgumentNullException(nameof(cosmosClient));
+
+            if (settings == null)
+                throw new ArgumentNullException(nameof(settings));
+            _settings = settings.Value ?? throw new ArgumentNullException(nameof(settings));
+            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+
+            if (string.IsNullOrEmpty(_settings.DatabaseName))
+                throw new ArgumentNullException("DatabaseName cannot be null or empty");
+
+            if (string.IsNullOrEmpty(_settings.ContainerName))
+                throw new ArgumentNullException("ContainerName cannot be null or empty");
+
             _container = _cosmosClient.GetContainer(_settings.DatabaseName, _settings.ContainerName);
         }
 

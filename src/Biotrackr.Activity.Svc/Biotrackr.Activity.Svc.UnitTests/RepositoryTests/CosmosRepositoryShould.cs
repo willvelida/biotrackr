@@ -69,5 +69,57 @@
             await repositoryAction.Should().ThrowAsync<Exception>();
             _loggerMock.VerifyLog(logger => logger.LogError($"Exception thrown in CreateActivityDocument: Mock Failure"));
         }
+
+        [Fact]
+        public void Constructor_ShouldInitializeContainerWithCorrectParameters()
+        {
+            // Assert
+            _cosmosClientMock.Verify(x => x.GetContainer("DatabaseName", "ContainerName"), Times.Once);
+        }
+
+        [Fact]
+        public void Constructor_ShouldThrowArgumentNullException_WhenCosmosClientIsNull()
+        {
+            // Act & Assert
+            Assert.Throws<ArgumentNullException>(() =>
+                new CosmosRepository(null, _optionsMock.Object, _loggerMock.Object));
+        }
+
+        [Fact]
+        public void Constructor_ShouldThrowArgumentNullException_WhenOptionsIsNull()
+        {
+            // Act & Assert
+            Assert.Throws<ArgumentNullException>(() =>
+                new CosmosRepository(_cosmosClientMock.Object, null, _loggerMock.Object));
+        }
+
+        [Fact]
+        public void Constructor_ShouldThrowArgumentNullException_WhenLoggerIsNull()
+        {
+            // Act & Assert
+            Assert.Throws<ArgumentNullException>(() =>
+                new CosmosRepository(_cosmosClientMock.Object, _optionsMock.Object, null));
+        }
+
+        [Theory]
+        [InlineData(null, "ContainerName")]
+        [InlineData("", "ContainerName")]
+        [InlineData("DatabaseName", null)]
+        [InlineData("DatabaseName", "")]
+        [InlineData(null, null)]
+        public void Constructor_ShouldHandleInvalidSettings(string databaseName, string containerName)
+        {
+            // Arrange
+            _optionsMock.Setup(x => x.Value).Returns(new Settings
+            {
+                DatabaseName = databaseName,
+                ContainerName = containerName
+            });
+
+            // Act & Assert
+            var exception = Assert.Throws<ArgumentNullException>(() =>
+                new CosmosRepository(_cosmosClientMock.Object, _optionsMock.Object, _loggerMock.Object));
+
+        }
     }
 }
