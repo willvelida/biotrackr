@@ -1,9 +1,7 @@
-﻿using System.Diagnostics.CodeAnalysis;
-using System.Text.Json.Serialization;
+﻿using System.Text.Json.Serialization;
 
 namespace Biotrackr.Auth.Svc.Models
 {
-    [ExcludeFromCodeCoverage]
     public class RefreshTokenResponse
     {
         [JsonPropertyName("access_token")]

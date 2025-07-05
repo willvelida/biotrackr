@@ -1,7 +1,5 @@
 using Biotrackr.Auth.Svc.Models;
 using Biotrackr.Auth.Svc.Services.Interfaces;
-using Microsoft.ApplicationInsights;
-using Microsoft.ApplicationInsights.DataContracts;
 
 namespace Biotrackr.Auth.Svc
 {
