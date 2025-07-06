@@ -9,6 +9,12 @@ on:
             parameters-file:
                 required: true
                 type: string
+            scope:
+                required: true
+                type: string
+            location:
+                required: true
+                type: string
         secrets:
             client-id:
                 required: true
@@ -39,3 +45,16 @@ jobs:
           with:
             inlineScript: |
                 az deployment group what-if --resource-group ${{ secrets.resource-group-name }} --template-file ${{ inputs.template-file }} --parameters ${{ inputs.parameters-file }}
+
+        - uses: azure/bicep-deploy@v2
+          name: Perform What-If
+          with:
+            type: deployments
+            operation: whatIf
+            scope: ${{ inputs.scope }}
+            validation-level: 'providerNoRbac'
+            subscription-id: ${{ secrets.subscription-id }}
+            location: ${{ inputs.location }}
+            name: ${{ github.run_number }}
+            template-file: ${{ inputs.template-file }}
+            parameters-file: ${{ inputs.parameters-file }}
