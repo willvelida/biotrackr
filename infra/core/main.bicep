@@ -113,7 +113,7 @@ module cosmos '../modules/database/serverless-cosmos-db.bicep' = {
   }
 }
 
-module apim '../modules/integration/apim-consumption.bicep' = {
+module apim '../modules/apim/apim-consumption.bicep' = {
   name: 'apim'
   params: {
     baseName: baseName

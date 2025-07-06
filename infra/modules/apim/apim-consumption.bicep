@@ -42,6 +42,11 @@ param appInsightsName string
 param logAnalyticsName string
 
 var apimName = 'api-${baseName}-${environment}'
+var productNames = [
+  'Activity'
+  'Sleep'
+  'Weight'
+]
 
 resource uai 'Microsoft.ManagedIdentity/userAssignedIdentities@2023-01-31' existing = {
   name: uaiName
@@ -74,6 +79,14 @@ resource apiManagement 'Microsoft.ApiManagement/service@2024-05-01' = {
     }
   }
 }
+
+module products 'apim-products.bicep' = [for name in productNames: {
+  name: '${name}-product'
+  params: {
+    apimName: apiManagement.name
+    productName: name
+  }
+}]
 
 resource apiLogger 'Microsoft.ApiManagement/service/loggers@2023-09-01-preview' = {
   name: '${appInsightsName}-apim'

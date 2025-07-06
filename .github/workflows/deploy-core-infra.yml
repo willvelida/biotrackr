@@ -23,7 +23,7 @@ jobs:
     validate:
         needs: lint
         name: Validate Template
-        uses: willvelida/biotrackr/.github/workflows/template-bicep-validate.yml@feature/apim-integration
+        uses: willvelida/biotrackr/.github/workflows/template-bicep-validate.yml@main
         with:
           template-file: './infra/core/main.bicep'
           parameters-file: './infra/core/main.dev.bicepparam'
@@ -37,7 +37,7 @@ jobs:
     preview:
         needs: validate
         name: Preview Changes
-        uses: willvelida/biotrackr/.github/workflows/template-bicep-whatif.yml@feature/apim-integration
+        uses: willvelida/biotrackr/.github/workflows/template-bicep-whatif.yml@main
         with:
           template-file: './infra/core/main.bicep'
           parameters-file: './infra/core/main.dev.bicepparam'
@@ -51,7 +51,7 @@ jobs:
     deploy-dev:
         needs: preview
         name: Deploy Template to Dev
-        uses: willvelida/biotrackr/.github/workflows/template-bicep-deploy.yml@feature/apim-integration
+        uses: willvelida/biotrackr/.github/workflows/template-bicep-deploy.yml@main
         with:
           template-file: './infra/core/main.bicep'
           parameters-file: './infra/core/main.dev.bicepparam'
