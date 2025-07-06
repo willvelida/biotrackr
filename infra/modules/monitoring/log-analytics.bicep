@@ -1,10 +1,13 @@
 metadata name = 'Log Analytics Workspace'
 metadata description = 'This module deploys a Log Analytics workspace.'
 
-@description('The name of the Log Analytics workspace')
-@minLength(4)
-@maxLength(63)
-param name string
+@description('The base name given to all resources')
+@minLength(5)
+@maxLength(50)
+param baseName string
+
+@description('The environment that the Log Analytics workspace will be deployed to')
+param environment string
 
 @description('The location that the Log Analytics workspace will be deployed to')
 @allowed([
@@ -15,8 +18,10 @@ param location string
 @description('The tags that will be applied to the Log Analytics workspace')
 param tags object
 
+var lawName = 'law-${baseName}-${environment}'
+
 resource logAnalytics 'Microsoft.OperationalInsights/workspaces@2023-09-01' = {
-  name: name
+  name: lawName
   location: location
   tags: tags
   properties: {

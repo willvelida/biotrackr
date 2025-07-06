@@ -1,10 +1,13 @@
 metadata name = 'Azure Container Registry'
 metadata description = 'This module deploys an Azure Container Registry. It also assigns the "AcrPull" role to a provided user-assigned managed identity'
 
-@description('The name of the Container Registry')
+@description('The base name given to all resources')
 @minLength(5)
 @maxLength(50)
-param name string
+param baseName string
+
+@description('The environment that the Container Registry will be deployed to')
+param environment string
 
 @description('The region where the Container Registry will be deployed')
 @allowed([
@@ -25,6 +28,7 @@ param uaiName string
 @maxLength(63)
 param logAnalyticsName string
 
+var acrName = 'acr${baseName}${environment}'
 var acrPullRoleDefintionId = subscriptionResourceId('Microsoft.Authorization/roleDefinitions', '7f951dda-4ed3-4680-a7ca-43fe172d538d')
 
 resource uai 'Microsoft.ManagedIdentity/userAssignedIdentities@2023-01-31' existing = {
@@ -36,7 +40,7 @@ resource logAnalytics 'Microsoft.OperationalInsights/workspaces@2023-09-01' exis
 }
 
 resource acr 'Microsoft.ContainerRegistry/registries@2023-07-01' = {
-  name: name
+  name: acrName
   location: location
   tags: tags
   sku: {

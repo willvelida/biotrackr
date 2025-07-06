@@ -41,11 +41,14 @@ jobs:
             tenant-id: ${{ secrets.tenant-id }}
             subscription-id: ${{ secrets.subscription-id }}
 
-        - uses: azure/arm-deploy@v2
+        - uses: azure/bicep-deploy@v2
           name: Deploy Bicep Template
           with:
+            type: deployment
+            operation: create
             scope: ${{ inputs.scope }}
-            resourceGroupName: ${{ secrets.resource-group-name }}
-            template: ${{ inputs.template-file }}
-            parameters: ${{ inputs.parameters-file }}
-            deploymentName: ${{ github.run_number }} 
+            subscription-id: ${{ secrets.subscription-id }}
+            resource-group-name: ${{ secrets.resource-group-name }}
+            template-file: ${{ inputs.template-file }}
+            parameters-file: ${{ inputs.parameters-file }}
+            name: ${{ github.run_number }} 

@@ -37,12 +37,14 @@ jobs:
                 tenant-id: ${{ secrets.tenant-id }}
                 subscription-id: ${{ secrets.subscription-id }}
 
-            - uses: azure/arm-deploy@v2
+            - uses: azure/bicep-deploy@v2
               name: Run preflight validation
               with:
+                type: deployment
                 scope: ${{ inputs.scope }}
-                resourceGroupName: ${{ secrets.resource-group-name }}
-                deploymentName: ${{ github.run_number }}
-                template: ${{ inputs.template-file }}
-                parameters: ${{ inputs.parameters-file }}
-                deploymentMode: Validate
+                subscription-id: ${{ secrets.subscription-id }}
+                resource-group-name: ${{ secrets.resource-group-name }}
+                name: ${{ github.run_number }}
+                template-file: ${{ inputs.template-file }}
+                parameters-file: ${{ inputs.parameters-file }}
+                operation: validate

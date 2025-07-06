@@ -1,10 +1,13 @@
 metadata name = 'Azure Key Vault'
 metadata description = 'This module deploys a Key Vault, and assigns the "Key Vault Secrets Officer" role to a provided user-assigned identity.'
 
-@description('The name of the Key Vault')
-@minLength(3)
-@maxLength(24)
-param name string
+@description('The base name given to all resources')
+@minLength(5)
+@maxLength(50)
+param baseName string
+
+@description('The environment that the Key Vault instance will be deployed to')
+param environment string
 
 @description('The region that the Key Vault will be deployed to')
 @allowed([
@@ -25,6 +28,7 @@ param uaiName string
 @maxLength(63)
 param logAnalyticsName string
 
+var keyVaultName = 'kv-${baseName}-${environment}'
 var keyVaultSecretsOfficerRoleDefinitionId = subscriptionResourceId('Microsoft.Authorization/roleDefinitions','b86a8fe4-44ce-4948-aee5-eccb2c155cd7')
 
 resource uai 'Microsoft.ManagedIdentity/userAssignedIdentities@2023-01-31' existing = {
@@ -36,7 +40,7 @@ resource logAnalytics 'Microsoft.OperationalInsights/workspaces@2023-09-01' exis
 }
 
 resource keyVault 'Microsoft.KeyVault/vaults@2023-07-01' = {
-  name: name
+  name: keyVaultName
   location: location
   tags: tags
   properties: {

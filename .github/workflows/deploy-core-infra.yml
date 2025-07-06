@@ -23,11 +23,11 @@ jobs:
     validate:
         needs: lint
         name: Validate Template
-        uses: willvelida/biotrackr/.github/workflows/template-bicep-validate.yml@main
+        uses: willvelida/biotrackr/.github/workflows/template-bicep-validate.yml@feature/apim-integration
         with:
           template-file: './infra/core/main.bicep'
           parameters-file: './infra/core/main.dev.bicepparam'
-          scope: resourcegroup
+          scope: resourceGroup
         secrets:
           client-id: ${{ secrets.AZURE_CLIENT_ID }}
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
@@ -37,10 +37,11 @@ jobs:
     preview:
         needs: validate
         name: Preview Changes
-        uses: willvelida/biotrackr/.github/workflows/template-bicep-whatif.yml@main
+        uses: willvelida/biotrackr/.github/workflows/template-bicep-whatif.yml@feature/apim-integration
         with:
           template-file: './infra/core/main.bicep'
           parameters-file: './infra/core/main.dev.bicepparam'
+          scope: resourceGroup
         secrets:
           client-id: ${{ secrets.AZURE_CLIENT_ID }}
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
@@ -50,11 +51,11 @@ jobs:
     deploy-dev:
         needs: preview
         name: Deploy Template to Dev
-        uses: willvelida/biotrackr/.github/workflows/template-bicep-deploy.yml@main
+        uses: willvelida/biotrackr/.github/workflows/template-bicep-deploy.yml@feature/apim-integration
         with:
           template-file: './infra/core/main.bicep'
           parameters-file: './infra/core/main.dev.bicepparam'
-          scope: resourcegroup
+          scope: resourceGroup
           environment: dev
         secrets:
           client-id: ${{ secrets.AZURE_CLIENT_ID }}

@@ -9,6 +9,9 @@ on:
             parameters-file:
                 required: true
                 type: string
+            scope:
+                required: true
+                type: string
         secrets:
             client-id:
                 required: true
@@ -34,8 +37,15 @@ jobs:
             tenant-id: ${{ secrets.tenant-id }}
             subscription-id: ${{ secrets.subscription-id }}
 
-        - uses: Azure/cli@v2
-          name: Run What-If Preview
+        - uses: azure/bicep-deploy@v2
+          name: Perform What-If
           with:
-            inlineScript: |
-                az deployment group what-if --resource-group ${{ secrets.resource-group-name }} --template-file ${{ inputs.template-file }} --parameters ${{ inputs.parameters-file }}
+            type: deployment
+            operation: whatIf
+            scope: ${{ inputs.scope }}
+            validation-level: 'providerNoRbac'
+            subscription-id: ${{ secrets.subscription-id }}
+            resource-group-name: ${{ secrets.resource-group-name }}
+            name: ${{ github.run_number }}
+            template-file: ${{ inputs.template-file }}
+            parameters-file: ${{ inputs.parameters-file }}

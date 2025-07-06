@@ -1,10 +1,13 @@
 metadata name = 'Container App Environment'
 metadata description = 'This module deploys a Container App Environment, which send logs to a provided Log Analytics workspace'
 
-@description('The name for the Container App Environment')
-@minLength(3)
+@description('The base name given to all resources')
+@minLength(5)
 @maxLength(50)
-param name string
+param baseName string
+
+@description('The environment that the Container App Environment will be deployed to')
+param environment string
 
 @description('The region that this Container App Environment will be deployed to')
 @allowed([
@@ -20,12 +23,14 @@ param tags object
 @maxLength(63)
 param logAnalyticsName string
 
+var envName = 'env-${baseName}-${environment}'
+
 resource logAnalytics 'Microsoft.OperationalInsights/workspaces@2023-09-01' existing = {
   name: logAnalyticsName
 }
 
 resource containerAppEnv 'Microsoft.App/managedEnvironments@2024-03-01' = {
-  name: name
+  name: envName
   location: location
   tags: tags
   properties: {
