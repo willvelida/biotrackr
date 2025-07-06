@@ -41,7 +41,7 @@ jobs:
             tenant-id: ${{ secrets.tenant-id }}
             subscription-id: ${{ secrets.subscription-id }}
 
-        - uses: azure/arm-deploy@v2
+        - uses: azure/bicep-deploy@v2
           name: Deploy Bicep Template
           with:
             type: deployment

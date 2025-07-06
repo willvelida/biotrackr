@@ -55,7 +55,7 @@ jobs:
         with:
           template-file: './infra/core/main.bicep'
           parameters-file: './infra/core/main.dev.bicepparam'
-          scope: resourceGroup
+          scope: resourcegroup
           environment: dev
         secrets:
           client-id: ${{ secrets.AZURE_CLIENT_ID }}
