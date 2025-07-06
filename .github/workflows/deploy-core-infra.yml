@@ -28,7 +28,6 @@ jobs:
           template-file: './infra/core/main.bicep'
           parameters-file: './infra/core/main.dev.bicepparam'
           scope: resourceGroup
-          location: australiaeast
         secrets:
           client-id: ${{ secrets.AZURE_CLIENT_ID }}
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
@@ -43,7 +42,6 @@ jobs:
           template-file: './infra/core/main.bicep'
           parameters-file: './infra/core/main.dev.bicepparam'
           scope: resourceGroup
-          location: australiaeast
         secrets:
           client-id: ${{ secrets.AZURE_CLIENT_ID }}
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
@@ -59,7 +57,6 @@ jobs:
           parameters-file: './infra/core/main.dev.bicepparam'
           scope: resourceGroup
           environment: dev
-          location: australiaeast
         secrets:
           client-id: ${{ secrets.AZURE_CLIENT_ID }}
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}

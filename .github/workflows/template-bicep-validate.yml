@@ -12,9 +12,6 @@ on:
             scope:
                 required: true
                 type: string
-            location:
-                required: true
-                type: string
         secrets:
             client-id:
                 required: true
@@ -45,7 +42,6 @@ jobs:
               with:
                 type: deployment
                 scope: ${{ inputs.scope }}
-                location: ${{ inputs.location }}
                 subscription-id: ${{ secrets.subscription-id }}
                 resource-group-name: ${{ secrets.resource-group-name }}
                 name: ${{ github.run_number }}

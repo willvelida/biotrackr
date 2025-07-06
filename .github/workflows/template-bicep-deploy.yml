@@ -12,9 +12,6 @@ on:
             scope:
                 required: true
                 type: string
-            location:
-                required: true
-                type: string
             environment:
                 required: true
                 type: string
@@ -50,7 +47,6 @@ jobs:
             type: deployment
             operation: create
             scope: ${{ inputs.scope }}
-            location: ${{ inputs.location }}
             subscription-id: ${{ secrets.subscription-id }}
             resource-group-name: ${{ secrets.resource-group-name }}
             template-file: ${{ inputs.template-file }}
