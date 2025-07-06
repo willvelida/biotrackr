@@ -46,7 +46,7 @@ jobs:
         - uses: azure/bicep-deploy@v2
           name: Perform What-If
           with:
-            type: deployments
+            type: deployment
             operation: whatIf
             scope: ${{ inputs.scope }}
             validation-level: 'providerNoRbac'
