@@ -1,10 +1,13 @@
 metadata name = 'User Assigned Identity'
 metadata description = 'This module deploys a User Assigned Identity.'
 
-@description('The name of the user-assigned identity')
-@minLength(3)
-@maxLength(128)
-param name string
+@description('The base name given to all resources')
+@minLength(5)
+@maxLength(50)
+param baseName string
+
+@description('The environment that the User-Assigned Identity will be deployed to')
+param environment string
 
 @description('The region that the user-assigned identity will be deployed to')
 @allowed([
@@ -15,8 +18,10 @@ param location string
 @description('The tags that will be applied to the user-assigned identity')
 param tags object
 
+var uaiName = 'uai-${baseName}-${environment}'
+
 resource userAssignedIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2023-01-31' = {
-  name: name
+  name: uaiName
   location: location
   tags: tags
 }

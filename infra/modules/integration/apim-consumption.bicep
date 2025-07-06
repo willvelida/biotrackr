@@ -1,10 +1,13 @@
 metadata name = 'API Management'
 metadata description = 'Deploys a API Management instance using the Consumption SKU'
 
-@description('The name of the API Management instance')
-@minLength(1)
+@description('The base name given to all resources')
+@minLength(5)
 @maxLength(50)
-param name string
+param baseName string
+
+@description('The environment that the Api Management instance will be deployed to')
+param environment string
 
 @description('The region where the API Management instance will be deployed')
 @allowed(['australiaeast'])
@@ -16,12 +19,12 @@ param tags object
 @description('The email address of the owner of this API Management instance')
 @minLength(5)
 @maxLength(50)
-param emailAddress string
+param emailAddress string = 'willvelida@hotmail.co.uk'
 
 @description('The name of the owner of this API Management instance')
 @minLength(1)
 @maxLength(100)
-param publisherName string
+param publisherName string = 'Will Velida'
 
 @description('The name of the user-assigned identity that this API Management instance will use')
 @minLength(3)
@@ -38,6 +41,8 @@ param appInsightsName string
 @maxLength(63)
 param logAnalyticsName string
 
+var apimName = 'api-${baseName}-${environment}'
+
 resource uai 'Microsoft.ManagedIdentity/userAssignedIdentities@2023-01-31' existing = {
   name: uaiName
 }
@@ -51,7 +56,7 @@ resource logAnalytics 'Microsoft.OperationalInsights/workspaces@2023-09-01' exis
 }
 
 resource apiManagement 'Microsoft.ApiManagement/service@2024-05-01' = {
-  name: name
+  name: apimName
   location: location
   tags: tags
   sku: {

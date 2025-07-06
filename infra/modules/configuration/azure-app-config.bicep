@@ -1,10 +1,13 @@
 metadata name = 'Azure App Configuration Store module'
 metadata description = 'This module deploys an Azure App Configuration Store that grants a supplied user-assigned identity with the "App Config Data Reader" role'
 
-@description('The name given to the App Configuration')
+@description('The base name given to all resources')
 @minLength(5)
 @maxLength(50)
-param name string
+param baseName string
+
+@description('The environment that the App Configuration instance will be deployed to')
+param environment string
 
 @description('The region that the App Configuration instance will be deployed to')
 @allowed([
@@ -25,6 +28,7 @@ param uaiName string
 @maxLength(63)
 param logAnalyticsName string
 
+var appConfigName = 'config-${baseName}-${environment}'
 var appConfigDataReaderRoleId = subscriptionResourceId('Microsoft.Authorization/roleDefinitions','516239f1-63e1-4d78-a4de-a74fb236a071')
 
 resource uai 'Microsoft.ManagedIdentity/userAssignedIdentities@2023-01-31' existing = {
@@ -36,7 +40,7 @@ resource logAnalytics 'Microsoft.OperationalInsights/workspaces@2023-09-01' exis
 }
 
 resource appConfig 'Microsoft.AppConfiguration/configurationStores@2024-05-01' = {
-  name: name
+  name: appConfigName
   location: location
   tags: tags
   sku: {
