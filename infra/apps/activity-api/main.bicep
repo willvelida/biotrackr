@@ -87,15 +87,6 @@ module activityApi '../../modules/host/container-app-http.bicep' = {
   }
 }
 
-module activityApiProduct '../../modules/apim/apim-products.bicep' = {
-  name: 'activity-product'
-  params: {
-    apimName: apim.name
-    productName: apiProductName
-    apiName: activityApimApi.name
-  }
-}
-
 resource activityApimApi 'Microsoft.ApiManagement/service/apis@2024-06-01-preview' = {
   name: 'activity'
   parent: apim
@@ -149,5 +140,14 @@ resource activityApiHealthCheck 'Microsoft.ApiManagement/service/apis/operations
     method: 'GET'
     urlTemplate: '/healthz/liveness'
     description: 'Liveness Health Check Endpoint'
+  }
+}
+
+module activityApiProduct '../../modules/apim/apim-products.bicep' = {
+  name: 'activity-product'
+  params: {
+    apimName: apim.name
+    productName: apiProductName
+    apiName: activityApimApi.name
   }
 }
