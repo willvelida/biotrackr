@@ -9,6 +9,9 @@ on:
             parameters-file:
                 required: true
                 type: string
+            parameters:
+                required: false
+                type: string
             scope:
                 required: true
                 type: string
@@ -51,4 +54,5 @@ jobs:
             resource-group-name: ${{ secrets.resource-group-name }}
             template-file: ${{ inputs.template-file }}
             parameters-file: ${{ inputs.parameters-file }}
+            parameters: ${{ inputs.parameters }}
             name: ${{ github.run_number }} 
