@@ -103,7 +103,7 @@ resource activityApimApi 'Microsoft.ApiManagement/service/apis@2024-06-01-previe
     path: 'activity'
     displayName: 'Activity API'
     description: 'Endpoints for Biotrack Activity API'
-    subscriptionRequired: true
+    subscriptionRequired: false
     protocols: [
       'https'
     ]
