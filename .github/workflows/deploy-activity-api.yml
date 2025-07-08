@@ -87,7 +87,7 @@ jobs:
         with:
           template-file: './infra/apps/activity-api/main.bicep'
           parameters-file: ./infra/apps/activity-api/main.dev.bicepparam imageName=${{ needs.retrieve-container-image-dev.outputs.loginServer }}/biotrackr-activity-api:${{ github.sha }}
-          scope: resourcegroup
+          scope: resourceGroup
         secrets:
           client-id: ${{ secrets.AZURE_CLIENT_ID }}
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
@@ -99,6 +99,7 @@ jobs:
         needs: [validate, retrieve-container-image-dev]
         uses: willvelida/biotrackr/.github/workflows/template-bicep-whatif.yml@main
         with:
+          scope: resourceGroup
           template-file: './infra/apps/activity-api/main.bicep'
           parameters-file: ./infra/apps/activity-api/main.dev.bicepparam imageName=${{ needs.retrieve-container-image-dev.outputs.loginServer }}/biotrackr-activity-api:${{ github.sha }}
         secrets:
@@ -114,7 +115,7 @@ jobs:
         with:
           template-file: './infra/apps/activity-api/main.bicep'
           parameters-file: ./infra/apps/activity-api/main.dev.bicepparam imageName=${{ needs.retrieve-container-image-dev.outputs.loginServer }}/biotrackr-activity-api:${{ github.sha }}
-          scope: resourcegroup
+          scope: resourceGroup
           environment: dev
         secrets:
           client-id: ${{ secrets.AZURE_CLIENT_ID }}
