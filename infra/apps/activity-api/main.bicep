@@ -108,7 +108,7 @@ resource activityApiGetAll 'Microsoft.ApiManagement/service/apis/operations@2024
   properties: {
     displayName: 'GetAllActivities'
     method: 'GET'
-    urlTemplate: '/activity'
+    urlTemplate: '/'
     description: 'Get all Activity Summaries' 
   }
 }
@@ -119,7 +119,7 @@ resource activityApiGetByDate 'Microsoft.ApiManagement/service/apis/operations@2
   properties: {
     displayName: 'GetActivityByDate'
     method: 'GET'
-    urlTemplate: '/activity/{date}'
+    urlTemplate: '/{date}'
     description: 'Get a specific activity summary via this endpoint by providing the date in the following format (YYYY-MM-DD)'
     templateParameters: [
       {
