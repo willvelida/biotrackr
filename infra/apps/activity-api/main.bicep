@@ -92,6 +92,7 @@ module activityApiProduct '../../modules/apim/apim-products.bicep' = {
   params: {
     apimName: apim.name
     productName: apiProductName
+    apiName: activityApimApi.name
   }
 }
 
