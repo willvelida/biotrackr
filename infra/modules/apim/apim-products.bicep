@@ -13,6 +13,7 @@ resource apim 'Microsoft.ApiManagement/service@2024-06-01-preview' existing = {
 
 resource api 'Microsoft.ApiManagement/service/apis@2024-06-01-preview' existing = {
   name: apiName
+  parent: apim
 }
 
 resource apimProduct 'Microsoft.ApiManagement/service/products@2024-06-01-preview' = {
