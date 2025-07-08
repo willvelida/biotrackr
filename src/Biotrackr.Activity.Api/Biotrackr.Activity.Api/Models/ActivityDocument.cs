@@ -2,6 +2,7 @@
 
 namespace Biotrackr.Activity.Api.Models
 {
+    // Activity Document
     public class ActivityDocument
     {
         public string Id { get; set; }
