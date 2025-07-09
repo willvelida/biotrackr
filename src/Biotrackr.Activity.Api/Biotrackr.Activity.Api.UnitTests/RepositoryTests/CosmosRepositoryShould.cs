@@ -102,62 +102,201 @@ namespace Biotrackr.Activity.Api.UnitTests.RepositoryTests
         }
 
         [Fact]
-        public async Task GetAllActivitySummaries_ShouldReturnListOfActivityDocuments()
+        public async Task GetAllActivitySummariesPaginated_ShouldReturnPaginatedResults()
         {
             // Arrange
             var fixture = new Fixture();
-            var activityDocuments = fixture.CreateMany<ActivityDocument>().ToList();
+            var activityDocuments = fixture.CreateMany<ActivityDocument>(10).ToList();
+            var totalCount = 100;
+            var request = new PaginationRequest { PageNumber = 2, PageSize = 10 };
 
-            var feedResponse = new Mock<FeedResponse<ActivityDocument>>();
-            feedResponse.Setup(x => x.GetEnumerator()).Returns(activityDocuments.GetEnumerator());
+            // Mock the count query
+            var countFeedResponse = new Mock<FeedResponse<int>>();
+            countFeedResponse.Setup(x => x.GetEnumerator()).Returns(new List<int> { totalCount }.GetEnumerator());
 
-            var iterator = new Mock<FeedIterator<ActivityDocument>>();
-            iterator.SetupSequence(x => x.HasMoreResults).Returns(true).Returns(false);
-            iterator.Setup(x => x.ReadNextAsync(default)).ReturnsAsync(feedResponse.Object);
+            var countIterator = new Mock<FeedIterator<int>>();
+            countIterator.SetupSequence(x => x.HasMoreResults).Returns(true).Returns(false);
+            countIterator.Setup(x => x.ReadNextAsync(default)).ReturnsAsync(countFeedResponse.Object);
 
-            _containerMock.Setup(x => x.GetItemQueryIterator<ActivityDocument>(It.IsAny<QueryDefinition>(), It.IsAny<string>(), It.IsAny<QueryRequestOptions>())).Returns(iterator.Object);
+            // Mock the data query
+            var dataFeedResponse = new Mock<FeedResponse<ActivityDocument>>();
+            dataFeedResponse.Setup(x => x.GetEnumerator()).Returns(activityDocuments.GetEnumerator());
+
+            var dataIterator = new Mock<FeedIterator<ActivityDocument>>();
+            dataIterator.SetupSequence(x => x.HasMoreResults).Returns(true).Returns(false);
+            dataIterator.Setup(x => x.ReadNextAsync(default)).ReturnsAsync(dataFeedResponse.Object);
+
+            _containerMock.Setup(x => x.GetItemQueryIterator<int>(
+                It.Is<QueryDefinition>(q => q.QueryText.Contains("COUNT")),
+                It.IsAny<string>(),
+                It.IsAny<QueryRequestOptions>()))
+                .Returns(countIterator.Object);
+
+            _containerMock.Setup(x => x.GetItemQueryIterator<ActivityDocument>(
+                It.Is<QueryDefinition>(q => q.QueryText.Contains("OFFSET") && q.QueryText.Contains("LIMIT")),
+                It.IsAny<string>(),
+                It.IsAny<QueryRequestOptions>()))
+                .Returns(dataIterator.Object);
 
             // Act
-            var result = await _repository.GetAllActivitySummaries();
+            var result = await _repository.GetAllActivitySummaries(request);
 
             // Assert
-            result.Should().BeEquivalentTo(activityDocuments);
+            result.Should().NotBeNull();
+            result.Items.Should().BeEquivalentTo(activityDocuments);
+            result.PageNumber.Should().Be(2);
+            result.PageSize.Should().Be(10);
+            result.TotalCount.Should().Be(100);
+            result.TotalPages.Should().Be(10);
+            result.HasPreviousPage.Should().BeTrue();
+            result.HasNextPage.Should().BeTrue();
         }
 
         [Fact]
-        public async Task GetAllActivitySummaries_ShouldReturnEmptyList_WhenActivitiesDoNotExist()
+        public async Task GetAllActivitySummariesPaginated_ShouldReturnCorrectPaginationMetadata_ForFirstPage()
         {
             // Arrange
-            var feedResponse = new Mock<FeedResponse<ActivityDocument>>();
-            feedResponse.Setup(x => x.GetEnumerator()).Returns(new List<ActivityDocument>().GetEnumerator());
+            var fixture = new Fixture();
+            var activityDocuments = fixture.CreateMany<ActivityDocument>(20).ToList();
+            var totalCount = 50;
+            var request = new PaginationRequest { PageNumber = 1, PageSize = 20 };
 
-            var iterator = new Mock<FeedIterator<ActivityDocument>>();
-            iterator.SetupSequence(x => x.HasMoreResults).Returns(true).Returns(false);
-            iterator.Setup(x => x.ReadNextAsync(default)).ReturnsAsync(feedResponse.Object);
-
-            _containerMock.Setup(x => x.GetItemQueryIterator<ActivityDocument>(It.IsAny<QueryDefinition>(), It.IsAny<string>(), It.IsAny<QueryRequestOptions>())).Returns(iterator.Object);
+            SetupMocksForPagination(activityDocuments, totalCount);
 
             // Act
-            var result = await _repository.GetAllActivitySummaries();
+            var result = await _repository.GetAllActivitySummaries(request);
 
             // Assert
-            result.Should().BeEmpty();
+            result.PageNumber.Should().Be(1);
+            result.PageSize.Should().Be(20);
+            result.TotalCount.Should().Be(50);
+            result.TotalPages.Should().Be(3);
+            result.HasPreviousPage.Should().BeFalse();
+            result.HasNextPage.Should().BeTrue();
         }
 
         [Fact]
-        public async Task GetAllActivitySummaries_ShouldLogErrorAndThrowException_WhenExceptionOccurs()
+        public async Task GetAllActivitySummariesPaginated_ShouldReturnCorrectPaginationMetadata_ForLastPage()
         {
             // Arrange
+            var fixture = new Fixture();
+            var activityDocuments = fixture.CreateMany<ActivityDocument>(10).ToList();
+            var totalCount = 50;
+            var request = new PaginationRequest { PageNumber = 3, PageSize = 20 };
+
+            SetupMocksForPagination(activityDocuments, totalCount);
+
+            // Act
+            var result = await _repository.GetAllActivitySummaries(request);
+
+            // Assert
+            result.PageNumber.Should().Be(3);
+            result.PageSize.Should().Be(20);
+            result.TotalCount.Should().Be(50);
+            result.TotalPages.Should().Be(3);
+            result.HasPreviousPage.Should().BeTrue();
+            result.HasNextPage.Should().BeFalse();
+        }
+
+        [Fact]
+        public async Task GetAllActivitySummariesPaginated_ShouldUseCorrectOffsetAndLimit()
+        {
+            // Arrange
+            var fixture = new Fixture();
+            var activityDocuments = fixture.CreateMany<ActivityDocument>(15).ToList();
+            var request = new PaginationRequest { PageNumber = 3, PageSize = 15 };
+
+            SetupMocksForPagination(activityDocuments, 100);
+
+            // Act
+            await _repository.GetAllActivitySummaries(request);
+
+            // Assert
+            _containerMock.Verify(x => x.GetItemQueryIterator<ActivityDocument>(
+                It.Is<QueryDefinition>(q =>
+                    q.QueryText.Contains("OFFSET @offset LIMIT @limit")),
+                It.IsAny<string>(),
+                It.IsAny<QueryRequestOptions>()), Times.Once);
+        }
+
+        [Fact]
+        public async Task GetAllActivitySummariesPaginated_ShouldHandleEmptyResults()
+        {
+            // Arrange
+            var request = new PaginationRequest { PageNumber = 1, PageSize = 20 };
+
+            SetupMocksForPagination(new List<ActivityDocument>(), 0);
+
+            // Act
+            var result = await _repository.GetAllActivitySummaries(request);
+
+            // Assert
+            result.Items.Should().BeEmpty();
+            result.TotalCount.Should().Be(0);
+            result.TotalPages.Should().Be(0);
+            result.HasPreviousPage.Should().BeFalse();
+            result.HasNextPage.Should().BeFalse();
+        }
+
+        [Fact]
+        public async Task GetAllActivitySummariesPaginated_ShouldLogErrorAndThrowException_WhenExceptionOccurs()
+        {
+            // Arrange
+            var request = new PaginationRequest { PageNumber = 1, PageSize = 20 };
             var exceptionMessage = "Test Exception";
+
+            // Mock the main query to throw an exception, not the count query
             _containerMock.Setup(c => c.GetItemQueryIterator<ActivityDocument>(It.IsAny<QueryDefinition>(), It.IsAny<string>(), It.IsAny<QueryRequestOptions>()))
                           .Throws(new Exception(exceptionMessage));
 
+            // Mock the count query to succeed so we get to the main query
+            var countFeedResponse = new Mock<FeedResponse<int>>();
+            countFeedResponse.Setup(x => x.GetEnumerator()).Returns(new List<int> { 100 }.GetEnumerator());
+
+            var countIterator = new Mock<FeedIterator<int>>();
+            countIterator.SetupSequence(x => x.HasMoreResults).Returns(true).Returns(false);
+            countIterator.Setup(x => x.ReadNextAsync(default)).ReturnsAsync(countFeedResponse.Object);
+
+            _containerMock.Setup(x => x.GetItemQueryIterator<int>(It.IsAny<QueryDefinition>(), It.IsAny<string>(), It.IsAny<QueryRequestOptions>()))
+                          .Returns(countIterator.Object);
+
             // Act
-            Func<Task> act = async () => await _repository.GetAllActivitySummaries();
+            Func<Task> act = async () => await _repository.GetAllActivitySummaries(request);
 
             // Assert
             await act.Should().ThrowAsync<Exception>().WithMessage(exceptionMessage);
             _loggerMock.VerifyLog(logger => logger.LogError($"Exception thrown in GetAllActivitySummaries: Test Exception"));
+        }
+
+        private void SetupMocksForPagination(List<ActivityDocument> activityDocuments, int totalCount)
+        {
+            // Mock the count query
+            var countFeedResponse = new Mock<FeedResponse<int>>();
+            countFeedResponse.Setup(x => x.GetEnumerator()).Returns(new List<int> { totalCount }.GetEnumerator());
+
+            var countIterator = new Mock<FeedIterator<int>>();
+            countIterator.SetupSequence(x => x.HasMoreResults).Returns(true).Returns(false);
+            countIterator.Setup(x => x.ReadNextAsync(default)).ReturnsAsync(countFeedResponse.Object);
+
+            // Mock the data query
+            var dataFeedResponse = new Mock<FeedResponse<ActivityDocument>>();
+            dataFeedResponse.Setup(x => x.GetEnumerator()).Returns(activityDocuments.GetEnumerator());
+
+            var dataIterator = new Mock<FeedIterator<ActivityDocument>>();
+            dataIterator.SetupSequence(x => x.HasMoreResults).Returns(true).Returns(false);
+            dataIterator.Setup(x => x.ReadNextAsync(default)).ReturnsAsync(dataFeedResponse.Object);
+
+            _containerMock.Setup(x => x.GetItemQueryIterator<int>(
+                It.Is<QueryDefinition>(q => q.QueryText.Contains("COUNT")),
+                It.IsAny<string>(),
+                It.IsAny<QueryRequestOptions>()))
+                .Returns(countIterator.Object);
+
+            _containerMock.Setup(x => x.GetItemQueryIterator<ActivityDocument>(
+                It.Is<QueryDefinition>(q => q.QueryText.Contains("OFFSET") && q.QueryText.Contains("LIMIT")),
+                It.IsAny<string>(),
+                It.IsAny<QueryRequestOptions>()))
+                .Returns(dataIterator.Object);
         }
     }
 }

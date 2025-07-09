@@ -51,11 +51,18 @@ namespace Biotrackr.Activity.Api.Repositories
             }
         }
 
-        public async Task<List<ActivityDocument>> GetAllActivitySummaries()
+        public async Task<PaginationResponse<ActivityDocument>> GetAllActivitySummaries(PaginationRequest request)
         {
             try
             {
-                QueryDefinition queryDefinition = new QueryDefinition("SELECT * FROM c");
+                _logger.LogInformation($"Getting all activity summaries with pagination: PageNumber={request.PageNumber}, PageSize={request.PageSize}");
+
+                var totalCount = await GetTotalActivityCount();
+
+                QueryDefinition queryDefinition = new QueryDefinition("SELECT * FROM c ORDER BY c_ts DESC OFFSET @offset LIMIT @limit")
+                    .WithParameter("@offset", request.Skip)
+                    .WithParameter("@limit", request.PageSize);
+
                 QueryRequestOptions queryRequestOptions = new QueryRequestOptions
                 {
                     PartitionKey = new PartitionKey("Activity")
@@ -70,12 +77,47 @@ namespace Biotrackr.Activity.Api.Repositories
                     results.AddRange(response);
                 }
 
-                return results;
+                _logger.LogInformation($"Retrieved {results.Count} activity summaries for page: {request.PageNumber}");
+
+                return new PaginationResponse<ActivityDocument>
+                {
+                    Items = results,
+                    PageNumber = request.PageNumber,
+                    PageSize = request.PageSize,
+                    TotalCount = totalCount
+                };
             }
             catch (Exception ex)
             {
                 _logger.LogError($"Exception thrown in {nameof(GetAllActivitySummaries)}: {ex.Message}");
                 throw;
+            }
+        }
+
+        private async Task<int> GetTotalActivityCount()
+        {
+            try
+            {
+                var countQuery = new QueryDefinition("SELECT VALUE COUNT (1) FROM c");
+                var queryRequestOptions = new QueryRequestOptions
+                {
+                    PartitionKey = new PartitionKey("Activity")
+                };
+
+                var iterator = _container.GetItemQueryIterator<int>(countQuery, requestOptions: queryRequestOptions);
+
+                while (iterator.HasMoreResults)
+                {
+                    var response = await iterator.ReadNextAsync();
+                    return response.FirstOrDefault();
+                }
+
+                return 0;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"Exception thrown in {nameof(GetTotalActivityCount)}: {ex.Message}");
+                return 0;
             }
         }
     }

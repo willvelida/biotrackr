@@ -109,7 +109,31 @@ resource activityApiGetAll 'Microsoft.ApiManagement/service/apis/operations@2024
     displayName: 'GetAllActivities'
     method: 'GET'
     urlTemplate: '/'
-    description: 'Get all Activity Summaries' 
+    description: 'Get all Activity Summaries'
+    request: {
+      queryParameters: [
+        {
+          name: 'pageNumber'
+          description: 'The page number to retrieve (default: 1)'
+          type: 'integer'
+          required: false
+          defaultValue: '1'
+          values: [
+            
+          ]
+        }
+        {
+          name: 'pageSize'
+          description: 'The number of items per page (default: 20, max: 100)'
+          type: 'integer'
+          required: false
+          defaultValue: '20'
+          values: [
+            
+          ]
+        }
+      ]
+    } 
   }
 }
 

@@ -51,33 +51,81 @@ namespace Biotrackr.Activity.Api.UnitTests.EndpointHandlerTests
         }
 
         [Fact]
-        public async Task GetAllActivities_ShouldReturnOk_WhenActivitiesAreFound()
+        public async Task GetAllActivities_ShouldReturnPaginatedResult_WhenPaginationParametersProvided()
         {
             // Arrange
             var fixture = new Fixture();
-            var activityDocuments = fixture.CreateMany<ActivityDocument>().ToList();
-            _cosmosRepositoryMock.Setup(x => x.GetAllActivitySummaries()).ReturnsAsync(activityDocuments);
+            var activityDocuments = fixture.CreateMany<ActivityDocument>(10).ToList();
+            var paginatedResponse = new PaginationResponse<ActivityDocument>
+            {
+                Items = activityDocuments,
+                PageNumber = 2,
+                PageSize = 10,
+                TotalCount = 50
+            };
+
+            _cosmosRepositoryMock.Setup(x => x.GetAllActivitySummaries(It.IsAny<PaginationRequest>()))
+                                .ReturnsAsync(paginatedResponse);
 
             // Act
-            var result = await ActivityHandlers.GetAllActivities(_cosmosRepositoryMock.Object);
+            var result = await ActivityHandlers.GetAllActivities(_cosmosRepositoryMock.Object, 2, 10);
 
             // Assert
-            result.Should().BeOfType<Ok<List<ActivityDocument>>>();
-            result.Value.Should().BeEquivalentTo(activityDocuments);
+            result.Should().BeOfType<Ok<PaginationResponse<ActivityDocument>>>();
+            var okResult = result as Ok<PaginationResponse<ActivityDocument>>;
+            okResult.Value.Should().BeEquivalentTo(paginatedResponse);
         }
 
         [Fact]
-        public async Task GetAllActivities_ShouldReturnOk_WhenActivitiesAreNotFound()
+        public async Task GetAllActivities_ShouldUseDefaultPageSize_WhenOnlyPageNumberProvided()
         {
             // Arrange
-            _cosmosRepositoryMock.Setup(x => x.GetAllActivitySummaries()).ReturnsAsync(new List<ActivityDocument>());
+            var fixture = new Fixture();
+            var paginatedResponse = new PaginationResponse<ActivityDocument>
+            {
+                Items = fixture.CreateMany<ActivityDocument>(20).ToList(),
+                PageNumber = 2,
+                PageSize = 20,
+                TotalCount = 100
+            };
+
+            _cosmosRepositoryMock.Setup(x => x.GetAllActivitySummaries(
+                It.Is<PaginationRequest>(r => r.PageNumber == 2 && r.PageSize == 20)))
+                                .ReturnsAsync(paginatedResponse);
 
             // Act
-            var result = await ActivityHandlers.GetAllActivities(_cosmosRepositoryMock.Object);
+            var result = await ActivityHandlers.GetAllActivities(_cosmosRepositoryMock.Object, 2, null);
 
             // Assert
-            result.Should().BeOfType<Ok<List<ActivityDocument>>>();
-            result.Value.Should().BeEmpty();
+            result.Should().BeOfType<Ok<PaginationResponse<ActivityDocument>>>();
+            _cosmosRepositoryMock.Verify(x => x.GetAllActivitySummaries(
+                It.Is<PaginationRequest>(r => r.PageNumber == 2 && r.PageSize == 20)), Times.Once);
+        }
+
+        [Fact]
+        public async Task GetAllActivities_ShouldUseDefaultPageNumber_WhenOnlyPageSizeProvided()
+        {
+            // Arrange
+            var fixture = new Fixture();
+            var paginatedResponse = new PaginationResponse<ActivityDocument>
+            {
+                Items = fixture.CreateMany<ActivityDocument>(50).ToList(),
+                PageNumber = 1,
+                PageSize = 50,
+                TotalCount = 100
+            };
+
+            _cosmosRepositoryMock.Setup(x => x.GetAllActivitySummaries(
+                It.Is<PaginationRequest>(r => r.PageNumber == 1 && r.PageSize == 50)))
+                                .ReturnsAsync(paginatedResponse);
+
+            // Act
+            var result = await ActivityHandlers.GetAllActivities(_cosmosRepositoryMock.Object, null, 50);
+
+            // Assert
+            result.Should().BeOfType<Ok<PaginationResponse<ActivityDocument>>>();
+            _cosmosRepositoryMock.Verify(x => x.GetAllActivitySummaries(
+                It.Is<PaginationRequest>(r => r.PageNumber == 1 && r.PageSize == 50)), Times.Once);
         }
     }
 }
