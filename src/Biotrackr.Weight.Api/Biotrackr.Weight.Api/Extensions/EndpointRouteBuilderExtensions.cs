@@ -8,7 +8,7 @@ namespace Biotrackr.Weight.Api.Extensions
     {
         public static void RegisterWeightEndpoints(this IEndpointRouteBuilder endpointRouteBuilder)
         {
-            var weightEndpoints = endpointRouteBuilder.MapGroup("/weight");
+            var weightEndpoints = endpointRouteBuilder.MapGroup("/");
 
             weightEndpoints.MapGet("/", WeightHandlers.GetAllWeights)
                 .WithName("GetAllWeights")
