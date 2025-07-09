@@ -83,7 +83,7 @@ jobs:
     validate:
         name: Validate Template
         needs: [lint, retrieve-container-image-dev]
-        uses: willvelida/biotrackr/.github/workflows/template-bicep-validate.yml@feature/activity.api/apim_infra
+        uses: willvelida/biotrackr/.github/workflows/template-bicep-validate.yml@main
         with:
           template-file: './infra/apps/activity-api/main.bicep'
           parameters-file: ./infra/apps/activity-api/main.dev.bicepparam
@@ -98,7 +98,7 @@ jobs:
     preview:
         name: Preview Changes
         needs: [validate, retrieve-container-image-dev]
-        uses: willvelida/biotrackr/.github/workflows/template-bicep-whatif.yml@feature/activity.api/apim_infra
+        uses: willvelida/biotrackr/.github/workflows/template-bicep-whatif.yml@main
         with:
           scope: resourceGroup
           template-file: './infra/apps/activity-api/main.bicep'
@@ -113,7 +113,7 @@ jobs:
     deploy-dev:
         name: Deploy Template to Dev
         needs: [preview, retrieve-container-image-dev]
-        uses: willvelida/biotrackr/.github/workflows/template-bicep-deploy.yml@feature/activity.api/apim_infra
+        uses: willvelida/biotrackr/.github/workflows/template-bicep-deploy.yml@main
         with:
           template-file: './infra/apps/activity-api/main.bicep'
           parameters-file: ./infra/apps/activity-api/main.dev.bicepparam

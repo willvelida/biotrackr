@@ -25,6 +25,9 @@ param appConfigName string
 @description('The name of the Cosmos DB account that this Sleep Api uses')
 param cosmosDbAccountName string
 
+@description('The name of the API Management instance that this Api uses')
+param apimName string
+
 resource uai 'Microsoft.ManagedIdentity/userAssignedIdentities@2023-01-31' existing = {
   name: uaiName
 }
@@ -36,6 +39,12 @@ resource appConfig 'Microsoft.AppConfiguration/configurationStores@2024-05-01' e
 resource cosmosDbAccount 'Microsoft.DocumentDB/databaseAccounts@2024-11-15' existing = {
   name: cosmosDbAccountName
 }
+
+resource apim 'Microsoft.ApiManagement/service@2024-06-01-preview' existing = {
+  name: apimName
+}
+
+var apiProductName = 'Sleep'
 
 module sleepApi '../../modules/host/container-app-http.bicep' = {
   name: 'sleep-api'
@@ -75,5 +84,70 @@ module sleepApi '../../modules/host/container-app-http.bicep' = {
         value: cosmosDbAccount.properties.documentEndpoint
       }
     ]
+  }
+}
+
+resource sleepApimApi 'Microsoft.ApiManagement/service/apis@2024-06-01-preview' = {
+  name: 'sleep'
+  parent: apim
+  properties: {
+    path: 'sleep'
+    displayName: 'Sleep API'
+    description: 'Endpoints for Biotrackr Sleep API'
+    subscriptionRequired: true
+    protocols: [
+      'https'
+    ]
+    serviceUrl: 'https://${sleepApi.outputs.fqdn}'
+  }
+}
+
+resource sleepApiGetAll 'Microsoft.ApiManagement/service/apis/operations@2024-06-01-preview' = {
+  name: 'sleep-getall'
+  parent: sleepApimApi
+  properties: {
+    displayName: 'GetAllSleeps'
+    method: 'GET'
+    urlTemplate: '/'
+    description: 'Gets all sleep documents' 
+  }
+}
+
+resource sleepApiGetByDate 'Microsoft.ApiManagement/service/apis/operations@2024-06-01-preview' = {
+  name: 'sleep-getbydate'
+  parent: sleepApimApi
+  properties: {
+    displayName: 'GetSleepByDate'
+    method: 'get'
+    urlTemplate: '/{date}'
+    description: 'Gets a sleep document by date'
+    templateParameters: [
+      {
+        name: 'date'
+        description: 'The date for the activity summary in YYYY-MM-DD format'
+        type: 'string'
+        required: true
+      }
+    ] 
+  }
+}
+
+resource sleepApiHealthCheck 'Microsoft.ApiManagement/service/apis/operations@2024-06-01-preview' = {
+  name: 'sleep-healthcheck'
+  parent: sleepApimApi
+  properties: {
+    displayName: 'LivenessCheck'
+    method: 'GET'
+    urlTemplate: '/healthz/liveness'
+    description: 'Liveness Health Check Endpoint' 
+  }
+}
+
+module sleepApiProduct '../../modules/apim/apim-products.bicep' = {
+  name: 'sleep-product'
+  params: {
+    apiName: sleepApimApi.name
+    apimName: apim.name
+    productName: apiProductName
   }
 }
