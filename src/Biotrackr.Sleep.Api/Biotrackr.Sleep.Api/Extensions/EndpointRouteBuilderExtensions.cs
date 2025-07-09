@@ -8,7 +8,7 @@ namespace Biotrackr.Sleep.Api.Extensions
     {
         public static void RegisterSleepEndpoints(this IEndpointRouteBuilder endpointRouteBuilder)
         {
-            var sleepEndpoints = endpointRouteBuilder.MapGroup("/sleep");
+            var sleepEndpoints = endpointRouteBuilder.MapGroup("/");
 
             sleepEndpoints.MapGet("/", SleepHandlers.GetAllSleeps)
                 .WithName("GetAllSleeps")
