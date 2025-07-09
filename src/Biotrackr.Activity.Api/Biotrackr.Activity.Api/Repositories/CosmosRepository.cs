@@ -59,7 +59,7 @@ namespace Biotrackr.Activity.Api.Repositories
 
                 var totalCount = await GetTotalActivityCount();
 
-                QueryDefinition queryDefinition = new QueryDefinition("SELECT * FROM c ORDER BY c_ts DESC OFFSET @offset LIMIT @limit")
+                QueryDefinition queryDefinition = new QueryDefinition("SELECT * FROM c ORDER BY c._ts DESC OFFSET @offset LIMIT @limit")
                     .WithParameter("@offset", request.Skip)
                     .WithParameter("@limit", request.PageSize);
 
