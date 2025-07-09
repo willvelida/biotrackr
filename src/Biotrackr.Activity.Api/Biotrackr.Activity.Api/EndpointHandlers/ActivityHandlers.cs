@@ -18,9 +18,18 @@ namespace Biotrackr.Activity.Api.EndpointHandlers
             return TypedResults.Ok(activity);
         }
 
-        public static async Task<Ok<List<ActivityDocument>>> GetAllActivities(ICosmosRepository cosmosRepository)
+        public static async Task<Ok<PaginationResponse<ActivityDocument>>> GetAllActivities(
+            ICosmosRepository cosmosRepository,
+            int? pageNumber = null,
+            int? pageSize = null)
         {
-            var activities = await cosmosRepository.GetAllActivitySummaries();
+            var paginationRequest = new PaginationRequest
+            {
+                PageNumber = pageNumber ?? 1,
+                PageSize = pageSize ?? 20
+            };
+
+            var activities = await cosmosRepository.GetAllActivitySummaries(paginationRequest);
             return TypedResults.Ok(activities);
         }
     }
