@@ -8,7 +8,7 @@ namespace Biotrackr.Activity.Api.Extensions
     {
         public static void RegisterActivityEndpoints(this IEndpointRouteBuilder endpointRouteBuilder)
         {
-            var activityEndpoints = endpointRouteBuilder.MapGroup("/activity");
+            var activityEndpoints = endpointRouteBuilder.MapGroup("/");
 
             activityEndpoints.MapGet("/", ActivityHandlers.GetAllActivities)
                 .WithName("GetAllActivities")

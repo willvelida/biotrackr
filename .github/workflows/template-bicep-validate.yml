@@ -9,6 +9,9 @@ on:
             parameters-file:
                 required: true
                 type: string
+            parameters:
+                required: false
+                type: string
             scope:
                 required: true
                 type: string
@@ -47,4 +50,5 @@ jobs:
                 name: ${{ github.run_number }}
                 template-file: ${{ inputs.template-file }}
                 parameters-file: ${{ inputs.parameters-file }}
+                parameters: ${{ inputs.parameters }}
                 operation: validate
