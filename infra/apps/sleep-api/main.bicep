@@ -109,7 +109,31 @@ resource sleepApiGetAll 'Microsoft.ApiManagement/service/apis/operations@2024-06
     displayName: 'GetAllSleeps'
     method: 'GET'
     urlTemplate: '/'
-    description: 'Gets all sleep documents' 
+    description: 'Gets all sleep documents'
+    request: {
+      queryParameters: [
+        {
+          name: 'pageNumber'
+          description: 'The page number to retrieve (default: 1)'
+          type: 'integer'
+          required: false
+          defaultValue: '1'
+          values: [
+            
+          ]
+        }
+        {
+          name: 'pageSize'
+          description: 'The number of items per page (default: 20, max: 100)'
+          type: 'integer'
+          required: false
+          defaultValue: '20'
+          values: [
+            
+          ]
+        }
+      ]
+    }  
   }
 }
 

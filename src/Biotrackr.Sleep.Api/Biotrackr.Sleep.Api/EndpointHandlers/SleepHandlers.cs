@@ -19,10 +19,18 @@ namespace Biotrackr.Sleep.Api.EndpointHandlers
             return TypedResults.Ok(sleep);
         }
 
-        public static async Task<Ok<List<SleepDocument>>> GetAllSleeps(
-            ICosmosRepository cosmosRepository)
+        public static async Task<Ok<PaginationResponse<SleepDocument>>> GetAllSleeps(
+            ICosmosRepository cosmosRepository,
+            int? pageNumber = null,
+            int? pageSize = null)
         {
-            var sleeps = await cosmosRepository.GetAllSleepDocuments();
+            var paginationRequest = new PaginationRequest
+            {
+                PageNumber = pageNumber ?? 1,
+                PageSize = pageSize ?? 20
+            };
+
+            var sleeps = await cosmosRepository.GetAllSleepDocuments(paginationRequest);
             return TypedResults.Ok(sleeps);
         }
     }

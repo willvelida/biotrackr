@@ -5,6 +5,6 @@ namespace Biotrackr.Sleep.Api.Repositories.Interfaces
     public interface ICosmosRepository
     {
         Task<SleepDocument> GetSleepSummaryByDate(string date);
-        Task<List<SleepDocument>> GetAllSleepDocuments();
+        Task<PaginationResponse<SleepDocument>> GetAllSleepDocuments(PaginationRequest request);
     }
 }

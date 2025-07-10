@@ -21,11 +21,18 @@ namespace Biotrackr.Sleep.Api.Repositories
             _logger = logger;
         }
 
-        public async Task<List<SleepDocument>> GetAllSleepDocuments()
+        public async Task<PaginationResponse<SleepDocument>> GetAllSleepDocuments(PaginationRequest request)
         {
             try
             {
-                QueryDefinition queryDefinition = new QueryDefinition("SELECT * FROM c");
+                _logger.LogInformation($"Fetching all sleep documents with pagination: PageNumber={request.PageNumber}, PageSize={request.PageSize}");
+
+                var totalSleepCount = await GetTotalSleepCount();
+
+                QueryDefinition queryDefinition = new QueryDefinition("SELECT * FROM c ORDER BY c._ts DESC OFFSET @offset LIMIT @limit")
+                    .WithParameter("@offset", request.Skip)
+                    .WithParameter("@limit", request.PageSize);
+
                 QueryRequestOptions queryRequestOptions = new QueryRequestOptions
                 {
                     PartitionKey = new PartitionKey("Sleep")
@@ -40,7 +47,15 @@ namespace Biotrackr.Sleep.Api.Repositories
                     results.AddRange(response.ToList());
                 }
 
-                return results;
+                _logger.LogInformation($"Fetched {results.Count} sleep documents out of {totalSleepCount} total records.");
+
+                return new PaginationResponse<SleepDocument>
+                {
+                    Items = results,
+                    TotalCount = totalSleepCount,
+                    PageNumber = request.PageNumber,
+                    PageSize = request.PageSize
+                };
             }
             catch (Exception ex)
             {
@@ -75,6 +90,33 @@ namespace Biotrackr.Sleep.Api.Repositories
             {
                 _logger.LogError($"Exception thrown in {nameof(GetSleepSummaryByDate)}: {ex.Message}");
                 throw;
+            }
+        }
+
+        private async Task<int> GetTotalSleepCount()
+        {
+            try
+            {
+                var countQuery = new QueryDefinition("SELECT VALUE COUNT (1) FROM c");
+                var queryRequestOptions = new QueryRequestOptions
+                {
+                    PartitionKey = new PartitionKey("Sleep")
+                };
+
+                var iterator = _container.GetItemQueryIterator<int>(countQuery, requestOptions: queryRequestOptions);
+
+                while (iterator.HasMoreResults)
+                {
+                    var response = await iterator.ReadNextAsync();
+                    return response.FirstOrDefault();
+                }
+
+                return 0;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"Exception thrown in {nameof(GetTotalSleepCount)}: {ex.Message}");
+                return 0;
             }
         }
     }
