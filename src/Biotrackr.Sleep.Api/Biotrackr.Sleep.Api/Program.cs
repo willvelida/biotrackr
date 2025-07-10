@@ -1,8 +1,8 @@
 using Azure.Identity;
 using Biotrackr.Sleep.Api.Configuration;
 using Biotrackr.Sleep.Api.Extensions;
-using Biotrackr.Sleep.Api.Repositories.Interfaces;
 using Biotrackr.Sleep.Api.Repositories;
+using Biotrackr.Sleep.Api.Repositories.Interfaces;
 using Microsoft.Azure.Cosmos;
 using Microsoft.Extensions.Configuration.AzureAppConfiguration;
 using Microsoft.OpenApi.Models;
