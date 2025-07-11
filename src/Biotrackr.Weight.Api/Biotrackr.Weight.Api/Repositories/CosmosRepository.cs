@@ -21,11 +21,17 @@ namespace Biotrackr.Weight.Api.Repositories
             _logger = logger;
         }
 
-        public async Task<List<WeightDocument>> GetAllWeightDocuments()
+        public async Task<PaginationResponse<WeightDocument>> GetAllWeightDocuments(PaginationRequest paginationRequest)
         {
             try
             {
-                QueryDefinition queryDefinition = new QueryDefinition("SELECT * FROM c");
+                _logger.LogInformation($"Fetching all weight documents with pagination: PageNumber={paginationRequest.PageNumber}, PageSize={paginationRequest.PageSize}");
+
+                var totalCount = await GetTotalWeightCount();
+
+                QueryDefinition queryDefinition = new QueryDefinition("SELECT * FROM c ORDER BY c._ts DESC OFFSET @offset LIMIT @limit")
+                    .WithParameter("@offset", paginationRequest.Skip)
+                    .WithParameter("@limit", paginationRequest.PageSize);
                 QueryRequestOptions queryRequestOptions = new QueryRequestOptions
                 {
                     PartitionKey = new PartitionKey("Weight")
@@ -40,7 +46,13 @@ namespace Biotrackr.Weight.Api.Repositories
                     results.AddRange(response.ToList());
                 }
 
-                return results;
+                return new PaginationResponse<WeightDocument>
+                {
+                    Items = results,
+                    TotalCount = totalCount,
+                    PageNumber = paginationRequest.PageNumber,
+                    PageSize = paginationRequest.PageSize
+                };
             }
             catch (Exception ex)
             {
@@ -75,6 +87,33 @@ namespace Biotrackr.Weight.Api.Repositories
             {
                 _logger.LogError($"Exception thrown in {nameof(GetWeightDocumentByDate)}: {ex.Message}");
                 throw;
+            }
+        }
+
+        private async Task<int> GetTotalWeightCount()
+        {
+            try
+            {
+                QueryDefinition queryDefinition = new QueryDefinition("SELECT VALUE COUNT(1) FROM c");
+                QueryRequestOptions queryRequestOptions = new QueryRequestOptions
+                {
+                    PartitionKey = new PartitionKey("Weight")
+                };
+
+                var iterator = _container.GetItemQueryIterator<int>(queryDefinition, requestOptions: queryRequestOptions);
+
+                if (iterator.HasMoreResults)
+                {
+                    var response = await iterator.ReadNextAsync();
+                    return response.FirstOrDefault();
+                }
+
+                return 0;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"Exception thrown in {nameof(GetTotalWeightCount)}: {ex.Message}");
+                return 0;
             }
         }
     }

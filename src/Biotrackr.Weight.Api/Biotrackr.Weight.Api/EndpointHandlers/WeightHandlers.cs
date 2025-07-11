@@ -6,10 +6,18 @@ namespace Biotrackr.Weight.Api.EndpointHandlers
 {
     public static class WeightHandlers
     {
-        public static async Task<Ok<List<WeightDocument>>> GetAllWeights(
-            ICosmosRepository cosmosRepository)
+        public static async Task<Ok<PaginationResponse<WeightDocument>>> GetAllWeights(
+            ICosmosRepository cosmosRepository,
+            int? pageNumber = null,
+            int? pageSize = null)
         {
-            var weightDocuments = await cosmosRepository.GetAllWeightDocuments();
+            var paginationRequest = new PaginationRequest
+            {
+                PageNumber = pageNumber ?? 1,
+                PageSize = pageSize ?? 20
+            };
+
+            var weightDocuments = await cosmosRepository.GetAllWeightDocuments(paginationRequest);
             return TypedResults.Ok(weightDocuments);
         }
 
