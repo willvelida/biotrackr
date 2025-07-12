@@ -45,6 +45,7 @@ resource apim 'Microsoft.ApiManagement/service@2024-06-01-preview' existing = {
 }
 
 var apiProductName = 'Activity'
+var activityApiEndpointConfigName = 'ActivityApi:BaseUrl'
 
 module activityApi '../../modules/host/container-app-http.bicep' = {
   name: 'activity-api'
@@ -173,5 +174,14 @@ module activityApiProduct '../../modules/apim/apim-products.bicep' = {
     apimName: apim.name
     productName: apiProductName
     apiName: activityApimApi.name
+  }
+}
+
+
+resource activityApiEndpointSetting 'Microsoft.AppConfiguration/configurationStores/keyValues@2025-02-01-preview' = {
+  name: activityApiEndpointConfigName
+  parent: appConfig
+  properties: {
+    value: '${apim.properties.gatewayUrl}/activity'
   }
 }

@@ -45,6 +45,7 @@ resource apim 'Microsoft.ApiManagement/service@2024-06-01-preview' existing = {
 }
 
 var apiProductName = 'Weight'
+var weightApiEndpointConfigName = 'WeightApi:BaseUrl'
 
 module weightApi '../../modules/host/container-app-http.bicep' = {
   name: 'weight-api'
@@ -171,5 +172,13 @@ module weightApiProduct '../../modules/apim/apim-products.bicep' = {
     apiName: weightApimApi.name
     apimName: apim.name
     productName: apiProductName
+  }
+}
+
+resource weightApiEndpointSetting 'Microsoft.AppConfiguration/configurationStores/keyValues@2025-02-01-preview' = {
+  name: weightApiEndpointConfigName
+  parent: appConfig
+  properties: {
+    value: '${apim.properties.gatewayUrl}/weight'
   }
 }
