@@ -45,7 +45,7 @@ resource apim 'Microsoft.ApiManagement/service@2024-06-01-preview' existing = {
 }
 
 var apiProductName = 'Weight'
-var weightApiEndpointConfigName = 'WeightApi:BaseUrl'
+var weightApiEndpointConfigName = 'Biotrackr:WeightApiUrl'
 
 module weightApi '../../modules/host/container-app-http.bicep' = {
   name: 'weight-api'

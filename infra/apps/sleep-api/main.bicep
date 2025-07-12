@@ -45,7 +45,7 @@ resource apim 'Microsoft.ApiManagement/service@2024-06-01-preview' existing = {
 }
 
 var apiProductName = 'Sleep'
-var sleepApiEndpointConfigName = 'SleepApi:BaseUrl'
+var sleepApiEndpointConfigName = 'Biotrackr:SleepApiUrl'
 
 module sleepApi '../../modules/host/container-app-http.bicep' = {
   name: 'sleep-api'

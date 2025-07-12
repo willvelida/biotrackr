@@ -45,7 +45,7 @@ resource apim 'Microsoft.ApiManagement/service@2024-06-01-preview' existing = {
 }
 
 var apiProductName = 'Activity'
-var activityApiEndpointConfigName = 'ActivityApi:BaseUrl'
+var activityApiEndpointConfigName = 'Biotrackr:ActivityApiUrl'
 
 module activityApi '../../modules/host/container-app-http.bicep' = {
   name: 'activity-api'
