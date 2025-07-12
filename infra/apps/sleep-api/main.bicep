@@ -45,6 +45,7 @@ resource apim 'Microsoft.ApiManagement/service@2024-06-01-preview' existing = {
 }
 
 var apiProductName = 'Sleep'
+var sleepApiEndpointConfigName = 'Biotrackr:SleepApiUrl'
 
 module sleepApi '../../modules/host/container-app-http.bicep' = {
   name: 'sleep-api'
@@ -173,5 +174,13 @@ module sleepApiProduct '../../modules/apim/apim-products.bicep' = {
     apiName: sleepApimApi.name
     apimName: apim.name
     productName: apiProductName
+  }
+}
+
+resource sleepApiEndpointSetting 'Microsoft.AppConfiguration/configurationStores/keyValues@2025-02-01-preview' = {
+  name: sleepApiEndpointConfigName
+  parent: appConfig
+  properties: {
+    value: '${apim.properties.gatewayUrl}/sleep'
   }
 }
