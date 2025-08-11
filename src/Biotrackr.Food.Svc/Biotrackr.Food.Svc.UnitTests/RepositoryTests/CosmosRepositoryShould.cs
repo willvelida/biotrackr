@@ -200,7 +200,7 @@ namespace Biotrackr.Food.Svc.UnitTests.RepositoryTests
                 x => x.Log(
                     LogLevel.Error,
                     It.IsAny<EventId>(),
-                    It.Is<It.IsAnyType>((v, t) => v.ToString()!.Contains("Exception thrown in CreateActivityDocument")),
+                    It.Is<It.IsAnyType>((v, t) => v.ToString()!.Contains("Exception thrown in CreateFoodDocument")),
                     It.IsAny<Exception>(),
                     It.IsAny<Func<It.IsAnyType, Exception?, string>>()),
                 Times.Once);
@@ -232,7 +232,7 @@ namespace Biotrackr.Food.Svc.UnitTests.RepositoryTests
                 x => x.Log(
                     LogLevel.Error,
                     It.IsAny<EventId>(),
-                    It.Is<It.IsAnyType>((v, t) => v.ToString()!.Contains("Exception thrown in CreateActivityDocument")),
+                    It.Is<It.IsAnyType>((v, t) => v.ToString()!.Contains("Exception thrown in CreateFoodDocument")),
                     It.IsAny<Exception>(),
                     It.IsAny<Func<It.IsAnyType, Exception?, string>>()),
                 Times.Once);
