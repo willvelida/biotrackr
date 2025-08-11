@@ -87,7 +87,7 @@ jobs:
         with:
           template-file: './infra/apps/food-service/main.bicep'
           parameters-file: ./infra/apps/food-service/main.dev.bicepparam imageName=${{ needs.retrieve-container-image-dev.outputs.loginServer }}/biotrackr-food-svc:${{ github.sha }}
-          scope: resourcegroup
+          scope: resourceGroup
         secrets:
           client-id: ${{ secrets.AZURE_CLIENT_ID }}
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
@@ -101,7 +101,7 @@ jobs:
         with:
           template-file: './infra/apps/food-service/main.bicep'
           parameters-file: ./infra/apps/food-service/main.dev.bicepparam imageName=${{ needs.retrieve-container-image-dev.outputs.loginServer }}/biotrackr-food-svc:${{ github.sha }}
-          scope: resourcegroup
+          scope: resourceGroup
         secrets:
           client-id: ${{ secrets.AZURE_CLIENT_ID }}
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
@@ -115,7 +115,7 @@ jobs:
         with:
           template-file: './infra/apps/food-service/main.bicep'
           parameters-file: ./infra/apps/food-service/main.dev.bicepparam imageName=${{ needs.retrieve-container-image-dev.outputs.loginServer }}/biotrackr-food-svc:${{ github.sha }}
-          scope: resourcegroup
+          scope: resourceGroup
           environment: dev
         secrets:
           client-id: ${{ secrets.AZURE_CLIENT_ID }}
