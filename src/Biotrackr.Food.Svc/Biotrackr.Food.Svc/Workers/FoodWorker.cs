@@ -1,5 +1,4 @@
 ﻿using Biotrackr.Food.Svc.Services.Interfaces;
-using DnsClient.Internal;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using System;

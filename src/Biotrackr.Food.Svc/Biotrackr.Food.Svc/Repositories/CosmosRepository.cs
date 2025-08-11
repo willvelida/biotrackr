@@ -49,7 +49,7 @@ namespace Biotrackr.Food.Svc.Repositories
             catch (Exception ex)
             {
 
-                _logger.LogError($"Exception thrown in CreateActivityDocument: {ex.Message}");
+                _logger.LogError($"Exception thrown in CreateFoodDocument: {ex.Message}");
                 throw;
             }
         }
