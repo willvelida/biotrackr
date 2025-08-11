@@ -1,0 +1,10 @@
+{
+  "profiles": {
+    "Biotrackr.Food.Svc": {
+      "commandName": "Project"
+    },
+    "Container (Dockerfile)": {
+      "commandName": "Docker"
+    }
+  }
+}
