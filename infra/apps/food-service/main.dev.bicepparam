@@ -5,7 +5,7 @@ param imageName = ''
 param location = 'australiaeast'
 param tags = {
   ApplicationName: 'Biotrackr'
-  Component: 'Sleep-Svc'
+  Component: 'Food-Svc'
   Environment: 'Dev'
 }
 param containerAppEnvironmentName = 'env-biotrackr-dev'
