@@ -178,7 +178,7 @@ namespace Biotrackr.Food.Svc.UnitTests.ServiceTests
             // Assert
             capturedRequest.Should().NotBeNull();
             capturedRequest!.Method.Should().Be(HttpMethod.Get);
-            capturedRequest.RequestUri!.ToString().Should().Be($"https://api.fitbit.com/1/user/-/foods/date/{date}.json");
+            capturedRequest.RequestUri!.ToString().Should().Be($"https://api.fitbit.com/1/user/-/foods/log/date/{date}.json");
             capturedRequest.Headers.Authorization.Should().NotBeNull();
             capturedRequest.Headers.Authorization!.Scheme.Should().Be("Bearer");
             capturedRequest.Headers.Authorization.Parameter.Should().Be(accessToken);
@@ -212,7 +212,7 @@ namespace Biotrackr.Food.Svc.UnitTests.ServiceTests
             await _fitbitService.GetFoodResponse(date);
 
             // Assert
-            capturedRequest!.RequestUri!.ToString().Should().Be($"https://api.fitbit.com/1/user/-/foods/date/{date}.json");
+            capturedRequest!.RequestUri!.ToString().Should().Be($"https://api.fitbit.com/1/user/-/foods/log/date/{date}.json");
         }
 
         [Theory]
