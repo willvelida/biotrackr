@@ -9,7 +9,7 @@ namespace Biotrackr.Food.Svc.Models.FitbitEntities
     public class NutritionalValues
     {
         public int calories { get; set; }
-        public int carbs { get; set; }
+        public double carbs { get; set; }
         public double fat { get; set; }
         public int fiber { get; set; }
         public int protein { get; set; }
