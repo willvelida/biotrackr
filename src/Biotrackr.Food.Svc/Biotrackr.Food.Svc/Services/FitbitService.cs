@@ -31,7 +31,7 @@ namespace Biotrackr.Food.Svc.Services
             {
                 KeyVaultSecret fitbitAccessToken = await _secretClient.GetSecretAsync("AccessToken");
                 _httpClient.DefaultRequestHeaders.Clear();
-                Uri getDailyFoodLogUri = new Uri($"https://api.fitbit.com/1/user/-/foods/date/{date}.json");
+                Uri getDailyFoodLogUri = new Uri($"https://api.fitbit.com/1/user/-/foods/log/date/{date}.json");
                 var request = new HttpRequestMessage(HttpMethod.Get, getDailyFoodLogUri);
                 request.Content = new StringContent("");
                 request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", fitbitAccessToken.Value);
