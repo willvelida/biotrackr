@@ -32,5 +32,35 @@ namespace Biotrackr.Weight.Api.EndpointHandlers
             }
             return TypedResults.Ok(weightDocument);
         }
+
+        public static async Task<Results<BadRequest, Ok<PaginationResponse<WeightDocument>>>> GetWeightsByDateRange(
+            ICosmosRepository cosmosRepository,
+            string startDate,
+            string endDate,
+            int? pageNumber = null,
+            int? pageSize = null)
+        {
+            // Validate date formats
+            if (!DateOnly.TryParse(startDate, out var parsedStartDate) ||
+                !DateOnly.TryParse(endDate, out var parsedEndDate))
+            {
+                return TypedResults.BadRequest();
+            }
+
+            // Validate date range (start date should be before or equal to end date)
+            if (parsedStartDate > parsedEndDate)
+            {
+                return TypedResults.BadRequest();
+            }
+
+            var paginationRequest = new PaginationRequest
+            {
+                PageNumber = pageNumber ?? 1,
+                PageSize = pageSize ?? 20
+            };
+
+            var weightDocuments = await cosmosRepository.GetWeightsByDateRange(startDate, endDate, paginationRequest);
+            return TypedResults.Ok(weightDocuments);
+        }
     }
 }

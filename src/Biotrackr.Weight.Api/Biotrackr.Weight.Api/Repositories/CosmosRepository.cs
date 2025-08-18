@@ -90,6 +90,54 @@ namespace Biotrackr.Weight.Api.Repositories
             }
         }
 
+        public async Task<PaginationResponse<WeightDocument>> GetWeightsByDateRange(string startDate, string endDate, PaginationRequest paginationRequest)
+        {
+            try
+            {
+                _logger.LogInformation($"Fetching weight documents between {startDate} and {endDate} with pagination: PageNumber={paginationRequest.PageNumber}, PageSize={paginationRequest.PageSize}");
+
+                // Get total count for the date range
+                var totalCount = await GetWeightCountForDateRange(startDate, endDate);
+
+                // Get paginated results
+                QueryDefinition queryDefinition = new QueryDefinition(
+                    "SELECT * FROM c WHERE c.documentType = 'Weight' AND c.date >= @startDate AND c.date <= @endDate ORDER BY c.date ASC OFFSET @offset LIMIT @limit")
+                    .WithParameter("@startDate", startDate)
+                    .WithParameter("@endDate", endDate)
+                    .WithParameter("@offset", paginationRequest.Skip)
+                    .WithParameter("@limit", paginationRequest.PageSize);
+
+                QueryRequestOptions queryRequestOptions = new QueryRequestOptions
+                {
+                    PartitionKey = new PartitionKey("Weight")
+                };
+
+                var iterator = _container.GetItemQueryIterator<WeightDocument>(queryDefinition, requestOptions: queryRequestOptions);
+                var results = new List<WeightDocument>();
+
+                while (iterator.HasMoreResults)
+                {
+                    var response = await iterator.ReadNextAsync();
+                    results.AddRange(response.ToList());
+                }
+
+                _logger.LogInformation($"Found {results.Count} weight documents in date range (page {paginationRequest.PageNumber})");
+
+                return new PaginationResponse<WeightDocument>
+                {
+                    Items = results,
+                    TotalCount = totalCount,
+                    PageNumber = paginationRequest.PageNumber,
+                    PageSize = paginationRequest.PageSize
+                };
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"Exception thrown in {nameof(GetWeightsByDateRange)}: {ex.Message}");
+                throw;
+            }
+        }
+
         private async Task<int> GetTotalWeightCount()
         {
             try
@@ -113,6 +161,32 @@ namespace Biotrackr.Weight.Api.Repositories
             catch (Exception ex)
             {
                 _logger.LogError($"Exception thrown in {nameof(GetTotalWeightCount)}: {ex.Message}");
+                return 0;
+            }
+        }
+
+        private async Task<int> GetWeightCountForDateRange(string startDate, string endDate)
+        {
+            try
+            {
+                QueryDefinition queryDefinition = new QueryDefinition("SELECT VALUE COUNT(1) FROM c WHERE c.date >= @startDate AND c.date <= @endDate")
+                    .WithParameter("@startDate", startDate)
+                    .WithParameter("@endDate", endDate);
+                QueryRequestOptions queryRequestOptions = new QueryRequestOptions
+                {
+                    PartitionKey = new PartitionKey("Weight")
+                };
+                var iterator = _container.GetItemQueryIterator<int>(queryDefinition, requestOptions: queryRequestOptions);
+                if (iterator.HasMoreResults)
+                {
+                    var response = await iterator.ReadNextAsync();
+                    return response.FirstOrDefault();
+                }
+                return 0;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"Exception thrown in {nameof(GetWeightCountForDateRange)}: {ex.Message}");
                 return 0;
             }
         }

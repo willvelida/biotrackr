@@ -34,7 +34,7 @@ namespace Biotrackr.Weight.Api.UnitTests.EndpointHandlerTests
             // Assert
             result.Result.Should().BeOfType<Ok<WeightDocument>>();
             var okResult = result.Result as Ok<WeightDocument>;
-            okResult.Value.Should().BeEquivalentTo(weightDocument);
+            okResult!.Value.Should().BeEquivalentTo(weightDocument);
             okResult.Value.Date.Should().Be(date);
         }
 
@@ -43,7 +43,7 @@ namespace Biotrackr.Weight.Api.UnitTests.EndpointHandlerTests
         {
             // Arrange
             var date = "2022-01-01";
-            _cosmosRepositoryMock.Setup(x => x.GetWeightDocumentByDate(date)).ReturnsAsync((WeightDocument)null);
+            _cosmosRepositoryMock.Setup(x => x.GetWeightDocumentByDate(date)).ReturnsAsync((WeightDocument?)null);
 
             // Act
             var result = await WeightHandlers.GetWeightByDate(_cosmosRepositoryMock.Object, date);
@@ -146,7 +146,7 @@ namespace Biotrackr.Weight.Api.UnitTests.EndpointHandlerTests
             // Assert
             result.Should().BeOfType<Ok<PaginationResponse<WeightDocument>>>();
             var okResult = result as Ok<PaginationResponse<WeightDocument>>;
-            okResult.Value.Should().BeEquivalentTo(paginationResponse);
+            okResult!.Value.Should().BeEquivalentTo(paginationResponse);
         }
 
         [Fact]
@@ -172,7 +172,7 @@ namespace Biotrackr.Weight.Api.UnitTests.EndpointHandlerTests
             // Assert
             result.Should().BeOfType<Ok<PaginationResponse<WeightDocument>>>();
             var okResult = result as Ok<PaginationResponse<WeightDocument>>;
-            okResult.Value.Should().BeEquivalentTo(paginatedResponse);
+            okResult!.Value.Should().BeEquivalentTo(paginatedResponse);
         }
 
         [Fact]
@@ -226,7 +226,7 @@ namespace Biotrackr.Weight.Api.UnitTests.EndpointHandlerTests
             // Assert
             result.Should().BeOfType<Ok<PaginationResponse<WeightDocument>>>();
             var okResult = result as Ok<PaginationResponse<WeightDocument>>;
-            okResult.Value.PageNumber.Should().Be(pageNumber);
+            okResult!.Value.PageNumber.Should().Be(pageNumber);
             okResult.Value.PageSize.Should().Be(pageSize);
 
             _cosmosRepositoryMock.Verify(x => x.GetAllWeightDocuments(It.Is<PaginationRequest>(p =>
@@ -397,6 +397,62 @@ namespace Biotrackr.Weight.Api.UnitTests.EndpointHandlerTests
             // Verify the repository was still called with correct parameters
             _cosmosRepositoryMock.Verify(x => x.GetAllWeightDocuments(
                 It.Is<PaginationRequest>(r => r.PageNumber == 1 && r.PageSize == 10)), Times.Once);
+        }
+
+        [Fact]
+        public async Task GetWeightsByDateRange_ShouldReturnPaginatedWeightDocuments_WhenValidDateRange()
+        {
+            // Arrange
+            var startDate = "2022-01-01";
+            var endDate = "2022-01-31";
+            var pageNumber = 1;
+            var pageSize = 10;
+            var fixture = new Fixture();
+            var weightDocuments = fixture.CreateMany<WeightDocument>(10).ToList();
+            var paginationResponse = new PaginationResponse<WeightDocument>
+            {
+                Items = weightDocuments,
+                TotalCount = 25,
+                PageNumber = pageNumber,
+                PageSize = pageSize
+            };
+
+            _cosmosRepositoryMock.Setup(x => x.GetWeightsByDateRange(startDate, endDate, It.IsAny<PaginationRequest>()))
+                .ReturnsAsync(paginationResponse);
+
+            // Act
+            var result = await WeightHandlers.GetWeightsByDateRange(_cosmosRepositoryMock.Object, startDate, endDate, pageNumber, pageSize);
+
+            // Assert
+            result.Result.Should().BeOfType<Ok<PaginationResponse<WeightDocument>>>();
+            var okResult = result.Result as Ok<PaginationResponse<WeightDocument>>;
+            okResult!.Value.Should().BeEquivalentTo(paginationResponse);
+        }
+
+        [Fact]
+        public async Task GetWeightsByDateRange_ShouldUseDefaultPagination_WhenNotProvided()
+        {
+            // Arrange
+            var startDate = "2022-01-01";
+            var endDate = "2022-01-31";
+            var fixture = new Fixture();
+            var paginationResponse = new PaginationResponse<WeightDocument>
+            {
+                Items = fixture.CreateMany<WeightDocument>(20).ToList(),
+                TotalCount = 20,
+                PageNumber = 1,
+                PageSize = 20
+            };
+
+            _cosmosRepositoryMock.Setup(x => x.GetWeightsByDateRange(startDate, endDate,
+                It.Is<PaginationRequest>(p => p.PageNumber == 1 && p.PageSize == 20)))
+                .ReturnsAsync(paginationResponse);
+
+            // Act
+            var result = await WeightHandlers.GetWeightsByDateRange(_cosmosRepositoryMock.Object, startDate, endDate);
+
+            // Assert
+            result.Result.Should().BeOfType<Ok<PaginationResponse<WeightDocument>>>();
         }
     }
 }

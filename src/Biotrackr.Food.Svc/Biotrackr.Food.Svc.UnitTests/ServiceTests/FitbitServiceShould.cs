@@ -178,7 +178,7 @@ namespace Biotrackr.Food.Svc.UnitTests.ServiceTests
             // Assert
             capturedRequest.Should().NotBeNull();
             capturedRequest!.Method.Should().Be(HttpMethod.Get);
-            capturedRequest.RequestUri!.ToString().Should().Be($"https://api.fitbit.com/1/user/-/foods/date/{date}.json");
+            capturedRequest.RequestUri!.ToString().Should().Be($"https://api.fitbit.com/1/user/-/foods/log/date/{date}.json");
             capturedRequest.Headers.Authorization.Should().NotBeNull();
             capturedRequest.Headers.Authorization!.Scheme.Should().Be("Bearer");
             capturedRequest.Headers.Authorization.Parameter.Should().Be(accessToken);
@@ -212,7 +212,7 @@ namespace Biotrackr.Food.Svc.UnitTests.ServiceTests
             await _fitbitService.GetFoodResponse(date);
 
             // Assert
-            capturedRequest!.RequestUri!.ToString().Should().Be($"https://api.fitbit.com/1/user/-/foods/date/{date}.json");
+            capturedRequest!.RequestUri!.ToString().Should().Be($"https://api.fitbit.com/1/user/-/foods/log/date/{date}.json");
         }
 
         [Theory]
@@ -386,6 +386,51 @@ namespace Biotrackr.Food.Svc.UnitTests.ServiceTests
                 var exception = await Record.ExceptionAsync(() => _fitbitService.GetFoodResponse(date));
                 // May throw JsonException or return null depending on the input
             }
+        }
+
+        [Fact]
+        public async Task GetFoodResponse_ShouldHandleDecimalCarbValues()
+        {
+            // Arrange
+            var date = "2023-10-01";
+            var accessToken = "test-access-token";
+            var jsonWithDecimalValues = @"{
+                ""foods"": [{
+                    ""nutritionalValues"": {
+                        ""calories"": 200.5,
+                        ""carbs"": 25.5,
+                        ""fat"": 10.2,
+                        ""fiber"": 3.7,
+                        ""protein"": 15.8,
+                        ""sodium"": 300.1
+                    }
+                }]
+            }";
+
+            _mockSecretClient.Setup(s => s.GetSecretAsync("AccessToken", null, It.IsAny<CancellationToken>()))
+                .ReturnsAsync(Response.FromValue(new KeyVaultSecret("AccessToken", accessToken), Mock.Of<Response>()));
+
+            _mockHttpMessageHandler.Protected()
+                .Setup<Task<HttpResponseMessage>>("SendAsync", ItExpr.IsAny<HttpRequestMessage>(), ItExpr.IsAny<CancellationToken>())
+                .ReturnsAsync(new HttpResponseMessage
+                {
+                    StatusCode = HttpStatusCode.OK,
+                    Content = new StringContent(jsonWithDecimalValues)
+                });
+
+            // Act
+            var result = await _fitbitService.GetFoodResponse(date);
+
+            // Assert
+            result.Should().NotBeNull();
+            result.foods.Should().NotBeNull();
+            var nutritionalValues = result.foods.First().nutritionalValues;
+            nutritionalValues.calories.Should().Be(200.5);
+            nutritionalValues.carbs.Should().Be(25.5);
+            nutritionalValues.fat.Should().Be(10.2);
+            nutritionalValues.fiber.Should().Be(3.7);
+            nutritionalValues.protein.Should().Be(15.8);
+            nutritionalValues.sodium.Should().Be(300.1);
         }
     }
 }
