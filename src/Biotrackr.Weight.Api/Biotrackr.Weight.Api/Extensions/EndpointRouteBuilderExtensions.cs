@@ -21,6 +21,12 @@ namespace Biotrackr.Weight.Api.Extensions
                 .WithOpenApi()
                 .WithSummary("Gets a weight document by date")
                 .WithDescription("Gets a weight document from the database by date");
+
+            weightEndpoints.MapGet("/range/{startDate}/{endDate}", WeightHandlers.GetWeightsByDateRange)
+                .WithName("GetWeightsByDateRange")
+                .WithOpenApi()
+                .WithSummary("Gets weight documents within a date range with pagination")
+                .WithDescription("Gets paginated weight documents between the specified start and end dates (inclusive). Supports optional pageNumber and pageSize query parameters.");
         }
 
         public static void RegisterHealthCheckEndpoints(this IEndpointRouteBuilder endpointRouteBuilder)

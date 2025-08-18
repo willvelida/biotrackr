@@ -156,6 +156,51 @@ resource weightApiGetByDate 'Microsoft.ApiManagement/service/apis/operations@202
   }
 }
 
+resource weightApiGetByDateRange 'Microsoft.ApiManagement/service/apis/operations@2024-06-01-preview' = {
+  name: 'weight-getbydaterange'
+  parent: weightApimApi
+  properties: {
+    displayName: 'GetWeightsByDateRange'
+    method: 'GET'
+    urlTemplate: '/range/{startDate}/{endDate}'
+    description: 'Gets paginated weight documents within a date range'
+    templateParameters: [
+      {
+        name: 'startDate'
+        description: 'The start date for the range in YYYY-MM-DD format'
+        type: 'string'
+        required: true
+      }
+      {
+        name: 'endDate'
+        description: 'The end date for the range in YYYY-MM-DD format'
+        type: 'string'
+        required: true
+      }
+    ]
+    request: {
+      queryParameters: [
+        {
+          name: 'pageNumber'
+          description: 'The page number to retrieve (default: 1)'
+          type: 'integer'
+          required: false
+          defaultValue: '1'
+          values: []
+        }
+        {
+          name: 'pageSize'
+          description: 'The number of items per page (default: 20, max: 100)'
+          type: 'integer'
+          required: false
+          defaultValue: '20'
+          values: []
+        }
+      ]
+    }
+  }
+}
+
 resource weightApiHealthCheck 'Microsoft.ApiManagement/service/apis/operations@2024-06-01-preview' = {
   name: 'weight-healthcheck'
   parent: weightApimApi

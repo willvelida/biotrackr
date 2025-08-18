@@ -376,6 +376,87 @@ namespace Biotrackr.Weight.Api.UnitTests.RepositoryTests
             result.PageSize.Should().Be(request.PageSize);
         }
 
+        [Fact]
+        public async Task GetWeightsByDateRange_ShouldReturnPaginatedWeightDocuments_WhenWeightsExistInRange()
+        {
+            // Arrange
+            var startDate = "2022-01-01";
+            var endDate = "2022-01-31";
+            var paginationRequest = new PaginationRequest { PageNumber = 1, PageSize = 5 };
+            var fixture = new Fixture();
+            var weightDocuments = fixture.CreateMany<WeightDocument>(5).ToList();
+            var totalCount = 15;
+
+            // Set dates within range for test data
+            for (int i = 0; i < weightDocuments.Count; i++)
+            {
+                weightDocuments[i].Date = $"2022-01-{(i + 1):D2}";
+            }
+
+            // Setup count query
+            var countFeedResponse = new Mock<FeedResponse<int>>();
+            countFeedResponse.Setup(x => x.GetEnumerator()).Returns(new List<int> { totalCount }.GetEnumerator());
+
+            var countIterator = new Mock<FeedIterator<int>>();
+            countIterator.SetupSequence(x => x.HasMoreResults).Returns(true).Returns(false);
+            countIterator.Setup(x => x.ReadNextAsync(default)).ReturnsAsync(countFeedResponse.Object);
+
+            _containerMock.Setup(x => x.GetItemQueryIterator<int>(
+                It.Is<QueryDefinition>(q => q.QueryText.Contains("COUNT(1)")),
+                It.IsAny<string>(),
+                It.IsAny<QueryRequestOptions>()))
+                .Returns(countIterator.Object);
+
+            // Setup main query
+            var feedResponse = new Mock<FeedResponse<WeightDocument>>();
+            feedResponse.Setup(x => x.GetEnumerator()).Returns(weightDocuments.GetEnumerator());
+
+            var iterator = new Mock<FeedIterator<WeightDocument>>();
+            iterator.SetupSequence(x => x.HasMoreResults).Returns(true).Returns(false);
+            iterator.Setup(x => x.ReadNextAsync(default)).ReturnsAsync(feedResponse.Object);
+
+            _containerMock.Setup(x => x.GetItemQueryIterator<WeightDocument>(
+                It.Is<QueryDefinition>(q => q.QueryText.Contains("OFFSET @offset LIMIT @limit")),
+                It.IsAny<string>(),
+                It.IsAny<QueryRequestOptions>()))
+                .Returns(iterator.Object);
+
+            // Act
+            var result = await _repository.GetWeightsByDateRange(startDate, endDate, paginationRequest);
+
+            // Assert
+            result.Should().NotBeNull();
+            result.Items.Should().HaveCount(5);
+            result.Items.Should().BeEquivalentTo(weightDocuments);
+            result.TotalCount.Should().Be(totalCount);
+            result.PageNumber.Should().Be(1);
+            result.PageSize.Should().Be(5);
+        }
+
+        [Fact]
+        public async Task GetWeightsByDateRange_ShouldReturnCorrectPaginationMetadata()
+        {
+            // Arrange
+            var startDate = "2022-01-01";
+            var endDate = "2022-01-31";
+            var paginationRequest = new PaginationRequest { PageNumber = 2, PageSize = 10 };
+            var weightDocuments = new List<WeightDocument>();
+            var totalCount = 25;
+
+            SetupMocksForDateRangePagination(weightDocuments, totalCount);
+
+            // Act
+            var result = await _repository.GetWeightsByDateRange(startDate, endDate, paginationRequest);
+
+            // Assert
+            result.PageNumber.Should().Be(2);
+            result.PageSize.Should().Be(10);
+            result.TotalCount.Should().Be(25);
+            result.TotalPages.Should().Be(3);
+            result.HasPreviousPage.Should().BeTrue();
+            result.HasNextPage.Should().BeTrue();
+        }
+
         private void SetupMocksForPagination(List<WeightDocument> weightDocuments, int totalCount)
         {
             // Mock the count query
@@ -405,6 +486,37 @@ namespace Biotrackr.Weight.Api.UnitTests.RepositoryTests
                 It.IsAny<string>(),
                 It.IsAny<QueryRequestOptions>()))
                 .Returns(dataIterator.Object);
+        }
+
+        private void SetupMocksForDateRangePagination(List<WeightDocument> weightDocuments, int totalCount)
+        {
+            // Setup count query
+            var countFeedResponse = new Mock<FeedResponse<int>>();
+            countFeedResponse.Setup(x => x.GetEnumerator()).Returns(new List<int> { totalCount }.GetEnumerator());
+
+            var countIterator = new Mock<FeedIterator<int>>();
+            countIterator.SetupSequence(x => x.HasMoreResults).Returns(true).Returns(false);
+            countIterator.Setup(x => x.ReadNextAsync(default)).ReturnsAsync(countFeedResponse.Object);
+
+            _containerMock.Setup(x => x.GetItemQueryIterator<int>(
+                It.Is<QueryDefinition>(q => q.QueryText.Contains("COUNT(1)")),
+                It.IsAny<string>(),
+                It.IsAny<QueryRequestOptions>()))
+                .Returns(countIterator.Object);
+
+            // Setup main query
+            var feedResponse = new Mock<FeedResponse<WeightDocument>>();
+            feedResponse.Setup(x => x.GetEnumerator()).Returns(weightDocuments.GetEnumerator());
+
+            var iterator = new Mock<FeedIterator<WeightDocument>>();
+            iterator.SetupSequence(x => x.HasMoreResults).Returns(true).Returns(false);
+            iterator.Setup(x => x.ReadNextAsync(default)).ReturnsAsync(feedResponse.Object);
+
+            _containerMock.Setup(x => x.GetItemQueryIterator<WeightDocument>(
+                It.Is<QueryDefinition>(q => q.QueryText.Contains("OFFSET @offset LIMIT @limit")),
+                It.IsAny<string>(),
+                It.IsAny<QueryRequestOptions>()))
+                .Returns(iterator.Object);
         }
     }
 }
