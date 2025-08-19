@@ -297,7 +297,6 @@ namespace Biotrackr.Sleep.Api.UnitTests.RepositoryTests
         {
             // Arrange
             var request = new PaginationRequest { PageNumber = 2, PageSize = 10 };
-            var expectedSkip = 10; // (2-1) * 10
             var sleepDocuments = new List<SleepDocument>();
             var totalCount = 25;
 
@@ -362,6 +361,291 @@ namespace Biotrackr.Sleep.Api.UnitTests.RepositoryTests
             result.PageSize.Should().Be(request.PageSize);
         }
 
+        [Fact]
+        public async Task GetSleepDocumentsByDateRange_ShouldReturnPaginationResponseWithSleepDocuments()
+        {
+            // Arrange
+            var startDate = "2022-01-01";
+            var endDate = "2022-01-31";
+            var request = new PaginationRequest { PageNumber = 1, PageSize = 5 };
+            var fixture = new Fixture();
+            var sleepDocuments = fixture.CreateMany<SleepDocument>(5).ToList();
+            var totalCount = 10;
+
+            SetupMocksForDateRangePagination(sleepDocuments, totalCount, startDate, endDate);
+
+            // Act
+            var result = await _repository.GetSleepDocumentsByDateRange(startDate, endDate, request);
+
+            // Assert
+            result.Should().NotBeNull();
+            result.Items.Should().BeEquivalentTo(sleepDocuments);
+            result.TotalCount.Should().Be(totalCount);
+            result.PageNumber.Should().Be(request.PageNumber);
+            result.PageSize.Should().Be(request.PageSize);
+        }
+
+        [Fact]
+        public async Task GetSleepDocumentsByDateRange_ShouldReturnEmptyPaginationResponse_WhenNoSleepDocumentsExistInRange()
+        {
+            // Arrange
+            var startDate = "2022-01-01";
+            var endDate = "2022-01-31";
+            var request = new PaginationRequest { PageNumber = 1, PageSize = 5 };
+
+            SetupMocksForDateRangePagination(new List<SleepDocument>(), 0, startDate, endDate);
+
+            // Act
+            var result = await _repository.GetSleepDocumentsByDateRange(startDate, endDate, request);
+
+            // Assert
+            result.Should().NotBeNull();
+            result.Items.Should().BeEmpty();
+            result.TotalCount.Should().Be(0);
+            result.PageNumber.Should().Be(request.PageNumber);
+            result.PageSize.Should().Be(request.PageSize);
+        }
+
+        [Fact]
+        public async Task GetSleepDocumentsByDateRange_ShouldLogErrorAndThrowException_WhenExceptionOccurs()
+        {
+            // Arrange
+            var startDate = "2022-01-01";
+            var endDate = "2022-01-31";
+            var request = new PaginationRequest { PageNumber = 1, PageSize = 5 };
+            var exceptionMessage = "Test Exception";
+
+            // Setup count query to succeed
+            var countFeedResponse = new Mock<FeedResponse<int>>();
+            countFeedResponse.Setup(f => f.GetEnumerator()).Returns(new List<int> { 10 }.GetEnumerator());
+
+            var mockCountIterator = new Mock<FeedIterator<int>>();
+            mockCountIterator.SetupSequence(i => i.HasMoreResults)
+                .Returns(true)
+                .Returns(false);
+            mockCountIterator.Setup(i => i.ReadNextAsync(default))
+                .ReturnsAsync(countFeedResponse.Object);
+
+            _containerMock.Setup(c => c.GetItemQueryIterator<int>(
+                It.Is<QueryDefinition>(q => q.QueryText.Contains("COUNT") && 
+                                           q.QueryText.Contains("c.date >= @startDate") &&
+                                           q.QueryText.Contains("c.date <= @endDate")),
+                It.IsAny<string>(),
+                It.IsAny<QueryRequestOptions>()))
+                .Returns(mockCountIterator.Object);
+
+            // Setup main query to throw exception
+            _containerMock.Setup(c => c.GetItemQueryIterator<SleepDocument>(
+                It.Is<QueryDefinition>(q => q.QueryText.Contains("c.date >= @startDate") &&
+                                           q.QueryText.Contains("c.date <= @endDate") &&
+                                           q.QueryText.Contains("ORDER BY") &&
+                                           q.QueryText.Contains("OFFSET") &&
+                                           q.QueryText.Contains("LIMIT")),
+                It.IsAny<string>(),
+                It.IsAny<QueryRequestOptions>()))
+                .Throws(new Exception(exceptionMessage));
+
+            // Act
+            Func<Task> act = async () => await _repository.GetSleepDocumentsByDateRange(startDate, endDate, request);
+
+            // Assert
+            await act.Should().ThrowAsync<Exception>().WithMessage(exceptionMessage);
+            _loggerMock.VerifyLog(logger => logger.LogError($"Exception thrown in GetSleepDocumentsByDateRange: Test Exception"));
+        }
+
+        [Fact]
+        public async Task GetSleepDocumentsByDateRange_ShouldReturnCorrectPaginationMetadata()
+        {
+            // Arrange
+            var startDate = "2022-01-01";
+            var endDate = "2022-01-31";
+            var request = new PaginationRequest { PageNumber = 2, PageSize = 10 };
+            var fixture = new Fixture();
+            var sleepDocuments = fixture.CreateMany<SleepDocument>(10).ToList();
+            var totalCount = 25;
+
+            SetupMocksForDateRangePagination(sleepDocuments, totalCount, startDate, endDate);
+
+            // Act
+            var result = await _repository.GetSleepDocumentsByDateRange(startDate, endDate, request);
+
+            // Assert
+            result.Should().NotBeNull();
+            result.Items.Should().BeEquivalentTo(sleepDocuments);
+            result.PageNumber.Should().Be(2);
+            result.PageSize.Should().Be(10);
+            result.TotalCount.Should().Be(25);
+            result.TotalPages.Should().Be(3);
+            result.HasPreviousPage.Should().BeTrue();
+            result.HasNextPage.Should().BeTrue();
+        }
+
+        [Fact]
+        public async Task GetSleepDocumentsByDateRange_ShouldUseCorrectDateRangeParameters()
+        {
+            // Arrange
+            var startDate = "2022-01-01";
+            var endDate = "2022-01-31";
+            var request = new PaginationRequest { PageNumber = 1, PageSize = 10 };
+            var fixture = new Fixture();
+            var sleepDocuments = fixture.CreateMany<SleepDocument>(5).ToList();
+
+            SetupMocksForDateRangePagination(sleepDocuments, 5, startDate, endDate);
+
+            // Act
+            await _repository.GetSleepDocumentsByDateRange(startDate, endDate, request);
+
+            // Assert
+            _containerMock.Verify(x => x.GetItemQueryIterator<SleepDocument>(
+                It.Is<QueryDefinition>(q =>
+                    q.QueryText.Contains("c.date >= @startDate") &&
+                    q.QueryText.Contains("c.date <= @endDate") &&
+                    q.QueryText.Contains("OFFSET @offset LIMIT @limit")),
+                It.IsAny<string>(),
+                It.IsAny<QueryRequestOptions>()), Times.Once);
+        }
+
+        [Fact]
+        public async Task GetSleepDocumentsByDateRange_ShouldContinueWhenCountQueryFails()
+        {
+            // Arrange
+            var startDate = "2022-01-01";
+            var endDate = "2022-01-31";
+            var request = new PaginationRequest { PageNumber = 1, PageSize = 5 };
+            var fixture = new Fixture();
+            var sleepDocuments = fixture.CreateMany<SleepDocument>(3).ToList();
+
+            // Setup count query to fail
+            _containerMock.Setup(c => c.GetItemQueryIterator<int>(
+                It.Is<QueryDefinition>(q => q.QueryText.Contains("COUNT") &&
+                                           q.QueryText.Contains("c.date >= @startDate") &&
+                                           q.QueryText.Contains("c.date <= @endDate")),
+                It.IsAny<string>(),
+                It.IsAny<QueryRequestOptions>()))
+                .Throws(new Exception("Count query failed"));
+
+            // Setup for sleep documents query to succeed
+            var feedResponse = new Mock<FeedResponse<SleepDocument>>();
+            feedResponse.Setup(f => f.GetEnumerator()).Returns(sleepDocuments.GetEnumerator());
+
+            var mockFeedIterator = new Mock<FeedIterator<SleepDocument>>();
+            mockFeedIterator.SetupSequence(i => i.HasMoreResults)
+                .Returns(true)
+                .Returns(false);
+            mockFeedIterator.Setup(i => i.ReadNextAsync(default))
+                .ReturnsAsync(feedResponse.Object);
+
+            _containerMock.Setup(c => c.GetItemQueryIterator<SleepDocument>(
+                It.Is<QueryDefinition>(q => q.QueryText.Contains("c.date >= @startDate") &&
+                                           q.QueryText.Contains("c.date <= @endDate") &&
+                                           q.QueryText.Contains("ORDER BY")),
+                It.IsAny<string>(),
+                It.IsAny<QueryRequestOptions>()))
+                .Returns(mockFeedIterator.Object);
+
+            // Act
+            var result = await _repository.GetSleepDocumentsByDateRange(startDate, endDate, request);
+
+            // Assert
+            result.Should().NotBeNull();
+            result.Items.Should().BeEquivalentTo(sleepDocuments);
+            result.TotalCount.Should().Be(0); // Should be 0 because count query failed
+            result.PageNumber.Should().Be(request.PageNumber);
+            result.PageSize.Should().Be(request.PageSize);
+        }
+
+        [Fact]
+        public async Task GetSleepDocumentsByDateRange_ShouldReturnCorrectPaginationMetadata_ForFirstPage()
+        {
+            // Arrange
+            var startDate = "2022-01-01";
+            var endDate = "2022-01-31";
+            var request = new PaginationRequest { PageNumber = 1, PageSize = 20 };
+            var fixture = new Fixture();
+            var sleepDocuments = fixture.CreateMany<SleepDocument>(20).ToList();
+            var totalCount = 50;
+
+            SetupMocksForDateRangePagination(sleepDocuments, totalCount, startDate, endDate);
+
+            // Act
+            var result = await _repository.GetSleepDocumentsByDateRange(startDate, endDate, request);
+
+            // Assert
+            result.PageNumber.Should().Be(1);
+            result.PageSize.Should().Be(20);
+            result.TotalCount.Should().Be(50);
+            result.TotalPages.Should().Be(3);
+            result.HasPreviousPage.Should().BeFalse();
+            result.HasNextPage.Should().BeTrue();
+        }
+
+        [Fact]
+        public async Task GetSleepDocumentsByDateRange_ShouldReturnCorrectPaginationMetadata_ForLastPage()
+        {
+            // Arrange
+            var startDate = "2022-01-01";
+            var endDate = "2022-01-31";
+            var request = new PaginationRequest { PageNumber = 3, PageSize = 20 };
+            var fixture = new Fixture();
+            var sleepDocuments = fixture.CreateMany<SleepDocument>(10).ToList();
+            var totalCount = 50;
+
+            SetupMocksForDateRangePagination(sleepDocuments, totalCount, startDate, endDate);
+
+            // Act
+            var result = await _repository.GetSleepDocumentsByDateRange(startDate, endDate, request);
+
+            // Assert
+            result.PageNumber.Should().Be(3);
+            result.PageSize.Should().Be(20);
+            result.TotalCount.Should().Be(50);
+            result.TotalPages.Should().Be(3);
+            result.HasPreviousPage.Should().BeTrue();
+            result.HasNextPage.Should().BeFalse();
+        }
+
+        [Fact]
+        public async Task GetSleepDocumentsByDateRange_ShouldHandleEmptyResults()
+        {
+            // Arrange
+            var startDate = "2022-01-01";
+            var endDate = "2022-01-31";
+            var request = new PaginationRequest { PageNumber = 1, PageSize = 20 };
+
+            SetupMocksForDateRangePagination(new List<SleepDocument>(), 0, startDate, endDate);
+
+            // Act
+            var result = await _repository.GetSleepDocumentsByDateRange(startDate, endDate, request);
+
+            // Assert
+            result.Items.Should().BeEmpty();
+            result.TotalCount.Should().Be(0);
+            result.TotalPages.Should().Be(0);
+            result.HasPreviousPage.Should().BeFalse();
+            result.HasNextPage.Should().BeFalse();
+        }
+
+        [Fact]
+        public async Task GetSleepDocumentsByDateRange_ShouldLogInformationMessages()
+        {
+            // Arrange
+            var startDate = "2022-01-01";
+            var endDate = "2022-01-31";
+            var request = new PaginationRequest { PageNumber = 1, PageSize = 5 };
+            var fixture = new Fixture();
+            var sleepDocuments = fixture.CreateMany<SleepDocument>(3).ToList();
+            var totalCount = 10;
+
+            SetupMocksForDateRangePagination(sleepDocuments, totalCount, startDate, endDate);
+
+            // Act
+            await _repository.GetSleepDocumentsByDateRange(startDate, endDate, request);
+
+            // Assert
+            _loggerMock.VerifyLog(logger => logger.LogInformation($"Fetching sleep documents from {startDate} to {endDate} with pagination: PageNumber={request.PageNumber}, PageSize={request.PageSize}"));
+            _loggerMock.VerifyLog(logger => logger.LogInformation($"Fetched {sleepDocuments.Count} sleep documents out of {totalCount} total records."));
+        }
+
         private void SetupMocksForPagination(List<SleepDocument> sleepDocuments, int totalCount)
         {
             // Mock the count query
@@ -388,6 +672,42 @@ namespace Biotrackr.Sleep.Api.UnitTests.RepositoryTests
 
             _containerMock.Setup(x => x.GetItemQueryIterator<SleepDocument>(
                 It.Is<QueryDefinition>(q => q.QueryText.Contains("OFFSET") && q.QueryText.Contains("LIMIT")),
+                It.IsAny<string>(),
+                It.IsAny<QueryRequestOptions>()))
+                .Returns(dataIterator.Object);
+        }
+
+        private void SetupMocksForDateRangePagination(List<SleepDocument> sleepDocuments, int totalCount, string startDate, string endDate)
+        {
+            // Mock the count query for date range
+            var countFeedResponse = new Mock<FeedResponse<int>>();
+            countFeedResponse.Setup(x => x.GetEnumerator()).Returns(new List<int> { totalCount }.GetEnumerator());
+
+            var countIterator = new Mock<FeedIterator<int>>();
+            countIterator.SetupSequence(x => x.HasMoreResults).Returns(true).Returns(false);
+            countIterator.Setup(x => x.ReadNextAsync(default)).ReturnsAsync(countFeedResponse.Object);
+
+            // Mock the data query for date range
+            var dataFeedResponse = new Mock<FeedResponse<SleepDocument>>();
+            dataFeedResponse.Setup(x => x.GetEnumerator()).Returns(sleepDocuments.GetEnumerator());
+
+            var dataIterator = new Mock<FeedIterator<SleepDocument>>();
+            dataIterator.SetupSequence(x => x.HasMoreResults).Returns(true).Returns(false);
+            dataIterator.Setup(x => x.ReadNextAsync(default)).ReturnsAsync(dataFeedResponse.Object);
+
+            _containerMock.Setup(x => x.GetItemQueryIterator<int>(
+                It.Is<QueryDefinition>(q => q.QueryText.Contains("COUNT") &&
+                                           q.QueryText.Contains("c.date >= @startDate") &&
+                                           q.QueryText.Contains("c.date <= @endDate")),
+                It.IsAny<string>(),
+                It.IsAny<QueryRequestOptions>()))
+                .Returns(countIterator.Object);
+
+            _containerMock.Setup(x => x.GetItemQueryIterator<SleepDocument>(
+                It.Is<QueryDefinition>(q => q.QueryText.Contains("c.date >= @startDate") &&
+                                           q.QueryText.Contains("c.date <= @endDate") &&
+                                           q.QueryText.Contains("OFFSET") &&
+                                           q.QueryText.Contains("LIMIT")),
                 It.IsAny<string>(),
                 It.IsAny<QueryRequestOptions>()))
                 .Returns(dataIterator.Object);

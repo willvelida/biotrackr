@@ -20,6 +20,11 @@ namespace Biotrackr.Sleep.Api.Extensions
                 .WithOpenApi()
                 .WithSummary("Gets a sleep document by date")
                 .WithDescription("Gets a sleep document by date from the database");
+            sleepEndpoints.MapGet("/range/{startDate}/{endDate}", SleepHandlers.GetSleepsByDateRange)
+                .WithName("GetSleepsByDateRange")
+                .WithOpenApi()
+                .WithSummary("Gets sleep documents within a date range with pagination")
+                .WithDescription("Gets paginated sleep documents between the specified start and end dates (inclusive). Supports optional pageNumber and pageSize query parameters.");
         }
 
         public static void RegisterHealthCheckEndpoints(this IEndpointRouteBuilder endpointRouteBuilder)
