@@ -21,6 +21,12 @@ namespace Biotrackr.Activity.Api.Extensions
                 .WithOpenApi()
                 .WithSummary("Get an Activity Summary by providing a date")
                 .WithDescription("You can get a specific activity summary via this endpoint by providing the date in the following format (YYYY-MM-DD)");
+
+            activityEndpoints.MapGet("/range/{startDate}/{endDate}", ActivityHandlers.GetActivitiesByDateRange)
+                .WithName("GetActivitiesByDateRange")
+                .WithOpenApi()
+                .WithSummary("Gets activity documents within a date range with pagination")
+                .WithDescription("Gets paginated activity documents between the specified start and end dates (inclusive). Supports optional pageNumber and pageSize query parameters.");
         }
 
         public static void RegisterHealthCheckEndpoints(this IEndpointRouteBuilder endpointRouteBuilder)

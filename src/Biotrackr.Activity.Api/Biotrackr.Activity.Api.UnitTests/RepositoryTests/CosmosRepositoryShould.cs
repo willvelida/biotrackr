@@ -298,5 +298,302 @@ namespace Biotrackr.Activity.Api.UnitTests.RepositoryTests
                 It.IsAny<QueryRequestOptions>()))
                 .Returns(dataIterator.Object);
         }
+
+        #region GetActivitiesByDateRange Tests
+
+        [Fact]
+        public async Task GetActivitiesByDateRange_ShouldReturnPaginatedResults_WhenDateRangeIsValid()
+        {
+            // Arrange
+            var fixture = new Fixture();
+            var startDate = "2023-01-01";
+            var endDate = "2023-01-31";
+            var activityDocuments = fixture.CreateMany<ActivityDocument>(5).ToList();
+            var totalCount = 15;
+            var request = new PaginationRequest { PageNumber = 1, PageSize = 5 };
+
+            // Mock the count query for date range
+            var countFeedResponse = new Mock<FeedResponse<int>>();
+            countFeedResponse.Setup(x => x.GetEnumerator()).Returns(new List<int> { totalCount }.GetEnumerator());
+
+            var countIterator = new Mock<FeedIterator<int>>();
+            countIterator.SetupSequence(x => x.HasMoreResults).Returns(true).Returns(false);
+            countIterator.Setup(x => x.ReadNextAsync(default)).ReturnsAsync(countFeedResponse.Object);
+
+            // Mock the data query for date range
+            var dataFeedResponse = new Mock<FeedResponse<ActivityDocument>>();
+            dataFeedResponse.Setup(x => x.GetEnumerator()).Returns(activityDocuments.GetEnumerator());
+
+            var dataIterator = new Mock<FeedIterator<ActivityDocument>>();
+            dataIterator.SetupSequence(x => x.HasMoreResults).Returns(true).Returns(false);
+            dataIterator.Setup(x => x.ReadNextAsync(default)).ReturnsAsync(dataFeedResponse.Object);
+
+            _containerMock.Setup(x => x.GetItemQueryIterator<int>(
+                It.Is<QueryDefinition>(q => 
+                    q.QueryText.Contains("COUNT") && 
+                    q.QueryText.Contains("c.date >= @startDate") && 
+                    q.QueryText.Contains("c.date <= @endDate")),
+                It.IsAny<string>(),
+                It.IsAny<QueryRequestOptions>()))
+                .Returns(countIterator.Object);
+
+            _containerMock.Setup(x => x.GetItemQueryIterator<ActivityDocument>(
+                It.Is<QueryDefinition>(q => 
+                    q.QueryText.Contains("c.documentType = 'Activity'") &&
+                    q.QueryText.Contains("c.date >= @startDate") && 
+                    q.QueryText.Contains("c.date <= @endDate") &&
+                    q.QueryText.Contains("ORDER BY c.date ASC") &&
+                    q.QueryText.Contains("OFFSET @offset LIMIT @limit")),
+                It.IsAny<string>(),
+                It.IsAny<QueryRequestOptions>()))
+                .Returns(dataIterator.Object);
+
+            // Act
+            var result = await _repository.GetActivitiesByDateRange(startDate, endDate, request);
+
+            // Assert
+            result.Should().NotBeNull();
+            result.Items.Should().BeEquivalentTo(activityDocuments);
+            result.PageNumber.Should().Be(1);
+            result.PageSize.Should().Be(5);
+            result.TotalCount.Should().Be(15);
+            result.TotalPages.Should().Be(3);
+            result.HasPreviousPage.Should().BeFalse();
+            result.HasNextPage.Should().BeTrue();
+        }
+
+        [Fact]
+        public async Task GetActivitiesByDateRange_ShouldUseCorrectPartitionKey()
+        {
+            // Arrange
+            var fixture = new Fixture();
+            var startDate = "2023-01-01";
+            var endDate = "2023-01-31";
+            var activityDocuments = fixture.CreateMany<ActivityDocument>(3).ToList();
+            var request = new PaginationRequest { PageNumber = 1, PageSize = 10 };
+
+            SetupMocksForDateRange(activityDocuments, 3);
+
+            // Act
+            await _repository.GetActivitiesByDateRange(startDate, endDate, request);
+
+            // Assert
+            _containerMock.Verify(x => x.GetItemQueryIterator<int>(
+                It.IsAny<QueryDefinition>(),
+                It.IsAny<string>(),
+                It.Is<QueryRequestOptions>(opts => 
+                    opts.PartitionKey.Equals(new PartitionKey("Activity")))), Times.Once);
+
+            _containerMock.Verify(x => x.GetItemQueryIterator<ActivityDocument>(
+                It.IsAny<QueryDefinition>(),
+                It.IsAny<string>(),
+                It.Is<QueryRequestOptions>(opts => 
+                    opts.PartitionKey.Equals(new PartitionKey("Activity")))), Times.Once);
+        }
+
+        [Fact]
+        public async Task GetActivitiesByDateRange_ShouldUseCorrectQueryParameters()
+        {
+            // Arrange
+            var fixture = new Fixture();
+            var startDate = "2023-01-01";
+            var endDate = "2023-01-31";
+            var activityDocuments = fixture.CreateMany<ActivityDocument>(3).ToList();
+            var request = new PaginationRequest { PageNumber = 2, PageSize = 10 };
+
+            SetupMocksForDateRange(activityDocuments, 25);
+
+            // Act
+            await _repository.GetActivitiesByDateRange(startDate, endDate, request);
+
+            // Assert
+            // Verify the data query contains correct parameters
+            _containerMock.Verify(x => x.GetItemQueryIterator<ActivityDocument>(
+                It.Is<QueryDefinition>(q => 
+                    q.QueryText.Contains("@startDate") && 
+                    q.QueryText.Contains("@endDate") &&
+                    q.QueryText.Contains("@offset") &&
+                    q.QueryText.Contains("@limit")),
+                It.IsAny<string>(),
+                It.IsAny<QueryRequestOptions>()), Times.Once);
+
+            // Verify the count query contains correct parameters
+            _containerMock.Verify(x => x.GetItemQueryIterator<int>(
+                It.Is<QueryDefinition>(q => 
+                    q.QueryText.Contains("@startDate") && 
+                    q.QueryText.Contains("@endDate")),
+                It.IsAny<string>(),
+                It.IsAny<QueryRequestOptions>()), Times.Once);
+        }
+
+        [Fact]
+        public async Task GetActivitiesByDateRange_ShouldReturnCorrectPaginationMetadata_ForMiddlePage()
+        {
+            // Arrange
+            var fixture = new Fixture();
+            var startDate = "2023-01-01";
+            var endDate = "2023-01-31";
+            var activityDocuments = fixture.CreateMany<ActivityDocument>(10).ToList();
+            var totalCount = 50;
+            var request = new PaginationRequest { PageNumber = 3, PageSize = 10 };
+
+            SetupMocksForDateRange(activityDocuments, totalCount);
+
+            // Act
+            var result = await _repository.GetActivitiesByDateRange(startDate, endDate, request);
+
+            // Assert
+            result.PageNumber.Should().Be(3);
+            result.PageSize.Should().Be(10);
+            result.TotalCount.Should().Be(50);
+            result.TotalPages.Should().Be(5);
+            result.HasPreviousPage.Should().BeTrue();
+            result.HasNextPage.Should().BeTrue();
+        }
+
+        [Fact]
+        public async Task GetActivitiesByDateRange_ShouldReturnEmptyResults_WhenNoDataInDateRange()
+        {
+            // Arrange
+            var startDate = "2023-01-01";
+            var endDate = "2023-01-31";
+            var request = new PaginationRequest { PageNumber = 1, PageSize = 10 };
+
+            SetupMocksForDateRange(new List<ActivityDocument>(), 0);
+
+            // Act
+            var result = await _repository.GetActivitiesByDateRange(startDate, endDate, request);
+
+            // Assert
+            result.Items.Should().BeEmpty();
+            result.TotalCount.Should().Be(0);
+            result.TotalPages.Should().Be(0);
+            result.HasPreviousPage.Should().BeFalse();
+            result.HasNextPage.Should().BeFalse();
+        }
+
+        [Fact]
+        public async Task GetActivitiesByDateRange_ShouldLogCorrectInformation()
+        {
+            // Arrange
+            var fixture = new Fixture();
+            var startDate = "2023-01-01";
+            var endDate = "2023-01-31";
+            var activityDocuments = fixture.CreateMany<ActivityDocument>(5).ToList();
+            var request = new PaginationRequest { PageNumber = 1, PageSize = 5 };
+
+            SetupMocksForDateRange(activityDocuments, 5);
+
+            // Act
+            await _repository.GetActivitiesByDateRange(startDate, endDate, request);
+
+            // Assert
+            _loggerMock.VerifyLog(logger => logger.LogInformation(
+                $"Fetching activity documents between {startDate} and {endDate} with pagination: PageNumber=1, PageSize=5"));
+            
+            _loggerMock.VerifyLog(logger => logger.LogInformation(
+                "Found 5 activity documents in date range (page 1)"));
+        }
+
+        [Fact]
+        public async Task GetActivitiesByDateRange_ShouldHandleException_AndLogError()
+        {
+            // Arrange
+            var startDate = "2023-01-01";
+            var endDate = "2023-01-31";
+            var request = new PaginationRequest { PageNumber = 1, PageSize = 10 };
+            var exceptionMessage = "Database connection failed";
+
+            // Setup the count query to succeed
+            var countFeedResponse = new Mock<FeedResponse<int>>();
+            countFeedResponse.Setup(x => x.GetEnumerator()).Returns(new List<int> { 10 }.GetEnumerator());
+
+            var countIterator = new Mock<FeedIterator<int>>();
+            countIterator.SetupSequence(x => x.HasMoreResults).Returns(true).Returns(false);
+            countIterator.Setup(x => x.ReadNextAsync(default)).ReturnsAsync(countFeedResponse.Object);
+
+            _containerMock.Setup(x => x.GetItemQueryIterator<int>(
+                It.Is<QueryDefinition>(q => q.QueryText.Contains("COUNT")),
+                It.IsAny<string>(),
+                It.IsAny<QueryRequestOptions>()))
+                .Returns(countIterator.Object);
+
+            // Setup the data query to throw an exception
+            _containerMock.Setup(x => x.GetItemQueryIterator<ActivityDocument>(
+                It.Is<QueryDefinition>(q => 
+                    q.QueryText.Contains("c.documentType = 'Activity'") &&
+                    q.QueryText.Contains("c.date >= @startDate")),
+                It.IsAny<string>(),
+                It.IsAny<QueryRequestOptions>()))
+                .Throws(new Exception(exceptionMessage));
+
+            // Act
+            Func<Task> act = async () => await _repository.GetActivitiesByDateRange(startDate, endDate, request);
+
+            // Assert
+            await act.Should().ThrowAsync<Exception>().WithMessage(exceptionMessage);
+            _loggerMock.VerifyLog(logger => logger.LogError($"Exception thrown in GetActivitiesByDateRange: {exceptionMessage}"));
+        }
+
+        [Fact]
+        public async Task GetActivitiesByDateRange_ShouldReturnCorrectResults_ForSameDayRange()
+        {
+            // Arrange
+            var fixture = new Fixture();
+            var sameDate = "2023-01-15";
+            var activityDocuments = fixture.CreateMany<ActivityDocument>(2).ToList();
+            var request = new PaginationRequest { PageNumber = 1, PageSize = 10 };
+
+            SetupMocksForDateRange(activityDocuments, 2);
+
+            // Act
+            var result = await _repository.GetActivitiesByDateRange(sameDate, sameDate, request);
+
+            // Assert
+            result.Should().NotBeNull();
+            result.Items.Should().HaveCount(2);
+            result.TotalCount.Should().Be(2);
+        }
+
+        private void SetupMocksForDateRange(List<ActivityDocument> activityDocuments, int totalCount)
+        {
+            // Mock the count query for date range
+            var countFeedResponse = new Mock<FeedResponse<int>>();
+            countFeedResponse.Setup(x => x.GetEnumerator()).Returns(new List<int> { totalCount }.GetEnumerator());
+
+            var countIterator = new Mock<FeedIterator<int>>();
+            countIterator.SetupSequence(x => x.HasMoreResults).Returns(true).Returns(false);
+            countIterator.Setup(x => x.ReadNextAsync(default)).ReturnsAsync(countFeedResponse.Object);
+
+            // Mock the data query for date range
+            var dataFeedResponse = new Mock<FeedResponse<ActivityDocument>>();
+            dataFeedResponse.Setup(x => x.GetEnumerator()).Returns(activityDocuments.GetEnumerator());
+
+            var dataIterator = new Mock<FeedIterator<ActivityDocument>>();
+            dataIterator.SetupSequence(x => x.HasMoreResults).Returns(true).Returns(false);
+            dataIterator.Setup(x => x.ReadNextAsync(default)).ReturnsAsync(dataFeedResponse.Object);
+
+            _containerMock.Setup(x => x.GetItemQueryIterator<int>(
+                It.Is<QueryDefinition>(q => 
+                    q.QueryText.Contains("COUNT") && 
+                    q.QueryText.Contains("c.date >= @startDate") && 
+                    q.QueryText.Contains("c.date <= @endDate")),
+                It.IsAny<string>(),
+                It.IsAny<QueryRequestOptions>()))
+                .Returns(countIterator.Object);
+
+            _containerMock.Setup(x => x.GetItemQueryIterator<ActivityDocument>(
+                It.Is<QueryDefinition>(q => 
+                    q.QueryText.Contains("c.documentType = 'Activity'") &&
+                    q.QueryText.Contains("c.date >= @startDate") && 
+                    q.QueryText.Contains("c.date <= @endDate") &&
+                    q.QueryText.Contains("ORDER BY c.date ASC") &&
+                    q.QueryText.Contains("OFFSET @offset LIMIT @limit")),
+                It.IsAny<string>(),
+                It.IsAny<QueryRequestOptions>()))
+                .Returns(dataIterator.Object);
+        }
+
+        #endregion
     }
 }
