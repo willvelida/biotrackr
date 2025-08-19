@@ -33,5 +33,35 @@ namespace Biotrackr.Sleep.Api.EndpointHandlers
             var sleeps = await cosmosRepository.GetAllSleepDocuments(paginationRequest);
             return TypedResults.Ok(sleeps);
         }
+
+        public static async Task<Results<BadRequest, Ok<PaginationResponse<SleepDocument>>>> GetSleepsByDateRange(
+            ICosmosRepository cosmosRepository,
+            string startDate,
+            string endDate,
+            int? pageNumber = null,
+            int? pageSize = null)
+        {
+            // Validate date formats
+            if (!DateOnly.TryParse(startDate, out var parsedStartDate) ||
+                !DateOnly.TryParse(endDate, out var parsedEndDate))
+            {
+                return TypedResults.BadRequest();
+            }
+
+            // Validate date range (start date should be before or equal to end date)
+            if (parsedStartDate > parsedEndDate)
+            {
+                return TypedResults.BadRequest();
+            }
+
+            var paginationRequest = new PaginationRequest
+            {
+                PageNumber = pageNumber ?? 1,
+                PageSize = pageSize ?? 20
+            };
+
+            var activityDocuments = await cosmosRepository.GetSleepDocumentsByDateRange(startDate, endDate, paginationRequest);
+            return TypedResults.Ok(activityDocuments);
+        }
     }
 }

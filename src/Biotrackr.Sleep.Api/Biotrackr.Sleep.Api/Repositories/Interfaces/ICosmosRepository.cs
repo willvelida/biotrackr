@@ -6,5 +6,6 @@ namespace Biotrackr.Sleep.Api.Repositories.Interfaces
     {
         Task<SleepDocument> GetSleepSummaryByDate(string date);
         Task<PaginationResponse<SleepDocument>> GetAllSleepDocuments(PaginationRequest request);
+        Task<PaginationResponse<SleepDocument>> GetSleepDocumentsByDateRange(string startDate, string endDate, PaginationRequest request);
     }
 }

@@ -157,6 +157,51 @@ resource sleepApiGetByDate 'Microsoft.ApiManagement/service/apis/operations@2024
   }
 }
 
+resource sleepApiGetByDateRange 'Microsoft.ApiManagement/service/apis/operations@2024-06-01-preview' = {
+  name: 'sleep-getbydaterange'
+  parent: sleepApimApi
+  properties: {
+    displayName: 'GetSleepsByDateRange'
+    method: 'GET'
+    urlTemplate: '/range/{startDate}/{endDate}'
+    description: 'Gets paginated sleep documents within a date range'
+    templateParameters: [
+      {
+        name: 'startDate'
+        description: 'The start date for the range in YYYY-MM-DD format'
+        type: 'string'
+        required: true
+      }
+      {
+        name: 'endDate'
+        description: 'The end date for the range in YYYY-MM-DD format'
+        type: 'string'
+        required: true
+      }
+    ]
+    request: {
+      queryParameters: [
+        {
+          name: 'pageNumber'
+          description: 'The page number to retrieve (default: 1)'
+          type: 'integer'
+          required: false
+          defaultValue: '1'
+          values: []
+        }
+        {
+          name: 'pageSize'
+          description: 'The number of items per page (default: 20, max: 100)'
+          type: 'integer'
+          required: false
+          defaultValue: '20'
+          values: []
+        }
+      ]
+    }
+  }
+}
+
 resource sleepApiHealthCheck 'Microsoft.ApiManagement/service/apis/operations@2024-06-01-preview' = {
   name: 'sleep-healthcheck'
   parent: sleepApimApi
