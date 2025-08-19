@@ -21,6 +21,54 @@ namespace Biotrackr.Activity.Api.Repositories
             _logger = logger;
         }
 
+        public async Task<PaginationResponse<ActivityDocument>> GetActivitiesByDateRange(string startDate, string endDate, PaginationRequest paginationRequest)
+        {
+            try
+            {
+                _logger.LogInformation($"Fetching activity documents between {startDate} and {endDate} with pagination: PageNumber={paginationRequest.PageNumber}, PageSize={paginationRequest.PageSize}");
+
+                // Get total count for the date range
+                var totalCount = await GetActivityCountForDateRange(startDate, endDate);
+
+                // Get paginated results
+                QueryDefinition queryDefinition = new QueryDefinition(
+                    "SELECT * FROM c WHERE c.documentType = 'Activity' AND c.date >= @startDate AND c.date <= @endDate ORDER BY c.date ASC OFFSET @offset LIMIT @limit")
+                    .WithParameter("@startDate", startDate)
+                    .WithParameter("@endDate", endDate)
+                    .WithParameter("@offset", paginationRequest.Skip)
+                    .WithParameter("@limit", paginationRequest.PageSize);
+
+                QueryRequestOptions queryRequestOptions = new QueryRequestOptions
+                {
+                    PartitionKey = new PartitionKey("Activity")
+                };
+
+                var iterator = _container.GetItemQueryIterator<ActivityDocument>(queryDefinition, requestOptions: queryRequestOptions);
+                var results = new List<ActivityDocument>();
+
+                while (iterator.HasMoreResults)
+                {
+                    var response = await iterator.ReadNextAsync();
+                    results.AddRange(response.ToList());
+                }
+
+                _logger.LogInformation($"Found {results.Count} activity documents in date range (page {paginationRequest.PageNumber})");
+
+                return new PaginationResponse<ActivityDocument>
+                {
+                    Items = results,
+                    TotalCount = totalCount,
+                    PageNumber = paginationRequest.PageNumber,
+                    PageSize = paginationRequest.PageSize
+                };
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"Exception thrown in {nameof(GetActivitiesByDateRange)}: {ex.Message}");
+                throw;
+            }
+        }
+
         public async Task<ActivityDocument> GetActivitySummaryByDate(string date)
         {
             try
@@ -117,6 +165,32 @@ namespace Biotrackr.Activity.Api.Repositories
             catch (Exception ex)
             {
                 _logger.LogError($"Exception thrown in {nameof(GetTotalActivityCount)}: {ex.Message}");
+                return 0;
+            }
+        }
+
+        private async Task<int> GetActivityCountForDateRange(string startDate, string endDate)
+        {
+            try
+            {
+                QueryDefinition queryDefinition = new QueryDefinition("SELECT VALUE COUNT(1) FROM c WHERE c.date >= @startDate AND c.date <= @endDate")
+                    .WithParameter("@startDate", startDate)
+                    .WithParameter("@endDate", endDate);
+                QueryRequestOptions queryRequestOptions = new QueryRequestOptions
+                {
+                    PartitionKey = new PartitionKey("Activity")
+                };
+                var iterator = _container.GetItemQueryIterator<int>(queryDefinition, requestOptions: queryRequestOptions);
+                if (iterator.HasMoreResults)
+                {
+                    var response = await iterator.ReadNextAsync();
+                    return response.FirstOrDefault();
+                }
+                return 0;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"Exception thrown in {nameof(GetActivityCountForDateRange)}: {ex.Message}");
                 return 0;
             }
         }

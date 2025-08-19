@@ -6,5 +6,6 @@ namespace Biotrackr.Activity.Api.Repositories.Interfaces
     {
         Task<ActivityDocument> GetActivitySummaryByDate(string date);
         Task<PaginationResponse<ActivityDocument>> GetAllActivitySummaries(PaginationRequest request);
+        Task<PaginationResponse<ActivityDocument>> GetActivitiesByDateRange(string startDate, string endDate, PaginationRequest request);
     }
 }
