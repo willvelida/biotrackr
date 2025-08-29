@@ -39,7 +39,7 @@ jobs:
 
         steps:
             - name: Checkout Repository code
-              uses: actions/checkout@v4
+              uses: actions/checkout@v5
 
             - uses: azure/login@v2
               name: Login to Azure
