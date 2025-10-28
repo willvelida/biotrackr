@@ -1,0 +1,32 @@
+Summary
+  Generated on: 28/10/2025 - 11:40:23 AM
+  Coverage date: 28/10/2025 - 11:11:07 AM - 28/10/2025 - 11:39:13 AM
+  Parser: MultiReport (8x Cobertura)
+  Assemblies: 1
+  Classes: 10
+  Files: 9
+  Line coverage: 71.1%
+  Covered lines: 210
+  Uncovered lines: 85
+  Coverable lines: 295
+  Total lines: 484
+  Branch coverage: 78.5% (22 of 28)
+  Covered branches: 22
+  Total branches: 28
+  Method coverage: 97.4% (38 of 39)
+  Full method coverage: 89.7% (35 of 39)
+  Covered methods: 38
+  Fully covered methods: 35
+  Total methods: 39
+
+Biotrackr.Weight.Api                                               71.1%
+  Biotrackr.Weight.Api.Configuration.Settings                       100%
+  Biotrackr.Weight.Api.EndpointHandlers.WeightHandlers              100%
+  Biotrackr.Weight.Api.Extensions.EndpointRouteBuilderExtensions    100%
+  Biotrackr.Weight.Api.Models.FitbitEntities.Weight                 100%
+  Biotrackr.Weight.Api.Models.FitbitEntities.WeightResponse         100%
+  Biotrackr.Weight.Api.Models.PaginationRequest                     100%
+  Biotrackr.Weight.Api.Models.PaginationResponse<T>                 100%
+  Biotrackr.Weight.Api.Models.WeightDocument                        100%
+  Biotrackr.Weight.Api.Repositories.CosmosRepository               92.3%
+  Program                                                             0%

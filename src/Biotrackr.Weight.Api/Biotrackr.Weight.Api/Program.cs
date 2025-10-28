@@ -11,16 +11,18 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Configuration.AddEnvironmentVariables();
 var managedIdentityClientId = builder.Configuration.GetValue<string>("managedidentityclientid");
-var defaultCredentailOptions = new DefaultAzureCredentialOptions()
+var azureAppConfigEndpoint = builder.Configuration.GetValue<string>("azureappconfigendpoint");
+
+// Only load Azure App Configuration if endpoint is provided (not in test environment)
+if (!string.IsNullOrWhiteSpace(azureAppConfigEndpoint))
 {
-    ManagedIdentityClientId = managedIdentityClientId
-};
-builder.Configuration.AddAzureAppConfiguration(config =>
-{
-    config.Connect(new Uri(builder.Configuration.GetValue<string>("azureappconfigendpoint")),
-        new ManagedIdentityCredential(managedIdentityClientId))
-    .Select(KeyFilter.Any, LabelFilter.Null);
-});
+    builder.Configuration.AddAzureAppConfiguration(config =>
+    {
+        config.Connect(new Uri(azureAppConfigEndpoint),
+            new ManagedIdentityCredential(managedIdentityClientId))
+        .Select(KeyFilter.Any, LabelFilter.Null);
+    });
+}
 
 builder.Services.Configure<Settings>(builder.Configuration.GetSection("Biotrackr"));
 var cosmosClientOptions = new CosmosClientOptions
@@ -30,9 +32,28 @@ var cosmosClientOptions = new CosmosClientOptions
         PropertyNamingPolicy = CosmosPropertyNamingPolicy.CamelCase
     }
 };
-var cosmosClient = new CosmosClient(builder.Configuration.GetValue<string>("cosmosdbendpoint"),
-    new DefaultAzureCredential(defaultCredentailOptions),
-    cosmosClientOptions);
+
+var cosmosDbEndpoint = builder.Configuration.GetValue<string>("cosmosdbendpoint");
+var cosmosDbAccountKey = builder.Configuration.GetValue<string>("Biotrackr:CosmosDb:AccountKey");
+
+CosmosClient cosmosClient;
+if (!string.IsNullOrWhiteSpace(cosmosDbAccountKey))
+{
+    // Use account key for local/test environments
+    cosmosClient = new CosmosClient(cosmosDbEndpoint, cosmosDbAccountKey, cosmosClientOptions);
+}
+else
+{
+    // Use Managed Identity for production
+    var defaultCredentialOptions = new DefaultAzureCredentialOptions()
+    {
+        ManagedIdentityClientId = managedIdentityClientId
+    };
+    cosmosClient = new CosmosClient(cosmosDbEndpoint,
+        new DefaultAzureCredential(defaultCredentialOptions),
+        cosmosClientOptions);
+}
+
 builder.Services.AddSingleton(cosmosClient);
 builder.Services.AddTransient<ICosmosRepository, CosmosRepository>();
 

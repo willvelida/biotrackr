@@ -454,5 +454,85 @@ namespace Biotrackr.Weight.Api.UnitTests.EndpointHandlerTests
             // Assert
             result.Result.Should().BeOfType<Ok<PaginationResponse<WeightDocument>>>();
         }
+
+        [Fact]
+        public async Task GetWeightsByDateRange_ShouldReturnBadRequest_WhenStartDateIsInvalid()
+        {
+            // Arrange
+            var invalidStartDate = "invalid-date";
+            var endDate = "2024-01-31";
+
+            // Act
+            var result = await WeightHandlers.GetWeightsByDateRange(_cosmosRepositoryMock.Object, invalidStartDate, endDate);
+
+            // Assert
+            result.Result.Should().BeOfType<BadRequest>();
+        }
+
+        [Fact]
+        public async Task GetWeightsByDateRange_ShouldReturnBadRequest_WhenEndDateIsInvalid()
+        {
+            // Arrange
+            var startDate = "2024-01-01";
+            var invalidEndDate = "not-a-date";
+
+            // Act
+            var result = await WeightHandlers.GetWeightsByDateRange(_cosmosRepositoryMock.Object, startDate, invalidEndDate);
+
+            // Assert
+            result.Result.Should().BeOfType<BadRequest>();
+        }
+
+        [Fact]
+        public async Task GetWeightsByDateRange_ShouldReturnBadRequest_WhenBothDatesAreInvalid()
+        {
+            // Arrange
+            var invalidStartDate = "invalid-start";
+            var invalidEndDate = "invalid-end";
+
+            // Act
+            var result = await WeightHandlers.GetWeightsByDateRange(_cosmosRepositoryMock.Object, invalidStartDate, invalidEndDate);
+
+            // Assert
+            result.Result.Should().BeOfType<BadRequest>();
+        }
+
+        [Fact]
+        public async Task GetWeightsByDateRange_ShouldReturnBadRequest_WhenStartDateIsAfterEndDate()
+        {
+            // Arrange
+            var startDate = "2024-12-31";
+            var endDate = "2024-01-01";
+
+            // Act
+            var result = await WeightHandlers.GetWeightsByDateRange(_cosmosRepositoryMock.Object, startDate, endDate);
+
+            // Assert
+            result.Result.Should().BeOfType<BadRequest>();
+        }
+
+        [Fact]
+        public async Task GetWeightsByDateRange_ShouldReturnOk_WhenStartDateEqualsEndDate()
+        {
+            // Arrange
+            var startDate = "2024-01-15";
+            var endDate = "2024-01-15";
+            var expectedResponse = new PaginationResponse<WeightDocument>
+            {
+                Items = new List<WeightDocument>(),
+                TotalCount = 0,
+                PageNumber = 1,
+                PageSize = 20
+            };
+
+            _cosmosRepositoryMock.Setup(x => x.GetWeightsByDateRange(startDate, endDate, It.IsAny<PaginationRequest>()))
+                .ReturnsAsync(expectedResponse);
+
+            // Act
+            var result = await WeightHandlers.GetWeightsByDateRange(_cosmosRepositoryMock.Object, startDate, endDate);
+
+            // Assert
+            result.Result.Should().BeOfType<Ok<PaginationResponse<WeightDocument>>>();
+        }
     }
 }

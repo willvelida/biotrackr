@@ -1,0 +1,66 @@
+name: Run .NET API Contract Tests
+
+on:
+    workflow_call:
+        inputs:
+            dotnet-version:
+                description: 'The version of .NET to use'
+                required: true
+                type: string
+            working-directory:
+                description: 'The working directory to run the tests'
+                required: true
+                type: string
+            test-filter:
+                description: 'Test filter expression (e.g., Category=Smoke or FullyQualifiedName~ApiSmokeTests)'
+                required: false
+                type: string
+                default: 'Category=Contract|Category=Smoke'
+
+jobs:
+    run-contract-tests:
+        name: Run API Contract Tests
+        runs-on: ubuntu-latest
+        defaults:
+            run:
+                working-directory: ${{ inputs.working-directory }}
+        steps:
+            - name: Checkout Repository code
+              uses: actions/checkout@v4
+
+            - name: Setup .NET ${{ inputs.dotnet-version }}
+              uses: actions/setup-dotnet@v4
+              with:
+                dotnet-version: ${{ inputs.dotnet-version }}
+            
+            - name: Install dependencies
+              run: dotnet restore
+
+            - name: Build
+              run: dotnet build --no-restore --verbosity normal
+
+            - name: Run API contract tests
+              run: |
+                dotnet test \
+                  --no-build \
+                  --verbosity normal \
+                  --filter "${{ inputs.test-filter }}" \
+                  --logger "trx;LogFileName=contract-test-results.trx" \
+                  --results-directory ./TestResults
+
+            - name: Upload Test Results
+              uses: actions/upload-artifact@v4
+              if: always()
+              with:
+                name: contract-test-results-${{ github.run_number }}
+                path: ${{ inputs.working-directory }}/TestResults/*.trx
+                retention-days: 30
+
+            - name: Publish Test Results
+              uses: dorny/test-reporter@v1
+              if: always()
+              with:
+                name: Contract Test Results
+                path: ${{ inputs.working-directory }}/TestResults/*.trx
+                reporter: dotnet-trx
+                fail-on-error: false
