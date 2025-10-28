@@ -39,7 +39,7 @@ jobs:
 
     run-contract-tests:
         name: Run Contract Tests
-        needs: [env-setup, run-unit-tests]
+        needs: env-setup
         uses: willvelida/biotrackr/.github/workflows/template-dotnet-run-contract-tests.yml@main
         with:
           dotnet-version: ${{ needs.env-setup.outputs.dotnet-version }}
@@ -61,7 +61,7 @@ jobs:
 
     build-container-image-dev:
         name: Build and Push Container Image
-        needs: run-e2e-tests
+        needs: [run-unit-tests, run-contract-tests, run-e2e-tests]
         uses: willvelida/biotrackr/.github/workflows/template-acr-push-image.yml@main
         with:
           working-directory: ./src/Biotrackr.Weight.Svc
