@@ -91,4 +91,4 @@ jobs:
                 path: code-coverage-results.md
 
             - name: Write to Job Summary
-              run: cat ${{ inputs.working-directory }}/CoverageReport/SummaryGithub.md >> $GITHUB_STEP_SUMMARY
+              run: cat ./CoverageReport/SummaryGithub.md >> $GITHUB_STEP_SUMMARY
