@@ -35,7 +35,7 @@ jobs:
         uses: willvelida/biotrackr/.github/workflows/template-dotnet-run-unit-tests.yml@main
         with:
           dotnet-version: ${{ needs.env-setup.outputs.dotnet-version }}
-          working-directory: ./src/Biotrackr.Weight.Svc
+          working-directory: ./src/Biotrackr.Weight.Svc/Biotrackr.Weight.Svc.UnitTests
 
     run-contract-tests:
         name: Run Contract Tests
@@ -43,7 +43,7 @@ jobs:
         uses: willvelida/biotrackr/.github/workflows/template-dotnet-run-contract-tests.yml@main
         with:
           dotnet-version: ${{ needs.env-setup.outputs.dotnet-version }}
-          working-directory: ./src/Biotrackr.Weight.Svc
+          working-directory: ./src/Biotrackr.Weight.Svc/Biotrackr.Weight.Svc.IntegrationTests
           test-filter: 'FullyQualifiedName~Contract'
 
     run-e2e-tests:
@@ -52,7 +52,7 @@ jobs:
         uses: willvelida/biotrackr/.github/workflows/template-dotnet-run-e2e-tests.yml@main
         with:
           dotnet-version: ${{ needs.env-setup.outputs.dotnet-version }}
-          working-directory: ./src/Biotrackr.Weight.Svc
+          working-directory: ./src/Biotrackr.Weight.Svc/Biotrackr.Weight.Svc.IntegrationTests
           test-filter: 'FullyQualifiedName~E2E'
         secrets:
           client-id: ${{ secrets.AZURE_CLIENT_ID }}
