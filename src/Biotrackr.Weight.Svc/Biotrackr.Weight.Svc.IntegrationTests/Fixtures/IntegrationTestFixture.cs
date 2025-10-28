@@ -147,12 +147,7 @@ namespace Biotrackr.Weight.Svc.IntegrationTests.Fixtures
             // Add real Cosmos client
             services.AddSingleton(CosmosClient);
 
-            // Create a fake SecretClient for testing - we don't use it because HTTP is mocked
-            // In real tests, HTTP responses will be mocked so SecretClient won't be called
-            var fakeSecretClient = (SecretClient?)null!;
-            services.AddSingleton(fakeSecretClient);
-
-            // Register services
+            // Register services (SecretClient not needed for E2E tests - FitbitService uses mocked HTTP)
             services.AddScoped<ICosmosRepository, CosmosRepository>();
             services.AddScoped<IFitbitService, FitbitService>();
             services.AddScoped<IWeightService, WeightService>();
