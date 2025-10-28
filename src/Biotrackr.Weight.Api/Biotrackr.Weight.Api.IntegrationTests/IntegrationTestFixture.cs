@@ -12,14 +12,22 @@ public class IntegrationTestFixture : IAsyncLifetime
 {
     public WeightApiWebApplicationFactory Factory { get; private set; } = null!;
     public HttpClient Client { get; private set; } = null!;
+    
+    /// <summary>
+    /// Set to false to skip database initialization (for contract/smoke tests)
+    /// </summary>
+    protected virtual bool InitializeDatabase => true;
 
     public async Task InitializeAsync()
     {
         Factory = new WeightApiWebApplicationFactory();
         Client = Factory.CreateClient();
         
-        // Initialize database and container
-        await InitializeDatabaseAsync();
+        // Initialize database and container only if requested
+        if (InitializeDatabase)
+        {
+            await InitializeDatabaseAsync();
+        }
     }
 
     private async Task InitializeDatabaseAsync()

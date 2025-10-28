@@ -7,12 +7,12 @@ namespace Biotrackr.Weight.Api.IntegrationTests;
 /// <summary>
 /// Smoke tests to verify API infrastructure
 /// </summary>
-[Collection(nameof(IntegrationTestCollection))]
+[Collection(nameof(ContractTestCollection))]
 public class ApiSmokeTests
 {
-    private readonly IntegrationTestFixture _fixture;
+    private readonly ContractTestFixture _fixture;
 
-    public ApiSmokeTests(IntegrationTestFixture fixture)
+    public ApiSmokeTests(ContractTestFixture fixture)
     {
         _fixture = fixture;
     }

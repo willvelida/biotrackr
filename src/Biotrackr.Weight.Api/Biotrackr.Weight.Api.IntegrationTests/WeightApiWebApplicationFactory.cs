@@ -19,26 +19,17 @@ public class WeightApiWebApplicationFactory : WebApplicationFactory<Program>
 
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
-        // Set environment to Test first
+        // Set environment variables BEFORE host builds (so Program.cs can read them)
+        Environment.SetEnvironmentVariable("cosmosdbendpoint", CosmosDbEndpoint);
+        Environment.SetEnvironmentVariable("Biotrackr:CosmosDb:AccountKey", CosmosDbAccountKey);
+        Environment.SetEnvironmentVariable("Biotrackr:DatabaseName", "biotrackr-test");
+        Environment.SetEnvironmentVariable("Biotrackr:ContainerName", "weight-test");
+        Environment.SetEnvironmentVariable("azureappconfigendpoint", string.Empty);
+        Environment.SetEnvironmentVariable("managedidentityclientid", string.Empty);
+        
+        // Set environment to Test
         builder.UseEnvironment("Test");
         
-        builder.ConfigureAppConfiguration((context, config) =>
-        {
-            // Add test-specific in-memory configuration - will override other sources
-            config.AddInMemoryCollection(new Dictionary<string, string?>
-            {
-                // Prevent Azure App Configuration loading
-                ["azureappconfigendpoint"] = string.Empty,
-                ["managedidentityclientid"] = string.Empty,
-                
-                // Cosmos DB configuration for tests (using local emulator)
-                ["cosmosdbendpoint"] = CosmosDbEndpoint,
-                ["Biotrackr:CosmosDb:AccountKey"] = CosmosDbAccountKey,
-                ["Biotrackr:DatabaseName"] = "biotrackr-test",
-                ["Biotrackr:ContainerName"] = "weight-test"
-            });
-        });
-
         builder.ConfigureServices(services =>
         {
             // Remove existing Cosmos Client registration if it exists

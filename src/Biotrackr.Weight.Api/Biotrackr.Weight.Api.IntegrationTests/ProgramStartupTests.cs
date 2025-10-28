@@ -13,12 +13,12 @@ namespace Biotrackr.Weight.Api.IntegrationTests;
 /// Integration tests for Program.cs application startup and configuration
 /// These tests verify that the application configures correctly and all services are registered
 /// </summary>
-[Collection(nameof(IntegrationTestCollection))]
+[Collection(nameof(ContractTestCollection))]
 public class ProgramStartupTests
 {
-    private readonly IntegrationTestFixture _fixture;
+    private readonly ContractTestFixture _fixture;
 
-    public ProgramStartupTests(IntegrationTestFixture fixture)
+    public ProgramStartupTests(ContractTestFixture fixture)
     {
         _fixture = fixture;
     }
