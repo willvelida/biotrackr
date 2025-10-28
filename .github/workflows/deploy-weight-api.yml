@@ -12,6 +12,7 @@ permissions:
     contents: read
     id-token: write
     pull-requests: write
+    checks: write
 
 env:
   DOTNET_VERSION: 9.0.x
