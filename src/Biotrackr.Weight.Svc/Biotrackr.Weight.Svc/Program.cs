@@ -66,8 +66,6 @@ internal class Program
         services.AddSingleton(new CosmosClient(cosmosDbEndpoint, new DefaultAzureCredential(defaultCredentialOptions), cosmosClientOptions));
 
         services.AddScoped<ICosmosRepository, CosmosRepository>();
-
-        services.AddScoped<IFitbitService, FitbitService>();
         services.AddScoped<IWeightService, WeightService>();
 
         services.AddHttpClient<IFitbitService, FitbitService>()
