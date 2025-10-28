@@ -117,7 +117,7 @@ public class WeightEndpointsTests : IAsyncLifetime
         var client = _fixture.Client;
 
         // Act
-        var response = await client.GetAsync("/api/weight?pageNumber=1&pageSize=10");
+        var response = await client.GetAsync("/?pageNumber=1&pageSize=10");
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.OK);
@@ -136,7 +136,7 @@ public class WeightEndpointsTests : IAsyncLifetime
         var testDate = "2024-01-01";
 
         // Act
-        var response = await client.GetAsync($"/api/weight/{testDate}");
+        var response = await client.GetAsync($"/{testDate}");
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.OK);
@@ -154,7 +154,7 @@ public class WeightEndpointsTests : IAsyncLifetime
         var nonExistentDate = "2099-12-31";
 
         // Act
-        var response = await client.GetAsync($"/api/weight/{nonExistentDate}");
+        var response = await client.GetAsync($"/{nonExistentDate}");
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.NotFound);
@@ -169,7 +169,7 @@ public class WeightEndpointsTests : IAsyncLifetime
         var endDate = "2024-01-31";
 
         // Act
-        var response = await client.GetAsync($"/api/weight/range/{startDate}/{endDate}?pageNumber=1&pageSize=10");
+        var response = await client.GetAsync($"/range/{startDate}/{endDate}?pageNumber=1&pageSize=10");
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.OK);
@@ -192,7 +192,7 @@ public class WeightEndpointsTests : IAsyncLifetime
         var endDate = "2024-01-31";
 
         // Act
-        var response = await client.GetAsync($"/api/weight/range/{invalidStartDate}/{endDate}");
+        var response = await client.GetAsync($"/range/{invalidStartDate}/{endDate}");
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
@@ -207,7 +207,7 @@ public class WeightEndpointsTests : IAsyncLifetime
         var endDate = "2024-01-01";
 
         // Act
-        var response = await client.GetAsync($"/api/weight/range/{startDate}/{endDate}");
+        var response = await client.GetAsync($"/range/{startDate}/{endDate}");
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
@@ -220,7 +220,7 @@ public class WeightEndpointsTests : IAsyncLifetime
         var client = _fixture.Client;
 
         // Act
-        var response = await client.GetAsync("/api/weight/healthz/liveness");
+        var response = await client.GetAsync("/healthz/liveness");
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.OK);
@@ -252,7 +252,7 @@ public class WeightEndpointsTests : IAsyncLifetime
         _testDocumentIds.Clear();
 
         // Act
-        var response = await client.GetAsync("/api/weight?pageNumber=1&pageSize=10");
+        var response = await client.GetAsync("/?pageNumber=1&pageSize=10");
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.OK);
