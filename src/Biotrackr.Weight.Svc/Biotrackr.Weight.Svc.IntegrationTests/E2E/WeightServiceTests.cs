@@ -24,10 +24,31 @@ namespace Biotrackr.Weight.Svc.IntegrationTests.E2E
             _fixture = fixture;
         }
 
+        /// <summary>
+        /// Clears all documents from the test container to ensure test isolation.
+        /// </summary>
+        private async Task ClearContainerAsync()
+        {
+            var query = new QueryDefinition("SELECT c.id, c.documentType FROM c");
+            var iterator = _fixture.Container.GetItemQueryIterator<dynamic>(query);
+
+            while (iterator.HasMoreResults)
+            {
+                var response = await iterator.ReadNextAsync();
+                foreach (var item in response)
+                {
+                    await _fixture.Container.DeleteItemAsync<dynamic>(
+                        item.id.ToString(),
+                        new PartitionKey(item.documentType.ToString()));
+                }
+            }
+        }
+
         [Fact]
         public async Task MapAndSaveDocument_Saves_Weight_Document_To_Cosmos()
         {
-            // Arrange
+            // Arrange - Clear container for test isolation
+            await ClearContainerAsync();
             var weight = TestDataBuilder.BuildWeight(DateTime.UtcNow);
             var date = DateTime.UtcNow.ToString("yyyy-MM-dd");
 
@@ -64,7 +85,9 @@ namespace Biotrackr.Weight.Svc.IntegrationTests.E2E
         [Fact]
         public async Task MapAndSaveDocument_Creates_Unique_Document_Ids()
         {
-            // Arrange
+            // Arrange - Clear container for test isolation
+            await ClearContainerAsync();
+            
             var date = DateTime.UtcNow.ToString("yyyy-MM-dd");
             var weight1 = TestDataBuilder.BuildWeight(DateTime.UtcNow);
             var weight2 = TestDataBuilder.BuildWeight(DateTime.UtcNow);

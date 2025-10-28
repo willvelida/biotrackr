@@ -234,6 +234,69 @@ services.AddSingleton(fakeSecretClient);
 
 ---
 
+### Issue: E2E Tests Find More Documents Than Expected (Test Isolation Failure)
+
+**Symptoms**:
+- Test expects to find 1 document but finds multiple (e.g., 3)
+- All documents have the same date
+- Error: `Expected documents to contain 1 item(s) because exactly one document should be saved, but found 3`
+- Tests pass individually but fail when run together
+
+**Root Cause**:
+xUnit Collection Fixtures share the same database instance across all tests in the collection. When tests don't clean up after themselves, subsequent tests find leftover data from previous tests.
+
+Tests query by date (`WHERE c.date = @date`), and since all tests run on the same date (e.g., 2025-10-28), they find each other's documents.
+
+**Solution**:
+Add a cleanup method to clear the container before each test:
+
+```csharp
+/// <summary>
+/// Clears all documents from the test container to ensure test isolation.
+/// </summary>
+private async Task ClearContainerAsync()
+{
+    var query = new QueryDefinition("SELECT c.id, c.documentType FROM c");
+    var iterator = _fixture.Container.GetItemQueryIterator<dynamic>(query);
+
+    while (iterator.HasMoreResults)
+    {
+        var response = await iterator.ReadNextAsync();
+        foreach (var item in response)
+        {
+            await _fixture.Container.DeleteItemAsync<dynamic>(
+                item.id.ToString(),
+                new PartitionKey(item.documentType.ToString()));
+        }
+    }
+}
+
+[Fact]
+public async Task MyTest()
+{
+    // Arrange - Clear container for test isolation
+    await ClearContainerAsync();
+    
+    // ... rest of test
+}
+```
+
+**Alternative Solutions**:
+1. **Use unique test data** - Generate unique dates/identifiers per test
+2. **Delete specific documents** - Track created IDs and delete only those
+3. **Separate collections** - Don't use Collection Fixtures (slower, more isolation)
+
+**Resolution History**:
+- Fixed in `WeightServiceTests.cs` (added ClearContainerAsync method, commit TBD, 2025-10-28)
+
+**Prevention**:
+- Always clean up test data before or after each test
+- Use `[Collection]` fixtures carefully - understand data is shared
+- Consider using IAsyncLifetime on test classes for per-test setup/teardown
+- For CosmosDB E2E tests, always clear container in test setup
+
+---
+
 ## Notes
 
 - Keep this document updated as new patterns emerge
