@@ -27,11 +27,11 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Biotrackr.Activity.Api\Biotrackr.Activity.Api.csproj" />
+    <Using Include="Xunit" />
   </ItemGroup>
 
   <ItemGroup>
-    <Using Include="Xunit" />
+    <ProjectReference Include="..\Biotrackr.Activity.Api\Biotrackr.Activity.Api.csproj" />
   </ItemGroup>
 
 </Project>

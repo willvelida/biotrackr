@@ -184,6 +184,57 @@ run-e2e-tests:
 
 ## E2E Test Issues
 
+### Issue: E2E Tests Fail with "SSL negotiation failed" on Direct Connection Mode
+
+**Symptoms**:
+- E2E tests fail with `Microsoft.Azure.Documents.GoneException`
+- Error: `TransportException: SSL negotiation failed`
+- Error mentions `rntbd://127.0.0.1:10251/` (Direct mode TCP+SSL protocol)
+- Tests trying to connect to Cosmos DB Emulator port 10251
+
+**Root Cause**:
+CosmosClient defaults to **Direct mode** (TCP+SSL via rntbd:// protocol), which requires proper SSL/TLS certificate negotiation. Even with `ServerCertificateCustomValidationCallback`, the Direct mode connection fails with the Cosmos DB Emulator's self-signed certificate.
+
+**Solution**:
+Force **Gateway mode** (HTTPS only) in `CosmosClientOptions`:
+
+```csharp
+services.AddSingleton<CosmosClient>(sp =>
+{
+    return new CosmosClient(cosmosDbEndpoint, cosmosDbAccountKey, new CosmosClientOptions
+    {
+        ConnectionMode = ConnectionMode.Gateway, // Force Gateway mode (HTTPS only)
+        SerializerOptions = new CosmosSerializationOptions
+        {
+            PropertyNamingPolicy = CosmosPropertyNamingPolicy.CamelCase
+        },
+        HttpClientFactory = () => new HttpClient(new HttpClientHandler
+        {
+            ServerCertificateCustomValidationCallback = (_, _, _, _) => true
+        })
+    });
+});
+```
+
+**Why This Works**:
+- **Gateway mode**: Uses HTTPS (port 8081) which respects `ServerCertificateCustomValidationCallback`
+- **Direct mode**: Uses TCP+SSL (port 10251) which requires system-level certificate trust
+- Local emulator uses self-signed certificates that work better with HTTPS than TCP+SSL
+
+**Resolution History**:
+- Fixed in `ActivityApiWebApplicationFactory.cs` (added ConnectionMode.Gateway, commit TBD, 2025-10-29)
+- 10 of 12 E2E tests now pass with local Docker Cosmos DB Emulator
+
+**Prevention**:
+- Always use `ConnectionMode.Gateway` for local Cosmos DB Emulator tests
+- Apply this pattern to all `*WebApplicationFactory.cs` files in integration test projects
+- For production: Direct mode is preferred for performance, but Gateway mode works everywhere
+
+**Performance Note**:
+Gateway mode has slightly higher latency (~2-3ms per request) but is more reliable for local development and testing.
+
+---
+
 ### Issue: E2E Tests Fail with "Value cannot be null (Parameter 'implementationInstance')"
 
 **Symptoms**:
