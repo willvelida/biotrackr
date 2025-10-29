@@ -6,6 +6,8 @@ Auto-generated from all feature plans. Last updated: 2025-10-28
 - Azure Cosmos DB (existing, no changes needed) (002-weight-svc-coverage)
 - C# / .NET 9.0 (003-weight-svc-integration-tests)
 - Azure Cosmos DB (via Emulator in tests - mcr.microsoft.com/cosmosdb/linux/azure-cosmos-emulator:latest) (003-weight-svc-integration-tests)
+- .NET 9.0 (C#) + xUnit 2.9.3, FluentAssertions 8.4.0, Moq 4.20.72, AutoFixture 4.18.1, coverlet.collector 6.0.4, Microsoft.AspNetCore.Mvc.Testing 9.0.0 (004-activity-api-tests)
+- Azure Cosmos DB (for integration tests), In-memory mocks (for unit tests) (004-activity-api-tests)
 
 - .NET 9.0 (C#) + xUnit 2.9.3, FluentAssertions 8.4.0, Moq 4.20.72, AutoFixture 4.18.1, coverlet.collector 6.0.4 (001-weight-api-tests)
 
@@ -26,10 +28,10 @@ tests/
 .NET 9.0 (C#): Follow standard conventions
 
 ## Recent Changes
+- 004-activity-api-tests: Added .NET 9.0 (C#) + xUnit 2.9.3, FluentAssertions 8.4.0, Moq 4.20.72, AutoFixture 4.18.1, coverlet.collector 6.0.4, Microsoft.AspNetCore.Mvc.Testing 9.0.0
 - 003-weight-svc-integration-tests: Added C# / .NET 9.0
 - 002-weight-svc-coverage: Added .NET 9.0 (C#) + xUnit 2.9.3, FluentAssertions 8.4.0, Moq 4.20.72, AutoFixture 4.18.1, coverlet.collector 6.0.4
 
-- 001-weight-api-tests: Added .NET 9.0 (C#) + xUnit 2.9.3, FluentAssertions 8.4.0, Moq 4.20.72, AutoFixture 4.18.1, coverlet.collector 6.0.4
 
 <!-- MANUAL ADDITIONS START -->
 
@@ -44,5 +46,18 @@ When registering services with dependency injection:
 ⚠️ **Do NOT use duplicate registrations** for services registered with `AddHttpClient<TClient, TImplementation>()` - the AddHttpClient call handles the registration.
 
 See [docs/decision-records/2025-10-28-service-lifetime-registration.md](../docs/decision-records/2025-10-28-service-lifetime-registration.md) for details.
+
+## Common Issues & Resolutions
+
+⚠️ **IMPORTANT**: Before implementing tests or workflows, READ [.specify/memory/common-resolutions.md](../.specify/memory/common-resolutions.md) for known issues and their solutions.
+
+This file contains:
+- GitHub Actions workflow issues (permissions, target frameworks, working directories)
+- Service lifetime & dependency injection patterns
+- Test organization (Contract vs E2E)
+- E2E test isolation and Cosmos DB cleanup patterns
+- Prevention strategies for recurring issues
+
+**Always check this file first when encountering test failures or workflow issues.**
 
 <!-- MANUAL ADDITIONS END -->

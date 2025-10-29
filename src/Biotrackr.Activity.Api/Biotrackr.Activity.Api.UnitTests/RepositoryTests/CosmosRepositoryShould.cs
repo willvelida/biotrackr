@@ -268,6 +268,45 @@ namespace Biotrackr.Activity.Api.UnitTests.RepositoryTests
             _loggerMock.VerifyLog(logger => logger.LogError($"Exception thrown in GetAllActivitySummaries: Test Exception"));
         }
 
+        [Fact]
+        public async Task GetTotalActivityCount_ShouldLogError_WhenQueryFails()
+        {
+            // Arrange
+            var request = new PaginationRequest { PageNumber = 1, PageSize = 20 };
+            var exceptionMessage = "Count query failed";
+
+            // Mock the count query to throw an exception - this will be caught by GetTotalActivityCount
+            var countIterator = new Mock<FeedIterator<int>>();
+            countIterator.Setup(x => x.HasMoreResults).Throws(new Exception(exceptionMessage));
+
+            _containerMock.Setup(x => x.GetItemQueryIterator<int>(
+                It.Is<QueryDefinition>(q => q.QueryText.Contains("COUNT")),
+                It.IsAny<string>(),
+                It.IsAny<QueryRequestOptions>()))
+                .Returns(countIterator.Object);
+
+            // Setup data query to succeed (GetAllActivitySummaries will continue after count fails)
+            var dataFeedResponse = new Mock<FeedResponse<ActivityDocument>>();
+            dataFeedResponse.Setup(x => x.GetEnumerator()).Returns(new List<ActivityDocument>().GetEnumerator());
+
+            var dataIterator = new Mock<FeedIterator<ActivityDocument>>();
+            dataIterator.SetupSequence(x => x.HasMoreResults).Returns(true).Returns(false);
+            dataIterator.Setup(x => x.ReadNextAsync(default)).ReturnsAsync(dataFeedResponse.Object);
+
+            _containerMock.Setup(x => x.GetItemQueryIterator<ActivityDocument>(
+                It.IsAny<QueryDefinition>(),
+                It.IsAny<string>(),
+                It.IsAny<QueryRequestOptions>()))
+                .Returns(dataIterator.Object);
+
+            // Act
+            var result = await _repository.GetAllActivitySummaries(request);
+
+            // Assert - GetTotalActivityCount catches exception and returns 0
+            result.TotalCount.Should().Be(0);
+            _loggerMock.VerifyLog(logger => logger.LogError($"Exception thrown in GetTotalActivityCount: {exceptionMessage}"));
+        }
+
         private void SetupMocksForPagination(List<ActivityDocument> activityDocuments, int totalCount)
         {
             // Mock the count query
@@ -553,6 +592,51 @@ namespace Biotrackr.Activity.Api.UnitTests.RepositoryTests
             result.Should().NotBeNull();
             result.Items.Should().HaveCount(2);
             result.TotalCount.Should().Be(2);
+        }
+
+        [Fact]
+        public async Task GetActivityCountForDateRange_ShouldLogError_WhenQueryFails()
+        {
+            // Arrange
+            var startDate = "2023-01-01";
+            var endDate = "2023-01-31";
+            var request = new PaginationRequest { PageNumber = 1, PageSize = 10 };
+            var exceptionMessage = "Count query failed";
+
+            // Mock the count query to throw an exception - this will be caught by GetActivityCountForDateRange
+            var countIterator = new Mock<FeedIterator<int>>();
+            countIterator.Setup(x => x.HasMoreResults).Throws(new Exception(exceptionMessage));
+
+            _containerMock.Setup(x => x.GetItemQueryIterator<int>(
+                It.Is<QueryDefinition>(q => 
+                    q.QueryText.Contains("COUNT") && 
+                    q.QueryText.Contains("c.date >= @startDate")),
+                It.IsAny<string>(),
+                It.IsAny<QueryRequestOptions>()))
+                .Returns(countIterator.Object);
+
+            // Setup data query to succeed (GetActivitiesByDateRange will continue after count fails)
+            var dataFeedResponse = new Mock<FeedResponse<ActivityDocument>>();
+            dataFeedResponse.Setup(x => x.GetEnumerator()).Returns(new List<ActivityDocument>().GetEnumerator());
+
+            var dataIterator = new Mock<FeedIterator<ActivityDocument>>();
+            dataIterator.SetupSequence(x => x.HasMoreResults).Returns(true).Returns(false);
+            dataIterator.Setup(x => x.ReadNextAsync(default)).ReturnsAsync(dataFeedResponse.Object);
+
+            _containerMock.Setup(x => x.GetItemQueryIterator<ActivityDocument>(
+                It.Is<QueryDefinition>(q => 
+                    q.QueryText.Contains("c.documentType = 'Activity'") &&
+                    q.QueryText.Contains("c.date >= @startDate")),
+                It.IsAny<string>(),
+                It.IsAny<QueryRequestOptions>()))
+                .Returns(dataIterator.Object);
+
+            // Act
+            var result = await _repository.GetActivitiesByDateRange(startDate, endDate, request);
+
+            // Assert - GetActivityCountForDateRange catches exception and returns 0
+            result.TotalCount.Should().Be(0);
+            _loggerMock.VerifyLog(logger => logger.LogError($"Exception thrown in GetActivityCountForDateRange: {exceptionMessage}"));
         }
 
         private void SetupMocksForDateRange(List<ActivityDocument> activityDocuments, int totalCount)

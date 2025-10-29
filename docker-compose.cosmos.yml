@@ -1,0 +1,24 @@
+version: '3.8'
+
+services:
+  cosmos-emulator:
+    image: mcr.microsoft.com/cosmosdb/linux/azure-cosmos-emulator:latest
+    container_name: biotrackr-cosmos-emulator
+    ports:
+      - "8081:8081"      # HTTPS endpoint
+      - "10251:10251"    # Data plane
+      - "10252:10252"    # MongoDB endpoint
+      - "10253:10253"    # Cassandra endpoint
+      - "10254:10254"    # Table endpoint
+    environment:
+      - AZURE_COSMOS_EMULATOR_PARTITION_COUNT=10
+      - AZURE_COSMOS_EMULATOR_ENABLE_DATA_PERSISTENCE=false
+      - AZURE_COSMOS_EMULATOR_IP_ADDRESS_OVERRIDE=127.0.0.1
+    healthcheck:
+      test: ["CMD", "curl", "-k", "https://localhost:8081/_explorer/emulator.pem"]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+      start_period: 60s
+    # Note: First startup can take 2-3 minutes while emulator initializes
+    # On Windows with WSL2, may require 8GB RAM allocated to Docker Desktop

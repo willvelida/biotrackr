@@ -51,6 +51,20 @@ namespace Biotrackr.Activity.Api.UnitTests.EndpointHandlerTests
         }
 
         [Fact]
+        public async Task GetActivityByDate_ShouldReturnBadRequest_WhenDateFormatIsInvalid()
+        {
+            // Arrange
+            var invalidDate = "invalid-date-format";
+
+            // Act
+            var result = await ActivityHandlers.GetActivityByDate(_cosmosRepositoryMock.Object, invalidDate);
+
+            // Assert
+            result.Result.Should().BeOfType<BadRequest>();
+            _cosmosRepositoryMock.Verify(x => x.GetActivitySummaryByDate(It.IsAny<string>()), Times.Never);
+        }
+
+        [Fact]
         public async Task GetAllActivities_ShouldReturnPaginatedResult_WhenPaginationParametersProvided()
         {
             // Arrange

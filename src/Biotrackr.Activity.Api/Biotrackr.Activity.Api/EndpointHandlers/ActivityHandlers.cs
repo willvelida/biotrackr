@@ -6,10 +6,16 @@ namespace Biotrackr.Activity.Api.EndpointHandlers
 {
     public static class ActivityHandlers
     {
-        public static async Task<Results<NotFound, Ok<ActivityDocument>>> GetActivityByDate(
+        public static async Task<Results<BadRequest, NotFound, Ok<ActivityDocument>>> GetActivityByDate(
             ICosmosRepository cosmosRepository,
             string date)
         {
+            // Validate date format
+            if (!DateOnly.TryParse(date, out _))
+            {
+                return TypedResults.BadRequest();
+            }
+
             var activity = await cosmosRepository.GetActivitySummaryByDate(date);
             if (activity == null)
             {
