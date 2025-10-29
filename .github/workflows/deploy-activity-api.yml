@@ -135,8 +135,8 @@ jobs:
           resource-group-name: ${{ secrets.AZURE_RG_NAME_DEV }}
 
     run-e2e-tests:
-        name: Run E2E Tests with Cosmos DB Emulator
-        needs: [env-setup, run-contract-tests]
+        name: Run E2E Tests Against Dev
+        needs: [deploy-dev, env-setup]
         uses: willvelida/biotrackr/.github/workflows/template-dotnet-run-e2e-tests.yml@main
         with:
           dotnet-version: ${{ needs.env-setup.outputs.dotnet-version }}
