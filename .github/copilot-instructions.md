@@ -8,6 +8,8 @@ Auto-generated from all feature plans. Last updated: 2025-10-28
 - Azure Cosmos DB (via Emulator in tests - mcr.microsoft.com/cosmosdb/linux/azure-cosmos-emulator:latest) (003-weight-svc-integration-tests)
 - .NET 9.0 (C#) + xUnit 2.9.3, FluentAssertions 8.4.0, Moq 4.20.72, AutoFixture 4.18.1, coverlet.collector 6.0.4, Microsoft.AspNetCore.Mvc.Testing 9.0.0 (004-activity-api-tests)
 - Azure Cosmos DB (for integration tests), In-memory mocks (for unit tests) (004-activity-api-tests)
+- C# / .NET 9.0 + xUnit 2.9.3, FluentAssertions 8.4.0, Moq 4.20.72, AutoFixture 4.18.1, coverlet.collector 6.0.4, Microsoft.AspNetCore.Mvc.Testing 9.0.0 (005-activity-svc-tests)
+- Azure Cosmos DB (via Emulator in tests using mcr.microsoft.com/cosmosdb/linux/azure-cosmos-emulator:latest) (005-activity-svc-tests)
 
 - .NET 9.0 (C#) + xUnit 2.9.3, FluentAssertions 8.4.0, Moq 4.20.72, AutoFixture 4.18.1, coverlet.collector 6.0.4 (001-weight-api-tests)
 
@@ -28,9 +30,9 @@ tests/
 .NET 9.0 (C#): Follow standard conventions
 
 ## Recent Changes
+- 005-activity-svc-tests: Added C# / .NET 9.0 + xUnit 2.9.3, FluentAssertions 8.4.0, Moq 4.20.72, AutoFixture 4.18.1, coverlet.collector 6.0.4, Microsoft.AspNetCore.Mvc.Testing 9.0.0
 - 004-activity-api-tests: Added .NET 9.0 (C#) + xUnit 2.9.3, FluentAssertions 8.4.0, Moq 4.20.72, AutoFixture 4.18.1, coverlet.collector 6.0.4, Microsoft.AspNetCore.Mvc.Testing 9.0.0
 - 003-weight-svc-integration-tests: Added C# / .NET 9.0
-- 002-weight-svc-coverage: Added .NET 9.0 (C#) + xUnit 2.9.3, FluentAssertions 8.4.0, Moq 4.20.72, AutoFixture 4.18.1, coverlet.collector 6.0.4
 
 
 <!-- MANUAL ADDITIONS START -->
