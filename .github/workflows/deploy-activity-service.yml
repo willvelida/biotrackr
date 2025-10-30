@@ -108,8 +108,9 @@ jobs:
         uses: willvelida/biotrackr/.github/workflows/template-bicep-validate.yml@main
         with:
           template-file: './infra/apps/activity-service/main.bicep'
-          parameters-file: ./infra/apps/activity-service/main.dev.bicepparam imageName=${{ needs.retrieve-container-image-dev.outputs.loginServer }}/biotrackr-activity-svc:${{ github.sha }}
-          scope: resourcegroup
+          parameters-file: ./infra/apps/activity-service/main.dev.bicepparam
+          parameters: '{"imageName": "${{ needs.retrieve-container-image-dev.outputs.loginServer }}/biotrackr-activity-svc:${{ github.sha }}"}'
+          scope: resourceGroup
         secrets:
           client-id: ${{ secrets.AZURE_CLIENT_ID }}
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
@@ -121,8 +122,10 @@ jobs:
         needs: [validate, retrieve-container-image-dev]
         uses: willvelida/biotrackr/.github/workflows/template-bicep-whatif.yml@main
         with:
+          scope: resourceGroup
           template-file: './infra/apps/activity-service/main.bicep'
-          parameters-file: ./infra/apps/activity-service/main.dev.bicepparam imageName=${{ needs.retrieve-container-image-dev.outputs.loginServer }}/biotrackr-activity-svc:${{ github.sha }}
+          parameters-file: ./infra/apps/activity-service/main.dev.bicepparam
+          parameters: '{"imageName": "${{ needs.retrieve-container-image-dev.outputs.loginServer }}/biotrackr-activity-svc:${{ github.sha }}"}'
         secrets:
           client-id: ${{ secrets.AZURE_CLIENT_ID }}
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
@@ -135,8 +138,9 @@ jobs:
         uses: willvelida/biotrackr/.github/workflows/template-bicep-deploy.yml@main
         with:
           template-file: './infra/apps/activity-service/main.bicep'
-          parameters-file: ./infra/apps/activity-service/main.dev.bicepparam imageName=${{ needs.retrieve-container-image-dev.outputs.loginServer }}/biotrackr-activity-svc:${{ github.sha }}
-          scope: resourcegroup
+          parameters-file: ./infra/apps/activity-service/main.dev.bicepparam
+          parameters: '{"imageName": "${{ needs.retrieve-container-image-dev.outputs.loginServer }}/biotrackr-activity-svc:${{ github.sha }}"}'
+          scope: resourceGroup
           environment: dev
         secrets:
           client-id: ${{ secrets.AZURE_CLIENT_ID }}
