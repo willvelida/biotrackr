@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 using Azure.Identity;
 using Biotrackr.Sleep.Api.Configuration;
 using Biotrackr.Sleep.Api.Extensions;
@@ -7,21 +8,32 @@ using Microsoft.Azure.Cosmos;
 using Microsoft.Extensions.Configuration.AzureAppConfiguration;
 using Microsoft.OpenApi.Models;
 
-var builder = WebApplication.CreateBuilder(args);
+[ExcludeFromCodeCoverage]
+public partial class Program
+{
+    private static void Main(string[] args)
+    {
+        var builder = WebApplication.CreateBuilder(args);
 
 builder.Configuration.AddEnvironmentVariables();
 var managedIdentityClientId = builder.Configuration.GetValue<string>("managedidentityclientid");
+var azureAppConfigEndpoint = builder.Configuration.GetValue<string>("azureappconfigendpoint");
+
+// Only load Azure App Configuration if endpoint is provided (not in test environment)
+if (!string.IsNullOrWhiteSpace(azureAppConfigEndpoint))
+{
+    builder.Configuration.AddAzureAppConfiguration(config =>
+    {
+        config.Connect(new Uri(azureAppConfigEndpoint),
+            new ManagedIdentityCredential(managedIdentityClientId))
+        .Select(KeyFilter.Any, LabelFilter.Null);
+    });
+}
+
 var defaultCredentialOptions = new DefaultAzureCredentialOptions()
 {
     ManagedIdentityClientId = managedIdentityClientId
 };
-
-builder.Configuration.AddAzureAppConfiguration(config =>
-{
-    config.Connect(new Uri(builder.Configuration.GetValue<string>("azureappconfigendpoint")),
-                   new ManagedIdentityCredential(managedIdentityClientId))
-        .Select(keyFilter: KeyFilter.Any, LabelFilter.Null);
-});
 
 builder.Services.Configure<Settings>(builder.Configuration.GetSection("Biotrackr"));
 
@@ -66,5 +78,7 @@ app.RegisterSleepEndpoints();
 app.RegisterHealthCheckEndpoints();
 
 app.Run();
+    }
+}
 
 public partial class Program { }

@@ -12,6 +12,7 @@ permissions:
     contents: read
     id-token: write
     pull-requests: write
+    checks: write
 
 env:
   DOTNET_VERSION: 9.0.x
@@ -32,17 +33,40 @@ jobs:
               echo "coverage-path=${{ env.COVERAGE_PATH }}" >> "$GITHUB_OUTPUT"
 
     run-unit-tests:
-          name: Run Unit Tests
+          name: Run Unit Tests with Coverage
           needs: env-setup
           uses: willvelida/biotrackr/.github/workflows/template-dotnet-run-unit-tests.yml@main
           with:
             dotnet-version: ${{ needs.env-setup.outputs.dotnet-version }}
             working-directory: ./src/Biotrackr.Sleep.Api/Biotrackr.Sleep.Api.UnitTests
-            coverage-path: ${{ needs.env-setup.outputs.coverage-path }}
+            coverage-threshold: 80
+            fail-below-threshold: true
+
+    run-contract-tests:
+          name: Run API Contract Tests
+          needs: env-setup
+          uses: willvelida/biotrackr/.github/workflows/template-dotnet-run-contract-tests.yml@main
+          with:
+            dotnet-version: ${{ needs.env-setup.outputs.dotnet-version }}
+            working-directory: ./src/Biotrackr.Sleep.Api/Biotrackr.Sleep.Api.IntegrationTests
+            test-filter: 'FullyQualifiedName~Contract'
+
+    run-e2e-tests:
+          name: Run API E2E Tests
+          needs: env-setup
+          uses: willvelida/biotrackr/.github/workflows/template-dotnet-run-e2e-tests.yml@main
+          with:
+            dotnet-version: ${{ needs.env-setup.outputs.dotnet-version }}
+            working-directory: ./src/Biotrackr.Sleep.Api/Biotrackr.Sleep.Api.IntegrationTests
+            test-filter: 'FullyQualifiedName~E2E'
+          secrets:
+            client-id: ${{ secrets.AZURE_CLIENT_ID }}
+            tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+            subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
     build-container-image-dev:
           name: Build and Push Container Image
-          needs: run-unit-tests
+          needs: [run-unit-tests, run-contract-tests, run-e2e-tests]
           uses: willvelida/biotrackr/.github/workflows/template-acr-push-image.yml@main
           with:
             working-directory: ./src/Biotrackr.Sleep.Api
