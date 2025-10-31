@@ -85,9 +85,13 @@ namespace Biotrackr.Sleep.Svc.IntegrationTests.E2E
 
             documents.Should().ContainSingle("exactly one document should be saved");
             var savedDoc = documents.First();
-            savedDoc.id.ToString().Should().Be(sleepDocument.Id);
-            savedDoc.documentType.ToString().Should().Be("Sleep");
-            savedDoc.date.ToString().Should().Be(sleepDocument.Date);
+            string savedId = savedDoc.id.ToString();
+            string savedDocType = savedDoc.documentType.ToString();
+            string savedDate = savedDoc.date.ToString();
+            
+            savedId.Should().Be(sleepDocument.Id);
+            savedDocType.Should().Be("Sleep");
+            savedDate.Should().Be(sleepDocument.Date);
         }
 
         [Fact]
@@ -106,7 +110,8 @@ namespace Biotrackr.Sleep.Svc.IntegrationTests.E2E
                 new PartitionKey("Sleep"));
 
             readResponse.Resource.Should().NotBeNull();
-            readResponse.Resource.id.ToString().Should().Be(sleepDocument.Id);
+            string readId = readResponse.Resource.id.ToString();
+            readId.Should().Be(sleepDocument.Id);
         }
     }
 }

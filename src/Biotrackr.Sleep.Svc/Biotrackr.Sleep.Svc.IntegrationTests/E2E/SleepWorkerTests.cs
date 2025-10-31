@@ -113,8 +113,11 @@ namespace Biotrackr.Sleep.Svc.IntegrationTests.E2E
 
             documents.Should().ContainSingle("exactly one document should be saved");
             var savedDoc = documents.First();
-            savedDoc.date.ToString().Should().Be(expectedDate);
-            savedDoc.documentType.ToString().Should().Be("Sleep");
+            string savedDate = savedDoc.date.ToString();
+            string savedDocType = savedDoc.documentType.ToString();
+            
+            savedDate.Should().Be(expectedDate);
+            savedDocType.Should().Be("Sleep");
         }
     }
 }

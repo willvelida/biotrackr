@@ -91,8 +91,11 @@ namespace Biotrackr.Sleep.Svc.IntegrationTests.E2E
             documents.Should().ContainSingle("exactly one document should be saved");
             
             var savedDoc = documents.First();
-            savedDoc.date.ToString().Should().Be(date);
-            savedDoc.documentType.ToString().Should().Be("Sleep");
+            string savedDate = savedDoc.date.ToString();
+            string savedDocType = savedDoc.documentType.ToString();
+            
+            savedDate.Should().Be(date);
+            savedDocType.Should().Be("Sleep");
             savedDoc.id.Should().NotBeNull("ID should be generated");
             
             // Verify sleep data was mapped correctly
