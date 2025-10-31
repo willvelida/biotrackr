@@ -1,4 +1,3 @@
-using Biotrackr.Sleep.Svc.Configuration;
 using Microsoft.Azure.Cosmos;
 using Microsoft.Extensions.Configuration;
 
@@ -8,18 +7,26 @@ namespace Biotrackr.Sleep.Svc.IntegrationTests.Fixtures
     {
         public CosmosClient CosmosClient { get; private set; } = null!;
         public Container Container { get; private set; } = null!;
-
-        private const string DatabaseName = "BiotrackrTestDb";
-        private const string ContainerName = "SleepTestContainer";
-        private const string CosmosDbEndpoint = "https://localhost:8081";
-        private const string CosmosDbAccountKey = "C2y6yDjf5/R+ob0N8A7Cgv30VRDJIWEHLM+4QDU5DE2nQ9nDuVTqobD4b8mGGyPMbIZnqyMsEcaGQy67XIw/Jw==";
+        public Database Database { get; private set; } = null!;
+        public IConfiguration Configuration { get; private set; } = null!;
 
         public async Task InitializeAsync()
         {
+            // Load configuration from appsettings.Test.json
+            Configuration = new ConfigurationBuilder()
+                .SetBasePath(Directory.GetCurrentDirectory())
+                .AddJsonFile("appsettings.Test.json", optional: false)
+                .Build();
+
+            var cosmosDbEndpoint = Configuration["cosmosdbendpoint"] ?? throw new InvalidOperationException("cosmosdbendpoint not configured");
+            var cosmosDbAccountKey = Configuration["cosmosdbaccountkey"] ?? throw new InvalidOperationException("cosmosdbaccountkey not configured");
+            var databaseId = Configuration["databaseId"] ?? "BiotrackrTestDb";
+            var containerId = Configuration["containerId"] ?? "SleepTestContainer";
+
             // Create CosmosClient with Gateway mode for Emulator compatibility
             CosmosClient = new CosmosClient(
-                CosmosDbEndpoint,
-                CosmosDbAccountKey,
+                cosmosDbEndpoint,
+                cosmosDbAccountKey,
                 new CosmosClientOptions
                 {
                     ConnectionMode = ConnectionMode.Gateway, // CRITICAL: Gateway mode for Cosmos DB Emulator
@@ -34,14 +41,14 @@ namespace Biotrackr.Sleep.Svc.IntegrationTests.Fixtures
                 });
 
             // Create database
-            var databaseResponse = await CosmosClient.CreateDatabaseIfNotExistsAsync(DatabaseName);
-            var database = databaseResponse.Database;
+            var databaseResponse = await CosmosClient.CreateDatabaseIfNotExistsAsync(databaseId);
+            Database = databaseResponse.Database;
 
             // Create container with partition key
-            var containerResponse = await database.CreateContainerIfNotExistsAsync(
+            var containerResponse = await Database.CreateContainerIfNotExistsAsync(
                 new ContainerProperties
                 {
-                    Id = ContainerName,
+                    Id = containerId,
                     PartitionKeyPath = "/documentType"
                 });
 
@@ -55,8 +62,7 @@ namespace Biotrackr.Sleep.Svc.IntegrationTests.Fixtures
                 try
                 {
                     // Delete test database
-                    var database = CosmosClient.GetDatabase(DatabaseName);
-                    await database.DeleteAsync();
+                    await Database.DeleteAsync();
                 }
                 catch
                 {
