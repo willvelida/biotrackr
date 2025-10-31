@@ -142,22 +142,6 @@ For more detailed setup instructions, see the [Cosmos DB Emulator Setup Guide](d
 - [Integration Test Project Structure](docs/decision-records/2025-10-28-integration-test-project-structure.md)
 - [Flaky Test Handling](docs/decision-records/2025-10-28-flaky-test-handling.md)
 
-## 🤝 Contributing
-
-Contributions are welcome! This is a personal project, but if you have suggestions or improvements:
-
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add some amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
-
-Please ensure your code:
-- Follows existing code style and conventions
-- Includes appropriate unit and integration tests
-- Updates relevant documentation
-- Passes all CI/CD checks
-
 ## 📄 License
 
 This project is licensed under the Apache License 2.0 - see the [LICENSE](LICENSE) file for details.
