@@ -348,6 +348,85 @@ public async Task MyTest()
 
 ---
 
+## Code Coverage Exclusions
+
+### Issue: Program.cs Not Excluded from Code Coverage in CI/CD
+
+**Symptoms**:
+- Local tests show 100% coverage with `<ExcludeByFile>**/Program.cs</ExcludeByFile>` in .csproj
+- CI/CD coverage reports show lower percentage (e.g., 52% instead of 100%)
+- Program.cs appears in coverage reports despite exclusion configuration
+- `coverlet.msbuild` package exclusions work locally but not in CI
+
+**Root Cause**:
+The `<ExcludeByFile>` property in .csproj files works with `coverlet.msbuild` for local coverage runs, but GitHub Actions workflows use `dotnet test --collect:"XPlat Code Coverage"` which uses `coverlet.collector`. The collector doesn't respect .csproj `<ExcludeByFile>` properties without a runsettings file.
+
+**Solution**:
+Use the `[ExcludeFromCodeCoverage]` attribute directly in the Program.cs file, following the Weight Service pattern:
+
+**❌ Wrong** (doesn't work in CI):
+```xml
+<!-- In .csproj -->
+<PropertyGroup>
+  <ExcludeByFile>**/Program.cs</ExcludeByFile>
+</PropertyGroup>
+```
+
+**✅ Correct** (works everywhere):
+```csharp
+// In Program.cs
+using System.Diagnostics.CodeAnalysis;
+
+[ExcludeFromCodeCoverage]
+internal class Program
+{
+    private static void Main(string[] args)
+    {
+        // ... application setup code
+        host.Run();
+    }
+}
+```
+
+**Why This Works**:
+- `[ExcludeFromCodeCoverage]` attribute is recognized by all coverage tools (coverlet.collector, coverlet.msbuild, dotCover, etc.)
+- Works consistently in both local development and CI/CD environments
+- No need for runsettings files or template modifications
+- Follows established pattern from Weight Service
+
+**Resolution History**:
+- Fixed in `Biotrackr.Activity.Svc/Program.cs` (added [ExcludeFromCodeCoverage] attribute, commit 1741655, 2025-10-31)
+- Removed unnecessary `<ExcludeByFile>` from .csproj (commit 60b2826, 2025-10-31)
+- Removed `coverlet.msbuild` package dependency (commit 60b2826, 2025-10-31)
+
+**Prevention**:
+- Always use `[ExcludeFromCodeCoverage]` attribute for Program.cs in .NET worker services
+- Don't rely on .csproj `<ExcludeByFile>` properties for CI/CD coverage
+- Only include `coverlet.collector` package (not `coverlet.msbuild`) in test projects
+- Follow Weight Service pattern for consistency across all services
+
+**Pattern to Follow**:
+```csharp
+using System.Diagnostics.CodeAnalysis;
+// ... other usings
+
+[ExcludeFromCodeCoverage]
+internal class Program
+{
+    private static void Main(string[] args)
+    {
+        // Host builder and configuration
+        IHost host = Host.CreateDefaultBuilder(args)
+            .ConfigureServices(...)
+            .Build();
+        
+        host.Run();
+    }
+}
+```
+
+---
+
 ## Notes
 
 - Keep this document updated as new patterns emerge
