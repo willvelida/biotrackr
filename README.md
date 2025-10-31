@@ -1,29 +1,169 @@
 # biotrackr
 
-Welcome to my personal health platform! I use a Fitbit to log my workouts, so this application uses the API that Fitbit provides to run some analysis on that data, and provide me insights.
+[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
+[![.NET](https://img.shields.io/badge/.NET-9.0-purple.svg)](https://dotnet.microsoft.com/)
+[![Azure](https://img.shields.io/badge/Azure-Cloud-0078D4.svg)](https://azure.microsoft.com/)
 
-## Documentation
+**biotrackr** is a personal health platform that integrates with the Fitbit API to collect, analyze, and provide insights on health and fitness data. The application follows a microservices architecture deployed on Azure, with comprehensive CI/CD pipelines and infrastructure as code.
 
-Check out the following markdown files that explains decisions made in this project:
+## 📋 Table of Contents
 
-- [GitHub Actions Workflow Templates](./docs/github-workflow-templates.md)
-- [Bicep Modules Structure](./docs/bicep-modules-structure.md)
+- [Architecture](#-architecture)
+- [Features](#-features)
+- [Tech Stack](#-tech-stack)
+- [Getting Started](#-getting-started)
+- [Build Status](#-build-status)
+- [Documentation](#-documentation)
+- [Contributing](#-contributing)
+- [License](#-license)
 
-## Tech Stack Used
+## 🏗️ Architecture
 
-- Bicep
-- GitHub Actions
-- .NET
+The application follows a **microservices architecture** with separate services for different health domains:
 
-## Build Status
+- **Activity Service**: Processes and stores physical activity data from Fitbit
+- **Sleep Service**: Manages sleep tracking and analysis
+- **Weight Service**: Handles weight measurements and trends
+- **Auth Service**: Manages authentication and authorization with Fitbit API
 
-| Component | Status | Unit Test Coverage | Integration Test Coverage |
-| --------- | ------ | ------------------ | ------------------------- |
-| Biotrackr.Infra | [![Deploy Core Biotrackr Infrastructure](https://github.com/willvelida/biotrackr/actions/workflows/deploy-core-infra.yml/badge.svg)](https://github.com/willvelida/biotrackr/actions/workflows/deploy-core-infra.yml) | N/A | N/A |
-| Biotrackr.Auth.Svc| [![Deploy Auth Service](https://github.com/willvelida/biotrackr/actions/workflows/deploy-auth-service.yml/badge.svg)](https://github.com/willvelida/biotrackr/actions/workflows/deploy-auth-service.yml) | ![Code Coverage](https://img.shields.io/badge/Code%20Coverage-50%25-critical?style=flat) | N/A |
-| Biotrackr.Activity.Svc | [![Deploy Activity Service](https://github.com/willvelida/biotrackr/actions/workflows/deploy-activity-service.yml/badge.svg)](https://github.com/willvelida/biotrackr/actions/workflows/deploy-activity-service.yml) | ![Code Coverage](https://img.shields.io/badge/Code%20Coverage-100%25-brightgreen?style=flat) | ![Integration Tests](https://img.shields.io/badge/Tests-17%20Passing-brightgreen?style=flat) |
-| Biotrackr.Activity.Api | [![Deploy Activity Api](https://github.com/willvelida/biotrackr/actions/workflows/deploy-activity-api.yml/badge.svg)](https://github.com/willvelida/biotrackr/actions/workflows/deploy-activity-api.yml) | ![Code Coverage](https://img.shields.io/badge/Code%20Coverage-79.3%25-yellow?style=flat) | ![Integration Tests](https://img.shields.io/badge/Tests-30%20Passing-brightgreen?style=flat) |
-| Biotrackr.Sleep.Api | [![Deploy Sleep Api](https://github.com/willvelida/biotrackr/actions/workflows/deploy-sleep-api.yml/badge.svg)](https://github.com/willvelida/biotrackr/actions/workflows/deploy-sleep-api.yml) | ![Code Coverage](https://img.shields.io/badge/Code%20Coverage-87%25-brightgreen?style=flat) | ![Integration Tests](https://img.shields.io/badge/Tests-19%20Passing-brightgreen?style=flat) |
-| Biotrackr.Sleep.Svc | [![Deploy Sleep Service](https://github.com/willvelida/biotrackr/actions/workflows/deploy-sleep-service.yml/badge.svg)](https://github.com/willvelida/biotrackr/actions/workflows/deploy-sleep-service.yml) | ![Code Coverage](https://img.shields.io/badge/Code%20Coverage-48%25-critical?style=flat) | N/A |
-| Biotrackr.Weight.Api | [![Deploy Weight Api](https://github.com/willvelida/biotrackr/actions/workflows/deploy-weight-api.yml/badge.svg)](https://github.com/willvelida/biotrackr/actions/workflows/deploy-weight-api.yml) | ![Code Coverage](https://img.shields.io/badge/Code%20Coverage-75%25-yellow?style=flat) | ![Integration Tests](https://img.shields.io/badge/Tests-8%2F9%20Passing-success?style=flat) |
-| Biotrackr.Weight.Svc | [![Deploy Weight Service](https://github.com/willvelida/biotrackr/actions/workflows/deploy-weight-service.yml/badge.svg)](https://github.com/willvelida/biotrackr/actions/workflows/deploy-weight-service.yml) | ![Code Coverage](https://img.shields.io/badge/Code%20Coverage-100%25-brightgreen?style=flat) | ![Integration Tests](https://img.shields.io/badge/Tests-4%20Passing-brightgreen?style=flat) | 
+Each service consists of:
+- **API Layer**: RESTful endpoints for data access
+- **Service Layer**: Business logic and integration with Fitbit API
+- **Data Layer**: Azure Cosmos DB for persistence
+
+## ✨ Features
+
+- 🏃 **Activity Tracking**: Comprehensive workout and activity data collection
+- 😴 **Sleep Analysis**: Sleep patterns, stages, and quality metrics
+- ⚖️ **Weight Management**: Weight tracking and trend visualization
+- 🔐 **Secure Authentication**: OAuth integration with Fitbit
+- 📊 **Data Insights**: Analysis and reporting on health metrics
+- ☁️ **Cloud-Native**: Fully deployed on Azure with auto-scaling
+- 🚀 **CI/CD**: Automated testing, deployment, and infrastructure management
+
+## 🛠️ Tech Stack
+
+### Backend
+- **.NET 9.0**: Modern C# microservices
+- **Azure Functions**: Serverless compute for background processing
+- **Azure Cosmos DB**: NoSQL database for scalable data storage
+- **Azure App Configuration**: Centralized configuration management
+- **Azure Key Vault**: Secure secrets management
+
+### Infrastructure
+- **Bicep**: Infrastructure as Code (IaC) for Azure resources
+- **GitHub Actions**: CI/CD pipelines and workflow automation
+- **Docker**: Containerization for consistent environments
+
+### Testing
+- **xUnit**: Unit and integration testing framework
+- **FluentAssertions**: Readable test assertions
+- **Moq**: Mocking framework for unit tests
+- **Cosmos DB Emulator**: Local database testing
+
+## 🚀 Getting Started
+
+### Prerequisites
+
+- [.NET 9.0 SDK](https://dotnet.microsoft.com/download)
+- [Docker Desktop](https://www.docker.com/products/docker-desktop)
+- [Azure CLI](https://docs.microsoft.com/cli/azure/install-azure-cli) (for deployment)
+- [PowerShell](https://docs.microsoft.com/powershell/scripting/install/installing-powershell) (Windows users)
+
+### Local Development Setup
+
+1. **Clone the repository**
+   ```bash
+   git clone https://github.com/willvelida/biotrackr.git
+   cd biotrackr
+   ```
+
+2. **Start Cosmos DB Emulator**
+   
+   **Windows (PowerShell)**:
+   ```powershell
+   .\cosmos-emulator.ps1 start
+   ```
+   
+   **macOS/Linux**:
+   ```bash
+   docker-compose -f docker-compose.cosmos.yml up -d
+   ```
+
+3. **Install SSL Certificate** (Required for local testing)
+   
+   Follow the [Cosmos DB Emulator Setup Guide](docs/cosmos-emulator-setup.md) for platform-specific instructions.
+
+4. **Build a service**
+   ```bash
+   cd src/Biotrackr.Activity.Api
+   dotnet build
+   ```
+
+5. **Run tests**
+   ```bash
+   # Unit tests only
+   dotnet test --filter "FullyQualifiedName~UnitTests"
+   
+   # All tests (requires Cosmos DB Emulator)
+   dotnet test
+   ```
+
+For more detailed setup instructions, see the [Cosmos DB Emulator Setup Guide](docs/cosmos-emulator-setup.md).
+
+## 📊 Build Status
+
+| Component | Deployment Status | Unit Test Coverage | Integration Test Coverage |
+| --------- | ----------------- | ------------------ | ------------------------- |
+| **Infrastructure** | [![Deploy Core Biotrackr Infrastructure](https://github.com/willvelida/biotrackr/actions/workflows/deploy-core-infra.yml/badge.svg)](https://github.com/willvelida/biotrackr/actions/workflows/deploy-core-infra.yml) | N/A | N/A |
+| **Auth Service** | [![Deploy Auth Service](https://github.com/willvelida/biotrackr/actions/workflows/deploy-auth-service.yml/badge.svg)](https://github.com/willvelida/biotrackr/actions/workflows/deploy-auth-service.yml) | ![Code Coverage](https://img.shields.io/badge/Code%20Coverage-50%25-critical?style=flat) | N/A |
+| **Activity Service** | [![Deploy Activity Service](https://github.com/willvelida/biotrackr/actions/workflows/deploy-activity-service.yml/badge.svg)](https://github.com/willvelida/biotrackr/actions/workflows/deploy-activity-service.yml) | ![Code Coverage](https://img.shields.io/badge/Code%20Coverage-100%25-brightgreen?style=flat) | ![Integration Tests](https://img.shields.io/badge/Tests-17%20Passing-brightgreen?style=flat) |
+| **Activity API** | [![Deploy Activity Api](https://github.com/willvelida/biotrackr/actions/workflows/deploy-activity-api.yml/badge.svg)](https://github.com/willvelida/biotrackr/actions/workflows/deploy-activity-api.yml) | ![Code Coverage](https://img.shields.io/badge/Code%20Coverage-79.3%25-yellow?style=flat) | ![Integration Tests](https://img.shields.io/badge/Tests-30%20Passing-brightgreen?style=flat) |
+| **Sleep API** | [![Deploy Sleep Api](https://github.com/willvelida/biotrackr/actions/workflows/deploy-sleep-api.yml/badge.svg)](https://github.com/willvelida/biotrackr/actions/workflows/deploy-sleep-api.yml) | ![Code Coverage](https://img.shields.io/badge/Code%20Coverage-87%25-brightgreen?style=flat) | ![Integration Tests](https://img.shields.io/badge/Tests-19%20Passing-brightgreen?style=flat) |
+| **Sleep Service** | [![Deploy Sleep Service](https://github.com/willvelida/biotrackr/actions/workflows/deploy-sleep-service.yml/badge.svg)](https://github.com/willvelida/biotrackr/actions/workflows/deploy-sleep-service.yml) | ![Code Coverage](https://img.shields.io/badge/Code%20Coverage-48%25-critical?style=flat) | N/A |
+| **Weight API** | [![Deploy Weight Api](https://github.com/willvelida/biotrackr/actions/workflows/deploy-weight-api.yml/badge.svg)](https://github.com/willvelida/biotrackr/actions/workflows/deploy-weight-api.yml) | ![Code Coverage](https://img.shields.io/badge/Code%20Coverage-75%25-yellow?style=flat) | ![Integration Tests](https://img.shields.io/badge/Tests-8%2F9%20Passing-success?style=flat) |
+| **Weight Service** | [![Deploy Weight Service](https://github.com/willvelida/biotrackr/actions/workflows/deploy-weight-service.yml/badge.svg)](https://github.com/willvelida/biotrackr/actions/workflows/deploy-weight-service.yml) | ![Code Coverage](https://img.shields.io/badge/Code%20Coverage-100%25-brightgreen?style=flat) | ![Integration Tests](https://img.shields.io/badge/Tests-4%20Passing-brightgreen?style=flat) |
+
+## 📚 Documentation
+
+### Architecture & Design
+- [GitHub Actions Workflow Templates](docs/github-workflow-templates.md) - Reusable CI/CD workflow patterns
+- [Bicep Modules Structure](docs/bicep-modules-structure.md) - Infrastructure as Code organization
+- [Decision Records](docs/decision-records/) - Architectural Decision Records (ADRs)
+
+### Development Guides
+- [Cosmos DB Emulator Setup](docs/cosmos-emulator-setup.md) - Local database configuration
+- [Contract Test Architecture](docs/decision-records/2025-10-28-contract-test-architecture.md) - Testing strategy
+- [Service Lifetime Registration](docs/decision-records/2025-10-28-service-lifetime-registration.md) - Dependency injection patterns
+
+### Key Decision Records
+- [Backend API Route Structure](docs/decision-records/2025-10-28-backend-api-route-structure.md)
+- [.NET Configuration Format](docs/decision-records/2025-10-28-dotnet-configuration-format.md)
+- [Integration Test Project Structure](docs/decision-records/2025-10-28-integration-test-project-structure.md)
+- [Flaky Test Handling](docs/decision-records/2025-10-28-flaky-test-handling.md)
+
+## 🤝 Contributing
+
+Contributions are welcome! This is a personal project, but if you have suggestions or improvements:
+
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add some amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
+
+Please ensure your code:
+- Follows existing code style and conventions
+- Includes appropriate unit and integration tests
+- Updates relevant documentation
+- Passes all CI/CD checks
+
+## 📄 License
+
+This project is licensed under the Apache License 2.0 - see the [LICENSE](LICENSE) file for details.
+
+---
+
+**Author**: [willvelida](https://github.com/willvelida)
+
+*For questions or feedback, please open an issue on this repository.*
