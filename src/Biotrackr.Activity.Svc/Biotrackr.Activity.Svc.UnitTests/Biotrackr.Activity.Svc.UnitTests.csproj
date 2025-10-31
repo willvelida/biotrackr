@@ -7,9 +7,6 @@
 
     <IsPackable>false</IsPackable>
     <IsTestProject>true</IsTestProject>
-    
-    <!-- Exclude Program.cs from coverage per decision record 2025-10-28 -->
-    <ExcludeByFile>**/Program.cs</ExcludeByFile>
   </PropertyGroup>
 
   <ItemGroup>
@@ -17,10 +14,6 @@
     <PackageReference Include="coverlet.collector" Version="6.0.4">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-    </PackageReference>
-    <PackageReference Include="coverlet.msbuild" Version="6.0.4">
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-      <PrivateAssets>all</PrivateAssets>
     </PackageReference>
     <PackageReference Include="FluentAssertions" Version="8.4.0" />
     <PackageReference Include="ILogger.Moq" Version="2.0.0" />
