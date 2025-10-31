@@ -38,7 +38,7 @@ jobs:
         uses: willvelida/biotrackr/.github/workflows/template-dotnet-run-unit-tests.yml@main
         with:
           dotnet-version: ${{ needs.env-setup.outputs.dotnet-version }}
-          working-directory: ./src/Biotrackr.Activity.Svc/Biotrackr.Activity.Svc.UnitTests
+          working-directory: ./src/Biotrackr.Activity.Svc
           coverage-threshold: 70
           fail-below-threshold: false
 
