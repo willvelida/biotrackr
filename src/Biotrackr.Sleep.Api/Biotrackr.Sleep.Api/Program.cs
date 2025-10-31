@@ -49,7 +49,7 @@ public partial class Program
             new DefaultAzureCredential(defaultCredentialOptions),
             cosmosClientOptions);
         builder.Services.AddSingleton(cosmosClient);
-        builder.Services.AddTransient<ICosmosRepository, CosmosRepository>();
+        builder.Services.AddScoped<ICosmosRepository, CosmosRepository>();
 
         builder.Services.AddEndpointsApiExplorer();
         builder.Services.AddSwaggerGen(options =>

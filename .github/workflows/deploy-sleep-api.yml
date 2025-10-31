@@ -53,7 +53,7 @@ jobs:
 
     run-e2e-tests:
           name: Run API E2E Tests
-          needs: env-setup
+          needs: [env-setup, run-contract-tests]
           uses: willvelida/biotrackr/.github/workflows/template-dotnet-run-e2e-tests.yml@main
           with:
             dotnet-version: ${{ needs.env-setup.outputs.dotnet-version }}
