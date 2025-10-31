@@ -17,6 +17,8 @@ public class ContractTestFixture : IntegrationTestFixture
     protected override bool InitializeDatabase => false;
 
     public IServiceProvider? ServiceProvider { get; private set; }
+    private CosmosClient? _contractCosmosClient;
+    private SecretClient? _contractSecretClient;
 
     public override async Task InitializeAsync()
     {
@@ -67,8 +69,11 @@ public class ContractTestFixture : IntegrationTestFixture
         };
 
         // Register services following Program.cs pattern
-        services.AddSingleton(new SecretClient(new Uri(keyVaultUrl), new DefaultAzureCredential(defaultCredentialOptions)));
-        services.AddSingleton(new CosmosClient(cosmosDbEndpoint, new DefaultAzureCredential(defaultCredentialOptions), cosmosClientOptions));
+        _contractSecretClient = new SecretClient(new Uri(keyVaultUrl), new DefaultAzureCredential(defaultCredentialOptions));
+        _contractCosmosClient = new CosmosClient(cosmosDbEndpoint, new DefaultAzureCredential(defaultCredentialOptions), cosmosClientOptions);
+        
+        services.AddSingleton(_contractSecretClient);
+        services.AddSingleton(_contractCosmosClient);
 
         services.AddScoped<ICosmosRepository, CosmosRepository>();
         services.AddScoped<IActivityService, ActivityService>();
@@ -85,6 +90,8 @@ public class ContractTestFixture : IntegrationTestFixture
         {
             disposable.Dispose();
         }
+
+        _contractCosmosClient?.Dispose();
 
         await base.DisposeAsync();
     }

@@ -62,7 +62,7 @@ public class IntegrationTestFixture : IAsyncLifetime
             {
                 await Database.DeleteAsync();
             }
-            catch
+            catch (Exception)
             {
                 // Ignore cleanup errors
             }
