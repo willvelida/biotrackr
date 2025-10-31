@@ -10,7 +10,7 @@ namespace Biotrackr.Sleep.Api.IntegrationTests.E2E;
 /// E2E tests for health check endpoints with real Cosmos DB
 /// Tests verify that health checks properly validate database connectivity
 /// </summary>
-[Collection(nameof(E2ETestCollection))]
+[Collection(E2ETestCollection.CollectionName)]
 public class HealthCheckTests
 {
     private readonly IntegrationTestFixture _fixture;

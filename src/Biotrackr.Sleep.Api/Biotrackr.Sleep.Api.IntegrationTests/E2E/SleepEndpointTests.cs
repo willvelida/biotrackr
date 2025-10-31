@@ -12,7 +12,7 @@ namespace Biotrackr.Sleep.Api.IntegrationTests.E2E;
 /// E2E tests for Sleep API endpoints with real Cosmos DB
 /// Tests verify full request/response cycle including database operations
 /// </summary>
-[Collection(nameof(E2ETestCollection))]
+[Collection(E2ETestCollection.CollectionName)]
 public class SleepEndpointTests
 {
     private readonly IntegrationTestFixture _fixture;
