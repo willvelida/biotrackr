@@ -39,6 +39,8 @@ jobs:
         with:
           dotnet-version: ${{ needs.env-setup.outputs.dotnet-version }}
           working-directory: ./src/Biotrackr.Activity.Svc/Biotrackr.Activity.Svc.UnitTests
+          coverage-threshold: 70
+          fail-below-threshold: false
 
     run-contract-tests:
         name: Run Contract Tests
