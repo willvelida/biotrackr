@@ -7,15 +7,16 @@ on:
         paths:
             - 'infra/apps/sleep-service/**'
             - 'src/Biotrackr.Sleep.Svc/**'
+            - '.github/workflows/deploy-sleep-service.yml'
 
 permissions:
     contents: read
     id-token: write
     pull-requests: write
+    checks: write  # Required for dorny/test-reporter@v1
 
 env:
   DOTNET_VERSION: 9.0.x
-  COVERAGE_PATH: ${{ github.workspace }}/coverage
 
 jobs:
     env-setup:
@@ -23,13 +24,11 @@ jobs:
         runs-on: ubuntu-latest
         outputs:
           dotnet-version: ${{ steps.set-output-defaults.outputs.dotnet-version }}
-          coverage-path: ${{ steps.set-output-defaults.outputs.coverage-path }}
         steps:
           - name: set outputs with default values
             id: set-output-defaults
             run: |
               echo "dotnet-version=${{ env.DOTNET_VERSION }}" >> "$GITHUB_OUTPUT"
-              echo "coverage-path=${{ env.COVERAGE_PATH }}" >> "$GITHUB_OUTPUT"
 
     run-unit-tests:
         name: Run Unit Tests
@@ -37,12 +36,33 @@ jobs:
         uses: willvelida/biotrackr/.github/workflows/template-dotnet-run-unit-tests.yml@main
         with:
           dotnet-version: ${{ needs.env-setup.outputs.dotnet-version }}
-          working-directory: ./src/Biotrackr.Sleep.Svc
-          coverage-path: ${{ needs.env-setup.outputs.coverage-path }}
+          working-directory: ./src/Biotrackr.Sleep.Svc/Biotrackr.Sleep.Svc.UnitTests
+
+    run-contract-tests:
+        name: Run Contract Tests
+        needs: env-setup
+        uses: willvelida/biotrackr/.github/workflows/template-dotnet-run-contract-tests.yml@main
+        with:
+          dotnet-version: ${{ needs.env-setup.outputs.dotnet-version }}
+          working-directory: ./src/Biotrackr.Sleep.Svc/Biotrackr.Sleep.Svc.IntegrationTests
+          test-filter: 'FullyQualifiedName~Contract'
+
+    run-e2e-tests:
+        name: Run E2E Tests
+        needs: [env-setup, run-contract-tests]
+        uses: willvelida/biotrackr/.github/workflows/template-dotnet-run-e2e-tests.yml@main
+        with:
+          dotnet-version: ${{ needs.env-setup.outputs.dotnet-version }}
+          working-directory: ./src/Biotrackr.Sleep.Svc/Biotrackr.Sleep.Svc.IntegrationTests
+          test-filter: 'FullyQualifiedName~E2E'
+        secrets:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
     build-container-image-dev:
         name: Build and Push Container Image
-        needs: run-unit-tests
+        needs: [run-unit-tests, run-contract-tests, run-e2e-tests]
         uses: willvelida/biotrackr/.github/workflows/template-acr-push-image.yml@main
         with:
           working-directory: ./src/Biotrackr.Sleep.Svc
@@ -86,8 +106,9 @@ jobs:
         uses: willvelida/biotrackr/.github/workflows/template-bicep-validate.yml@main
         with:
           template-file: './infra/apps/sleep-service/main.bicep'
-          parameters-file: ./infra/apps/sleep-service/main.dev.bicepparam imageName=${{ needs.retrieve-container-image-dev.outputs.loginServer }}/biotrackr-sleep-svc:${{ github.sha }}
-          scope: resourcegroup
+          parameters-file: ./infra/apps/sleep-service/main.dev.bicepparam
+          parameters: '{"imageName": "${{ needs.retrieve-container-image-dev.outputs.loginServer }}/biotrackr-sleep-svc:${{ github.sha }}"}'
+          scope: resourceGroup
         secrets:
           client-id: ${{ secrets.AZURE_CLIENT_ID }}
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
@@ -99,8 +120,10 @@ jobs:
         needs: [validate, retrieve-container-image-dev]
         uses: willvelida/biotrackr/.github/workflows/template-bicep-whatif.yml@main
         with:
+          scope: resourceGroup
           template-file: './infra/apps/sleep-service/main.bicep'
-          parameters-file: ./infra/apps/sleep-service/main.dev.bicepparam imageName=${{ needs.retrieve-container-image-dev.outputs.loginServer }}/biotrackr-sleep-svc:${{ github.sha }}
+          parameters-file: ./infra/apps/sleep-service/main.dev.bicepparam
+          parameters: '{"imageName": "${{ needs.retrieve-container-image-dev.outputs.loginServer }}/biotrackr-sleep-svc:${{ github.sha }}"}'
         secrets:
           client-id: ${{ secrets.AZURE_CLIENT_ID }}
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
@@ -113,8 +136,9 @@ jobs:
         uses: willvelida/biotrackr/.github/workflows/template-bicep-deploy.yml@main
         with:
           template-file: './infra/apps/sleep-service/main.bicep'
-          parameters-file: ./infra/apps/sleep-service/main.dev.bicepparam imageName=${{ needs.retrieve-container-image-dev.outputs.loginServer }}/biotrackr-sleep-svc:${{ github.sha }}
-          scope: resourcegroup
+          parameters-file: ./infra/apps/sleep-service/main.dev.bicepparam
+          parameters: '{"imageName": "${{ needs.retrieve-container-image-dev.outputs.loginServer }}/biotrackr-sleep-svc:${{ github.sha }}"}'
+          scope: resourceGroup
           environment: dev
         secrets:
           client-id: ${{ secrets.AZURE_CLIENT_ID }}
