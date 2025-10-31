@@ -31,7 +31,7 @@ jobs:
                 working-directory: ${{ inputs.working-directory }}
         steps:
             - name: Checkout Repository code
-              uses: actions/checkout@v4
+              uses: actions/checkout@v5
 
             - name: Setup .NET ${{ inputs.dotnet-version }}
               uses: actions/setup-dotnet@v4
