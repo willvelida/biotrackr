@@ -14,7 +14,6 @@
 - [Getting Started](#-getting-started)
 - [Build Status](#-build-status)
 - [Documentation](#-documentation)
-- [Contributing](#-contributing)
 - [License](#-license)
 
 ## 🏗️ Architecture
