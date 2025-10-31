@@ -1,3 +1,4 @@
+// Test coverage implementation complete - triggering CI/CD workflow
 using System.Diagnostics.CodeAnalysis;
 using Azure.Identity;
 using Azure.Monitor.OpenTelemetry.Exporter;
