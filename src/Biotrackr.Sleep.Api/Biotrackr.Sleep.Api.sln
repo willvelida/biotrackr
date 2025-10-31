@@ -1,26 +1,60 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
-VisualStudioVersion = 17.12.35514.174 d17.12
+VisualStudioVersion = 17.12.35514.174
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Biotrackr.Sleep.Api", "Biotrackr.Sleep.Api\Biotrackr.Sleep.Api.csproj", "{2B6AAEB5-EE7B-4377-9F0D-B9C675720975}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Biotrackr.Sleep.Api.UnitTests", "Biotrackr.Sleep.Api.UnitTests\Biotrackr.Sleep.Api.UnitTests.csproj", "{BAAB5549-1C6E-48A6-BF22-93E5B914200C}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Biotrackr.Sleep.Api.IntegrationTests", "Biotrackr.Sleep.Api.IntegrationTests\Biotrackr.Sleep.Api.IntegrationTests.csproj", "{016304B7-A0A4-4F82-8AF6-EE540EB03331}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
+		Debug|x64 = Debug|x64
+		Debug|x86 = Debug|x86
 		Release|Any CPU = Release|Any CPU
+		Release|x64 = Release|x64
+		Release|x86 = Release|x86
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
 		{2B6AAEB5-EE7B-4377-9F0D-B9C675720975}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{2B6AAEB5-EE7B-4377-9F0D-B9C675720975}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2B6AAEB5-EE7B-4377-9F0D-B9C675720975}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{2B6AAEB5-EE7B-4377-9F0D-B9C675720975}.Debug|x64.Build.0 = Debug|Any CPU
+		{2B6AAEB5-EE7B-4377-9F0D-B9C675720975}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{2B6AAEB5-EE7B-4377-9F0D-B9C675720975}.Debug|x86.Build.0 = Debug|Any CPU
 		{2B6AAEB5-EE7B-4377-9F0D-B9C675720975}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{2B6AAEB5-EE7B-4377-9F0D-B9C675720975}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2B6AAEB5-EE7B-4377-9F0D-B9C675720975}.Release|x64.ActiveCfg = Release|Any CPU
+		{2B6AAEB5-EE7B-4377-9F0D-B9C675720975}.Release|x64.Build.0 = Release|Any CPU
+		{2B6AAEB5-EE7B-4377-9F0D-B9C675720975}.Release|x86.ActiveCfg = Release|Any CPU
+		{2B6AAEB5-EE7B-4377-9F0D-B9C675720975}.Release|x86.Build.0 = Release|Any CPU
 		{BAAB5549-1C6E-48A6-BF22-93E5B914200C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{BAAB5549-1C6E-48A6-BF22-93E5B914200C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BAAB5549-1C6E-48A6-BF22-93E5B914200C}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{BAAB5549-1C6E-48A6-BF22-93E5B914200C}.Debug|x64.Build.0 = Debug|Any CPU
+		{BAAB5549-1C6E-48A6-BF22-93E5B914200C}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{BAAB5549-1C6E-48A6-BF22-93E5B914200C}.Debug|x86.Build.0 = Debug|Any CPU
 		{BAAB5549-1C6E-48A6-BF22-93E5B914200C}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{BAAB5549-1C6E-48A6-BF22-93E5B914200C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{BAAB5549-1C6E-48A6-BF22-93E5B914200C}.Release|x64.ActiveCfg = Release|Any CPU
+		{BAAB5549-1C6E-48A6-BF22-93E5B914200C}.Release|x64.Build.0 = Release|Any CPU
+		{BAAB5549-1C6E-48A6-BF22-93E5B914200C}.Release|x86.ActiveCfg = Release|Any CPU
+		{BAAB5549-1C6E-48A6-BF22-93E5B914200C}.Release|x86.Build.0 = Release|Any CPU
+		{016304B7-A0A4-4F82-8AF6-EE540EB03331}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{016304B7-A0A4-4F82-8AF6-EE540EB03331}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{016304B7-A0A4-4F82-8AF6-EE540EB03331}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{016304B7-A0A4-4F82-8AF6-EE540EB03331}.Debug|x64.Build.0 = Debug|Any CPU
+		{016304B7-A0A4-4F82-8AF6-EE540EB03331}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{016304B7-A0A4-4F82-8AF6-EE540EB03331}.Debug|x86.Build.0 = Debug|Any CPU
+		{016304B7-A0A4-4F82-8AF6-EE540EB03331}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{016304B7-A0A4-4F82-8AF6-EE540EB03331}.Release|Any CPU.Build.0 = Release|Any CPU
+		{016304B7-A0A4-4F82-8AF6-EE540EB03331}.Release|x64.ActiveCfg = Release|Any CPU
+		{016304B7-A0A4-4F82-8AF6-EE540EB03331}.Release|x64.Build.0 = Release|Any CPU
+		{016304B7-A0A4-4F82-8AF6-EE540EB03331}.Release|x86.ActiveCfg = Release|Any CPU
+		{016304B7-A0A4-4F82-8AF6-EE540EB03331}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

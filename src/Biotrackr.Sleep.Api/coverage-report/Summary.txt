@@ -1,0 +1,36 @@
+Summary
+  Generated on: 31/10/2025 - 3:58:43 PM
+  Coverage date: 31/10/2025 - 3:58:31 PM
+  Parser: Cobertura
+  Assemblies: 1
+  Classes: 14
+  Files: 13
+  Line coverage: 87%
+  Covered lines: 215
+  Uncovered lines: 32
+  Coverable lines: 247
+  Total lines: 485
+  Branch coverage: 91.6% (22 of 24)
+  Covered branches: 22
+  Total branches: 24
+  Method coverage: 96.9% (63 of 65)
+  Full method coverage: 93.8% (61 of 65)
+  Covered methods: 63
+  Fully covered methods: 61
+  Total methods: 65
+
+Biotrackr.Sleep.Api                                                 87%
+  Biotrackr.Sleep.Api.Configuration.Settings                       100%
+  Biotrackr.Sleep.Api.EndpointHandlers.SleepHandlers               100%
+  Biotrackr.Sleep.Api.Extensions.EndpointRouteBuilderExtensions      0%
+  Biotrackr.Sleep.Api.Models.FitbitEntities.Levels                 100%
+  Biotrackr.Sleep.Api.Models.FitbitEntities.Sleep                  100%
+  Biotrackr.Sleep.Api.Models.FitbitEntities.SleepData              100%
+  Biotrackr.Sleep.Api.Models.FitbitEntities.SleepDetails           100%
+  Biotrackr.Sleep.Api.Models.FitbitEntities.SleepResponse          100%
+  Biotrackr.Sleep.Api.Models.FitbitEntities.Stages                 100%
+  Biotrackr.Sleep.Api.Models.FitbitEntities.Summary                100%
+  Biotrackr.Sleep.Api.Models.PaginationRequest                     100%
+  Biotrackr.Sleep.Api.Models.PaginationResponse<T>                 100%
+  Biotrackr.Sleep.Api.Models.SleepDocument                         100%
+  Biotrackr.Sleep.Api.Repositories.CosmosRepository               98.4%

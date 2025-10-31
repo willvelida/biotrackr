@@ -30,9 +30,9 @@ tests/
 .NET 9.0 (C#): Follow standard conventions
 
 ## Recent Changes
+- 006-sleep-api-tests: Added C# / .NET 9.0 + xUnit 2.9.3, FluentAssertions 8.4.0, Moq 4.20.72, AutoFixture 4.18.1, coverlet.collector 6.0.4, Microsoft.AspNetCore.Mvc.Testing 9.0.0
 - 005-activity-svc-tests: Added C# / .NET 9.0 + xUnit 2.9.3, FluentAssertions 8.4.0, Moq 4.20.72, AutoFixture 4.18.1, coverlet.collector 6.0.4, Microsoft.AspNetCore.Mvc.Testing 9.0.0
 - 004-activity-api-tests: Added .NET 9.0 (C#) + xUnit 2.9.3, FluentAssertions 8.4.0, Moq 4.20.72, AutoFixture 4.18.1, coverlet.collector 6.0.4, Microsoft.AspNetCore.Mvc.Testing 9.0.0
-- 003-weight-svc-integration-tests: Added C# / .NET 9.0
 
 
 <!-- MANUAL ADDITIONS START -->

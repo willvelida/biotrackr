@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 using Azure.Identity;
 using Biotrackr.Sleep.Api.Configuration;
 using Biotrackr.Sleep.Api.Extensions;
@@ -7,64 +8,77 @@ using Microsoft.Azure.Cosmos;
 using Microsoft.Extensions.Configuration.AzureAppConfiguration;
 using Microsoft.OpenApi.Models;
 
-var builder = WebApplication.CreateBuilder(args);
-
-builder.Configuration.AddEnvironmentVariables();
-var managedIdentityClientId = builder.Configuration.GetValue<string>("managedidentityclientid");
-var defaultCredentialOptions = new DefaultAzureCredentialOptions()
+[ExcludeFromCodeCoverage]
+public partial class Program
 {
-    ManagedIdentityClientId = managedIdentityClientId
-};
-
-builder.Configuration.AddAzureAppConfiguration(config =>
-{
-    config.Connect(new Uri(builder.Configuration.GetValue<string>("azureappconfigendpoint")),
-                   new ManagedIdentityCredential(managedIdentityClientId))
-        .Select(keyFilter: KeyFilter.Any, LabelFilter.Null);
-});
-
-builder.Services.Configure<Settings>(builder.Configuration.GetSection("Biotrackr"));
-
-var cosmosClientOptions = new CosmosClientOptions
-{
-    SerializerOptions = new CosmosSerializationOptions
+    private static void Main(string[] args)
     {
-        PropertyNamingPolicy = CosmosPropertyNamingPolicy.CamelCase
-    }
-};
-var cosmosClient = new CosmosClient(
-    builder.Configuration.GetValue<string>("cosmosdbendpoint"),
-    new DefaultAzureCredential(defaultCredentialOptions),
-    cosmosClientOptions);
-builder.Services.AddSingleton(cosmosClient);
-builder.Services.AddTransient<ICosmosRepository, CosmosRepository>();
+        var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen(options =>
-{
-    options.SwaggerDoc("v1", new OpenApiInfo
-    {
-        Version = "1.0.0",
-        Title = "Biotrackr Sleep API",
-        Description = "Web API for Sleep data",
-        Contact = new OpenApiContact
+        builder.Configuration.AddEnvironmentVariables();
+        var managedIdentityClientId = builder.Configuration.GetValue<string>("managedidentityclientid");
+        var azureAppConfigEndpoint = builder.Configuration.GetValue<string>("azureappconfigendpoint");
+
+        // Only load Azure App Configuration if endpoint is provided (not in test environment)
+        if (!string.IsNullOrWhiteSpace(azureAppConfigEndpoint))
         {
-            Name = "Biotrackr",
-            Url = new Uri("https://github.com/willvelida/biotrackr")
+            builder.Configuration.AddAzureAppConfiguration(config =>
+            {
+                config.Connect(new Uri(azureAppConfigEndpoint),
+                    new ManagedIdentityCredential(managedIdentityClientId))
+                .Select(KeyFilter.Any, LabelFilter.Null);
+            });
         }
-    });
-});
 
-builder.Services.AddHealthChecks();
+        var defaultCredentialOptions = new DefaultAzureCredentialOptions()
+        {
+            ManagedIdentityClientId = managedIdentityClientId
+        };
 
-var app = builder.Build();
+        builder.Services.Configure<Settings>(builder.Configuration.GetSection("Biotrackr"));
 
-app.UseSwagger();
-app.UseSwaggerUI();
+        var cosmosClientOptions = new CosmosClientOptions
+        {
+            SerializerOptions = new CosmosSerializationOptions
+            {
+                PropertyNamingPolicy = CosmosPropertyNamingPolicy.CamelCase
+            }
+        };
+        var cosmosClient = new CosmosClient(
+            builder.Configuration.GetValue<string>("cosmosdbendpoint"),
+            new DefaultAzureCredential(defaultCredentialOptions),
+            cosmosClientOptions);
+        builder.Services.AddSingleton(cosmosClient);
+        builder.Services.AddScoped<ICosmosRepository, CosmosRepository>();
 
-app.RegisterSleepEndpoints();
-app.RegisterHealthCheckEndpoints();
+        builder.Services.AddEndpointsApiExplorer();
+        builder.Services.AddSwaggerGen(options =>
+        {
+            options.SwaggerDoc("v1", new OpenApiInfo
+            {
+                Version = "1.0.0",
+                Title = "Biotrackr Sleep API",
+                Description = "Web API for Sleep data",
+                Contact = new OpenApiContact
+                {
+                    Name = "Biotrackr",
+                    Url = new Uri("https://github.com/willvelida/biotrackr")
+                }
+            });
+        });
 
-app.Run();
+        builder.Services.AddHealthChecks();
+
+        var app = builder.Build();
+
+        app.UseSwagger();
+        app.UseSwaggerUI();
+
+        app.RegisterSleepEndpoints();
+        app.RegisterHealthCheckEndpoints();
+
+        app.Run();
+    }
+}
 
 public partial class Program { }
