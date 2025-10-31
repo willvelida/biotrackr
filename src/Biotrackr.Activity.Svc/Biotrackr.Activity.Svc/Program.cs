@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 using Azure.Identity;
 using Azure.Monitor.OpenTelemetry.Exporter;
 using Azure.Security.KeyVault.Secrets;
@@ -13,16 +14,20 @@ using OpenTelemetry.Metrics;
 using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
 
-// Activity Service with comprehensive test coverage (100% unit + integration tests)
-var resourceAttributes = new Dictionary<string, object>
+[ExcludeFromCodeCoverage]
+internal class Program
 {
-    { "service.name", "Biotrackr.Activity.Svc" },
-    { "service.version", "1.0.0" }
-};
+    private static void Main(string[] args)
+    {
+        var resourceAttributes = new Dictionary<string, object>
+        {
+            { "service.name", "Biotrackr.Activity.Svc" },
+            { "service.version", "1.0.0" }
+        };
 
-var resourceBuilder = ResourceBuilder.CreateDefault().AddAttributes(resourceAttributes);
+        var resourceBuilder = ResourceBuilder.CreateDefault().AddAttributes(resourceAttributes);
 
-IHost host = Host.CreateDefaultBuilder(args)
+        IHost host = Host.CreateDefaultBuilder(args)
     .ConfigureAppConfiguration(config =>
     {
         config.AddEnvironmentVariables();
@@ -102,4 +107,7 @@ IHost host = Host.CreateDefaultBuilder(args)
     })
     .Build();
 
-host.Run();
+        host.Run();
+    }
+}
+
