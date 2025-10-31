@@ -12,6 +12,7 @@ permissions:
     contents: read
     id-token: write
     pull-requests: write
+    checks: write  # Required for dorny/test-reporter@v1
 
 env:
   DOTNET_VERSION: 9.0.x
@@ -37,12 +38,32 @@ jobs:
         uses: willvelida/biotrackr/.github/workflows/template-dotnet-run-unit-tests.yml@main
         with:
           dotnet-version: ${{ needs.env-setup.outputs.dotnet-version }}
-          working-directory: ./src/Biotrackr.Sleep.Svc
+          working-directory: ./src/Biotrackr.Sleep.Svc/Biotrackr.Sleep.Svc.UnitTests
           coverage-path: ${{ needs.env-setup.outputs.coverage-path }}
+
+    run-contract-tests:
+        name: Run Contract Tests
+        needs: env-setup
+        uses: willvelida/biotrackr/.github/workflows/template-dotnet-run-contract-tests.yml@main
+        with:
+          dotnet-version: ${{ needs.env-setup.outputs.dotnet-version }}
+          working-directory: ./src/Biotrackr.Sleep.Svc/Biotrackr.Sleep.Svc.IntegrationTests
+          coverage-path: ${{ needs.env-setup.outputs.coverage-path }}
+          test-filter: 'FullyQualifiedName~Contract'
+
+    run-e2e-tests:
+        name: Run E2E Tests
+        needs: [env-setup, run-contract-tests]
+        uses: willvelida/biotrackr/.github/workflows/template-dotnet-run-e2e-tests.yml@main
+        with:
+          dotnet-version: ${{ needs.env-setup.outputs.dotnet-version }}
+          working-directory: ./src/Biotrackr.Sleep.Svc/Biotrackr.Sleep.Svc.IntegrationTests
+          coverage-path: ${{ needs.env-setup.outputs.coverage-path }}
+          test-filter: 'FullyQualifiedName~E2E'
 
     build-container-image-dev:
         name: Build and Push Container Image
-        needs: run-unit-tests
+        needs: [run-unit-tests, run-contract-tests, run-e2e-tests]
         uses: willvelida/biotrackr/.github/workflows/template-acr-push-image.yml@main
         with:
           working-directory: ./src/Biotrackr.Sleep.Svc

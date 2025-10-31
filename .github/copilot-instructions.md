@@ -1,6 +1,6 @@
 # biotrackr Development Guidelines
 
-Auto-generated from all feature plans. Last updated: 2025-10-28
+Auto-generated from all feature plans. Last updated: 2025-10-31
 
 ## Active Technologies
 - Azure Cosmos DB (existing, no changes needed) (002-weight-svc-coverage)
@@ -10,7 +10,8 @@ Auto-generated from all feature plans. Last updated: 2025-10-28
 - Azure Cosmos DB (for integration tests), In-memory mocks (for unit tests) (004-activity-api-tests)
 - C# / .NET 9.0 + xUnit 2.9.3, FluentAssertions 8.4.0, Moq 4.20.72, AutoFixture 4.18.1, coverlet.collector 6.0.4, Microsoft.AspNetCore.Mvc.Testing 9.0.0 (005-activity-svc-tests)
 - Azure Cosmos DB (via Emulator in tests using mcr.microsoft.com/cosmosdb/linux/azure-cosmos-emulator:latest) (005-activity-svc-tests)
-
+- C# / .NET 9.0 + xUnit 2.9.3, FluentAssertions 8.4.0, Moq 4.20.72, AutoFixture 4.18.1, coverlet.collector 6.0.4, Microsoft.AspNetCore.Mvc.Testing 9.0.0 (007-sleep-svc-tests)
+- Azure Cosmos DB (via Emulator in tests using mcr.microsoft.com/cosmosdb/linux/azure-cosmos-emulator:latest) (007-sleep-svc-tests)
 - .NET 9.0 (C#) + xUnit 2.9.3, FluentAssertions 8.4.0, Moq 4.20.72, AutoFixture 4.18.1, coverlet.collector 6.0.4 (001-weight-api-tests)
 
 ## Project Structure
@@ -30,9 +31,9 @@ tests/
 .NET 9.0 (C#): Follow standard conventions
 
 ## Recent Changes
+- 007-sleep-svc-tests: Added C# / .NET 9.0 + xUnit 2.9.3, FluentAssertions 8.4.0, Moq 4.20.72, AutoFixture 4.18.1, coverlet.collector 6.0.4, Microsoft.AspNetCore.Mvc.Testing 9.0.0
 - 006-sleep-api-tests: Added C# / .NET 9.0 + xUnit 2.9.3, FluentAssertions 8.4.0, Moq 4.20.72, AutoFixture 4.18.1, coverlet.collector 6.0.4, Microsoft.AspNetCore.Mvc.Testing 9.0.0
 - 005-activity-svc-tests: Added C# / .NET 9.0 + xUnit 2.9.3, FluentAssertions 8.4.0, Moq 4.20.72, AutoFixture 4.18.1, coverlet.collector 6.0.4, Microsoft.AspNetCore.Mvc.Testing 9.0.0
-- 004-activity-api-tests: Added .NET 9.0 (C#) + xUnit 2.9.3, FluentAssertions 8.4.0, Moq 4.20.72, AutoFixture 4.18.1, coverlet.collector 6.0.4, Microsoft.AspNetCore.Mvc.Testing 9.0.0
 
 
 <!-- MANUAL ADDITIONS START -->
