@@ -2,6 +2,71 @@
 
 This document captures working solutions to recurring issues in the Biotrackr project.
 
+## E2E Test Issues
+
+### Issue: RuntimeBinderException When Using FluentAssertions with Dynamic Types
+
+**Symptoms**:
+- E2E tests pass locally but fail in CI/CD
+- Error: `RuntimeBinderException: 'Newtonsoft.Json.Linq.JObject' does not contain a definition for 'Should'`
+- Error occurs when calling FluentAssertions methods on `dynamic` types from Cosmos DB queries
+- Tests using `_fixture.Container.GetItemQueryIterator<dynamic>(query)` fail
+
+**Root Cause**:
+When using `dynamic` types in E2E tests, the C# runtime binder cannot resolve FluentAssertions extension methods in certain environments (especially CI/CD). The runtime tries to find the `Should()` method on the dynamic type itself rather than recognizing it as an extension method.
+
+**Solution**:
+Use strongly-typed models instead of `dynamic` when reading from Cosmos DB:
+
+**❌ Wrong** (fails in CI/CD):
+```csharp
+var iterator = _fixture.Container.GetItemQueryIterator<dynamic>(query);
+var documents = new List<dynamic>();
+while (iterator.HasMoreResults)
+{
+    var response = await iterator.ReadNextAsync();
+    documents.AddRange(response);
+}
+var savedDoc = documents.First();
+savedDoc.id.Should().Be(expected); // RuntimeBinderException!
+```
+
+**✅ Correct** (works everywhere):
+```csharp
+var iterator = _fixture.Container.GetItemQueryIterator<SleepDocument>(query);
+var documents = new List<SleepDocument>();
+while (iterator.HasMoreResults)
+{
+    var response = await iterator.ReadNextAsync();
+    documents.AddRange(response);
+}
+var savedDoc = documents.First();
+savedDoc.Id.Should().Be(expected); // Works!
+```
+
+**For ReadItemAsync**:
+```csharp
+// Wrong
+var readResponse = await _fixture.Container.ReadItemAsync<dynamic>(id, partitionKey);
+string readId = readResponse.Resource.id.ToString(); // Dynamic binding issues
+
+// Correct
+var readResponse = await _fixture.Container.ReadItemAsync<SleepDocument>(id, partitionKey);
+readResponse.Resource.Id.Should().Be(expected);
+```
+
+**Resolution History**:
+- Fixed in `Biotrackr.Sleep.Svc.IntegrationTests` E2E tests (commit dbc0085, 2025-11-03)
+- Changed `CosmosRepositoryTests` from `dynamic` to `SleepDocument`
+- Changed `SleepServiceTests` from `dynamic` to `SleepDocument`
+
+**Prevention**:
+- Always use strongly-typed models when querying Cosmos DB in E2E tests
+- Avoid `dynamic` types when using FluentAssertions
+- Only use `dynamic` for cleanup operations (ClearContainerAsync) where you need flexible document deletion
+
+---
+
 ## GitHub Actions Workflow Issues
 
 ### Issue: Test Reporter Action Failing with Permissions Error
