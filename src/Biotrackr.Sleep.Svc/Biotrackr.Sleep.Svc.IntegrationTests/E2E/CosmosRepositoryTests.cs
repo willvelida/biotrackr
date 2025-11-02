@@ -1,6 +1,7 @@
 using Biotrackr.Sleep.Svc.Configuration;
 using Biotrackr.Sleep.Svc.IntegrationTests.Fixtures;
 using Biotrackr.Sleep.Svc.IntegrationTests.Helpers;
+using Biotrackr.Sleep.Svc.Models;
 using Biotrackr.Sleep.Svc.Repositories;
 using FluentAssertions;
 using Microsoft.Azure.Cosmos;
@@ -74,8 +75,8 @@ namespace Biotrackr.Sleep.Svc.IntegrationTests.E2E
             var query = new QueryDefinition("SELECT * FROM c WHERE c.id = @id")
                 .WithParameter("@id", sleepDocument.Id);
 
-            var iterator = _fixture.Container.GetItemQueryIterator<dynamic>(query);
-            var documents = new List<dynamic>();
+            var iterator = _fixture.Container.GetItemQueryIterator<SleepDocument>(query);
+            var documents = new List<SleepDocument>();
 
             while (iterator.HasMoreResults)
             {
@@ -85,13 +86,10 @@ namespace Biotrackr.Sleep.Svc.IntegrationTests.E2E
 
             documents.Should().ContainSingle("exactly one document should be saved");
             var savedDoc = documents.First();
-            string savedId = savedDoc.id.ToString();
-            string savedDocType = savedDoc.documentType.ToString();
-            string savedDate = savedDoc.date.ToString();
             
-            savedId.Should().Be(sleepDocument.Id);
-            savedDocType.Should().Be("Sleep");
-            savedDate.Should().Be(sleepDocument.Date);
+            savedDoc.Id.Should().Be(sleepDocument.Id);
+            savedDoc.DocumentType.Should().Be("Sleep");
+            savedDoc.Date.Should().Be(sleepDocument.Date);
         }
 
         [Fact]
@@ -105,13 +103,13 @@ namespace Biotrackr.Sleep.Svc.IntegrationTests.E2E
             await _repository.CreateSleepDocument(sleepDocument);
 
             // Assert - Can read document using partition key
-            var readResponse = await _fixture.Container.ReadItemAsync<dynamic>(
+            var readResponse = await _fixture.Container.ReadItemAsync<SleepDocument>(
                 sleepDocument.Id,
                 new PartitionKey("Sleep"));
 
             readResponse.Resource.Should().NotBeNull();
-            string readId = readResponse.Resource.id.ToString();
-            readId.Should().Be(sleepDocument.Id);
+            readResponse.Resource.Id.Should().Be(sleepDocument.Id);
+            readResponse.Resource.DocumentType.Should().Be("Sleep");
         }
     }
 }

@@ -1,6 +1,7 @@
 using Biotrackr.Sleep.Svc.Configuration;
 using Biotrackr.Sleep.Svc.IntegrationTests.Fixtures;
 using Biotrackr.Sleep.Svc.IntegrationTests.Helpers;
+using Biotrackr.Sleep.Svc.Models;
 using Biotrackr.Sleep.Svc.Repositories;
 using Biotrackr.Sleep.Svc.Services;
 using FluentAssertions;
@@ -79,8 +80,8 @@ namespace Biotrackr.Sleep.Svc.IntegrationTests.E2E
             var query = new QueryDefinition("SELECT * FROM c WHERE c.date = @date")
                 .WithParameter("@date", date);
 
-            var iterator = _fixture.Container.GetItemQueryIterator<dynamic>(query);
-            var documents = new List<dynamic>();
+            var iterator = _fixture.Container.GetItemQueryIterator<SleepDocument>(query);
+            var documents = new List<SleepDocument>();
 
             while (iterator.HasMoreResults)
             {
@@ -91,17 +92,20 @@ namespace Biotrackr.Sleep.Svc.IntegrationTests.E2E
             documents.Should().ContainSingle("exactly one document should be saved");
             
             var savedDoc = documents.First();
-            string savedDate = savedDoc.date.ToString();
-            string savedDocType = savedDoc.documentType.ToString();
             
-            savedDate.Should().Be(date);
-            savedDocType.Should().Be("Sleep");
-            savedDoc.id.Should().NotBeNull("ID should be generated");
+            savedDoc.Date.Should().Be(date);
+            savedDoc.DocumentType.Should().Be("Sleep");
+            savedDoc.Id.Should().NotBeNullOrEmpty("ID should be generated");
             
             // Verify sleep data was mapped correctly
-            savedDoc.duration.Should().NotBeNull();
-            savedDoc.efficiency.Should().NotBeNull();
-            savedDoc.minutesAsleep.Should().NotBeNull();
+            savedDoc.Sleep.Should().NotBeNull();
+            savedDoc.Sleep.Sleep.Should().NotBeNullOrEmpty("sleep records should exist");
+            
+            var mainSleep = savedDoc.Sleep.Sleep.FirstOrDefault(s => s.IsMainSleep);
+            mainSleep.Should().NotBeNull("there should be a main sleep record");
+            mainSleep!.Duration.Should().BeGreaterThan(0);
+            mainSleep.Efficiency.Should().BeGreaterThan(0);
+            mainSleep.MinutesAsleep.Should().BeGreaterThan(0);
         }
     }
 }
