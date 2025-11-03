@@ -1,10 +1,16 @@
+using System.Diagnostics.CodeAnalysis;
 using Azure.Identity;
 using Azure.Security.KeyVault.Secrets;
 using Biotrackr.Auth.Svc;
 using Biotrackr.Auth.Svc.Services;
 using Biotrackr.Auth.Svc.Services.Interfaces;
 
-IHost host = Host.CreateDefaultBuilder(args)
+[ExcludeFromCodeCoverage]
+internal class Program
+{
+    private static void Main(string[] args)
+    {
+        IHost host = Host.CreateDefaultBuilder(args)
     .ConfigureAppConfiguration(config =>
     {
         config.AddEnvironmentVariables();
@@ -19,8 +25,6 @@ IHost host = Host.CreateDefaultBuilder(args)
 
         services.AddSingleton(new SecretClient(new Uri(keyVaultUrl), new DefaultAzureCredential(defaultCredentialOptions)));
 
-        services.AddScoped<IRefreshTokenService, RefreshTokenService>();
-
         services.AddHttpClient<IRefreshTokenService, RefreshTokenService>()
             .AddStandardResilienceHandler();
 
@@ -33,4 +37,6 @@ IHost host = Host.CreateDefaultBuilder(args)
     })
     .Build();
 
-host.Run();
+        host.Run();
+    }
+}

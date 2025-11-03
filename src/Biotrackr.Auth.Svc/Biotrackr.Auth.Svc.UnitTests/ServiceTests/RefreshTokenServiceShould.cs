@@ -276,6 +276,52 @@ namespace Biotrackr.Auth.Svc.UnitTests.ServiceTests
             await refreshTokenAction.Should().ThrowAsync<JsonException>();
         }
 
+        [Fact]
+        public async Task ThrowHttpRequestExceptionWhen429TooManyRequests()
+        {
+            // ARRANGE
+            var mockFitbitRefreshToken = "testFitbitRefreshToken";
+            var mockFitbitCredential = "testFitbitCredential";
+
+            SetupSecretClientMocks(mockFitbitRefreshToken, mockFitbitCredential);
+
+            _mockHttpMessageHandler.Protected()
+                .Setup<Task<HttpResponseMessage>>("SendAsync", ItExpr.IsAny<HttpRequestMessage>(), ItExpr.IsAny<CancellationToken>())
+                .ReturnsAsync(new HttpResponseMessage
+                {
+                    StatusCode = (HttpStatusCode)429,
+                    Content = new StringContent("Too Many Requests")
+                });
+
+            // ACT
+            Func<Task> refreshTokenAction = async () => await _sut.RefreshTokens();
+
+            // ASSERT
+            await refreshTokenAction.Should().ThrowAsync<HttpRequestException>();
+            _mockLogger.VerifyLog(l => l.LogError(It.IsAny<Exception>(), $"Exception thrown in {nameof(RefreshTokenService.RefreshTokens)}"), Times.Once);
+        }
+
+        [Fact]
+        public async Task ThrowTaskCanceledExceptionWhenNetworkTimeout()
+        {
+            // ARRANGE
+            var mockFitbitRefreshToken = "testFitbitRefreshToken";
+            var mockFitbitCredential = "testFitbitCredential";
+
+            SetupSecretClientMocks(mockFitbitRefreshToken, mockFitbitCredential);
+
+            _mockHttpMessageHandler.Protected()
+                .Setup<Task<HttpResponseMessage>>("SendAsync", ItExpr.IsAny<HttpRequestMessage>(), ItExpr.IsAny<CancellationToken>())
+                .ThrowsAsync(new TaskCanceledException("The request was canceled due to the configured HttpClient.Timeout"));
+
+            // ACT
+            Func<Task> refreshTokenAction = async () => await _sut.RefreshTokens();
+
+            // ASSERT
+            await refreshTokenAction.Should().ThrowAsync<TaskCanceledException>();
+            _mockLogger.VerifyLog(l => l.LogError(It.IsAny<Exception>(), $"Exception thrown in {nameof(RefreshTokenService.RefreshTokens)}"), Times.Once);
+        }
+
         private void SetupSecretClientMocks(string mockFitbitRefreshToken, string mockFitbitCredential)
         {
             _mockSecretClient.Setup(x => x.GetSecretAsync(RefreshTokenSecretName, null, It.IsAny<CancellationToken>()))
