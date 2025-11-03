@@ -102,7 +102,7 @@ jobs:
                 tenantid: ${{ secrets.tenant-id }}
 
             - name: Upload Test Results
-              uses: actions/upload-artifact@v4
+              uses: actions/upload-artifact@v5
               if: always()
               with:
                 name: e2e-test-results-${{ github.run_number }}
