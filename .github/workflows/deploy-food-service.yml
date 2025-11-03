@@ -12,6 +12,7 @@ permissions:
     contents: read
     id-token: write
     pull-requests: write
+    checks: write  # Required for dorny/test-reporter@v1
 
 env:
   DOTNET_VERSION: 9.0.x
@@ -37,12 +38,35 @@ jobs:
         uses: willvelida/biotrackr/.github/workflows/template-dotnet-run-unit-tests.yml@main
         with:
           dotnet-version: ${{ needs.env-setup.outputs.dotnet-version }}
-          working-directory: ./src/Biotrackr.Food.Svc
-          coverage-path: ${{ needs.env-setup.outputs.coverage-path }}
+          working-directory: ./src/Biotrackr.Food.Svc/Biotrackr.Food.Svc.UnitTests
+          coverage-threshold: 70
+          fail-below-threshold: false
+
+    run-contract-tests:
+        name: Run Contract Tests
+        needs: env-setup
+        uses: willvelida/biotrackr/.github/workflows/template-dotnet-run-contract-tests.yml@main
+        with:
+          dotnet-version: ${{ needs.env-setup.outputs.dotnet-version }}
+          working-directory: ./src/Biotrackr.Food.Svc/Biotrackr.Food.Svc.IntegrationTests
+          test-filter: 'FullyQualifiedName~Contract'
+
+    run-e2e-tests:
+        name: Run E2E Tests
+        needs: [env-setup, run-contract-tests]
+        uses: willvelida/biotrackr/.github/workflows/template-dotnet-run-e2e-tests.yml@main
+        with:
+          dotnet-version: ${{ needs.env-setup.outputs.dotnet-version }}
+          working-directory: ./src/Biotrackr.Food.Svc/Biotrackr.Food.Svc.IntegrationTests
+          test-filter: 'FullyQualifiedName~E2E'
+        secrets:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
     build-container-image-dev:
         name: Build and Push Container Image
-        needs: run-unit-tests
+        needs: [run-unit-tests, run-contract-tests, run-e2e-tests]
         uses: willvelida/biotrackr/.github/workflows/template-acr-push-image.yml@main
         with:
           working-directory: ./src/Biotrackr.Food.Svc

@@ -32,9 +32,9 @@ tests/
 .NET 9.0 (C#): Follow standard conventions
 
 ## Recent Changes
+- 009-food-svc-tests: Added C# / .NET 9.0 + xUnit 2.9.3, FluentAssertions 8.4.0, Moq 4.20.72, AutoFixture 4.18.1, coverlet.collector 6.0.4, Microsoft.AspNetCore.Mvc.Testing 9.0.0
 - 008-auth-svc-tests: Added complete test coverage (97.5%) with unit, contract, and E2E tests for Auth Service
 - 007-sleep-svc-tests: Added C# / .NET 9.0 + xUnit 2.9.3, FluentAssertions 8.4.0, Moq 4.20.72, AutoFixture 4.18.1, coverlet.collector 6.0.4, Microsoft.AspNetCore.Mvc.Testing 9.0.0
-- 006-sleep-api-tests: Added C# / .NET 9.0 + xUnit 2.9.3, FluentAssertions 8.4.0, Moq 4.20.72, AutoFixture 4.18.1, coverlet.collector 6.0.4, Microsoft.AspNetCore.Mvc.Testing 9.0.0
 
 
 <!-- MANUAL ADDITIONS START -->
