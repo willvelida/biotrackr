@@ -50,15 +50,42 @@ jobs:
   run-e2e-tests:
       name: Run E2E Tests
       needs: [env-setup, run-contract-tests]
-      uses: willvelida/biotrackr/.github/workflows/template-dotnet-run-e2e-tests.yml@main
-      with:
-        dotnet-version: ${{ needs.env-setup.outputs.dotnet-version }}
-        working-directory: ./src/Biotrackr.Auth.Svc/Biotrackr.Auth.Svc.IntegrationTests
-        test-filter: 'FullyQualifiedName~E2E'
-      secrets:
-        client-id: ${{ secrets.AZURE_CLIENT_ID }}
-        tenant-id: ${{ secrets.AZURE_TENANT_ID }}
-        subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+      runs-on: ubuntu-latest
+      defaults:
+        run:
+          working-directory: ./src/Biotrackr.Auth.Svc/Biotrackr.Auth.Svc.IntegrationTests
+      steps:
+        - name: Checkout Repository code
+          uses: actions/checkout@v4
+
+        - name: Setup .NET ${{ needs.env-setup.outputs.dotnet-version }}
+          uses: actions/setup-dotnet@v4
+          with:
+            dotnet-version: ${{ needs.env-setup.outputs.dotnet-version }}
+        
+        - name: Install dependencies
+          run: dotnet restore
+
+        - name: Build
+          run: dotnet build --no-restore --verbosity normal
+
+        - name: Run E2E tests
+          run: |
+            dotnet test \
+              --no-build \
+              --verbosity normal \
+              --filter "FullyQualifiedName~E2E" \
+              --logger "trx;LogFileName=e2e-test-results.trx" \
+              --results-directory ./TestResults
+
+        - name: Publish Test Results
+          uses: dorny/test-reporter@v1
+          if: always()
+          with:
+            name: E2E Test Results
+            path: ./src/Biotrackr.Auth.Svc/Biotrackr.Auth.Svc.IntegrationTests/TestResults/*.trx
+            reporter: dotnet-trx
+            fail-on-error: true
 
   build-container-image-dev:
       name: Build and Push Container Image
