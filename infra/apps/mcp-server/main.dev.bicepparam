@@ -1,0 +1,17 @@
+using 'main.bicep'
+
+param name = 'biotrackr-mcp-server-dev'
+param imageName = 'mcr.microsoft.com/k8se/quickstart:latest'
+param location = 'australiaeast'
+param tags = {
+  ApplicationName: 'Biotrackr'
+  Component: 'MCP-Server'
+  Environment: 'Dev'
+}
+param containerAppEnvironmentName = 'env-biotrackr-dev'
+param containerRegistryName = 'acrbiotrackrdev'
+param uaiName = 'uai-biotrackr-dev'
+param appConfigName = 'config-biotrackr-dev'
+param apimName = 'api-biotrackr-dev'
+param enableManagedIdentityAuth = true
+param tenantId = ''

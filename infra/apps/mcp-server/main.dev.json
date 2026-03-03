@@ -1,0 +1,43 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "name": {
+      "value": "biotrackr-mcp-server-dev"
+    },
+    "imageName": {
+      "value": "mcr.microsoft.com/k8se/quickstart:latest"
+    },
+    "location": {
+      "value": "australiaeast"
+    },
+    "tags": {
+      "value": {
+        "ApplicationName": "Biotrackr",
+        "Component": "MCP-Server",
+        "Environment": "Dev"
+      }
+    },
+    "containerAppEnvironmentName": {
+      "value": "env-biotrackr-dev"
+    },
+    "containerRegistryName": {
+      "value": "acrbiotrackrdev"
+    },
+    "uaiName": {
+      "value": "uai-biotrackr-dev"
+    },
+    "appConfigName": {
+      "value": "config-biotrackr-dev"
+    },
+    "apimName": {
+      "value": "api-biotrackr-dev"
+    },
+    "enableManagedIdentityAuth": {
+      "value": true
+    },
+    "tenantId": {
+      "value": ""
+    }
+  }
+}
