@@ -15,6 +15,10 @@ on:
             scope:
                 required: true
                 type: string
+            inject-tenant-id:
+                required: false
+                type: boolean
+                default: false
             environment:
                 required: true
                 type: string
@@ -44,16 +48,18 @@ jobs:
             tenant-id: ${{ secrets.tenant-id }}
             subscription-id: ${{ secrets.subscription-id }}
 
-        - name: Prepare Parameters with Tenant ID
+        - name: Prepare Parameters
           id: prepare-params
           shell: bash
           run: |
-            if [ -n "${{ inputs.parameters }}" ]; then
-              # Merge user parameters with tenantId
-              PARAMS=$(echo '${{ inputs.parameters }}' | jq -c '. + {"tenantId": "${{ secrets.tenant-id }}"}')
+            if [ "${{ inputs.inject-tenant-id }}" = "true" ]; then
+              if [ -n "${{ inputs.parameters }}" ]; then
+                PARAMS=$(echo '${{ inputs.parameters }}' | jq -c '. + {"tenantId": "${{ secrets.tenant-id }}"}')
+              else
+                PARAMS='{"tenantId": "${{ secrets.tenant-id }}"}'
+              fi
             else
-              # Only tenantId
-              PARAMS='{"tenantId": "${{ secrets.tenant-id }}"}'
+              PARAMS='${{ inputs.parameters }}'
             fi
             echo "params=$PARAMS" >> "$GITHUB_OUTPUT"
 
