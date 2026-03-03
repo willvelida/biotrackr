@@ -25,6 +25,7 @@ The application follows a **microservices architecture** with separate services 
 - **Weight Service**: Handles weight measurements and trends
 - **Food Service**: Tracks nutrition and food logging data from Fitbit
 - **Auth Service**: Manages authentication and authorization with Fitbit API
+- **MCP Server**: [Model Context Protocol](https://modelcontextprotocol.io/) server exposing all health data as MCP tools for AI assistants
 
 Each service consists of:
 - **API Layer**: RESTful endpoints for data access
@@ -39,13 +40,14 @@ Each service consists of:
 - 🍎 **Food Logging**: Nutrition tracking and food diary management
 - 🔐 **Secure Authentication**: OAuth integration with Fitbit
 - 📊 **Data Insights**: Analysis and reporting on health metrics
+- 🤖 **MCP Integration**: AI-ready via Model Context Protocol server with 12 tools across all health domains
 - ☁️ **Cloud-Native**: Fully deployed on Azure with auto-scaling
 - 🚀 **CI/CD**: Automated testing, deployment, and infrastructure management
 
 ## 🛠️ Tech Stack
 
 ### Backend
-- **.NET 9.0**: Modern C# microservices
+- **.NET 9.0 / 10.0**: Modern C# microservices
 - **Azure Functions**: Serverless compute for background processing
 - **Azure Cosmos DB**: NoSQL database for scalable data storage
 - **Azure App Configuration**: Centralized configuration management
@@ -56,6 +58,7 @@ Each service consists of:
 - **GitHub Actions**: CI/CD pipelines and workflow automation
 - **Docker**: Containerization for consistent environments
 - **Azure API Management**: API gateway with JWT validation for secure managed identity authentication
+- **ModelContextProtocol SDK**: MCP server with Streamable HTTP transport
 
 ### Testing
 - **xUnit**: Unit and integration testing framework
@@ -127,6 +130,7 @@ For more detailed setup instructions, see the [Cosmos DB Emulator Setup Guide](d
 | **Weight Service** | [![Deploy Weight Service](https://github.com/willvelida/biotrackr/actions/workflows/deploy-weight-service.yml/badge.svg)](https://github.com/willvelida/biotrackr/actions/workflows/deploy-weight-service.yml) | ![Code Coverage](https://img.shields.io/badge/Code%20Coverage-100%25-brightgreen?style=flat) | ![Integration Tests](https://img.shields.io/badge/Tests-4%20Passing-brightgreen?style=flat) |
 | **Food API** | [![Deploy Food Api](https://github.com/willvelida/biotrackr/actions/workflows/deploy-food-api.yml/badge.svg)](https://github.com/willvelida/biotrackr/actions/workflows/deploy-food-api.yml) | ![Code Coverage](https://img.shields.io/badge/Code%20Coverage-70%25-yellow?style=flat) | ![Integration Tests](https://img.shields.io/badge/Tests-26%20Passing-brightgreen?style=flat) |
 | **Food Service** | [![Deploy Food Service](https://github.com/willvelida/biotrackr/actions/workflows/deploy-food-service.yml/badge.svg)](https://github.com/willvelida/biotrackr/actions/workflows/deploy-food-service.yml) | ![Code Coverage](https://img.shields.io/badge/Code%20Coverage-100%25-brightgreen?style=flat) | ![Integration Tests](https://img.shields.io/badge/Tests-14%20Passing-brightgreen?style=flat) |
+| **MCP Server** | [![Deploy MCP Server](https://github.com/willvelida/biotrackr/actions/workflows/deploy-mcp-server.yml/badge.svg)](https://github.com/willvelida/biotrackr/actions/workflows/deploy-mcp-server.yml) | ![Code Coverage](https://img.shields.io/badge/Code%20Coverage-106%20Tests-brightgreen?style=flat) | ![Integration Tests](https://img.shields.io/badge/Tests-13%20Passing-brightgreen?style=flat) |
 
 ## 📚 Documentation
 

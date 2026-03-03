@@ -1,0 +1,14 @@
+{
+  "inputs": [],
+  "servers": {
+    "biotrackr": {
+      "type": "stdio",
+      "command": "dotnet",
+      "args": [
+        "run",
+        "--project"
+      ],
+      "env": {}
+    }
+  }
+}
