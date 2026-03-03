@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 using System.Threading.RateLimiting;
 using Azure.Identity;
 using Biotrackr.Mcp.Server.Configuration;
@@ -106,4 +107,5 @@ app.MapMcp();
 
 app.Run();
 
+[ExcludeFromCodeCoverage]
 public partial class Program { }
