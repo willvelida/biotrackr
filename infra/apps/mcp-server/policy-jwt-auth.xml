@@ -19,7 +19,6 @@
     </choose>
   </inbound>
   <backend>
-    <base />
     <forward-request timeout="120" buffer-response="false" />
   </backend>
   <outbound>
