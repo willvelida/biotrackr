@@ -32,7 +32,7 @@ jobs:
     run-unit-tests:
           name: Run Unit Tests with Coverage
           needs: env-setup
-          uses: willvelida/biotrackr/.github/workflows/template-dotnet-run-unit-tests.yml@013-apim-managed-identity
+          uses: willvelida/biotrackr/.github/workflows/template-dotnet-run-unit-tests.yml@main
           with:
             dotnet-version: ${{ needs.env-setup.outputs.dotnet-version }}
             working-directory: ./src/Biotrackr.Activity.Api/Biotrackr.Activity.Api.UnitTests
@@ -42,7 +42,7 @@ jobs:
     run-contract-tests:
           name: Run API Contract Tests
           needs: env-setup
-          uses: willvelida/biotrackr/.github/workflows/template-dotnet-run-contract-tests.yml@013-apim-managed-identity
+          uses: willvelida/biotrackr/.github/workflows/template-dotnet-run-contract-tests.yml@main
           with:
             dotnet-version: ${{ needs.env-setup.outputs.dotnet-version }}
             working-directory: ./src/Biotrackr.Activity.Api/Biotrackr.Activity.Api.IntegrationTests
@@ -51,7 +51,7 @@ jobs:
     build-container-image-dev:
           name: Build and Push Container Image
           needs: [run-unit-tests, run-contract-tests]
-          uses: willvelida/biotrackr/.github/workflows/template-acr-push-image.yml@013-apim-managed-identity
+          uses: willvelida/biotrackr/.github/workflows/template-acr-push-image.yml@main
           with:
             working-directory: ./src/Biotrackr.Activity.Api
             app-name: biotrackr-activity-api
@@ -84,14 +84,14 @@ jobs:
     lint:
         name: Run Bicep Linter
         needs: retrieve-container-image-dev
-        uses: willvelida/biotrackr/.github/workflows/template-bicep-linter.yml@013-apim-managed-identity
+        uses: willvelida/biotrackr/.github/workflows/template-bicep-linter.yml@main
         with:
             template-file: './infra/apps/activity-api/main.bicep'
 
     validate:
         name: Validate Template
         needs: [lint, retrieve-container-image-dev]
-        uses: willvelida/biotrackr/.github/workflows/template-bicep-validate.yml@013-apim-managed-identity
+        uses: willvelida/biotrackr/.github/workflows/template-bicep-validate.yml@main
         with:
           template-file: './infra/apps/activity-api/main.bicep'
           parameters-file: ./infra/apps/activity-api/main.dev.bicepparam 
@@ -106,7 +106,7 @@ jobs:
     preview:
         name: Preview Changes
         needs: [validate, retrieve-container-image-dev]
-        uses: willvelida/biotrackr/.github/workflows/template-bicep-whatif.yml@013-apim-managed-identity
+        uses: willvelida/biotrackr/.github/workflows/template-bicep-whatif.yml@main
         with:
           scope: resourceGroup
           template-file: './infra/apps/activity-api/main.bicep'
@@ -121,7 +121,7 @@ jobs:
     deploy-dev:
         name: Deploy Template to Dev
         needs: [preview, retrieve-container-image-dev]
-        uses: willvelida/biotrackr/.github/workflows/template-bicep-deploy.yml@013-apim-managed-identity
+        uses: willvelida/biotrackr/.github/workflows/template-bicep-deploy.yml@main
         with:
           template-file: './infra/apps/activity-api/main.bicep'
           parameters-file: ./infra/apps/activity-api/main.dev.bicepparam
@@ -137,7 +137,7 @@ jobs:
     run-e2e-tests:
         name: Run E2E Tests Against Dev
         needs: [deploy-dev, env-setup]
-        uses: willvelida/biotrackr/.github/workflows/template-dotnet-run-e2e-tests.yml@013-apim-managed-identity
+        uses: willvelida/biotrackr/.github/workflows/template-dotnet-run-e2e-tests.yml@main
         with:
           dotnet-version: ${{ needs.env-setup.outputs.dotnet-version }}
           working-directory: ./src/Biotrackr.Activity.Api/Biotrackr.Activity.Api.IntegrationTests

@@ -30,7 +30,7 @@ jobs:
           working-directory: ${{ inputs.working-directory }}
       steps:
         - name: Checkout code
-          uses: actions/checkout@v4
+          uses: actions/checkout@v5
   
         - name: Azure login
           uses: azure/login@v2

@@ -13,7 +13,7 @@ permissions:
     contents: read
     id-token: write
     pull-requests: write
-    checks: write  # Required for dorny/test-reporter@v1
+    checks: write  # Required for dorny/test-reporter@v2
 
 env:
   DOTNET_VERSION: 9.0.x
