@@ -48,6 +48,8 @@ resource apim 'Microsoft.ApiManagement/service@2024-06-01-preview' existing = {
 
 var apiProductName = 'MCP-Server'
 var mcpServerEndpointConfigName = 'Biotrackr:McpServerUrl'
+var biotrackrApiEndpointConfigName = 'biotrackrapiendpoint'
+var biotrackrApiSubscriptionKeyConfigName = 'biotrackrapisubscriptionkey'
 
 module mcpServer '../../modules/host/container-app-http.bicep' = {
   name: 'mcp-server'
@@ -183,5 +185,31 @@ resource mcpServerEndpointSetting 'Microsoft.AppConfiguration/configurationStore
   parent: appConfig
   properties: {
     value: '${apim.properties.gatewayUrl}/mcp'
+  }
+}
+
+resource mcpServerApimSubscription 'Microsoft.ApiManagement/service/subscriptions@2024-06-01-preview' = {
+  name: 'mcp-server-internal'
+  parent: apim
+  properties: {
+    displayName: 'MCP Server Internal Subscription'
+    scope: '${apim.id}/apis'
+    state: 'active'
+  }
+}
+
+resource biotrackrApiEndpointSetting 'Microsoft.AppConfiguration/configurationStores/keyValues@2025-02-01-preview' = {
+  name: biotrackrApiEndpointConfigName
+  parent: appConfig
+  properties: {
+    value: apim.properties.gatewayUrl
+  }
+}
+
+resource biotrackrApiSubscriptionKeySetting 'Microsoft.AppConfiguration/configurationStores/keyValues@2025-02-01-preview' = {
+  name: biotrackrApiSubscriptionKeyConfigName
+  parent: appConfig
+  properties: {
+    value: mcpServerApimSubscription.listSecrets().primaryKey
   }
 }
