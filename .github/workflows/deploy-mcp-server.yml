@@ -51,7 +51,7 @@ jobs:
     build-container-image-dev:
           name: Build and Push Container Image
           needs: [run-unit-tests, run-integration-tests]
-          uses: willvelida/biotrackr/.github/workflows/template-acr-push-image.yml@feature/add-mcp-server
+          uses: willvelida/biotrackr/.github/workflows/template-acr-push-image.yml@main
           with:
             working-directory: ./src/Biotrackr.Mcp.Server
             app-name: biotrackr-mcp-server

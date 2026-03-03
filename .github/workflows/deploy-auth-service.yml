@@ -56,10 +56,10 @@ jobs:
           working-directory: ./src/Biotrackr.Auth.Svc/Biotrackr.Auth.Svc.IntegrationTests
       steps:
         - name: Checkout Repository code
-          uses: actions/checkout@v4
+          uses: actions/checkout@v5
 
         - name: Setup .NET ${{ needs.env-setup.outputs.dotnet-version }}
-          uses: actions/setup-dotnet@v4
+          uses: actions/setup-dotnet@v5
           with:
             dotnet-version: ${{ needs.env-setup.outputs.dotnet-version }}
         
@@ -79,7 +79,7 @@ jobs:
               --results-directory ./TestResults
 
         - name: Publish Test Results
-          uses: dorny/test-reporter@v1
+          uses: dorny/test-reporter@v2
           if: always()
           with:
             name: E2E Test Results
