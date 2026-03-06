@@ -1,0 +1,203 @@
+@page "/food"
+@rendermode InteractiveServer
+@inject IBiotrackrApiService ApiService
+
+<PageTitle>Biotrackr - Food</PageTitle>
+
+<h1>Food</h1>
+
+<DatePicker SelectedDate="@_selectedDate" StartDate="@_startDate" EndDate="@_endDate" Mode="@_mode"
+            OnSingleDateSelected="LoadByDate" OnDateRangeSelected="LoadByRange" />
+
+<LoadingSpinner IsLoading="@_isLoading" Message="Loading food data..." />
+<ErrorDisplay Message="@_errorMessage" />
+
+@if (!_isLoading && _singleItem is not null && _mode == "date")
+{
+    <div class="row g-3 mb-4">
+        <div class="col-md-2 col-sm-4 col-6">
+            <SummaryCard Title="Calories" Value="@(((int)_singleItem.Food.Summary.Calories).ToString("N0"))" Subtitle="@GetCalorieGoalText()" />
+        </div>
+        <div class="col-md-2 col-sm-4 col-6">
+            <SummaryCard Title="Protein" Value="@($"{_singleItem.Food.Summary.Protein:F1}g")" />
+        </div>
+        <div class="col-md-2 col-sm-4 col-6">
+            <SummaryCard Title="Carbs" Value="@($"{_singleItem.Food.Summary.Carbs:F1}g")" />
+        </div>
+        <div class="col-md-2 col-sm-4 col-6">
+            <SummaryCard Title="Fat" Value="@($"{_singleItem.Food.Summary.Fat:F1}g")" />
+        </div>
+        <div class="col-md-2 col-sm-4 col-6">
+            <SummaryCard Title="Fiber" Value="@($"{_singleItem.Food.Summary.Fiber:F1}g")" />
+        </div>
+        <div class="col-md-2 col-sm-4 col-6">
+            <SummaryCard Title="Water" Value="@($"{_singleItem.Food.Summary.Water:F0} ml")" />
+        </div>
+    </div>
+
+    @if (_singleItem.Food.Foods.Any())
+    {
+        <div class="card mb-4">
+            <div class="card-header"><strong>Food Log</strong></div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-sm mb-0">
+                        <thead>
+                            <tr>
+                                <th>Food</th>
+                                <th>Brand</th>
+                                <th>Calories</th>
+                                <th>Protein</th>
+                                <th>Carbs</th>
+                                <th>Fat</th>
+                                <th>Amount</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var entry in _singleItem.Food.Foods)
+                            {
+                                <tr>
+                                    <td>@entry.LoggedFood.Name</td>
+                                    <td>@(string.IsNullOrEmpty(entry.LoggedFood.Brand) ? "--" : entry.LoggedFood.Brand)</td>
+                                    <td>@entry.NutritionalValues.Calories.ToString("F0")</td>
+                                    <td>@entry.NutritionalValues.Protein.ToString("F1")g</td>
+                                    <td>@entry.NutritionalValues.Carbs.ToString("F1")g</td>
+                                    <td>@entry.NutritionalValues.Fat.ToString("F1")g</td>
+                                    <td>@entry.LoggedFood.Amount @entry.LoggedFood.Unit.Name</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    }
+}
+
+@if (!_isLoading && _rangeItems is not null && _mode == "range")
+{
+    <div class="card mb-4">
+        <div class="card-header"><strong>Food Records</strong></div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-sm table-hover mb-0">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Calories</th>
+                            <th>Protein</th>
+                            <th>Carbs</th>
+                            <th>Fat</th>
+                            <th>Fiber</th>
+                            <th>Items</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in _rangeItems.Items)
+                        {
+                            <tr>
+                                <td>@item.Date</td>
+                                <td>@(((int)item.Food.Summary.Calories).ToString("N0"))</td>
+                                <td>@item.Food.Summary.Protein.ToString("F1")g</td>
+                                <td>@item.Food.Summary.Carbs.ToString("F1")g</td>
+                                <td>@item.Food.Summary.Fat.ToString("F1")g</td>
+                                <td>@item.Food.Summary.Fiber.ToString("F1")g</td>
+                                <td>@item.Food.Foods.Count</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <PaginationControls PageNumber="@_rangeItems.PageNumber" TotalPages="@_rangeItems.TotalPages"
+                        TotalCount="@_rangeItems.TotalCount" HasPreviousPage="@_rangeItems.HasPreviousPage"
+                        HasNextPage="@_rangeItems.HasNextPage" OnPageChanged="OnPageChanged" />
+}
+
+@if (!_isLoading && _singleItem is null && _mode == "date" && _errorMessage is null)
+{
+    <div class="alert alert-info">No food data found for @_selectedDate.</div>
+}
+
+@code {
+    private bool _isLoading = true;
+    private string? _errorMessage;
+    private string _mode = "date";
+    private string _selectedDate = DateOnly.FromDateTime(DateTime.Today.AddDays(-1)).ToString("yyyy-MM-dd");
+    private string _startDate = DateOnly.FromDateTime(DateTime.Today.AddDays(-8)).ToString("yyyy-MM-dd");
+    private string _endDate = DateOnly.FromDateTime(DateTime.Today.AddDays(-1)).ToString("yyyy-MM-dd");
+    private int _currentPage = 1;
+
+    private FoodItem? _singleItem;
+    private PaginatedResponse<FoodItem>? _rangeItems;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadByDate(_selectedDate);
+    }
+
+    private async Task LoadByDate(string date)
+    {
+        _mode = "date";
+        _selectedDate = date;
+        _isLoading = true;
+        _errorMessage = null;
+        _singleItem = null;
+
+        try
+        {
+            _singleItem = await ApiService.GetFoodLogByDateAsync(date);
+        }
+        catch (Exception)
+        {
+            _errorMessage = "Failed to load food data. Please try again.";
+        }
+        finally
+        {
+            _isLoading = false;
+        }
+    }
+
+    private async Task LoadByRange((string StartDate, string EndDate) range)
+    {
+        _mode = "range";
+        _startDate = range.StartDate;
+        _endDate = range.EndDate;
+        _currentPage = 1;
+        await LoadRangePage();
+    }
+
+    private async Task OnPageChanged(int page)
+    {
+        _currentPage = page;
+        await LoadRangePage();
+    }
+
+    private async Task LoadRangePage()
+    {
+        _isLoading = true;
+        _errorMessage = null;
+
+        try
+        {
+            _rangeItems = await ApiService.GetFoodLogsByDateRangeAsync(_startDate, _endDate, _currentPage);
+        }
+        catch (Exception)
+        {
+            _errorMessage = "Failed to load food data. Please try again.";
+        }
+        finally
+        {
+            _isLoading = false;
+        }
+    }
+
+    private string GetCalorieGoalText()
+    {
+        if (_singleItem?.Food.Goals is null || _singleItem.Food.Goals.Calories == 0) return "";
+        var pct = _singleItem.Food.Summary.Calories / _singleItem.Food.Goals.Calories * 100;
+        return $"{pct:F0}% of {_singleItem.Food.Goals.Calories:N0} goal";
+    }
+}

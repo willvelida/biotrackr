@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="Biotrackr.UI.UnitTests/Biotrackr.UI.UnitTests.csproj" />
+  <Project Path="Biotrackr.UI/Biotrackr.UI.csproj" />
+</Solution>

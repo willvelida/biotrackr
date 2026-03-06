@@ -1,0 +1,28 @@
+<div class="card summary-card h-100 @CardClass">
+    <div class="card-body text-center">
+        <div class="card-icon mb-2">@IconContent</div>
+        <h6 class="card-subtitle text-muted">@Title</h6>
+        <h3 class="card-title mb-0">@Value</h3>
+        @if (!string.IsNullOrEmpty(Subtitle))
+        {
+            <small class="text-muted">@Subtitle</small>
+        }
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public string Title { get; set; } = string.Empty;
+
+    [Parameter]
+    public string Value { get; set; } = "--";
+
+    [Parameter]
+    public string? Subtitle { get; set; }
+
+    [Parameter]
+    public string CardClass { get; set; } = string.Empty;
+
+    [Parameter]
+    public RenderFragment? IconContent { get; set; }
+}

@@ -1,0 +1,168 @@
+@page "/weight"
+@rendermode InteractiveServer
+@inject IBiotrackrApiService ApiService
+
+<PageTitle>Biotrackr - Weight</PageTitle>
+
+<h1>Weight</h1>
+
+<DatePicker SelectedDate="@_selectedDate" StartDate="@_startDate" EndDate="@_endDate" Mode="@_mode"
+            OnSingleDateSelected="LoadByDate" OnDateRangeSelected="LoadByRange" />
+
+<LoadingSpinner IsLoading="@_isLoading" Message="Loading weight data..." />
+<ErrorDisplay Message="@_errorMessage" />
+
+@if (!_isLoading && _singleItem is not null && _mode == "date")
+{
+    @if (_singleItem.Weight.Weight > 0)
+    {
+        <div class="row g-3 mb-4">
+            <div class="col-md-3 col-sm-6">
+                <SummaryCard Title="Weight" Value="@($"{_singleItem.Weight.Weight:F1} kg")" />
+            </div>
+            <div class="col-md-3 col-sm-6">
+                <SummaryCard Title="BMI" Value="@($"{_singleItem.Weight.Bmi:F1}")" Subtitle="@GetBmiCategory(_singleItem.Weight.Bmi)" />
+            </div>
+            @if (_singleItem.Weight.Fat > 0)
+            {
+                <div class="col-md-3 col-sm-6">
+                    <SummaryCard Title="Body Fat" Value="@($"{_singleItem.Weight.Fat:F1}%")" />
+                </div>
+            }
+            <div class="col-md-3 col-sm-6">
+                <SummaryCard Title="Recorded" Value="@_singleItem.Weight.Time" Subtitle="@_singleItem.Weight.Source" />
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="alert alert-info">No weight entries for @_selectedDate.</div>
+    }
+}
+
+@if (!_isLoading && _rangeItems is not null && _mode == "range")
+{
+    <div class="card mb-4">
+        <div class="card-header"><strong>Weight Records</strong></div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-sm table-hover mb-0">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Weight (kg)</th>
+                            <th>BMI</th>
+                            <th>Body Fat %</th>
+                            <th>Time</th>
+                            <th>Source</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in _rangeItems.Items)
+                        {
+                            <tr>
+                                <td>@item.Date</td>
+                                <td>@item.Weight.Weight.ToString("F1")</td>
+                                <td>@item.Weight.Bmi.ToString("F1")</td>
+                                <td>@(item.Weight.Fat > 0 ? item.Weight.Fat.ToString("F1") : "--")</td>
+                                <td>@item.Weight.Time</td>
+                                <td>@item.Weight.Source</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <PaginationControls PageNumber="@_rangeItems.PageNumber" TotalPages="@_rangeItems.TotalPages"
+                        TotalCount="@_rangeItems.TotalCount" HasPreviousPage="@_rangeItems.HasPreviousPage"
+                        HasNextPage="@_rangeItems.HasNextPage" OnPageChanged="OnPageChanged" />
+}
+
+@if (!_isLoading && _singleItem is null && _mode == "date" && _errorMessage is null)
+{
+    <div class="alert alert-info">No weight data found for @_selectedDate.</div>
+}
+
+@code {
+    private bool _isLoading = true;
+    private string? _errorMessage;
+    private string _mode = "date";
+    private string _selectedDate = DateOnly.FromDateTime(DateTime.Today.AddDays(-1)).ToString("yyyy-MM-dd");
+    private string _startDate = DateOnly.FromDateTime(DateTime.Today.AddDays(-8)).ToString("yyyy-MM-dd");
+    private string _endDate = DateOnly.FromDateTime(DateTime.Today.AddDays(-1)).ToString("yyyy-MM-dd");
+    private int _currentPage = 1;
+
+    private WeightItem? _singleItem;
+    private PaginatedResponse<WeightItem>? _rangeItems;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadByDate(_selectedDate);
+    }
+
+    private async Task LoadByDate(string date)
+    {
+        _mode = "date";
+        _selectedDate = date;
+        _isLoading = true;
+        _errorMessage = null;
+        _singleItem = null;
+
+        try
+        {
+            _singleItem = await ApiService.GetWeightByDateAsync(date);
+        }
+        catch (Exception)
+        {
+            _errorMessage = "Failed to load weight data. Please try again.";
+        }
+        finally
+        {
+            _isLoading = false;
+        }
+    }
+
+    private async Task LoadByRange((string StartDate, string EndDate) range)
+    {
+        _mode = "range";
+        _startDate = range.StartDate;
+        _endDate = range.EndDate;
+        _currentPage = 1;
+        await LoadRangePage();
+    }
+
+    private async Task OnPageChanged(int page)
+    {
+        _currentPage = page;
+        await LoadRangePage();
+    }
+
+    private async Task LoadRangePage()
+    {
+        _isLoading = true;
+        _errorMessage = null;
+
+        try
+        {
+            _rangeItems = await ApiService.GetWeightByDateRangeAsync(_startDate, _endDate, _currentPage);
+        }
+        catch (Exception)
+        {
+            _errorMessage = "Failed to load weight data. Please try again.";
+        }
+        finally
+        {
+            _isLoading = false;
+        }
+    }
+
+    private static string GetBmiCategory(double bmi)
+    {
+        if (bmi < 18.5) return "Underweight";
+        if (bmi < 25.0) return "Normal";
+        if (bmi < 30.0) return "Overweight";
+        return "Obese";
+    }
+}
