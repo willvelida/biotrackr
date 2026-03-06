@@ -21,6 +21,11 @@ on:
                 required: false
                 type: boolean
                 default: true
+            runsettings-path:
+                description: 'Optional path to a .runsettings file for coverlet configuration (relative to working-directory)'
+                required: false
+                type: string
+                default: ''
 
 jobs:
     run-unit-tests:
@@ -50,6 +55,7 @@ jobs:
                   --no-build \
                   --verbosity normal \
                   --collect:"XPlat Code Coverage" \
+                  ${{ inputs.runsettings-path != '' && format('--settings {0}', inputs.runsettings-path) || '' }} \
                   --logger "trx;LogFileName=test-results.trx" \
                   --results-directory ./TestResults
 

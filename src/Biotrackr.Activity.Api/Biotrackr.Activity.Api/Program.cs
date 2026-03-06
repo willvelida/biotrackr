@@ -5,7 +5,6 @@ using Biotrackr.Activity.Api.Repositories;
 using Biotrackr.Activity.Api.Repositories.Interfaces;
 using Microsoft.Azure.Cosmos;
 using Microsoft.Extensions.Configuration.AzureAppConfiguration;
-using Microsoft.OpenApi.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -45,32 +44,15 @@ var cosmosClient = new CosmosClient(
 builder.Services.AddSingleton(cosmosClient);
 builder.Services.AddScoped<ICosmosRepository, CosmosRepository>();
 
-builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen(options =>
-{
-    options.SwaggerDoc("v1", new OpenApiInfo
-    {
-        Version = "1.0.0",
-        Title = "Biotrackr Activity API",
-        Description = "Web API for Activity data",
-        Contact = new OpenApiContact
-        {
-            Name = "Biotrackr",
-            Url = new Uri("https://github.com/willvelida/biotrackr")
-        }
-    });
-});
+builder.Services.AddOpenApi();
 
 builder.Services.AddHealthChecks();
 
 var app = builder.Build();
 
-app.UseSwagger();
-app.UseSwaggerUI();
+app.MapOpenApi();
 
 app.RegisterActivityEndpoints();
 app.RegisterHealthCheckEndpoints();
 
 app.Run();
-
-public partial class Program { }
