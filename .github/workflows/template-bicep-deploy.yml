@@ -19,6 +19,10 @@ on:
                 required: false
                 type: boolean
                 default: false
+            inject-easy-auth-config:
+              required: false
+              type: boolean
+              default: false
             environment:
                 required: true
                 type: string
@@ -31,6 +35,8 @@ on:
                 required: true
             resource-group-name:
                 required: false
+            easy-auth-client-id:
+              required: false
 
 jobs:
     deploy:
@@ -52,15 +58,24 @@ jobs:
           id: prepare-params
           shell: bash
           run: |
-            if [ "${{ inputs.inject-tenant-id }}" = "true" ]; then
-              if [ -n "${{ inputs.parameters }}" ]; then
-                PARAMS=$(echo '${{ inputs.parameters }}' | jq -c '. + {"tenantId": "${{ secrets.tenant-id }}"}')
-              else
-                PARAMS='{"tenantId": "${{ secrets.tenant-id }}"}'
-              fi
-            else
-              PARAMS='${{ inputs.parameters }}'
+            PARAMS='${{ inputs.parameters }}'
+
+            if [ -z "$PARAMS" ]; then
+              PARAMS='{}'
             fi
+
+            if [ "${{ inputs.inject-tenant-id }}" = "true" ]; then
+              PARAMS=$(echo "$PARAMS" | jq -c --arg tenantId "${{ secrets.tenant-id }}" '. + {"tenantId": $tenantId}')
+            fi
+
+            if [ "${{ inputs.inject-easy-auth-config }}" = "true" ]; then
+              PARAMS=$(echo "$PARAMS" | jq -c --arg easyAuthTenantId "${{ secrets.tenant-id }}" '. + {"easyAuthTenantId": $easyAuthTenantId}')
+
+              if [ -n "${{ secrets.easy-auth-client-id }}" ]; then
+                PARAMS=$(echo "$PARAMS" | jq -c --arg easyAuthClientId "${{ secrets.easy-auth-client-id }}" '. + {"easyAuthClientId": $easyAuthClientId}')
+              fi
+            fi
+
             echo "params=$PARAMS" >> "$GITHUB_OUTPUT"
 
         - uses: azure/bicep-deploy@v2

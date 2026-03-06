@@ -32,7 +32,7 @@ jobs:
     run-unit-tests:
           name: Run Unit Tests with Coverage
           needs: env-setup
-          uses: willvelida/biotrackr/.github/workflows/template-dotnet-run-unit-tests.yml@main
+          uses: willvelida/biotrackr/.github/workflows/template-dotnet-run-unit-tests.yml@feat/ui-implementation
           with:
             dotnet-version: ${{ needs.env-setup.outputs.dotnet-version }}
             working-directory: ./src/Biotrackr.UI/Biotrackr.UI.UnitTests
@@ -42,7 +42,7 @@ jobs:
     build-container-image-dev:
           name: Build and Push Container Image
           needs: [run-unit-tests]
-          uses: willvelida/biotrackr/.github/workflows/template-acr-push-image.yml@main
+          uses: willvelida/biotrackr/.github/workflows/template-acr-push-image.yml@feat/ui-implementation
           with:
             working-directory: ./src/Biotrackr.UI
             app-name: biotrackr-ui
@@ -75,48 +75,53 @@ jobs:
     lint:
         name: Run Bicep Linter
         needs: retrieve-container-image-dev
-        uses: willvelida/biotrackr/.github/workflows/template-bicep-linter.yml@main
+      uses: willvelida/biotrackr/.github/workflows/template-bicep-linter.yml@feat/ui-implementation
         with:
             template-file: './infra/apps/ui/main.bicep'
 
     validate:
         name: Validate Template
         needs: [lint, retrieve-container-image-dev]
-        uses: willvelida/biotrackr/.github/workflows/template-bicep-validate.yml@main
+        uses: ./.github/workflows/template-bicep-validate.yml
         with:
           template-file: './infra/apps/ui/main.bicep'
           parameters-file: ./infra/apps/ui/main.dev.bicepparam
-          parameters: '{"imageName": "${{ needs.retrieve-container-image-dev.outputs.loginServer }}/biotrackr-ui:${{ github.sha }}", "easyAuthClientId": "${{ secrets.EASY_AUTH_CLIENT_ID }}", "easyAuthTenantId": "${{ secrets.AZURE_TENANT_ID }}"}'
+          parameters: '{"imageName": "${{ needs.retrieve-container-image-dev.outputs.loginServer }}/biotrackr-ui:${{ github.sha }}"}'
+          inject-easy-auth-config: true
           scope: resourceGroup
         secrets:
           client-id: ${{ secrets.AZURE_CLIENT_ID }}
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
           resource-group-name: ${{ secrets.AZURE_RG_NAME_DEV }}
+          easy-auth-client-id: ${{ secrets.EASY_AUTH_CLIENT_ID }}
 
     preview:
         name: Preview Changes
         needs: [validate, retrieve-container-image-dev]
-        uses: willvelida/biotrackr/.github/workflows/template-bicep-whatif.yml@main
+        uses: ./.github/workflows/template-bicep-whatif.yml
         with:
           scope: resourceGroup
           template-file: './infra/apps/ui/main.bicep'
           parameters-file: ./infra/apps/ui/main.dev.bicepparam
-          parameters: '{"imageName": "${{ needs.retrieve-container-image-dev.outputs.loginServer }}/biotrackr-ui:${{ github.sha }}", "easyAuthClientId": "${{ secrets.EASY_AUTH_CLIENT_ID }}", "easyAuthTenantId": "${{ secrets.AZURE_TENANT_ID }}"}'
+          parameters: '{"imageName": "${{ needs.retrieve-container-image-dev.outputs.loginServer }}/biotrackr-ui:${{ github.sha }}"}'
+          inject-easy-auth-config: true
         secrets:
           client-id: ${{ secrets.AZURE_CLIENT_ID }}
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
           resource-group-name: ${{ secrets.AZURE_RG_NAME_DEV }}
+          easy-auth-client-id: ${{ secrets.EASY_AUTH_CLIENT_ID }}
 
     deploy-dev:
         name: Deploy Template to Dev
         needs: [preview, retrieve-container-image-dev]
-        uses: willvelida/biotrackr/.github/workflows/template-bicep-deploy.yml@main
+        uses: ./.github/workflows/template-bicep-deploy.yml
         with:
           template-file: './infra/apps/ui/main.bicep'
           parameters-file: ./infra/apps/ui/main.dev.bicepparam
-          parameters: '{"imageName": "${{ needs.retrieve-container-image-dev.outputs.loginServer }}/biotrackr-ui:${{ github.sha }}", "easyAuthClientId": "${{ secrets.EASY_AUTH_CLIENT_ID }}", "easyAuthTenantId": "${{ secrets.AZURE_TENANT_ID }}"}'
+          parameters: '{"imageName": "${{ needs.retrieve-container-image-dev.outputs.loginServer }}/biotrackr-ui:${{ github.sha }}"}'
+          inject-easy-auth-config: true
           scope: resourceGroup
           environment: dev
         secrets:
@@ -124,3 +129,4 @@ jobs:
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
           resource-group-name: ${{ secrets.AZURE_RG_NAME_DEV }}
+          easy-auth-client-id: ${{ secrets.EASY_AUTH_CLIENT_ID }}
