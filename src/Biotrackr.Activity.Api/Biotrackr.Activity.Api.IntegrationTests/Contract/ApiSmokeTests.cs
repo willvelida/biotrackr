@@ -60,26 +60,26 @@ public class ApiSmokeTests
     }
 
     [Fact]
-    public async Task Swagger_UI_Should_Be_Available()
+    public async Task OpenApi_Endpoint_Should_Be_Available()
     {
         // Arrange
         var client = _fixture.Factory.CreateClient();
 
         // Act
-        var response = await client.GetAsync("/swagger");
+        var response = await client.GetAsync("/openapi/v1.json");
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.OK);
     }
 
     [Fact]
-    public async Task Swagger_JSON_Should_Return_Valid_OpenAPI_Document()
+    public async Task OpenApi_Endpoint_Should_Return_Valid_OpenAPI_Document()
     {
         // Arrange
         var client = _fixture.Factory.CreateClient();
 
         // Act
-        var response = await client.GetAsync("/swagger/v1/swagger.json");
+        var response = await client.GetAsync("/openapi/v1.json");
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.OK);
