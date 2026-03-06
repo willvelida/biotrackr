@@ -1,0 +1,263 @@
+@page "/activity"
+@rendermode InteractiveServer
+@inject IBiotrackrApiService ApiService
+
+<PageTitle>Biotrackr - Activity</PageTitle>
+
+<h1>Activity</h1>
+
+<DatePicker SelectedDate="@_selectedDate" StartDate="@_startDate" EndDate="@_endDate" Mode="@_mode"
+            OnSingleDateSelected="LoadByDate" OnDateRangeSelected="LoadByRange" />
+
+<LoadingSpinner IsLoading="@_isLoading" Message="Loading activity data..." />
+<ErrorDisplay Message="@_errorMessage" />
+
+@if (!_isLoading && _singleItem is not null && _mode == "date")
+{
+    <div class="row g-3 mb-4">
+        <div class="col-md-3 col-sm-6">
+            <SummaryCard Title="Steps" Value="@(_singleItem.Activity.Summary.Steps.ToString("N0"))" 
+                         Subtitle="@GetGoalProgress(_singleItem.Activity.Summary.Steps, _singleItem.Activity.Goals.Steps)" />
+        </div>
+        <div class="col-md-3 col-sm-6">
+            <SummaryCard Title="Calories Burned" Value="@(_singleItem.Activity.Summary.CaloriesOut.ToString("N0"))"
+                         Subtitle="@GetGoalProgress(_singleItem.Activity.Summary.CaloriesOut, _singleItem.Activity.Goals.CaloriesOut)" />
+        </div>
+        <div class="col-md-3 col-sm-6">
+            <SummaryCard Title="Active Minutes" Value="@((_singleItem.Activity.Summary.FairlyActiveMinutes + _singleItem.Activity.Summary.VeryActiveMinutes).ToString("N0"))"
+                         Subtitle="@GetGoalProgress(_singleItem.Activity.Summary.FairlyActiveMinutes + _singleItem.Activity.Summary.VeryActiveMinutes, _singleItem.Activity.Goals.ActiveMinutes)" />
+        </div>
+        <div class="col-md-3 col-sm-6">
+            <SummaryCard Title="Floors" Value="@(_singleItem.Activity.Summary.Floors.ToString("N0"))"
+                         Subtitle="@GetGoalProgress(_singleItem.Activity.Summary.Floors, _singleItem.Activity.Goals.Floors)" />
+        </div>
+    </div>
+
+    @if (_singleItem.Activity.Summary.HeartRateZones.Any())
+    {
+        <div class="card mb-4">
+            <div class="card-header"><strong>Heart Rate Zones</strong></div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-sm mb-0">
+                        <thead>
+                            <tr>
+                                <th>Zone</th>
+                                <th>Minutes</th>
+                                <th>Calories</th>
+                                <th>Range (bpm)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var zone in _singleItem.Activity.Summary.HeartRateZones)
+                            {
+                                <tr>
+                                    <td>@zone.Name</td>
+                                    <td>@zone.Minutes</td>
+                                    <td>@zone.CaloriesOut.ToString("F1")</td>
+                                    <td>@zone.Min - @zone.Max</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    }
+
+    @if (_singleItem.Activity.Activities.Any())
+    {
+        <div class="card mb-4">
+            <div class="card-header"><strong>Activities</strong></div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-sm mb-0">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Calories</th>
+                                <th>Duration</th>
+                                <th>Steps</th>
+                                <th>Distance</th>
+                                <th>Start Time</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var activity in _singleItem.Activity.Activities)
+                            {
+                                <tr>
+                                    <td>@activity.Name</td>
+                                    <td>@activity.Calories</td>
+                                    <td>@FormatDuration(activity.Duration)</td>
+                                    <td>@activity.Steps.ToString("N0")</td>
+                                    <td>@(activity.Distance.HasValue ? $"{activity.Distance:F2} km" : "--")</td>
+                                    <td>@activity.StartTime</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    }
+
+    @if (_singleItem.Activity.Summary.Distances.Any())
+    {
+        <div class="card mb-4">
+            <div class="card-header"><strong>Distances</strong></div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-sm mb-0">
+                        <thead>
+                            <tr>
+                                <th>Activity</th>
+                                <th>Distance (km)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var d in _singleItem.Activity.Summary.Distances)
+                            {
+                                <tr>
+                                    <td>@d.Activity</td>
+                                    <td>@d.Distance.ToString("F2")</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    }
+}
+
+@if (!_isLoading && _rangeItems is not null && _mode == "range")
+{
+    <div class="card mb-4">
+        <div class="card-header"><strong>Activity Records</strong></div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-sm table-hover mb-0">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Steps</th>
+                            <th>Calories</th>
+                            <th>Active Min</th>
+                            <th>Floors</th>
+                            <th>Resting HR</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in _rangeItems.Items)
+                        {
+                            <tr>
+                                <td>@item.Date</td>
+                                <td>@item.Activity.Summary.Steps.ToString("N0")</td>
+                                <td>@item.Activity.Summary.CaloriesOut.ToString("N0")</td>
+                                <td>@((item.Activity.Summary.FairlyActiveMinutes + item.Activity.Summary.VeryActiveMinutes).ToString("N0"))</td>
+                                <td>@item.Activity.Summary.Floors</td>
+                                <td>@(item.Activity.Summary.RestingHeartRate > 0 ? item.Activity.Summary.RestingHeartRate.ToString() : "--")</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <PaginationControls PageNumber="@_rangeItems.PageNumber" TotalPages="@_rangeItems.TotalPages"
+                        TotalCount="@_rangeItems.TotalCount" HasPreviousPage="@_rangeItems.HasPreviousPage"
+                        HasNextPage="@_rangeItems.HasNextPage" OnPageChanged="OnPageChanged" />
+}
+
+@if (!_isLoading && _singleItem is null && _mode == "date" && _errorMessage is null)
+{
+    <div class="alert alert-info">No activity data found for @_selectedDate.</div>
+}
+
+@code {
+    private bool _isLoading = true;
+    private string? _errorMessage;
+    private string _mode = "date";
+    private string _selectedDate = DateOnly.FromDateTime(DateTime.Today.AddDays(-1)).ToString("yyyy-MM-dd");
+    private string _startDate = DateOnly.FromDateTime(DateTime.Today.AddDays(-8)).ToString("yyyy-MM-dd");
+    private string _endDate = DateOnly.FromDateTime(DateTime.Today.AddDays(-1)).ToString("yyyy-MM-dd");
+    private int _currentPage = 1;
+
+    private ActivityItem? _singleItem;
+    private PaginatedResponse<ActivityItem>? _rangeItems;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadByDate(_selectedDate);
+    }
+
+    private async Task LoadByDate(string date)
+    {
+        _mode = "date";
+        _selectedDate = date;
+        _isLoading = true;
+        _errorMessage = null;
+        _singleItem = null;
+
+        try
+        {
+            _singleItem = await ApiService.GetActivityByDateAsync(date);
+        }
+        catch (Exception)
+        {
+            _errorMessage = "Failed to load activity data. Please try again.";
+        }
+        finally
+        {
+            _isLoading = false;
+        }
+    }
+
+    private async Task LoadByRange((string StartDate, string EndDate) range)
+    {
+        _mode = "range";
+        _startDate = range.StartDate;
+        _endDate = range.EndDate;
+        _currentPage = 1;
+        await LoadRangePage();
+    }
+
+    private async Task OnPageChanged(int page)
+    {
+        _currentPage = page;
+        await LoadRangePage();
+    }
+
+    private async Task LoadRangePage()
+    {
+        _isLoading = true;
+        _errorMessage = null;
+
+        try
+        {
+            _rangeItems = await ApiService.GetActivitiesByDateRangeAsync(_startDate, _endDate, _currentPage);
+        }
+        catch (Exception)
+        {
+            _errorMessage = "Failed to load activity data. Please try again.";
+        }
+        finally
+        {
+            _isLoading = false;
+        }
+    }
+
+    private static string GetGoalProgress(int actual, int goal)
+    {
+        if (goal == 0) return "";
+        var pct = (double)actual / goal * 100;
+        return $"{pct:F0}% of {goal:N0} goal";
+    }
+
+    private static string FormatDuration(long milliseconds)
+    {
+        var ts = TimeSpan.FromMilliseconds(milliseconds);
+        return ts.TotalHours >= 1 ? $"{(int)ts.TotalHours}h {ts.Minutes}m" : $"{ts.Minutes}m";
+    }
+}

@@ -1,0 +1,106 @@
+<div class="card mb-3">
+    <div class="card-body">
+        <div class="row g-3 align-items-end">
+            <div class="col-auto">
+                <label class="form-label mb-0">View</label>
+                <select class="form-select form-select-sm" @onchange="OnModeChanged">
+                    <option value="date" selected="@(Mode == "date")">Single Date</option>
+                    <option value="range" selected="@(Mode == "range")">Date Range</option>
+                </select>
+            </div>
+
+            @if (Mode == "date")
+            {
+                <div class="col-auto">
+                    <label for="singleDate" class="form-label mb-0">Date</label>
+                    <input type="date" id="singleDate" class="form-control form-control-sm" 
+                           value="@SelectedDate" @onchange="OnDateChanged" />
+                </div>
+            }
+            else
+            {
+                <div class="col-auto">
+                    <label for="startDate" class="form-label mb-0">Start</label>
+                    <input type="date" id="startDate" class="form-control form-control-sm" 
+                           value="@StartDate" @onchange="OnStartDateChanged" />
+                </div>
+                <div class="col-auto">
+                    <label for="endDate" class="form-label mb-0">End</label>
+                    <input type="date" id="endDate" class="form-control form-control-sm" 
+                           value="@EndDate" @onchange="OnEndDateChanged" />
+                </div>
+                <div class="col-auto">
+                    <button class="btn btn-primary btn-sm" @onclick="ApplyRange">Apply</button>
+                </div>
+            }
+
+            <div class="col-auto">
+                <button class="btn btn-outline-secondary btn-sm" @onclick="GoToToday" title="Go to yesterday">Yesterday</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public string SelectedDate { get; set; } = DateOnly.FromDateTime(DateTime.Today.AddDays(-1)).ToString("yyyy-MM-dd");
+
+    [Parameter]
+    public string StartDate { get; set; } = DateOnly.FromDateTime(DateTime.Today.AddDays(-8)).ToString("yyyy-MM-dd");
+
+    [Parameter]
+    public string EndDate { get; set; } = DateOnly.FromDateTime(DateTime.Today.AddDays(-1)).ToString("yyyy-MM-dd");
+
+    [Parameter]
+    public string Mode { get; set; } = "date";
+
+    [Parameter]
+    public EventCallback<string> OnSingleDateSelected { get; set; }
+
+    [Parameter]
+    public EventCallback<(string StartDate, string EndDate)> OnDateRangeSelected { get; set; }
+
+    private void OnModeChanged(ChangeEventArgs e)
+    {
+        Mode = e.Value?.ToString() ?? "date";
+        StateHasChanged();
+    }
+
+    private async Task OnDateChanged(ChangeEventArgs e)
+    {
+        SelectedDate = e.Value?.ToString() ?? SelectedDate;
+        await OnSingleDateSelected.InvokeAsync(SelectedDate);
+    }
+
+    private void OnStartDateChanged(ChangeEventArgs e)
+    {
+        StartDate = e.Value?.ToString() ?? StartDate;
+    }
+
+    private void OnEndDateChanged(ChangeEventArgs e)
+    {
+        EndDate = e.Value?.ToString() ?? EndDate;
+    }
+
+    private async Task ApplyRange()
+    {
+        await OnDateRangeSelected.InvokeAsync((StartDate, EndDate));
+    }
+
+    private async Task GoToToday()
+    {
+        var yesterday = DateOnly.FromDateTime(DateTime.Today.AddDays(-1)).ToString("yyyy-MM-dd");
+        SelectedDate = yesterday;
+        StartDate = DateOnly.FromDateTime(DateTime.Today.AddDays(-8)).ToString("yyyy-MM-dd");
+        EndDate = yesterday;
+
+        if (Mode == "date")
+        {
+            await OnSingleDateSelected.InvokeAsync(yesterday);
+        }
+        else
+        {
+            await OnDateRangeSelected.InvokeAsync((StartDate, EndDate));
+        }
+    }
+}

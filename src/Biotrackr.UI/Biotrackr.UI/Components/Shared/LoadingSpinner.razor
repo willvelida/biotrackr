@@ -1,0 +1,20 @@
+@if (IsLoading)
+{
+    <div class="d-flex justify-content-center align-items-center py-5">
+        <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Loading...</span>
+        </div>
+        @if (!string.IsNullOrEmpty(Message))
+        {
+            <span class="ms-3 text-muted">@Message</span>
+        }
+    </div>
+}
+
+@code {
+    [Parameter]
+    public bool IsLoading { get; set; }
+
+    [Parameter]
+    public string? Message { get; set; }
+}
