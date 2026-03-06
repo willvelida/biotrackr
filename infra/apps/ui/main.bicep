@@ -115,7 +115,7 @@ resource easyAuth 'Microsoft.App/containerApps/authConfigs@2024-03-01' = {
       azureActiveDirectory: {
         registration: {
           clientId: easyAuthClientId
-          openIdIssuer: 'https://sts.windows.net/${easyAuthTenantId}/v2.0'
+          openIdIssuer: 'https://login.microsoftonline.com/${easyAuthTenantId}/v2.0'
         }
         validation: {
           allowedAudiences: [
