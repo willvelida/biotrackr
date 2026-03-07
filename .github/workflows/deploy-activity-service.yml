@@ -15,7 +15,7 @@ permissions:
     checks: write  # Required for dorny/test-reporter@v2
 
 env:
-  DOTNET_VERSION: 9.0.x
+  DOTNET_VERSION: 10.0.x
   COVERAGE_PATH: ${{ github.workspace }}/coverage
 
 jobs:
@@ -41,6 +41,7 @@ jobs:
           working-directory: ./src/Biotrackr.Activity.Svc/Biotrackr.Activity.Svc.UnitTests
           coverage-threshold: 70
           fail-below-threshold: false
+          runsettings-path: ../coverage.runsettings
 
     run-contract-tests:
         name: Run Contract Tests

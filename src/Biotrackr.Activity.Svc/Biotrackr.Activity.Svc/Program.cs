@@ -1,4 +1,3 @@
-using System.Diagnostics.CodeAnalysis;
 using Azure.Identity;
 using Azure.Monitor.OpenTelemetry.Exporter;
 using Azure.Security.KeyVault.Secrets;
@@ -14,20 +13,15 @@ using OpenTelemetry.Metrics;
 using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
 
-[ExcludeFromCodeCoverage]
-internal class Program
+var resourceAttributes = new Dictionary<string, object>
 {
-    private static void Main(string[] args)
-    {
-        var resourceAttributes = new Dictionary<string, object>
-        {
-            { "service.name", "Biotrackr.Activity.Svc" },
-            { "service.version", "1.0.0" }
-        };
+    { "service.name", "Biotrackr.Activity.Svc" },
+    { "service.version", "1.0.0" }
+};
 
-        var resourceBuilder = ResourceBuilder.CreateDefault().AddAttributes(resourceAttributes);
+var resourceBuilder = ResourceBuilder.CreateDefault().AddAttributes(resourceAttributes);
 
-        IHost host = Host.CreateDefaultBuilder(args)
+IHost host = Host.CreateDefaultBuilder(args)
     .ConfigureAppConfiguration(config =>
     {
         config.AddEnvironmentVariables();
@@ -62,8 +56,8 @@ internal class Program
             }
         };
 
-        services.AddSingleton(new SecretClient(new Uri(keyVaultUrl), new DefaultAzureCredential(defaultCredentialOptions)));
-        services.AddSingleton(new CosmosClient(cosmosDbEndpoint, new DefaultAzureCredential(defaultCredentialOptions), cosmosClientOptions));
+        services.AddSingleton(new SecretClient(new Uri(keyVaultUrl!), new DefaultAzureCredential(defaultCredentialOptions)));
+        services.AddSingleton(new CosmosClient(cosmosDbEndpoint!, new DefaultAzureCredential(defaultCredentialOptions), cosmosClientOptions));
 
         services.AddScoped<ICosmosRepository, CosmosRepository>();
 
@@ -101,12 +95,9 @@ internal class Program
             {
                 options.ConnectionString = context.Configuration["applicationinsightsconnectionstring"];
             });
-
         });
     })
     .Build();
 
-        host.Run();
-    }
-}
+host.Run();
 
