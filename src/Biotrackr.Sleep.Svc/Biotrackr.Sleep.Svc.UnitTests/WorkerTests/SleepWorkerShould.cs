@@ -6,6 +6,7 @@ using FluentAssertions;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Moq;
+using System.Reflection;
 
 namespace Biotrackr.Sleep.Svc.UnitTests.WorkerTests
 {
@@ -132,9 +133,12 @@ namespace Biotrackr.Sleep.Svc.UnitTests.WorkerTests
                 _mockLogger.Object,
                 _mockAppLifetime.Object);
 
-            // Act
-            await worker.StartAsync(cancellationTokenSource.Token);
-            await Task.Delay(100); // Give time for cleanup
+            // Act — invoke ExecuteAsync directly via reflection to bypass
+            // .NET 10 BackgroundService.StartAsync which skips ExecuteAsync
+            // when the token is already cancelled.
+            var executeMethod = typeof(SleepWorker).GetMethod("ExecuteAsync", BindingFlags.NonPublic | BindingFlags.Instance);
+            var task = (Task<int>)executeMethod!.Invoke(worker, new object[] { cancellationTokenSource.Token })!;
+            await task;
 
             // Assert - Should complete without throwing
             _mockAppLifetime.Verify(

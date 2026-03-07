@@ -16,7 +16,7 @@ permissions:
     checks: write
 
 env:
-  DOTNET_VERSION: 9.0.x
+  DOTNET_VERSION: 10.0.x
 
 jobs:
   env-setup:
@@ -37,6 +37,7 @@ jobs:
       with:
         dotnet-version: ${{ needs.env-setup.outputs.dotnet-version }}
         working-directory: ./src/Biotrackr.Auth.Svc/Biotrackr.Auth.Svc.UnitTests
+        runsettings-path: ../coverage.runsettings
 
   run-contract-tests:
       name: Run Contract Tests
