@@ -8,16 +8,13 @@ on:
 permissions:
     contents: read
     id-token: write
-    pull-requests: write
 
 jobs:
     purge:
         runs-on: ubuntu-latest
+        environment: dev
 
         steps:
-            - name: Checkout repository code
-              uses: actions/checkout@v5
-
             - name: Azure login
               uses: azure/login@v2
               with:
