@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<!--
+  Coverage exclusion settings for .NET 10 projects.
+  
+  The Microsoft.AspNetCore.OpenApi source generator (used by AddOpenApi()) emits classes
+  under the Microsoft.AspNetCore.OpenApi.Generated namespace that coverlet instruments
+  but no unit tests exercise, dragging coverage down significantly.
+  
+  Place this file at the solution root and pass it via:
+    dotnet test - -settings coverage.runsettings
+-->
+<RunSettings>
+  <DataCollectionRunSettings>
+    <DataCollectors>
+      <DataCollector friendlyName="XPlat Code Coverage">
+        <Configuration>
+          <ExcludeByAttribute>ExcludeFromCodeCoverage</ExcludeByAttribute>
+          <Exclude>
+            [*]Microsoft.AspNetCore.OpenApi.Generated.*,
+            [*]System.Runtime.CompilerServices.*OpenApiXmlCommentSupport_generated*
+          </Exclude>
+        </Configuration>
+      </DataCollector>
+    </DataCollectors>
+  </DataCollectionRunSettings>
+</RunSettings>

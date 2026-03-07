@@ -1,4 +1,3 @@
-using System.Diagnostics.CodeAnalysis;
 using Azure.Identity;
 using Biotrackr.Sleep.Api.Configuration;
 using Biotrackr.Sleep.Api.Extensions;
@@ -6,79 +5,54 @@ using Biotrackr.Sleep.Api.Repositories;
 using Biotrackr.Sleep.Api.Repositories.Interfaces;
 using Microsoft.Azure.Cosmos;
 using Microsoft.Extensions.Configuration.AzureAppConfiguration;
-using Microsoft.OpenApi.Models;
 
-[ExcludeFromCodeCoverage]
-public partial class Program
+var builder = WebApplication.CreateBuilder(args);
+
+builder.Configuration.AddEnvironmentVariables();
+var managedIdentityClientId = builder.Configuration.GetValue<string>("managedidentityclientid");
+var azureAppConfigEndpoint = builder.Configuration.GetValue<string>("azureappconfigendpoint");
+
+// Only load Azure App Configuration if endpoint is provided (not in test environment)
+if (!string.IsNullOrWhiteSpace(azureAppConfigEndpoint))
 {
-    private static void Main(string[] args)
+    builder.Configuration.AddAzureAppConfiguration(config =>
     {
-        var builder = WebApplication.CreateBuilder(args);
-
-        builder.Configuration.AddEnvironmentVariables();
-        var managedIdentityClientId = builder.Configuration.GetValue<string>("managedidentityclientid");
-        var azureAppConfigEndpoint = builder.Configuration.GetValue<string>("azureappconfigendpoint");
-
-        // Only load Azure App Configuration if endpoint is provided (not in test environment)
-        if (!string.IsNullOrWhiteSpace(azureAppConfigEndpoint))
-        {
-            builder.Configuration.AddAzureAppConfiguration(config =>
-            {
-                config.Connect(new Uri(azureAppConfigEndpoint),
-                    new ManagedIdentityCredential(managedIdentityClientId))
-                .Select(KeyFilter.Any, LabelFilter.Null);
-            });
-        }
-
-        var defaultCredentialOptions = new DefaultAzureCredentialOptions()
-        {
-            ManagedIdentityClientId = managedIdentityClientId
-        };
-
-        builder.Services.Configure<Settings>(builder.Configuration.GetSection("Biotrackr"));
-
-        var cosmosClientOptions = new CosmosClientOptions
-        {
-            SerializerOptions = new CosmosSerializationOptions
-            {
-                PropertyNamingPolicy = CosmosPropertyNamingPolicy.CamelCase
-            }
-        };
-        var cosmosClient = new CosmosClient(
-            builder.Configuration.GetValue<string>("cosmosdbendpoint"),
-            new DefaultAzureCredential(defaultCredentialOptions),
-            cosmosClientOptions);
-        builder.Services.AddSingleton(cosmosClient);
-        builder.Services.AddScoped<ICosmosRepository, CosmosRepository>();
-
-        builder.Services.AddEndpointsApiExplorer();
-        builder.Services.AddSwaggerGen(options =>
-        {
-            options.SwaggerDoc("v1", new OpenApiInfo
-            {
-                Version = "1.0.0",
-                Title = "Biotrackr Sleep API",
-                Description = "Web API for Sleep data",
-                Contact = new OpenApiContact
-                {
-                    Name = "Biotrackr",
-                    Url = new Uri("https://github.com/willvelida/biotrackr")
-                }
-            });
-        });
-
-        builder.Services.AddHealthChecks();
-
-        var app = builder.Build();
-
-        app.UseSwagger();
-        app.UseSwaggerUI();
-
-        app.RegisterSleepEndpoints();
-        app.RegisterHealthCheckEndpoints();
-
-        app.Run();
-    }
+        config.Connect(new Uri(azureAppConfigEndpoint),
+            new ManagedIdentityCredential(managedIdentityClientId))
+        .Select(KeyFilter.Any, LabelFilter.Null);
+    });
 }
 
-public partial class Program { }
+var defaultCredentialOptions = new DefaultAzureCredentialOptions()
+{
+    ManagedIdentityClientId = managedIdentityClientId
+};
+
+builder.Services.Configure<Settings>(builder.Configuration.GetSection("Biotrackr"));
+
+var cosmosClientOptions = new CosmosClientOptions
+{
+    SerializerOptions = new CosmosSerializationOptions
+    {
+        PropertyNamingPolicy = CosmosPropertyNamingPolicy.CamelCase
+    }
+};
+var cosmosClient = new CosmosClient(
+    builder.Configuration.GetValue<string>("cosmosdbendpoint"),
+    new DefaultAzureCredential(defaultCredentialOptions),
+    cosmosClientOptions);
+builder.Services.AddSingleton(cosmosClient);
+builder.Services.AddScoped<ICosmosRepository, CosmosRepository>();
+
+builder.Services.AddOpenApi();
+
+builder.Services.AddHealthChecks();
+
+var app = builder.Build();
+
+app.MapOpenApi();
+
+app.RegisterSleepEndpoints();
+app.RegisterHealthCheckEndpoints();
+
+app.Run();

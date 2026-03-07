@@ -26,33 +26,31 @@ public class ApiSmokeTests
     }
 
     [Fact]
-    public async Task SwaggerJson_ShouldBeAccessible()
+    public async Task OpenApiJson_ShouldBeAccessible()
     {
         // Act
-        var response = await _fixture.Client.GetAsync("/swagger/v1/swagger.json");
+        var response = await _fixture.Client.GetAsync("/openapi/v1.json");
 
-        // Assert - May return 404 if Swagger not configured in test environment
-        response.StatusCode.Should().BeOneOf(HttpStatusCode.OK, HttpStatusCode.NotFound);
+        // Assert
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
     }
 
     [Fact]
-    public async Task SwaggerJson_WhenAvailable_ShouldContainSleepEndpoints()
+    public async Task OpenApiJson_WhenAvailable_ShouldContainSleepEndpoints()
     {
         // Act
-        var response = await _fixture.Client.GetAsync("/swagger/v1/swagger.json");
+        var response = await _fixture.Client.GetAsync("/openapi/v1.json");
 
         // Assert
-        if (response.StatusCode == HttpStatusCode.OK)
-        {
-            var content = await response.Content.ReadAsStringAsync();
-            content.Should().NotBeNullOrEmpty();
-            
-            // Check for sleep-related paths - should contain at least one endpoint
-            var containsSleepEndpoints = content.Contains("GetAllSleeps") || 
-                                        content.Contains("GetSleepByDate") ||
-                                        content.Contains("GetSleepsByDateRange");
-            containsSleepEndpoints.Should().BeTrue("swagger should document sleep endpoints");
-        }
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        var content = await response.Content.ReadAsStringAsync();
+        content.Should().NotBeNullOrEmpty();
+        
+        // Check for sleep-related paths - should contain at least one endpoint
+        var containsSleepEndpoints = content.Contains("GetAllSleeps") || 
+                                    content.Contains("GetSleepByDate") ||
+                                    content.Contains("GetSleepsByDateRange");
+        containsSleepEndpoints.Should().BeTrue("openapi should document sleep endpoints");
     }
 
     // NOTE: Root endpoint tests moved to E2E tests since they require database access

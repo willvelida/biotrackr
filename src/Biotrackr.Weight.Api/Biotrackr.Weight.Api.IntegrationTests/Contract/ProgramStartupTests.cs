@@ -126,33 +126,33 @@ public class ProgramStartupTests
     }
 
     [Fact]
-    public void Swagger_Should_Be_Enabled()
+    public void OpenApi_Should_Be_Enabled()
     {
         // Arrange
         var services = _fixture.Factory.Services;
 
-        // Act - Check if Swagger services are registered
+        // Act - Check if endpoint routing is registered
         var endpointDataSource = services.GetService<Microsoft.AspNetCore.Routing.EndpointDataSource>();
 
         // Assert
-        endpointDataSource.Should().NotBeNull("Swagger requires endpoint routing");
+        endpointDataSource.Should().NotBeNull("OpenAPI requires endpoint routing");
     }
 
     [Fact]
-    public void SwaggerUI_Should_Be_Accessible()
+    public async Task OpenApi_Endpoint_Should_Be_Accessible()
     {
         // Arrange
-        var services = _fixture.Factory.Services;
+        var client = _fixture.Factory.CreateClient();
 
-        // Act - Verify API explorer is registered (required for Swagger)
-        var apiDescriptionProvider = services.GetService<Microsoft.AspNetCore.Mvc.ApiExplorer.IApiDescriptionGroupCollectionProvider>();
+        // Act
+        var response = await client.GetAsync("/openapi/v1.json");
 
         // Assert
-        apiDescriptionProvider.Should().NotBeNull("SwaggerUI requires API Explorer service");
+        response.StatusCode.Should().Be(System.Net.HttpStatusCode.OK);
     }
 
     [Fact]
-    public void Application_Should_Register_Endpoints_ApiExplorer()
+    public void Application_Should_Register_OpenApi()
     {
         // Arrange
         var services = _fixture.Factory.Services;

@@ -227,13 +227,13 @@ public class WeightEndpointsTests : IAsyncLifetime
     }
 
     [Fact]
-    public async Task Swagger_Should_Be_Accessible()
+    public async Task OpenApi_Should_Be_Accessible()
     {
         // Arrange
         var client = _fixture.Client;
 
         // Act
-        var response = await client.GetAsync("/swagger/index.html");
+        var response = await client.GetAsync("/openapi/v1.json");
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.OK);
