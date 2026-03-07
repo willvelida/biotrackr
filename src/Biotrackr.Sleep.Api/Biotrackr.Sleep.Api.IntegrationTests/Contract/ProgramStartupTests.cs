@@ -45,15 +45,13 @@ public class ProgramStartupTests
     }
 
     [Fact]
-    public async Task Application_ShouldExposeSwaggerEndpoint()
+    public async Task Application_ShouldExposeOpenApiEndpoint()
     {
         // Act
-        var response = await _fixture.Client.GetAsync("/swagger/v1/swagger.json");
+        var response = await _fixture.Client.GetAsync("/openapi/v1.json");
 
         // Assert
         response.Should().NotBeNull();
-        response.StatusCode.Should().BeOneOf(
-            System.Net.HttpStatusCode.OK,
-            System.Net.HttpStatusCode.NotFound); // May not be available in test environment
+        response.StatusCode.Should().Be(System.Net.HttpStatusCode.OK);
     }
 }

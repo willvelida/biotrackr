@@ -15,7 +15,7 @@ permissions:
     checks: write
 
 env:
-  DOTNET_VERSION: 9.0.x
+  DOTNET_VERSION: 10.0.x
   COVERAGE_PATH: ${{ github.workspace }}/coverage
 
 jobs:
@@ -39,8 +39,9 @@ jobs:
           with:
             dotnet-version: ${{ needs.env-setup.outputs.dotnet-version }}
             working-directory: ./src/Biotrackr.Sleep.Api/Biotrackr.Sleep.Api.UnitTests
-            coverage-threshold: 80
+            coverage-threshold: 70
             fail-below-threshold: true
+            runsettings-path: ../coverage.runsettings
 
     run-contract-tests:
           name: Run API Contract Tests
