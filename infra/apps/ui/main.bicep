@@ -53,31 +53,35 @@ resource containerAppEnv 'Microsoft.App/managedEnvironments@2024-03-01' existing
   name: containerAppEnvironmentName
 }
 
-resource managedCertApex 'Microsoft.App/managedEnvironments/managedCertificates@2024-03-01' = if (!empty(customDomainName)) {
-  name: 'cert-${replace(customDomainName, '.', '-')}'
-  parent: containerAppEnv
-  location: location
-  tags: tags
-  properties: {
-    subjectName: customDomainName
-    domainControlValidation: 'HTTP'
-  }
-}
-
-resource managedCertWww 'Microsoft.App/managedEnvironments/managedCertificates@2024-03-01' = if (!empty(customDomainWww)) {
-  name: 'cert-${replace(customDomainWww, '.', '-')}'
-  parent: containerAppEnv
-  location: location
-  tags: tags
-  properties: {
-    subjectName: customDomainWww
-    domainControlValidation: 'CNAME'
-  }
-}
-
 var uiApiEndpointConfigName = 'biotrackruiapiendpoint'
 var uiApiSubscriptionKeyConfigName = 'biotrackruiapisubscriptionkey'
 
+var uiHealthProbes = [
+  {
+    type: 'Liveness'
+    httpGet: {
+      port: 8080
+      path: '/healthz'
+    }
+    initialDelaySeconds: 15
+    periodSeconds: 30
+    failureThreshold: 3
+    timeoutSeconds: 5
+  }
+]
+
+var uiEnvVariables = [
+  {
+    name: 'azureappconfigendpoint'
+    value: appConfig.properties.endpoint
+  }
+  {
+    name: 'managedidentityclientid'
+    value: uai.properties.clientId
+  }
+]
+
+// Phase 1: Deploy Container App with custom domains registered (Disabled binding, no certificate)
 module ui '../../modules/host/container-app-http.bicep' = {
   name: 'ui'
   params: {
@@ -89,29 +93,68 @@ module ui '../../modules/host/container-app-http.bicep' = {
     imageName: imageName
     uaiName: uai.name
     targetPort: 8080
-    healthProbes: [
-      {
-        type: 'Liveness'
-        httpGet: {
-          port: 8080
-          path: '/healthz'
+    healthProbes: uiHealthProbes
+    envVariables: uiEnvVariables
+    customDomains: concat(
+      !empty(customDomainName) ? [
+        {
+          name: customDomainName
+          bindingType: 'Disabled'
         }
-        initialDelaySeconds: 15
-        periodSeconds: 30
-        failureThreshold: 3
-        timeoutSeconds: 5
-      }
-    ]
-    envVariables: [
-      {
-        name: 'azureappconfigendpoint'
-        value: appConfig.properties.endpoint
-      }
-      {
-        name: 'managedidentityclientid'
-        value: uai.properties.clientId
-      }
-    ]
+      ] : [],
+      !empty(customDomainWww) ? [
+        {
+          name: customDomainWww
+          bindingType: 'Disabled'
+        }
+      ] : []
+    )
+  }
+}
+
+// Phase 2: Create managed certificates (requires hostnames to be registered on the Container App)
+resource managedCertApex 'Microsoft.App/managedEnvironments/managedCertificates@2024-03-01' = if (!empty(customDomainName)) {
+  name: 'cert-${replace(customDomainName, '.', '-')}'
+  parent: containerAppEnv
+  location: location
+  tags: tags
+  properties: {
+    subjectName: customDomainName
+    domainControlValidation: 'HTTP'
+  }
+  dependsOn: [
+    ui
+  ]
+}
+
+resource managedCertWww 'Microsoft.App/managedEnvironments/managedCertificates@2024-03-01' = if (!empty(customDomainWww)) {
+  name: 'cert-${replace(customDomainWww, '.', '-')}'
+  parent: containerAppEnv
+  location: location
+  tags: tags
+  properties: {
+    subjectName: customDomainWww
+    domainControlValidation: 'CNAME'
+  }
+  dependsOn: [
+    ui
+  ]
+}
+
+// Phase 3: Re-deploy Container App with certificate bindings (SniEnabled)
+module uiCertBinding '../../modules/host/container-app-http.bicep' = if (!empty(customDomainName) || !empty(customDomainWww)) {
+  name: 'ui-cert-binding'
+  params: {
+    name: name
+    location: location
+    tags: tags
+    containerAppEnvironmentName: containerAppEnvironmentName
+    containerRegistryName: containerRegistryName
+    imageName: imageName
+    uaiName: uai.name
+    targetPort: 8080
+    healthProbes: uiHealthProbes
+    envVariables: uiEnvVariables
     customDomains: concat(
       !empty(customDomainName) ? [
         {
@@ -129,6 +172,9 @@ module ui '../../modules/host/container-app-http.bicep' = {
       ] : []
     )
   }
+  dependsOn: [
+    ui
+  ]
 }
 
 resource uiApimSubscription 'Microsoft.ApiManagement/service/subscriptions@2024-06-01-preview' = {
@@ -145,6 +191,7 @@ resource uiContainerApp 'Microsoft.App/containerApps@2024-03-01' existing = {
   name: name
   dependsOn: [
     ui
+    uiCertBinding
   ]
 }
 
