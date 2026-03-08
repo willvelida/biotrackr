@@ -400,3 +400,6 @@ FodyWeavers.xsd
 *.sln.iml
 
 docs/plans/*
+
+.github/agents/*
+.github/skills/*

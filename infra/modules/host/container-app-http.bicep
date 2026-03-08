@@ -31,6 +31,9 @@ param envVariables array = []
 @description('The Health Probes configured for this Container App')
 param healthProbes array = []
 
+@description('Custom domain bindings for this Container App')
+param customDomains array = []
+
 resource containerAppEnv 'Microsoft.App/managedEnvironments@2024-03-01' existing = {
   name: containerAppEnvironmentName
 }
@@ -56,6 +59,7 @@ resource httpContainerApp 'Microsoft.App/containerApps@2024-03-01' = {
         transport: 'http'
         targetPort: targetPort
         allowInsecure: false
+        customDomains: empty(customDomains) ? null : customDomains
       }
       registries: [
         {

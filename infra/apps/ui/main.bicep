@@ -31,6 +31,12 @@ param easyAuthClientId string
 @description('The Entra ID tenant ID for Easy Auth')
 param easyAuthTenantId string
 
+@description('The custom domain name for the UI (apex domain, e.g. biotrackr.dev). Leave empty to skip custom domain configuration.')
+param customDomainName string = ''
+
+@description('The www subdomain for the UI (e.g. www.biotrackr.dev). Leave empty to skip.')
+param customDomainWww string = ''
+
 resource uai 'Microsoft.ManagedIdentity/userAssignedIdentities@2023-01-31' existing = {
   name: uaiName
 }
@@ -43,8 +49,34 @@ resource apim 'Microsoft.ApiManagement/service@2024-06-01-preview' existing = {
   name: apimName
 }
 
+resource containerAppEnv 'Microsoft.App/managedEnvironments@2024-03-01' existing = {
+  name: containerAppEnvironmentName
+}
+
 var uiApiEndpointConfigName = 'biotrackruiapiendpoint'
 var uiApiSubscriptionKeyConfigName = 'biotrackruiapisubscriptionkey'
+
+resource managedCertApex 'Microsoft.App/managedEnvironments/managedCertificates@2024-03-01' = if (!empty(customDomainName)) {
+  name: 'cert-${replace(customDomainName, '.', '-')}'
+  parent: containerAppEnv
+  location: location
+  tags: tags
+  properties: {
+    subjectName: customDomainName
+    domainControlValidation: 'HTTP'
+  }
+}
+
+resource managedCertWww 'Microsoft.App/managedEnvironments/managedCertificates@2024-03-01' = if (!empty(customDomainWww)) {
+  name: 'cert-${replace(customDomainWww, '.', '-')}'
+  parent: containerAppEnv
+  location: location
+  tags: tags
+  properties: {
+    subjectName: customDomainWww
+    domainControlValidation: 'CNAME'
+  }
+}
 
 module ui '../../modules/host/container-app-http.bicep' = {
   name: 'ui'
@@ -80,6 +112,22 @@ module ui '../../modules/host/container-app-http.bicep' = {
         value: uai.properties.clientId
       }
     ]
+    customDomains: concat(
+      !empty(customDomainName) ? [
+        {
+          name: customDomainName
+          certificateId: managedCertApex.id
+          bindingType: 'SniEnabled'
+        }
+      ] : [],
+      !empty(customDomainWww) ? [
+        {
+          name: customDomainWww
+          certificateId: managedCertWww.id
+          bindingType: 'SniEnabled'
+        }
+      ] : []
+    )
   }
 }
 
