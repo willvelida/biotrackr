@@ -35,10 +35,12 @@ param logAnalyticsName string
 
 var accountName = 'cosmos-${baseName}-${environment}'
 var databaseName = 'BiotrackrDB'
-var containerName = 'records'
+var recordsContainerName = 'records'
+var conversationsContainerName = 'conversations'
 var cosmosDbEndpointSettingName = 'Biotrackr:CosmosDbEndpoint'
 var cosmosDatabaseSettingName = 'Biotrackr:DatabaseName'
-var containerSettingName = 'Biotrackr:ContainerName'
+var recordsContainerSettingName = 'Biotrackr:ContainerName'
+var conversationsContainerSettingName = 'Biotrackr:ConversationsContainerName'
 var cosmosDbDataContributorRole = '00000000-0000-0000-0000-000000000002'
 
 resource uai 'Microsoft.ManagedIdentity/userAssignedIdentities@2023-01-31' existing = {
@@ -110,12 +112,12 @@ resource databaseConfigSetting 'Microsoft.AppConfiguration/configurationStores/k
   }
 }
 
-resource activityContainer 'Microsoft.DocumentDB/databaseAccounts/sqlDatabases/containers@2024-08-15' = {
-  name: containerName
+resource recordsContainer 'Microsoft.DocumentDB/databaseAccounts/sqlDatabases/containers@2024-08-15' = {
+  name: recordsContainerName
   parent: database
   properties: {
     resource: {
-      id: containerName
+      id: recordsContainerName
       partitionKey: {
         paths: [
           '/documentType'
@@ -134,11 +136,43 @@ resource activityContainer 'Microsoft.DocumentDB/databaseAccounts/sqlDatabases/c
   }
 }
 
-resource activityContainerSetting 'Microsoft.AppConfiguration/configurationStores/keyValues@2024-05-01' = {
-  name: containerSettingName
+resource recordsContainerSetting 'Microsoft.AppConfiguration/configurationStores/keyValues@2024-05-01' = {
+  name: recordsContainerSettingName
   parent: appConfig
   properties: {
-    value: containerName
+    value: recordsContainerName
+  }
+}
+
+resource conversationsContainer 'Microsoft.DocumentDB/databaseAccounts/sqlDatabases/containers@2024-08-15' = {
+  name: conversationsContainerName
+  parent: database
+  properties: {
+    resource: {
+      id: conversationsContainerName
+      partitionKey: {
+        paths: [
+          '/sessionId'
+        ]
+        kind: 'Hash'
+      }
+      indexingPolicy: {
+        indexingMode: 'consistent'
+        includedPaths: [
+          {
+            path: '/*'
+          }
+        ]
+      }
+    }
+  }
+}
+
+resource conversationsContainerSetting 'Microsoft.AppConfiguration/configurationStores/keyValues@2024-05-01' = {
+  name: conversationsContainerSettingName
+  parent: appConfig
+  properties: {
+    value: conversationsContainerName
   }
 }
 
