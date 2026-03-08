@@ -1,5 +1,3 @@
-#Requires -Modules Microsoft.Graph.Beta.Applications, Microsoft.Graph.Applications
-
 <#
 .SYNOPSIS
     Creates the Agent Identity Blueprint in Entra ID for Biotrackr Chat Agent.

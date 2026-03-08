@@ -1,5 +1,3 @@
-#Requires -Modules Microsoft.Graph.Beta.Applications, Microsoft.Graph.Beta.Identity.SignIns
-
 <#
 .SYNOPSIS
     Configures the Agent Identity for Biotrackr Chat Agent after infrastructure provisioning.
@@ -199,7 +197,14 @@ Write-Host ""
 
 Write-Host "── Step 3: Cosmos DB Role Assignment ──"
 
-$agentSpObjectId = (az ad sp show --id $agentIdentityId --query id -o tsv 2>$null)
+# Wait for agent identity SP to propagate in Entra ID
+$agentSpObjectId = $null
+for ($i = 1; $i -le 6; $i++) {
+    $agentSpObjectId = (az ad sp show --id $agentIdentityId --query id -o tsv 2>$null)
+    if ($agentSpObjectId) { break }
+    Write-Host "  Waiting for agent identity SP to propagate (attempt $i/6)..."
+    Start-Sleep -Seconds 10
+}
 if (-not $agentSpObjectId) {
     Write-Error "Could not find service principal for agent identity $agentIdentityId."
     exit 1
