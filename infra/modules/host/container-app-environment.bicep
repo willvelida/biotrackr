@@ -46,3 +46,9 @@ resource containerAppEnv 'Microsoft.App/managedEnvironments@2024-03-01' = {
 
 @description('The name of the deployed Container App Environment')
 output containerAppEnvName string = containerAppEnv.name
+
+@description('The static IP address of the Container App Environment')
+output staticIp string = containerAppEnv.properties.staticIp
+
+@description('The default domain of the Container App Environment')
+output defaultDomain string = containerAppEnv.properties.defaultDomain
