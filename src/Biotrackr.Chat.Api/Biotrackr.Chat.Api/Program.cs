@@ -24,9 +24,13 @@ if (!string.IsNullOrWhiteSpace(azureAppConfigEndpoint))
 {
     builder.Configuration.AddAzureAppConfiguration(config =>
     {
-        config.Connect(new Uri(azureAppConfigEndpoint),
-            new ManagedIdentityCredential(managedIdentityClientId))
-        .Select(KeyFilter.Any, LabelFilter.Null);
+        var credential = new ManagedIdentityCredential(managedIdentityClientId);
+        config.Connect(new Uri(azureAppConfigEndpoint), credential)
+        .Select(KeyFilter.Any, LabelFilter.Null)
+        .ConfigureKeyVault(kv =>
+        {
+            kv.SetCredential(credential);
+        });
     });
 }
 
