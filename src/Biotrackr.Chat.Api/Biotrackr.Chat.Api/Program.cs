@@ -10,6 +10,7 @@ using Microsoft.Agents.AI.Hosting.AGUI.AspNetCore;
 using Microsoft.Azure.Cosmos;
 using Microsoft.Extensions.AI;
 using Microsoft.Extensions.Configuration.AzureAppConfiguration;
+using Microsoft.Identity.Web;
 using OpenTelemetry.Metrics;
 using OpenTelemetry.Trace;
 
@@ -41,19 +42,17 @@ var defaultCredentialOptions = new DefaultAzureCredentialOptions()
 
 builder.Services.Configure<Settings>(builder.Configuration.GetSection("Biotrackr"));
 
-// Cosmos DB
-var cosmosClientOptions = new CosmosClientOptions
-{
-    SerializerOptions = new CosmosSerializationOptions
-    {
-        PropertyNamingPolicy = CosmosPropertyNamingPolicy.CamelCase
-    }
-};
-var cosmosClient = new CosmosClient(
-    builder.Configuration.GetValue<string>("cosmosdbendpoint"),
-    new DefaultAzureCredential(defaultCredentialOptions),
-    cosmosClientOptions);
-builder.Services.AddSingleton(cosmosClient);
+// Authentication with Microsoft Identity Web + agent identity token credential
+builder.Services.AddAuthentication()
+    .AddMicrosoftIdentityWebApi(builder.Configuration.GetSection("AzureAd"))
+    .EnableTokenAcquisitionToCallDownstreamApi()
+    .AddInMemoryTokenCaches();
+
+builder.Services.AddMicrosoftIdentityAzureTokenCredential();
+builder.Services.AddAgentIdentities();
+
+// Cosmos DB via agent identity
+builder.Services.AddScoped<ICosmosClientFactory, AgentIdentityCosmosClientFactory>();
 
 // Services
 builder.Services.AddScoped<IChatHistoryRepository, ChatHistoryRepository>();

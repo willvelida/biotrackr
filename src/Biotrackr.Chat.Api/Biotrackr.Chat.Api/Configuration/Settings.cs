@@ -4,6 +4,8 @@ namespace Biotrackr.Chat.Api.Configuration
     {
         public string DatabaseName { get; set; }
         public string ConversationsContainerName { get; set; }
+        public string CosmosEndpoint { get; set; }
+        public string AgentIdentityId { get; set; }
         public string ApiBaseUrl { get; set; }
         public string AnthropicApiKey { get; set; }
         public string ChatAgentModel { get; set; }
