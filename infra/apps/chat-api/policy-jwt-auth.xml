@@ -1,0 +1,30 @@
+<policies>
+  <inbound>
+    <base />
+    <choose>
+      <when condition="@(context.Request.Headers.GetValueOrDefault(&quot;Authorization&quot;,&quot;&quot;).StartsWith(&quot;Bearer &quot;))">
+        <validate-jwt header-name="Authorization" failed-validation-httpcode="401" failed-validation-error-message="Unauthorized: Invalid or missing JWT token">
+          <openid-config url="{{openid-config-url}}" />
+          <audiences>
+            <audience>{{jwt-audience}}</audience>
+          </audiences>
+          <issuers>
+            <issuer>{{jwt-issuer}}</issuer>
+          </issuers>
+        </validate-jwt>
+      </when>
+      <otherwise>
+        <check-header name="Ocp-Apim-Subscription-Key" failed-check-httpcode="401" failed-check-error-message="Unauthorized: Missing or invalid subscription key" />
+      </otherwise>
+    </choose>
+  </inbound>
+  <backend>
+    <base />
+  </backend>
+  <outbound>
+    <base />
+  </outbound>
+  <on-error>
+    <base />
+  </on-error>
+</policies>
