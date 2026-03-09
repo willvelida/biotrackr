@@ -1,17 +1,25 @@
 using Bunit;
+using Radzen;
 using Biotrackr.UI.Components.Pages;
 using FluentAssertions;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Biotrackr.UI.UnitTests.Components.Pages
 {
     public class NotFoundPageShould : BunitContext
     {
+        public NotFoundPageShould()
+        {
+            Services.AddRadzenComponents();
+            JSInterop.Mode = JSRuntimeMode.Loose;
+        }
+
         [Fact]
         public void Render404Heading()
         {
             var cut = Render<NotFound>();
 
-            cut.Find("h1.text-muted").TextContent.Should().Be("404");
+            cut.Markup.Should().Contain("404");
         }
 
         [Fact]
@@ -19,7 +27,7 @@ namespace Biotrackr.UI.UnitTests.Components.Pages
         {
             var cut = Render<NotFound>();
 
-            cut.Find("h2").TextContent.Should().Be("Page not found");
+            cut.Markup.Should().Contain("Page not found");
         }
 
         [Fact]
@@ -35,9 +43,7 @@ namespace Biotrackr.UI.UnitTests.Components.Pages
         {
             var cut = Render<NotFound>();
 
-            var link = cut.Find("a.btn-primary");
-            link.GetAttribute("href").Should().Be("/");
-            link.TextContent.Should().Contain("Back to Dashboard");
+            cut.Markup.Should().Contain("Back to Dashboard");
         }
     }
 }

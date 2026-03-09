@@ -1,18 +1,24 @@
 using Bunit;
 using Biotrackr.UI.Components.Shared;
 using FluentAssertions;
+using Radzen;
 
 namespace Biotrackr.UI.UnitTests.Components.Shared
 {
     public class LoadingSpinnerShould : BunitContext
     {
+        public LoadingSpinnerShould()
+        {
+            Services.AddRadzenComponents();
+        }
+
         [Fact]
         public void RenderSpinner_WhenIsLoadingIsTrue()
         {
             var cut = Render<LoadingSpinner>(parameters => parameters
                 .Add(p => p.IsLoading, true));
 
-            cut.Find(".spinner-border").Should().NotBeNull();
+            cut.Find(".rz-progressbar-circular").Should().NotBeNull();
         }
 
         [Fact]
@@ -40,7 +46,7 @@ namespace Biotrackr.UI.UnitTests.Components.Shared
             var cut = Render<LoadingSpinner>(parameters => parameters
                 .Add(p => p.IsLoading, true));
 
-            cut.FindAll("span.ms-3").Should().BeEmpty();
+            cut.Markup.Should().NotContain("rz-text-body2");
         }
     }
 }

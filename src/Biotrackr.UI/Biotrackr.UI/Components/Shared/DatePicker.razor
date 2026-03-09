@@ -1,45 +1,39 @@
-<div class="card mb-3">
-    <div class="card-body">
-        <div class="row g-3 align-items-end">
-            <div class="col-auto">
-                <label class="form-label mb-0">View</label>
-                <select class="form-select form-select-sm" @onchange="OnModeChanged">
-                    <option value="date" selected="@(Mode == "date")">Single Date</option>
-                    <option value="range" selected="@(Mode == "range")">Date Range</option>
-                </select>
-            </div>
+<RadzenCard class="rz-mb-3">
+    <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.End" Gap="1rem" Wrap="FlexWrap.Wrap">
+        <RadzenStack Gap="0.25rem">
+            <RadzenText TextStyle="TextStyle.Caption">View</RadzenText>
+            <RadzenSelectBar @bind-Value="Mode" TValue="string" Change="@(args => OnModeChanged(args))">
+                <Items>
+                    <RadzenSelectBarItem Text="Single Date" Value="@("date")" />
+                    <RadzenSelectBarItem Text="Date Range" Value="@("range")" />
+                </Items>
+            </RadzenSelectBar>
+        </RadzenStack>
 
-            @if (Mode == "date")
-            {
-                <div class="col-auto">
-                    <label for="singleDate" class="form-label mb-0">Date</label>
-                    <input type="date" id="singleDate" class="form-control form-control-sm" 
-                           value="@SelectedDate" @onchange="OnDateChanged" />
-                </div>
-            }
-            else
-            {
-                <div class="col-auto">
-                    <label for="startDate" class="form-label mb-0">Start</label>
-                    <input type="date" id="startDate" class="form-control form-control-sm" 
-                           value="@StartDate" @onchange="OnStartDateChanged" />
-                </div>
-                <div class="col-auto">
-                    <label for="endDate" class="form-label mb-0">End</label>
-                    <input type="date" id="endDate" class="form-control form-control-sm" 
-                           value="@EndDate" @onchange="OnEndDateChanged" />
-                </div>
-                <div class="col-auto">
-                    <button class="btn btn-primary btn-sm" @onclick="ApplyRange">Apply</button>
-                </div>
-            }
+        @if (Mode == "date")
+        {
+            <RadzenStack Gap="0.25rem">
+                <RadzenText TextStyle="TextStyle.Caption">Date</RadzenText>
+                <RadzenDatePicker @bind-Value="_singleDate" DateFormat="yyyy-MM-dd"
+                                  Change="@(args => OnDateChanged(args))" />
+            </RadzenStack>
+        }
+        else
+        {
+            <RadzenStack Gap="0.25rem">
+                <RadzenText TextStyle="TextStyle.Caption">Start</RadzenText>
+                <RadzenDatePicker @bind-Value="_startDateValue" DateFormat="yyyy-MM-dd" />
+            </RadzenStack>
+            <RadzenStack Gap="0.25rem">
+                <RadzenText TextStyle="TextStyle.Caption">End</RadzenText>
+                <RadzenDatePicker @bind-Value="_endDateValue" DateFormat="yyyy-MM-dd" />
+            </RadzenStack>
+            <RadzenButton Text="Apply" Click="ApplyRange" ButtonStyle="ButtonStyle.Primary" Size="ButtonSize.Small" />
+        }
 
-            <div class="col-auto">
-                <button class="btn btn-outline-secondary btn-sm" @onclick="GoToToday" title="Go to yesterday">Yesterday</button>
-            </div>
-        </div>
-    </div>
-</div>
+        <RadzenButton Text="Yesterday" Click="GoToToday" ButtonStyle="ButtonStyle.Light" Size="ButtonSize.Small" />
+    </RadzenStack>
+</RadzenCard>
 
 @code {
     [Parameter]
@@ -60,30 +54,35 @@
     [Parameter]
     public EventCallback<(string StartDate, string EndDate)> OnDateRangeSelected { get; set; }
 
-    private void OnModeChanged(ChangeEventArgs e)
+    private DateTime? _singleDate;
+    private DateTime? _startDateValue;
+    private DateTime? _endDateValue;
+
+    protected override void OnParametersSet()
     {
-        Mode = e.Value?.ToString() ?? "date";
+        if (DateTime.TryParse(SelectedDate, out var d)) _singleDate = d;
+        if (DateTime.TryParse(StartDate, out var s)) _startDateValue = s;
+        if (DateTime.TryParse(EndDate, out var e)) _endDateValue = e;
+    }
+
+    private void OnModeChanged(object value)
+    {
         StateHasChanged();
     }
 
-    private async Task OnDateChanged(ChangeEventArgs e)
+    private async Task OnDateChanged(DateTime? value)
     {
-        SelectedDate = e.Value?.ToString() ?? SelectedDate;
-        await OnSingleDateSelected.InvokeAsync(SelectedDate);
-    }
-
-    private void OnStartDateChanged(ChangeEventArgs e)
-    {
-        StartDate = e.Value?.ToString() ?? StartDate;
-    }
-
-    private void OnEndDateChanged(ChangeEventArgs e)
-    {
-        EndDate = e.Value?.ToString() ?? EndDate;
+        if (value.HasValue)
+        {
+            SelectedDate = value.Value.ToString("yyyy-MM-dd");
+            await OnSingleDateSelected.InvokeAsync(SelectedDate);
+        }
     }
 
     private async Task ApplyRange()
     {
+        if (_startDateValue.HasValue) StartDate = _startDateValue.Value.ToString("yyyy-MM-dd");
+        if (_endDateValue.HasValue) EndDate = _endDateValue.Value.ToString("yyyy-MM-dd");
         await OnDateRangeSelected.InvokeAsync((StartDate, EndDate));
     }
 
@@ -91,8 +90,11 @@
     {
         var yesterday = DateOnly.FromDateTime(DateTime.Today.AddDays(-1)).ToString("yyyy-MM-dd");
         SelectedDate = yesterday;
+        _singleDate = DateTime.Today.AddDays(-1);
         StartDate = DateOnly.FromDateTime(DateTime.Today.AddDays(-8)).ToString("yyyy-MM-dd");
+        _startDateValue = DateTime.Today.AddDays(-8);
         EndDate = yesterday;
+        _endDateValue = DateTime.Today.AddDays(-1);
 
         if (Mode == "date")
         {

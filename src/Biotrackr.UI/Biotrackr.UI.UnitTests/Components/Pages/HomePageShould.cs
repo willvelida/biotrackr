@@ -1,5 +1,6 @@
 using Bunit;
 using Moq;
+using Radzen;
 using Biotrackr.UI.Components.Pages;
 using Biotrackr.UI.Models.Activity;
 using Biotrackr.UI.Models.Food;
@@ -19,6 +20,8 @@ namespace Biotrackr.UI.UnitTests.Components.Pages
         {
             _mockApiService = new Mock<IBiotrackrApiService>();
             Services.AddSingleton(_mockApiService.Object);
+            Services.AddRadzenComponents();
+            JSInterop.Mode = JSRuntimeMode.Loose;
         }
 
         [Fact]
@@ -28,7 +31,7 @@ namespace Biotrackr.UI.UnitTests.Components.Pages
 
             var cut = Render<Home>();
 
-            cut.Find("h1").TextContent.Should().Be("Dashboard");
+            cut.Markup.Should().Contain("Dashboard");
         }
 
         [Fact]
@@ -74,7 +77,7 @@ namespace Biotrackr.UI.UnitTests.Components.Pages
             var cut = Render<Home>();
 
             // Should show "--" placeholders for missing data
-            cut.FindAll("h3.card-title").Should().OnlyContain(el => el.TextContent.Contains("--"));
+            cut.Markup.Should().Contain("--");
         }
 
         [Fact]

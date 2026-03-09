@@ -1,6 +1,7 @@
 using System.Diagnostics.CodeAnalysis;
 using Azure.Identity;
 using Biotrackr.UI.Components;
+using Radzen;
 using Biotrackr.UI.Configuration;
 using Biotrackr.UI.Services;
 using Microsoft.Extensions.Configuration.AzureAppConfiguration;
@@ -37,6 +38,8 @@ builder.Services.AddOptions<BiotrackrApiSettings>()
 
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
+
+builder.Services.AddRadzenComponents();
 
 builder.Services.AddOpenTelemetry()
     .WithTracing(b => b.AddSource("Biotrackr.UI")
