@@ -69,7 +69,7 @@ jobs:
                     "-filefilters:-*.g.cs"
 
             - name: Upload Coverage Report
-              uses: actions/upload-artifact@v5
+              uses: actions/upload-artifact@v7
               if: always()
               with:
                 name: coverage-report-${{ github.run_number }}
