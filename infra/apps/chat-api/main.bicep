@@ -329,6 +329,23 @@ resource azureAdClientIdSetting 'Microsoft.AppConfiguration/configurationStores/
   }
 }
 
+// App Configuration: Client credentials — use managed identity FIC assertion
+resource azureAdClientCredSourceTypeSetting 'Microsoft.AppConfiguration/configurationStores/keyValues@2025-02-01-preview' = if (enableManagedIdentityAuth) {
+  name: 'AzureAd:ClientCredentials:0:SourceType'
+  parent: appConfig
+  properties: {
+    value: 'SignedAssertionFromManagedIdentity'
+  }
+}
+
+resource azureAdClientCredManagedIdentitySetting 'Microsoft.AppConfiguration/configurationStores/keyValues@2025-02-01-preview' = if (enableManagedIdentityAuth) {
+  name: 'AzureAd:ClientCredentials:0:ManagedIdentityClientId'
+  parent: appConfig
+  properties: {
+    value: uai.properties.clientId
+  }
+}
+
 // App Configuration: APIM base URL for calling other Biotrackr APIs
 resource apiBaseUrlSetting 'Microsoft.AppConfiguration/configurationStores/keyValues@2025-02-01-preview' = {
   name: 'Biotrackr:ApiBaseUrl'
