@@ -64,5 +64,36 @@ namespace Biotrackr.UI.UnitTests.Components.Shared
             cut.Markup.Should().Contain("Start");
             cut.Markup.Should().Contain("End");
         }
+
+        [Fact]
+        public void RenderModeToggle_WithBothOptions()
+        {
+            var cut = Render<DatePicker>();
+
+            cut.Markup.Should().Contain("Single Date");
+            cut.Markup.Should().Contain("Date Range");
+        }
+
+        [Fact]
+        public void RenderWithCustomSelectedDate()
+        {
+            var cut = Render<DatePicker>(parameters => parameters
+                .Add(p => p.SelectedDate, "2026-01-15"));
+
+            cut.Find(".rz-datepicker").Should().NotBeNull();
+        }
+
+        [Fact]
+        public void RenderRangeMode_WithCustomDates()
+        {
+            var cut = Render<DatePicker>(parameters => parameters
+                .Add(p => p.Mode, "range")
+                .Add(p => p.StartDate, "2026-01-01")
+                .Add(p => p.EndDate, "2026-01-31"));
+
+            cut.Markup.Should().Contain("Start");
+            cut.Markup.Should().Contain("End");
+            cut.Find(".rz-datepicker").Should().NotBeNull();
+        }
     }
 }
