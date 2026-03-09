@@ -23,6 +23,7 @@ The application follows a **microservices architecture** with separate services 
 - **Weight Service**: Handles weight measurements and trends
 - **Food Service**: Tracks nutrition and food logging data from Fitbit
 - **Auth Service**: Manages authentication and authorization with Fitbit API
+- **Chat API**: AI-powered chat agent for querying and analysing health data via natural language
 - **MCP Server**: [Model Context Protocol](https://modelcontextprotocol.io/) server exposing all health data as MCP tools for AI assistants
 - **UI**: Blazor Server dashboard for visualizing activity, sleep, weight, and food data
 
@@ -39,6 +40,7 @@ Each service consists of:
 - 🍎 **Food Logging**: Nutrition tracking and food diary management
 - 🔐 **Secure Authentication**: OAuth integration with Fitbit
 - 📊 **Data Insights**: Analysis and reporting on health metrics
+- 💬 **AI Chat Agent**: Natural language chat interface powered by Claude for querying and analysing health data
 - 🤖 **MCP Integration**: AI-ready via Model Context Protocol server with 12 tools across all health domains
 - 🖥️ **Web Dashboard**: Blazor Server UI for browsing and visualizing health data
 - ☁️ **Cloud-Native**: Fully deployed on Azure with auto-scaling
@@ -52,6 +54,7 @@ Each service consists of:
 - **Azure Cosmos DB**: NoSQL database for scalable data storage
 - **Azure App Configuration**: Centralized configuration management
 - **Azure Key Vault**: Secure secrets management
+- **Microsoft Agent Framework**: AI agent orchestration with Claude (Anthropic) as the LLM backend
 
 ### Infrastructure
 - **Bicep**: Infrastructure as Code (IaC) for Azure resources
@@ -84,7 +87,8 @@ Each service consists of:
 | **Weight Service** | [![Deploy Weight Service](https://github.com/willvelida/biotrackr/actions/workflows/deploy-weight-service.yml/badge.svg)](https://github.com/willvelida/biotrackr/actions/workflows/deploy-weight-service.yml) | ![Code Coverage](https://img.shields.io/badge/Code%20Coverage-100%25-brightgreen?style=flat) | ![Integration Tests](https://img.shields.io/badge/Tests-4%20Passing-brightgreen?style=flat) |
 | **Food API** | [![Deploy Food Api](https://github.com/willvelida/biotrackr/actions/workflows/deploy-food-api.yml/badge.svg)](https://github.com/willvelida/biotrackr/actions/workflows/deploy-food-api.yml) | ![Code Coverage](https://img.shields.io/badge/Code%20Coverage-70%25-yellow?style=flat) | ![Integration Tests](https://img.shields.io/badge/Tests-26%20Passing-brightgreen?style=flat) |
 | **Food Service** | [![Deploy Food Service](https://github.com/willvelida/biotrackr/actions/workflows/deploy-food-service.yml/badge.svg)](https://github.com/willvelida/biotrackr/actions/workflows/deploy-food-service.yml) | ![Code Coverage](https://img.shields.io/badge/Code%20Coverage-100%25-brightgreen?style=flat) | ![Integration Tests](https://img.shields.io/badge/Tests-14%20Passing-brightgreen?style=flat) |
-| **MCP Server** | [![Deploy MCP Server](https://github.com/willvelida/biotrackr/actions/workflows/deploy-mcp-server.yml/badge.svg)](https://github.com/willvelida/biotrackr/actions/workflows/deploy-mcp-server.yml) | ![Code Coverage](https://img.shields.io/badge/Code%20Coverage-106%20Tests-brightgreen?style=flat) | ![Integration Tests](https://img.shields.io/badge/Tests-13%20Passing-brightgreen?style=flat) |
+| **Chat API** | [![Deploy Chat Api](https://github.com/willvelida/biotrackr/actions/workflows/deploy-chat-api.yml/badge.svg)](https://github.com/willvelida/biotrackr/actions/workflows/deploy-chat-api.yml) | ![Code Coverage](https://img.shields.io/badge/Code%20Coverage-86%25-brightgreen?style=flat) | ![Integration Tests](https://img.shields.io/badge/Tests-2%20Passing-brightgreen?style=flat) |
+| **MCP Server** | [![Deploy MCP Server](https://github.com/willvelida/biotrackr/actions/workflows/deploy-mcp-server.yml/badge.svg)](https://github.com/willvelida/biotrackr/actions/workflows/deploy-mcp-server.yml) | ![Code Coverage](https://img.shields.io/badge/Code%20Coverage-76%25-yellow?style=flat) | ![Integration Tests](https://img.shields.io/badge/Tests-13%20Passing-brightgreen?style=flat) |
 | **UI** | [![Deploy UI](https://github.com/willvelida/biotrackr/actions/workflows/deploy-ui.yml/badge.svg)](https://github.com/willvelida/biotrackr/actions/workflows/deploy-ui.yml) | N/A | N/A |
 
 ##  License
