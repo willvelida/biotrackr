@@ -1,0 +1,5 @@
+<Solution>
+  <Project Path="Biotrackr.Chat.Api.IntegrationTests/Biotrackr.Chat.Api.IntegrationTests.csproj" />
+  <Project Path="Biotrackr.Chat.Api.UnitTests/Biotrackr.Chat.Api.UnitTests.csproj" />
+  <Project Path="Biotrackr.Chat.Api/Biotrackr.Chat.Api.csproj" />
+</Solution>

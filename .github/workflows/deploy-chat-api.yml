@@ -1,0 +1,152 @@
+name: Deploy Chat Api
+
+on:
+    pull_request:
+        branches:
+            - main
+        paths:
+            - 'infra/apps/chat-api/**'
+            - 'src/Biotrackr.Chat.Api/**'
+
+permissions:
+    contents: read
+    id-token: write
+    pull-requests: write
+    checks: write
+
+env:
+  DOTNET_VERSION: 10.0.x
+
+jobs:
+    env-setup:
+        name: Setup Environment
+        runs-on: ubuntu-latest
+        outputs:
+          dotnet-version: ${{ steps.set-output-defaults.outputs.dotnet-version }}
+        steps:
+          - name: set outputs with default values
+            id: set-output-defaults
+            run: |
+              echo "dotnet-version=${{ env.DOTNET_VERSION }}" >> "$GITHUB_OUTPUT"
+
+    run-unit-tests:
+          name: Run Unit Tests with Coverage
+          needs: env-setup
+          uses: willvelida/biotrackr/.github/workflows/template-dotnet-run-unit-tests.yml@main
+          with:
+            dotnet-version: ${{ needs.env-setup.outputs.dotnet-version }}
+            working-directory: ./src/Biotrackr.Chat.Api/Biotrackr.Chat.Api.UnitTests
+            coverage-threshold: 70
+            fail-below-threshold: true
+            runsettings-path: ../coverage.runsettings
+
+    run-contract-tests:
+          name: Run API Contract Tests
+          needs: env-setup
+          uses: willvelida/biotrackr/.github/workflows/template-dotnet-run-contract-tests.yml@main
+          with:
+            dotnet-version: ${{ needs.env-setup.outputs.dotnet-version }}
+            working-directory: ./src/Biotrackr.Chat.Api/Biotrackr.Chat.Api.IntegrationTests
+            test-filter: 'FullyQualifiedName~Contract'
+
+    build-container-image-dev:
+          name: Build and Push Container Image
+          needs: [run-unit-tests, run-contract-tests]
+          uses: willvelida/biotrackr/.github/workflows/template-acr-push-image.yml@main
+          with:
+            working-directory: ./src/Biotrackr.Chat.Api
+            app-name: biotrackr-chat-api
+          secrets:
+            client-id: ${{ secrets.AZURE_CLIENT_ID }}
+            tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+            subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+            resource-group-name: ${{ secrets.AZURE_RG_NAME_DEV }}
+
+    retrieve-container-image-dev:
+        name: Retrieve Container Image
+        needs: build-container-image-dev
+        runs-on: ubuntu-latest
+        outputs:
+          loginServer: ${{ steps.get-acr-server.outputs.loginServer }}
+        steps:
+          - name: Azure login
+            uses: azure/login@v2
+            with:
+              client-id: ${{ secrets.AZURE_CLIENT_ID }}
+              tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+              subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+          - name: Get ACR server
+            id: get-acr-server
+            run: |
+              loginServer=$(az acr list --resource-group ${{ secrets.AZURE_RG_NAME_DEV }} --query "[0].loginServer" -o tsv)
+              echo "loginServer=$loginServer" > "$GITHUB_OUTPUT"
+
+    lint:
+        name: Run Bicep Linter
+        needs: retrieve-container-image-dev
+        uses: willvelida/biotrackr/.github/workflows/template-bicep-linter.yml@main
+        with:
+            template-file: './infra/apps/chat-api/main.bicep'
+
+    validate:
+        name: Validate Template
+        needs: [lint, retrieve-container-image-dev]
+        uses: willvelida/biotrackr/.github/workflows/template-bicep-validate.yml@main
+        with:
+          template-file: './infra/apps/chat-api/main.bicep'
+          parameters-file: ./infra/apps/chat-api/main.dev.bicepparam
+          parameters: '{"imageName": "${{ needs.retrieve-container-image-dev.outputs.loginServer }}/biotrackr-chat-api:${{ github.sha }}"}'
+          scope: resourceGroup
+          inject-tenant-id: true
+        secrets:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+          resource-group-name: ${{ secrets.AZURE_RG_NAME_DEV }}
+
+    preview:
+        name: Preview Changes
+        needs: [validate, retrieve-container-image-dev]
+        uses: willvelida/biotrackr/.github/workflows/template-bicep-whatif.yml@main
+        with:
+          scope: resourceGroup
+          template-file: './infra/apps/chat-api/main.bicep'
+          parameters-file: ./infra/apps/chat-api/main.dev.bicepparam
+          parameters: '{"imageName": "${{ needs.retrieve-container-image-dev.outputs.loginServer }}/biotrackr-chat-api:${{ github.sha }}"}'
+          inject-tenant-id: true
+        secrets:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+          resource-group-name: ${{ secrets.AZURE_RG_NAME_DEV }}
+
+    deploy-dev:
+        name: Deploy Template to Dev
+        needs: [preview, retrieve-container-image-dev]
+        uses: willvelida/biotrackr/.github/workflows/template-bicep-deploy.yml@main
+        with:
+          template-file: './infra/apps/chat-api/main.bicep'
+          parameters-file: ./infra/apps/chat-api/main.dev.bicepparam
+          parameters: '{"imageName": "${{ needs.retrieve-container-image-dev.outputs.loginServer }}/biotrackr-chat-api:${{ github.sha }}"}'
+          scope: resourceGroup
+          inject-tenant-id: true
+          environment: dev
+        secrets:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+          resource-group-name: ${{ secrets.AZURE_RG_NAME_DEV }}
+
+    run-e2e-tests:
+        name: Run E2E Tests Against Dev
+        needs: [deploy-dev, env-setup]
+        uses: willvelida/biotrackr/.github/workflows/template-dotnet-run-e2e-tests.yml@main
+        with:
+          dotnet-version: ${{ needs.env-setup.outputs.dotnet-version }}
+          working-directory: ./src/Biotrackr.Chat.Api/Biotrackr.Chat.Api.IntegrationTests
+          test-filter: 'FullyQualifiedName~E2E'
+        secrets:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
