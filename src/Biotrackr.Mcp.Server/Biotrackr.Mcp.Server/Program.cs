@@ -21,11 +21,15 @@ var azureAppConfigEndpoint = builder.Configuration.GetValue<string>("azureappcon
 
 if (!string.IsNullOrWhiteSpace(azureAppConfigEndpoint))
 {
+    var credential = new ManagedIdentityCredential(managedIdentityClientId);
     builder.Configuration.AddAzureAppConfiguration(config =>
     {
-        config.Connect(new Uri(azureAppConfigEndpoint),
-            new ManagedIdentityCredential(managedIdentityClientId))
-        .Select(keyFilter: KeyFilter.Any, LabelFilter.Null);
+        config.Connect(new Uri(azureAppConfigEndpoint), credential)
+        .Select(keyFilter: KeyFilter.Any, LabelFilter.Null)
+        .ConfigureKeyVault(kv =>
+        {
+            kv.SetCredential(credential);
+        });
     });
 }
 

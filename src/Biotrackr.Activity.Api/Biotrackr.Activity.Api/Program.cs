@@ -15,11 +15,15 @@ var azureAppConfigEndpoint = builder.Configuration.GetValue<string>("azureappcon
 // Only load Azure App Configuration if endpoint is provided (not in test environment)
 if (!string.IsNullOrWhiteSpace(azureAppConfigEndpoint))
 {
+    var credential = new ManagedIdentityCredential(managedIdentityClientId);
     builder.Configuration.AddAzureAppConfiguration(config =>
     {
-        config.Connect(new Uri(azureAppConfigEndpoint),
-            new ManagedIdentityCredential(managedIdentityClientId))
-        .Select(KeyFilter.Any, LabelFilter.Null);
+        config.Connect(new Uri(azureAppConfigEndpoint), credential)
+        .Select(KeyFilter.Any, LabelFilter.Null)
+        .ConfigureKeyVault(kv =>
+        {
+            kv.SetCredential(credential);
+        });
     });
 }
 
