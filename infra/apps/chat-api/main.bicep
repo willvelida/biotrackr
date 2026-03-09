@@ -43,6 +43,12 @@ param jwtAudience string = environment().authentication.audiences[0]
 @description('The Claude model to use for the chat agent')
 param chatAgentModel string = 'claude-sonnet-4-6'
 
+@description('The application (client) ID of the agent identity blueprint')
+param agentBlueprintClientId string
+
+@description('The agent identity ID for Cosmos DB access')
+param agentIdentityId string
+
 resource uai 'Microsoft.ManagedIdentity/userAssignedIdentities@2023-01-31' existing = {
   name: uaiName
 }
@@ -98,10 +104,6 @@ module chatApi '../../modules/host/container-app-http.bicep' = {
       {
         name: 'managedidentityclientid'
         value: uai.properties.clientId
-      }
-      {
-        name: 'cosmosdbendpoint'
-        value: cosmosDbAccount.properties.documentEndpoint
       }
     ]
   }
@@ -276,5 +278,48 @@ resource anthropicApiKeySetting 'Microsoft.AppConfiguration/configurationStores/
   properties: {
     contentType: 'application/vnd.microsoft.appconfig.keyvaultref+json;charset=utf-8'
     value: '{"uri":"${keyVault.properties.vaultUri}secrets/AnthropicApiKey"}'
+  }
+}
+
+// App Configuration: Cosmos DB endpoint
+resource cosmosEndpointSetting 'Microsoft.AppConfiguration/configurationStores/keyValues@2025-02-01-preview' = {
+  name: 'Biotrackr:CosmosEndpoint'
+  parent: appConfig
+  properties: {
+    value: cosmosDbAccount.properties.documentEndpoint
+  }
+}
+
+// App Configuration: Azure AD settings for agent identity
+resource azureAdInstanceSetting 'Microsoft.AppConfiguration/configurationStores/keyValues@2025-02-01-preview' = if (enableManagedIdentityAuth) {
+  name: 'AzureAd:Instance'
+  parent: appConfig
+  properties: {
+    value: environment().authentication.loginEndpoint
+  }
+}
+
+resource azureAdTenantIdSetting 'Microsoft.AppConfiguration/configurationStores/keyValues@2025-02-01-preview' = if (enableManagedIdentityAuth) {
+  name: 'AzureAd:TenantId'
+  parent: appConfig
+  properties: {
+    value: tenantId
+  }
+}
+
+resource azureAdClientIdSetting 'Microsoft.AppConfiguration/configurationStores/keyValues@2025-02-01-preview' = if (enableManagedIdentityAuth) {
+  name: 'AzureAd:ClientId'
+  parent: appConfig
+  properties: {
+    value: agentBlueprintClientId
+  }
+}
+
+// App Configuration: Agent identity ID for Cosmos DB access
+resource agentIdentityIdSetting 'Microsoft.AppConfiguration/configurationStores/keyValues@2025-02-01-preview' = if (enableManagedIdentityAuth) {
+  name: 'Biotrackr:AgentIdentityId'
+  parent: appConfig
+  properties: {
+    value: agentIdentityId
   }
 }

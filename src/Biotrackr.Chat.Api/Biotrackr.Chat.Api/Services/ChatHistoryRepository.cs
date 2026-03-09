@@ -7,17 +7,24 @@ namespace Biotrackr.Chat.Api.Services
 {
     public class ChatHistoryRepository : IChatHistoryRepository
     {
-        private readonly Container _container;
+        private readonly ICosmosClientFactory _cosmosClientFactory;
+        private readonly Settings _settings;
         private readonly ILogger<ChatHistoryRepository> _logger;
 
         public ChatHistoryRepository(
-            CosmosClient cosmosClient,
+            ICosmosClientFactory cosmosClientFactory,
             IOptions<Settings> options,
             ILogger<ChatHistoryRepository> logger)
         {
-            var settings = options.Value;
-            _container = cosmosClient.GetContainer(settings.DatabaseName, settings.ConversationsContainerName);
+            _cosmosClientFactory = cosmosClientFactory;
+            _settings = options.Value;
             _logger = logger;
+        }
+
+        private Container GetContainer()
+        {
+            var client = _cosmosClientFactory.Create();
+            return client.GetContainer(_settings.DatabaseName, _settings.ConversationsContainerName);
         }
 
         public async Task<ChatConversationDocument?> GetConversationAsync(string sessionId)
@@ -26,7 +33,8 @@ namespace Biotrackr.Chat.Api.Services
 
             try
             {
-                var response = await _container.ReadItemAsync<ChatConversationDocument>(
+                var container = GetContainer();
+                var response = await container.ReadItemAsync<ChatConversationDocument>(
                     sessionId, new PartitionKey(sessionId));
                 return response.Resource;
             }
@@ -50,7 +58,8 @@ namespace Biotrackr.Chat.Api.Services
                 .WithParameter("@offset", pagination.Skip)
                 .WithParameter("@limit", pagination.PageSize);
 
-            var iterator = _container.GetItemQueryIterator<ChatConversationSummary>(queryDefinition);
+            var container = GetContainer();
+            var iterator = container.GetItemQueryIterator<ChatConversationSummary>(queryDefinition);
             var results = new List<ChatConversationSummary>();
 
             while (iterator.HasMoreResults)
@@ -77,9 +86,10 @@ namespace Biotrackr.Chat.Api.Services
             _logger.LogInformation("Saving {Role} message to conversation {SessionId}", role, sessionId);
 
             ChatConversationDocument conversation;
+            var container = GetContainer();
             try
             {
-                var response = await _container.ReadItemAsync<ChatConversationDocument>(
+                var response = await container.ReadItemAsync<ChatConversationDocument>(
                     sessionId, new PartitionKey(sessionId));
                 conversation = response.Resource;
             }
@@ -108,7 +118,7 @@ namespace Biotrackr.Chat.Api.Services
                 conversation.Title = content.Length > 50 ? content[..50] + "..." : content;
             }
 
-            await _container.UpsertItemAsync(conversation, new PartitionKey(sessionId));
+            await container.UpsertItemAsync(conversation, new PartitionKey(sessionId));
 
             _logger.LogInformation("Saved message to conversation {SessionId}, total messages: {Count}",
                 sessionId, conversation.Messages.Count);
@@ -119,14 +129,16 @@ namespace Biotrackr.Chat.Api.Services
         public async Task DeleteConversationAsync(string sessionId)
         {
             _logger.LogInformation("Deleting conversation {SessionId}", sessionId);
-            await _container.DeleteItemAsync<ChatConversationDocument>(
+            var container = GetContainer();
+            await container.DeleteItemAsync<ChatConversationDocument>(
                 sessionId, new PartitionKey(sessionId));
         }
 
         private async Task<int> GetTotalConversationCount()
         {
             var countQuery = new QueryDefinition("SELECT VALUE COUNT(1) FROM c");
-            var iterator = _container.GetItemQueryIterator<int>(countQuery);
+            var container = GetContainer();
+            var iterator = container.GetItemQueryIterator<int>(countQuery);
 
             while (iterator.HasMoreResults)
             {

@@ -13,6 +13,7 @@ namespace Biotrackr.Chat.Api.UnitTests.Services
 {
     public class ChatHistoryRepositoryShould
     {
+        private readonly Mock<ICosmosClientFactory> _cosmosClientFactoryMock;
         private readonly Mock<CosmosClient> _cosmosClientMock;
         private readonly Mock<Container> _containerMock;
         private readonly Mock<ILogger<ChatHistoryRepository>> _loggerMock;
@@ -20,6 +21,7 @@ namespace Biotrackr.Chat.Api.UnitTests.Services
 
         public ChatHistoryRepositoryShould()
         {
+            _cosmosClientFactoryMock = new Mock<ICosmosClientFactory>();
             _cosmosClientMock = new Mock<CosmosClient>();
             _containerMock = new Mock<Container>();
             _loggerMock = new Mock<ILogger<ChatHistoryRepository>>();
@@ -31,10 +33,13 @@ namespace Biotrackr.Chat.Api.UnitTests.Services
             };
             var options = Options.Create(settings);
 
+            _cosmosClientFactoryMock.Setup(x => x.Create())
+                .Returns(_cosmosClientMock.Object);
+
             _cosmosClientMock.Setup(x => x.GetContainer("test-db", "conversations"))
                 .Returns(_containerMock.Object);
 
-            _sut = new ChatHistoryRepository(_cosmosClientMock.Object, options, _loggerMock.Object);
+            _sut = new ChatHistoryRepository(_cosmosClientFactoryMock.Object, options, _loggerMock.Object);
         }
 
         [Fact]
