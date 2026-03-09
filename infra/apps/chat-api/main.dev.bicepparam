@@ -18,3 +18,5 @@ param keyVaultName = 'kv-biotrackr-dev'
 param enableManagedIdentityAuth = true
 param tenantId = ''
 param chatAgentModel = 'claude-sonnet-4-6'
+param agentBlueprintClientId = 'b638e7d4-52f3-4afb-a466-9b796da98d77'
+param agentIdentityId = '707307f7-ffc4-4744-a66b-19fa942c1c10'
