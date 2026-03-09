@@ -68,6 +68,22 @@ builder.Services.AddScoped<IBiotrackrApiService>(provider =>
     return new BiotrackrApiService(httpClient, logger);
 });
 
+builder.Services.AddHttpClient("ChatApi", (sp, client) =>
+{
+    var settings = sp.GetRequiredService<Microsoft.Extensions.Options.IOptions<BiotrackrApiSettings>>().Value;
+    var baseUrl = settings.BaseUrl ?? throw new InvalidOperationException("biotrackrapiendpoint is not configured.");
+    client.BaseAddress = new Uri($"{baseUrl.TrimEnd('/')}/chat/");
+})
+.AddHttpMessageHandler<ApiKeyDelegatingHandler>()
+.AddStandardResilienceHandler();
+
+builder.Services.AddScoped<IChatApiService>(provider =>
+{
+    var httpClient = provider.GetRequiredService<IHttpClientFactory>().CreateClient("ChatApi");
+    var logger = provider.GetRequiredService<ILogger<ChatApiService>>();
+    return new ChatApiService(httpClient, logger);
+});
+
 var app = builder.Build();
 
 if (!app.Environment.IsDevelopment())

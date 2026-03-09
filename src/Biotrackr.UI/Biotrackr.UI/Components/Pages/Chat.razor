@@ -1,0 +1,305 @@
+@page "/chat"
+@rendermode InteractiveServer
+@inject IChatApiService ChatApiService
+@inject IJSRuntime JS
+@using Biotrackr.UI.Telemetry
+
+<PageTitle>Biotrackr - Chat</PageTitle>
+
+<div class="chat-container">
+    <div class="chat-sidebar">
+        <div class="chat-sidebar-header">
+            <h6>Conversations</h6>
+            <button class="new-chat-btn" @onclick="StartNewConversation" disabled="@_isStreaming">+ New Chat</button>
+        </div>
+
+        @if (_isLoadingConversations)
+        {
+            <div class="chat-sidebar-loading">Loading...</div>
+        }
+        else if (_conversations.Count == 0)
+        {
+            <div class="chat-sidebar-empty">No conversations yet</div>
+        }
+        else
+        {
+            <div class="chat-sidebar-list">
+                @foreach (var conversation in _conversations)
+                {
+                    <div class="chat-sidebar-item @(conversation.SessionId == _currentSessionId ? "active" : "")"
+                         @onclick="() => LoadConversation(conversation.SessionId)">
+                        <div class="chat-sidebar-item-title">@conversation.Title</div>
+                        <div class="chat-sidebar-item-date">@conversation.LastUpdated.ToString("MMM dd, HH:mm")</div>
+                        <button class="chat-sidebar-item-delete" title="Delete conversation"
+                                @onclick="() => DeleteConversation(conversation.SessionId)"
+                                @onclick:stopPropagation="true"
+                                disabled="@_isStreaming">&#x2715;</button>
+                    </div>
+                }
+
+                @if (_hasMoreConversations)
+                {
+                    <button class="load-more-btn" @onclick="LoadMoreConversations" disabled="@_isLoadingConversations">
+                        Load more
+                    </button>
+                }
+            </div>
+        }
+    </div>
+
+    <div class="chat-main">
+        <div class="disclaimer-banner">
+            &#x26A0; This AI assistant provides data summaries only. It is not medical advice. Always consult a healthcare professional.
+        </div>
+
+        <ErrorDisplay Message="@_errorMessage" />
+
+        <div class="chat-messages" @ref="_messagesContainer">
+            @if (_messages.Count == 0 && !_isStreaming)
+            {
+                <div class="chat-empty-state">
+                    <p>Ask me about your health and fitness data.</p>
+                    <p>Try: <em>"How many steps did I take yesterday?"</em></p>
+                </div>
+            }
+            else
+            {
+                @foreach (var message in _messages)
+                {
+                    <div class="message @(message.Role == "user" ? "message-user" : "message-agent")">
+                        <div class="message-content">@message.Content</div>
+                        @if (message.Role == "assistant" && message.ToolCalls is { Count: > 0 })
+                        {
+                            <div class="message-tool-badges">
+                                @foreach (var tool in message.ToolCalls)
+                                {
+                                    <span class="tool-badge">@tool</span>
+                                }
+                            </div>
+                        }
+                        <div class="message-timestamp">@message.Timestamp.ToString("HH:mm")</div>
+                    </div>
+                }
+
+                @if (_isStreaming)
+                {
+                    <div class="message message-agent">
+                        @if (!string.IsNullOrEmpty(_currentResponse))
+                        {
+                            <div class="message-content">@_currentResponse</div>
+                        }
+                        <div class="typing-indicator">
+                            <span></span><span></span><span></span>
+                        </div>
+                    </div>
+                }
+            }
+        </div>
+
+        <div class="chat-input-area">
+            <input type="text" class="chat-input" placeholder="Type a message..."
+                   @bind="_inputMessage" @bind:event="oninput"
+                   @onkeydown="HandleKeyDown"
+                   disabled="@_isStreaming" />
+            <button class="chat-send-btn" @onclick="SendMessage"
+                    disabled="@(_isStreaming || string.IsNullOrWhiteSpace(_inputMessage))">
+                Send
+            </button>
+        </div>
+    </div>
+</div>
+
+@code {
+    private List<ChatMessage> _messages = [];
+    private List<ChatConversationSummary> _conversations = [];
+    private string? _currentSessionId;
+    private bool _isStreaming;
+    private string _currentResponse = string.Empty;
+    private List<string> _currentToolCalls = [];
+    private string _inputMessage = string.Empty;
+    private string? _errorMessage;
+    private bool _isLoadingConversations;
+    private bool _hasMoreConversations;
+    private int _conversationPage = 1;
+    private ElementReference _messagesContainer;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadConversationsList();
+    }
+
+    private async Task SendMessage()
+    {
+        if (string.IsNullOrWhiteSpace(_inputMessage) || _isStreaming)
+            return;
+
+        var messageText = _inputMessage.Trim();
+        _inputMessage = string.Empty;
+        _errorMessage = null;
+
+        _messages.Add(new ChatMessage
+        {
+            Role = "user",
+            Content = messageText,
+            Timestamp = DateTime.UtcNow
+        });
+
+        _isStreaming = true;
+        _currentResponse = string.Empty;
+        _currentToolCalls = [];
+        StateHasChanged();
+
+        if (_currentSessionId is null)
+        {
+            ChatTelemetry.ConversationsCreated.Add(1);
+        }
+
+        try
+        {
+            await foreach (var evt in ChatApiService.SendMessageAsync(_currentSessionId, messageText))
+            {
+                switch (evt.Type)
+                {
+                    case "TEXT_MESSAGE_CONTENT":
+                        _currentResponse += evt.Delta;
+                        StateHasChanged();
+                        break;
+
+                    case "RUN_STARTED":
+                        if (evt.ThreadId is not null)
+                        {
+                            _currentSessionId = evt.ThreadId;
+                        }
+                        break;
+
+                    case "TOOL_CALL_START":
+                        if (evt.Delta is not null)
+                        {
+                            _currentToolCalls.Add(evt.Delta);
+                        }
+                        break;
+
+                    case "RUN_FINISHED":
+                        if (evt.ThreadId is not null)
+                        {
+                            _currentSessionId = evt.ThreadId;
+                        }
+                        break;
+                }
+            }
+
+            if (!string.IsNullOrEmpty(_currentResponse))
+            {
+                _messages.Add(new ChatMessage
+                {
+                    Role = "assistant",
+                    Content = _currentResponse,
+                    Timestamp = DateTime.UtcNow,
+                    ToolCalls = _currentToolCalls.Count > 0 ? _currentToolCalls : null
+                });
+            }
+        }
+        catch (Exception)
+        {
+            _errorMessage = "Failed to get a response. Please try again.";
+        }
+        finally
+        {
+            _isStreaming = false;
+            _currentResponse = string.Empty;
+            _currentToolCalls = [];
+            StateHasChanged();
+        }
+
+        await LoadConversationsList();
+        await ScrollToBottom();
+    }
+
+    private async Task HandleKeyDown(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter" && !e.ShiftKey)
+        {
+            await SendMessage();
+        }
+    }
+
+    private async Task LoadConversation(string sessionId)
+    {
+        if (_isStreaming || sessionId == _currentSessionId)
+            return;
+
+        _errorMessage = null;
+        var conversation = await ChatApiService.GetConversationAsync(sessionId);
+        if (conversation is not null)
+        {
+            _currentSessionId = conversation.SessionId;
+            _messages = conversation.Messages;
+            StateHasChanged();
+            await ScrollToBottom();
+        }
+        else
+        {
+            _errorMessage = "Could not load conversation.";
+        }
+    }
+
+    private void StartNewConversation()
+    {
+        _currentSessionId = null;
+        _messages = [];
+        _currentResponse = string.Empty;
+        _currentToolCalls = [];
+        _errorMessage = null;
+        _inputMessage = string.Empty;
+    }
+
+    private async Task DeleteConversation(string sessionId)
+    {
+        if (_isStreaming)
+            return;
+
+        await ChatApiService.DeleteConversationAsync(sessionId);
+        _conversations.RemoveAll(c => c.SessionId == sessionId);
+
+        if (_currentSessionId == sessionId)
+        {
+            StartNewConversation();
+        }
+
+        StateHasChanged();
+    }
+
+    private async Task LoadConversationsList()
+    {
+        _isLoadingConversations = true;
+        _conversationPage = 1;
+
+        var result = await ChatApiService.GetConversationsAsync(pageNumber: 1, pageSize: 20);
+        _conversations = result.Items;
+        _hasMoreConversations = result.HasNextPage;
+
+        _isLoadingConversations = false;
+    }
+
+    private async Task LoadMoreConversations()
+    {
+        _conversationPage++;
+        var result = await ChatApiService.GetConversationsAsync(pageNumber: _conversationPage, pageSize: 20);
+        _conversations.AddRange(result.Items);
+        _hasMoreConversations = result.HasNextPage;
+        StateHasChanged();
+    }
+
+    private async Task ScrollToBottom()
+    {
+        try
+        {
+            await JS.InvokeVoidAsync("eval",
+                "document.querySelector('[class*=chat-messages]')?.scrollTo(0, document.querySelector('[class*=chat-messages]')?.scrollHeight)");
+        }
+        catch
+        {
+            // JS interop may fail during prerendering
+        }
+    }
+}
