@@ -25,12 +25,17 @@ IHost host = Host.CreateDefaultBuilder(args)
     .ConfigureAppConfiguration(config =>
     {
         config.AddEnvironmentVariables();
+        var credential = new ManagedIdentityCredential(Environment.GetEnvironmentVariable("managedidentityclientid"));
         config.AddAzureAppConfiguration(options =>
         {
             options.Connect(
                 new Uri(Environment.GetEnvironmentVariable("azureappconfigendpoint")),
-                new ManagedIdentityCredential(Environment.GetEnvironmentVariable("managedidentityclientid")))
-            .Select(keyFilter: KeyFilter.Any, labelFilter: LabelFilter.Null);
+                credential)
+            .Select(keyFilter: KeyFilter.Any, labelFilter: LabelFilter.Null)
+            .ConfigureKeyVault(kv =>
+            {
+                kv.SetCredential(credential);
+            });
         });
     })
     .ConfigureServices((context, services) =>

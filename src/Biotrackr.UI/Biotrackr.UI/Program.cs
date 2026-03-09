@@ -16,11 +16,15 @@ var azureAppConfigEndpoint = builder.Configuration.GetValue<string>("azureappcon
 
 if (!string.IsNullOrWhiteSpace(azureAppConfigEndpoint))
 {
+    var credential = new ManagedIdentityCredential(managedIdentityClientId);
     builder.Configuration.AddAzureAppConfiguration(config =>
     {
-        config.Connect(new Uri(azureAppConfigEndpoint),
-            new ManagedIdentityCredential(managedIdentityClientId))
-        .Select(keyFilter: KeyFilter.Any, LabelFilter.Null);
+        config.Connect(new Uri(azureAppConfigEndpoint), credential)
+        .Select(keyFilter: KeyFilter.Any, LabelFilter.Null)
+        .ConfigureKeyVault(kv =>
+        {
+            kv.SetCredential(credential);
+        });
     });
 }
 
@@ -66,6 +70,22 @@ builder.Services.AddScoped<IBiotrackrApiService>(provider =>
     var httpClient = provider.GetRequiredService<IHttpClientFactory>().CreateClient("BiotrackrApi");
     var logger = provider.GetRequiredService<ILogger<BiotrackrApiService>>();
     return new BiotrackrApiService(httpClient, logger);
+});
+
+builder.Services.AddHttpClient("ChatApi", (sp, client) =>
+{
+    var settings = sp.GetRequiredService<Microsoft.Extensions.Options.IOptions<BiotrackrApiSettings>>().Value;
+    var baseUrl = settings.BaseUrl ?? throw new InvalidOperationException("biotrackrapiendpoint is not configured.");
+    client.BaseAddress = new Uri($"{baseUrl.TrimEnd('/')}/chat/");
+})
+.AddHttpMessageHandler<ApiKeyDelegatingHandler>()
+.AddStandardResilienceHandler();
+
+builder.Services.AddScoped<IChatApiService>(provider =>
+{
+    var httpClient = provider.GetRequiredService<IHttpClientFactory>().CreateClient("ChatApi");
+    var logger = provider.GetRequiredService<ILogger<ChatApiService>>();
+    return new ChatApiService(httpClient, logger);
 });
 
 var app = builder.Build();
