@@ -16,26 +16,26 @@
 {
     <div class="row g-3 mb-4">
         <div class="col-md-2 col-sm-4 col-6">
-            <SummaryCard Title="Calories" Value="@(((int)_singleItem.Food.Summary.Calories).ToString("N0"))" Subtitle="@GetCalorieGoalText()" />
+            <SummaryCard Title="Calories" Value="@(((int)(_singleItem.Food?.Summary?.Calories ?? 0)).ToString("N0"))" Subtitle="@GetCalorieGoalText()" />
         </div>
         <div class="col-md-2 col-sm-4 col-6">
-            <SummaryCard Title="Protein" Value="@($"{_singleItem.Food.Summary.Protein:F1}g")" />
+            <SummaryCard Title="Protein" Value="@($"{_singleItem.Food?.Summary?.Protein ?? 0:F1}g")" />
         </div>
         <div class="col-md-2 col-sm-4 col-6">
-            <SummaryCard Title="Carbs" Value="@($"{_singleItem.Food.Summary.Carbs:F1}g")" />
+            <SummaryCard Title="Carbs" Value="@($"{_singleItem.Food?.Summary?.Carbs ?? 0:F1}g")" />
         </div>
         <div class="col-md-2 col-sm-4 col-6">
-            <SummaryCard Title="Fat" Value="@($"{_singleItem.Food.Summary.Fat:F1}g")" />
+            <SummaryCard Title="Fat" Value="@($"{_singleItem.Food?.Summary?.Fat ?? 0:F1}g")" />
         </div>
         <div class="col-md-2 col-sm-4 col-6">
-            <SummaryCard Title="Fiber" Value="@($"{_singleItem.Food.Summary.Fiber:F1}g")" />
+            <SummaryCard Title="Fiber" Value="@($"{_singleItem.Food?.Summary?.Fiber ?? 0:F1}g")" />
         </div>
         <div class="col-md-2 col-sm-4 col-6">
-            <SummaryCard Title="Water" Value="@($"{_singleItem.Food.Summary.Water:F0} ml")" />
+            <SummaryCard Title="Water" Value="@($"{_singleItem.Food?.Summary?.Water ?? 0:F0} ml")" />
         </div>
     </div>
 
-    @if (_singleItem.Food.Foods.Any())
+    @if (_singleItem.Food?.Foods?.Any() == true)
     {
         <div class="card mb-4">
             <div class="card-header"><strong>Food Log</strong></div>
@@ -57,13 +57,13 @@
                             @foreach (var entry in _singleItem.Food.Foods)
                             {
                                 <tr>
-                                    <td>@entry.LoggedFood.Name</td>
-                                    <td>@(string.IsNullOrEmpty(entry.LoggedFood.Brand) ? "--" : entry.LoggedFood.Brand)</td>
-                                    <td>@entry.NutritionalValues.Calories.ToString("F0")</td>
-                                    <td>@entry.NutritionalValues.Protein.ToString("F1")g</td>
-                                    <td>@entry.NutritionalValues.Carbs.ToString("F1")g</td>
-                                    <td>@entry.NutritionalValues.Fat.ToString("F1")g</td>
-                                    <td>@entry.LoggedFood.Amount @entry.LoggedFood.Unit.Name</td>
+                                    <td>@entry.LoggedFood?.Name</td>
+                                    <td>@(string.IsNullOrEmpty(entry.LoggedFood?.Brand) ? "--" : entry.LoggedFood.Brand)</td>
+                                    <td>@(entry.NutritionalValues?.Calories.ToString("F0") ?? "--")</td>
+                                    <td>@(entry.NutritionalValues?.Protein.ToString("F1") ?? "--")g</td>
+                                    <td>@(entry.NutritionalValues?.Carbs.ToString("F1") ?? "--")g</td>
+                                    <td>@(entry.NutritionalValues?.Fat.ToString("F1") ?? "--")g</td>
+                                    <td>@(entry.LoggedFood?.Amount) @(entry.LoggedFood?.Unit?.Name)</td>
                                 </tr>
                             }
                         </tbody>
@@ -97,12 +97,12 @@
                         {
                             <tr>
                                 <td>@item.Date</td>
-                                <td>@(((int)item.Food.Summary.Calories).ToString("N0"))</td>
-                                <td>@item.Food.Summary.Protein.ToString("F1")g</td>
-                                <td>@item.Food.Summary.Carbs.ToString("F1")g</td>
-                                <td>@item.Food.Summary.Fat.ToString("F1")g</td>
-                                <td>@item.Food.Summary.Fiber.ToString("F1")g</td>
-                                <td>@item.Food.Foods.Count</td>
+                                <td>@(((int)(item.Food?.Summary?.Calories ?? 0)).ToString("N0"))</td>
+                                <td>@(item.Food?.Summary?.Protein.ToString("F1") ?? "0.0")g</td>
+                                <td>@(item.Food?.Summary?.Carbs.ToString("F1") ?? "0.0")g</td>
+                                <td>@(item.Food?.Summary?.Fat.ToString("F1") ?? "0.0")g</td>
+                                <td>@(item.Food?.Summary?.Fiber.ToString("F1") ?? "0.0")g</td>
+                                <td>@(item.Food?.Foods?.Count ?? 0)</td>
                             </tr>
                         }
                     </tbody>
@@ -196,8 +196,10 @@
 
     private string GetCalorieGoalText()
     {
-        if (_singleItem?.Food.Goals is null || _singleItem.Food.Goals.Calories == 0) return "";
-        var pct = _singleItem.Food.Summary.Calories / _singleItem.Food.Goals.Calories * 100;
+        if (_singleItem?.Food?.Goals is null || _singleItem.Food.Goals.Calories == 0) return "";
+        var summary = _singleItem.Food.Summary;
+        if (summary is null) return "";
+        var pct = summary.Calories / _singleItem.Food.Goals.Calories * 100;
         return $"{pct:F0}% of {_singleItem.Food.Goals.Calories:N0} goal";
     }
 }

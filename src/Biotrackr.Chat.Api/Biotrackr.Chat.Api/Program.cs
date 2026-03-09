@@ -1,6 +1,7 @@
 using Anthropic;
 using Azure.Identity;
 using Biotrackr.Chat.Api.Configuration;
+using Biotrackr.Chat.Api.Configuration;
 using Biotrackr.Chat.Api.Extensions;
 using Biotrackr.Chat.Api.Middleware;
 using Biotrackr.Chat.Api.Services;
@@ -59,10 +60,15 @@ builder.Services.AddScoped<IChatHistoryRepository, ChatHistoryRepository>();
 builder.Services.AddMemoryCache();
 
 // HttpClient for calling Biotrackr APIs via APIM
-builder.Services.AddHttpClient("BiotrackrApi", client =>
+builder.Services.AddTransient<ApiKeyDelegatingHandler>();
+
+builder.Services.AddHttpClient("BiotrackrApi", (sp, client) =>
 {
-    client.BaseAddress = new Uri(builder.Configuration.GetValue<string>("Biotrackr:ApiBaseUrl")!);
-}).AddStandardResilienceHandler();
+    var settings = sp.GetRequiredService<Microsoft.Extensions.Options.IOptions<Settings>>().Value;
+    client.BaseAddress = new Uri(settings.ApiBaseUrl ?? throw new InvalidOperationException("Biotrackr:ApiBaseUrl is not configured."));
+})
+.AddHttpMessageHandler<ApiKeyDelegatingHandler>()
+.AddStandardResilienceHandler();
 
 // OpenTelemetry
 builder.Services.AddOpenTelemetry()

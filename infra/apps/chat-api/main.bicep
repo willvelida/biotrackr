@@ -43,6 +43,9 @@ param jwtAudience string = environment().authentication.audiences[0]
 @description('The Claude model to use for the chat agent')
 param chatAgentModel string = 'claude-sonnet-4-6'
 
+@description('The system prompt for the chat agent')
+param chatSystemPrompt string = 'You are the Biotrackr health and fitness assistant. You help the user understand their health data by querying activity, sleep, weight, and food records using the available tools. Always use the tools to retrieve data before answering. Present data clearly and concisely. You are not a medical professional — remind users to consult a healthcare provider for medical advice.'
+
 @description('The application (client) ID of the agent identity blueprint')
 param agentBlueprintClientId string
 
@@ -253,6 +256,17 @@ module chatApiProduct '../../modules/apim/apim-products.bicep' = {
   }
 }
 
+// APIM Subscription for Chat API to call other Biotrackr APIs
+resource chatApiApimSubscription 'Microsoft.ApiManagement/service/subscriptions@2024-06-01-preview' = {
+  name: 'chat-api-internal'
+  parent: apim
+  properties: {
+    displayName: 'Chat API Internal Subscription'
+    scope: '${apim.id}/apis'
+    state: 'active'
+  }
+}
+
 // App Configuration: Chat API endpoint URL
 resource chatApiEndpointSetting 'Microsoft.AppConfiguration/configurationStores/keyValues@2025-02-01-preview' = {
   name: chatApiEndpointConfigName
@@ -312,6 +326,50 @@ resource azureAdClientIdSetting 'Microsoft.AppConfiguration/configurationStores/
   parent: appConfig
   properties: {
     value: agentBlueprintClientId
+  }
+}
+
+// App Configuration: Client credentials — use managed identity FIC assertion
+resource azureAdClientCredSourceTypeSetting 'Microsoft.AppConfiguration/configurationStores/keyValues@2025-02-01-preview' = if (enableManagedIdentityAuth) {
+  name: 'AzureAd:ClientCredentials:0:SourceType'
+  parent: appConfig
+  properties: {
+    value: 'SignedAssertionFromManagedIdentity'
+  }
+}
+
+resource azureAdClientCredManagedIdentitySetting 'Microsoft.AppConfiguration/configurationStores/keyValues@2025-02-01-preview' = if (enableManagedIdentityAuth) {
+  name: 'AzureAd:ClientCredentials:0:ManagedIdentityClientId'
+  parent: appConfig
+  properties: {
+    value: uai.properties.clientId
+  }
+}
+
+// App Configuration: APIM base URL for calling other Biotrackr APIs
+resource apiBaseUrlSetting 'Microsoft.AppConfiguration/configurationStores/keyValues@2025-02-01-preview' = {
+  name: 'Biotrackr:ApiBaseUrl'
+  parent: appConfig
+  properties: {
+    value: apim.properties.gatewayUrl
+  }
+}
+
+// App Configuration: APIM subscription key for calling other APIs
+resource apiSubscriptionKeySetting 'Microsoft.AppConfiguration/configurationStores/keyValues@2025-02-01-preview' = {
+  name: 'Biotrackr:ApiSubscriptionKey'
+  parent: appConfig
+  properties: {
+    value: chatApiApimSubscription.listSecrets().primaryKey
+  }
+}
+
+// App Configuration: Chat agent system prompt
+resource chatSystemPromptSetting 'Microsoft.AppConfiguration/configurationStores/keyValues@2025-02-01-preview' = {
+  name: 'Biotrackr:ChatSystemPrompt'
+  parent: appConfig
+  properties: {
+    value: chatSystemPrompt
   }
 }
 
