@@ -16,7 +16,7 @@ public static class ServiceCollectionExtensions
         // Get Cosmos DB configuration
         var cosmosDbEndpoint = configuration.GetValue<string>("cosmosdbendpoint") 
             ?? configuration.GetValue<string>("CosmosDb:Endpoint");
-        var cosmosDbAccountKey = configuration.GetValue<string>("CosmosDb:AccountKey");
+        var cosmosDbAccountKey = configuration.GetValue<string>("Biotrackr:CosmosDb:AccountKey");
         var managedIdentityClientId = configuration.GetValue<string>("managedidentityclientid");
 
         // Configure Cosmos Client options

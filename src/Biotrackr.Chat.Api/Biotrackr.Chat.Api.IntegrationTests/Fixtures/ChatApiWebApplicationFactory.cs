@@ -21,6 +21,7 @@ public class ChatApiWebApplicationFactory : WebApplicationFactory<Program>
         Environment.SetEnvironmentVariable("Biotrackr:ConversationsContainerName", "conversations-test");
         Environment.SetEnvironmentVariable("Biotrackr:AgentIdentityId", "00000000-0000-0000-0000-000000000000");
         Environment.SetEnvironmentVariable("Biotrackr:ApiBaseUrl", "https://localhost:9999");
+        Environment.SetEnvironmentVariable("Biotrackr:ApiSubscriptionKey", "test-subscription-key");
         Environment.SetEnvironmentVariable("Biotrackr:AnthropicApiKey", "test-key");
         Environment.SetEnvironmentVariable("Biotrackr:ChatAgentModel", "claude-haiku-4-5");
         Environment.SetEnvironmentVariable("Biotrackr:ChatSystemPrompt", "You are a test assistant.");
