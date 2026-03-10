@@ -1,6 +1,5 @@
 @page "/login"
 @layout LoginLayout
-@inject NavigationManager NavigationManager
 
 <PageTitle>Biotrackr - Sign In</PageTitle>
 
@@ -17,9 +16,9 @@
             <RadzenText TextStyle="TextStyle.Body2" class="rz-color-secondary">
                 Sign in to view your health data dashboard
             </RadzenText>
-            <RadzenButton Text="Sign in with Microsoft" ButtonStyle="ButtonStyle.Primary"
-                          Size="ButtonSize.Large" Style="width: 100%;"
-                          Click="@(() => NavigationManager.NavigateTo("/.auth/login/aad?post_login_redirect_uri=/", true))" />
+            <a href="/.auth/login/aad?post_login_redirect_uri=/" class="rz-button rz-button-lg rz-variant-filled rz-primary" style="width: 100%; text-align: center; text-decoration: none;">
+                Sign in with Microsoft
+            </a>
         </RadzenStack>
     </RadzenCard>
 </RadzenStack>

@@ -63,5 +63,15 @@ namespace Biotrackr.UI.UnitTests.Components.Pages
 
             cut.Markup.Should().NotBeEmpty();
         }
+
+        [Fact]
+        public void HaveCorrectEasyAuthLoginUrl()
+        {
+            var cut = Render<Login>();
+
+            var link = cut.Find("a[href='/.auth/login/aad?post_login_redirect_uri=/']");
+            link.Should().NotBeNull();
+            link.TextContent.Should().Contain("Sign in with Microsoft");
+        }
     }
 }
