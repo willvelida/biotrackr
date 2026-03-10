@@ -1,14 +1,17 @@
-<div class="card summary-card h-100 @CardClass">
-    <div class="card-body text-center">
-        <div class="card-icon mb-2">@IconContent</div>
-        <h6 class="card-subtitle text-muted">@Title</h6>
-        <h3 class="card-title mb-0">@Value</h3>
+<RadzenCard class="@($"rz-h-100 summary-card {CardClass}")">
+    <RadzenStack Orientation="Orientation.Vertical" AlignItems="AlignItems.Center" Gap="0.25rem">
+        @if (IconContent is not null)
+        {
+            <div class="card-icon">@IconContent</div>
+        }
+        <RadzenText TextStyle="TextStyle.Overline" class="rz-color-secondary">@Title</RadzenText>
+        <RadzenText TextStyle="TextStyle.H5" class="rz-mb-0">@Value</RadzenText>
         @if (!string.IsNullOrEmpty(Subtitle))
         {
-            <small class="text-muted">@Subtitle</small>
+            <RadzenText TextStyle="TextStyle.Caption" class="rz-color-secondary">@Subtitle</RadzenText>
         }
-    </div>
-</div>
+    </RadzenStack>
+</RadzenCard>
 
 @code {
     [Parameter]

@@ -1,11 +1,17 @@
 using Bunit;
 using Biotrackr.UI.Components.Shared;
 using FluentAssertions;
+using Radzen;
 
 namespace Biotrackr.UI.UnitTests.Components.Shared
 {
     public class SummaryCardShould : BunitContext
     {
+        public SummaryCardShould()
+        {
+            Services.AddRadzenComponents();
+        }
+
         [Fact]
         public void RenderTitleAndValue()
         {
@@ -35,7 +41,7 @@ namespace Biotrackr.UI.UnitTests.Components.Shared
                 .Add(p => p.Title, "Weight")
                 .Add(p => p.Value, "80.5 kg"));
 
-            cut.FindAll("small.text-muted").Should().BeEmpty();
+            cut.Markup.Should().NotContain("rz-text-caption");
         }
 
         [Fact]
@@ -66,7 +72,6 @@ namespace Biotrackr.UI.UnitTests.Components.Shared
                 .Add(p => p.Value, "1,000")
                 .Add(p => p.IconContent, "<span class=\"test-icon\">icon</span>"));
 
-            // IconContent render fragment is rendered inside card-icon div
             cut.Find(".card-icon").InnerHtml.Should().Contain("test-icon");
         }
     }

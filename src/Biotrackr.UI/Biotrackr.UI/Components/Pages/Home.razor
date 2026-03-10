@@ -4,16 +4,16 @@
 
 <PageTitle>Biotrackr - Dashboard</PageTitle>
 
-<h1>Dashboard</h1>
-<p class="text-muted">@DateTime.Today.AddDays(-1).ToString("dddd, MMMM d, yyyy")</p>
+<RadzenText TextStyle="TextStyle.H4">Dashboard</RadzenText>
+<RadzenText TextStyle="TextStyle.Body2" class="rz-color-secondary rz-mb-4">@DateTime.Today.AddDays(-1).ToString("dddd, MMMM d, yyyy")</RadzenText>
 
 <LoadingSpinner IsLoading="@_isLoading" Message="Loading today's data..." />
 <ErrorDisplay Message="@_errorMessage" />
 
 @if (!_isLoading)
 {
-    <div class="row g-3 mb-4">
-        <div class="col-md-3 col-sm-6">
+    <RadzenRow Gap="1rem" class="rz-mb-4">
+        <RadzenColumn Size="12" SizeMD="3" SizeSM="6">
             <SummaryCard Title="Steps" Value="@FormatNumber(_activitySummary?.Steps)" CardClass="card-activity">
                 <IconContent>
                     <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" fill="#0d6efd" viewBox="0 0 16 16">
@@ -21,8 +21,8 @@
                     </svg>
                 </IconContent>
             </SummaryCard>
-        </div>
-        <div class="col-md-3 col-sm-6">
+        </RadzenColumn>
+        <RadzenColumn Size="12" SizeMD="3" SizeSM="6">
             <SummaryCard Title="Calories Burned" Value="@FormatNumber(_activitySummary?.CaloriesOut)" Subtitle="@GetCalorieGoalText()" CardClass="card-calories">
                 <IconContent>
                     <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" fill="#dc3545" viewBox="0 0 16 16">
@@ -30,8 +30,8 @@
                     </svg>
                 </IconContent>
             </SummaryCard>
-        </div>
-        <div class="col-md-3 col-sm-6">
+        </RadzenColumn>
+        <RadzenColumn Size="12" SizeMD="3" SizeSM="6">
             <SummaryCard Title="Calories Consumed" Value="@FormatCalories(_foodSummary?.Calories)" Subtitle="@GetFoodGoalText()" CardClass="card-food">
                 <IconContent>
                     <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" fill="#198754" viewBox="0 0 16 16">
@@ -39,8 +39,8 @@
                     </svg>
                 </IconContent>
             </SummaryCard>
-        </div>
-        <div class="col-md-3 col-sm-6">
+        </RadzenColumn>
+        <RadzenColumn Size="12" SizeMD="3" SizeSM="6">
             <SummaryCard Title="Sleep" Value="@FormatSleepDuration()" CardClass="card-sleep">
                 <IconContent>
                     <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" fill="#6f42c1" viewBox="0 0 16 16">
@@ -48,11 +48,11 @@
                     </svg>
                 </IconContent>
             </SummaryCard>
-        </div>
-    </div>
+        </RadzenColumn>
+    </RadzenRow>
 
-    <div class="row g-3 mb-4">
-        <div class="col-md-3 col-sm-6">
+    <RadzenRow Gap="1rem" class="rz-mb-4">
+        <RadzenColumn Size="12" SizeMD="3" SizeSM="6">
             <SummaryCard Title="Weight" Value="@FormatWeight()" Subtitle="@GetBmiText()" CardClass="card-weight">
                 <IconContent>
                     <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" fill="#fd7e14" viewBox="0 0 16 16">
@@ -60,8 +60,8 @@
                     </svg>
                 </IconContent>
             </SummaryCard>
-        </div>
-        <div class="col-md-3 col-sm-6">
+        </RadzenColumn>
+        <RadzenColumn Size="12" SizeMD="3" SizeSM="6">
             <SummaryCard Title="Active Minutes" Value="@FormatActiveMinutes()" Subtitle="@GetActiveMinutesGoalText()" CardClass="card-active">
                 <IconContent>
                     <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" fill="#20c997" viewBox="0 0 16 16">
@@ -70,8 +70,8 @@
                     </svg>
                 </IconContent>
             </SummaryCard>
-        </div>
-        <div class="col-md-3 col-sm-6">
+        </RadzenColumn>
+        <RadzenColumn Size="12" SizeMD="3" SizeSM="6">
             <SummaryCard Title="Resting Heart Rate" Value="@FormatHeartRate()" Subtitle="bpm" CardClass="card-heart">
                 <IconContent>
                     <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" fill="#e91e63" viewBox="0 0 16 16">
@@ -79,8 +79,8 @@
                     </svg>
                 </IconContent>
             </SummaryCard>
-        </div>
-        <div class="col-md-3 col-sm-6">
+        </RadzenColumn>
+        <RadzenColumn Size="12" SizeMD="3" SizeSM="6">
             <SummaryCard Title="Floors" Value="@FormatNumber(_activitySummary?.Floors)" Subtitle="@GetFloorsGoalText()" CardClass="card-floors">
                 <IconContent>
                     <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" fill="#6610f2" viewBox="0 0 16 16">
@@ -88,8 +88,8 @@
                     </svg>
                 </IconContent>
             </SummaryCard>
-        </div>
-    </div>
+        </RadzenColumn>
+    </RadzenRow>
 }
 
 @code {

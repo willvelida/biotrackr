@@ -3,15 +3,16 @@
 @inject IChatApiService ChatApiService
 @inject IJSRuntime JS
 @using Biotrackr.UI.Telemetry
+@using ChatMessage = Biotrackr.UI.Models.Chat.ChatMessage
 
 <PageTitle>Biotrackr - Chat</PageTitle>
 
 <div class="chat-container">
-    <div class="chat-sidebar">
-        <div class="chat-sidebar-header">
-            <h6>Conversations</h6>
-            <button class="new-chat-btn" @onclick="StartNewConversation" disabled="@_isStreaming">+ New Chat</button>
-        </div>
+    <div class="chat-sidebar-panel">
+        <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.SpaceBetween" AlignItems="AlignItems.Center" class="rz-p-3 chat-sidebar-header">
+            <RadzenText TextStyle="TextStyle.Subtitle2">Conversations</RadzenText>
+            <RadzenButton Text="+ New Chat" Size="ButtonSize.ExtraSmall" ButtonStyle="ButtonStyle.Light" Click="StartNewConversation" Disabled="@_isStreaming" />
+        </RadzenStack>
 
         @if (_isLoadingConversations)
         {
@@ -39,18 +40,16 @@
 
                 @if (_hasMoreConversations)
                 {
-                    <button class="load-more-btn" @onclick="LoadMoreConversations" disabled="@_isLoadingConversations">
-                        Load more
-                    </button>
+                    <RadzenButton Text="Load more" Variant="Variant.Text" Size="ButtonSize.Small" Click="LoadMoreConversations" Disabled="@_isLoadingConversations" Style="width: 100%;" />
                 }
             </div>
         }
     </div>
 
     <div class="chat-main">
-        <div class="disclaimer-banner">
-            &#x26A0; This AI assistant provides data summaries only. It is not medical advice. Always consult a healthcare professional.
-        </div>
+        <RadzenAlert AlertStyle="AlertStyle.Warning" Variant="Variant.Flat" ShowIcon="true" AllowClose="false" class="rz-mb-0">
+            This AI assistant provides data summaries only. It is not medical advice. Always consult a healthcare professional.
+        </RadzenAlert>
 
         <ErrorDisplay Message="@_errorMessage" />
 
@@ -73,7 +72,7 @@
                             <div class="message-tool-badges">
                                 @foreach (var tool in message.ToolCalls)
                                 {
-                                    <span class="tool-badge">@tool</span>
+                                    <RadzenBadge Text="@tool" BadgeStyle="BadgeStyle.Info" IsPill="true" class="rz-mr-1" />
                                 }
                             </div>
                         }
@@ -96,16 +95,10 @@
             }
         </div>
 
-        <div class="chat-input-area">
-            <input type="text" class="chat-input" placeholder="Type a message..."
-                   @bind="_inputMessage" @bind:event="oninput"
-                   @onkeydown="HandleKeyDown"
-                   disabled="@_isStreaming" />
-            <button class="chat-send-btn" @onclick="SendMessage"
-                    disabled="@(_isStreaming || string.IsNullOrWhiteSpace(_inputMessage))">
-                Send
-            </button>
-        </div>
+        <RadzenStack Orientation="Orientation.Horizontal" Gap="0.5rem" class="chat-input-area">
+            <RadzenTextBox @bind-Value="_inputMessage" Placeholder="Type a message..." Disabled="@_isStreaming" class="rz-flex-grow-1" @onkeydown="HandleKeyDown" />
+            <RadzenButton Text="Send" Icon="send" Click="SendMessage" Disabled="@(_isStreaming || string.IsNullOrWhiteSpace(_inputMessage))" ButtonStyle="ButtonStyle.Primary" />
+        </RadzenStack>
     </div>
 </div>
 

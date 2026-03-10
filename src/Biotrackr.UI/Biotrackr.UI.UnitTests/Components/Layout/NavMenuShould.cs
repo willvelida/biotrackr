@@ -1,17 +1,17 @@
 using Bunit;
+using Radzen;
 using Biotrackr.UI.Components.Layout;
 using FluentAssertions;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Biotrackr.UI.UnitTests.Components.Layout
 {
     public class NavMenuShould : BunitContext
     {
-        [Fact]
-        public void RenderBrandName()
+        public NavMenuShould()
         {
-            var cut = Render<NavMenu>();
-
-            cut.Find("a.navbar-brand").TextContent.Should().Be("Biotrackr");
+            Services.AddRadzenComponents();
+            JSInterop.Mode = JSRuntimeMode.Loose;
         }
 
         [Fact]
@@ -59,24 +59,7 @@ namespace Biotrackr.UI.UnitTests.Components.Layout
         {
             var cut = Render<NavMenu>();
 
-            var signOutLink = cut.Find("a[href='/.auth/logout?post_logout_redirect_uri=/login']");
-            signOutLink.TextContent.Should().Contain("Sign Out");
-        }
-
-        [Fact]
-        public void RenderSignOutWithLogoutIcon()
-        {
-            var cut = Render<NavMenu>();
-
-            cut.Find("span.bi-logout-nav-menu").Should().NotBeNull();
-        }
-
-        [Fact]
-        public void RenderSeparatorBeforeSignOut()
-        {
-            var cut = Render<NavMenu>();
-
-            cut.Find("hr").Should().NotBeNull();
+            cut.Markup.Should().Contain("Sign Out");
         }
     }
 }

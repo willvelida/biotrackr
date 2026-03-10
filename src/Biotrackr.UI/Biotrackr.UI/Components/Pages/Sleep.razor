@@ -4,7 +4,7 @@
 
 <PageTitle>Biotrackr - Sleep</PageTitle>
 
-<h1>Sleep</h1>
+<RadzenText TextStyle="TextStyle.H4">Sleep</RadzenText>
 
 <DatePicker SelectedDate="@_selectedDate" StartDate="@_startDate" EndDate="@_endDate" Mode="@_mode"
             OnSingleDateSelected="LoadByDate" OnDateRangeSelected="LoadByRange" />
@@ -14,146 +14,124 @@
 
 @if (!_isLoading && _singleItem is not null && _mode == "date")
 {
-    <div class="row g-3 mb-4">
-        <div class="col-md-3 col-sm-6">
+    <RadzenRow Gap="1rem" class="rz-mb-4">
+        <RadzenColumn Size="12" SizeMD="3" SizeSM="6">
             <SummaryCard Title="Time Asleep" Value="@FormatMinutes(_singleItem.Sleep.Summary.TotalMinutesAsleep)" />
-        </div>
-        <div class="col-md-3 col-sm-6">
+        </RadzenColumn>
+        <RadzenColumn Size="12" SizeMD="3" SizeSM="6">
             <SummaryCard Title="Time in Bed" Value="@FormatMinutes(_singleItem.Sleep.Summary.TotalTimeInBed)" />
-        </div>
-        <div class="col-md-3 col-sm-6">
+        </RadzenColumn>
+        <RadzenColumn Size="12" SizeMD="3" SizeSM="6">
             <SummaryCard Title="Sleep Records" Value="@_singleItem.Sleep.Summary.TotalSleepRecords.ToString()" />
-        </div>
-        <div class="col-md-3 col-sm-6">
+        </RadzenColumn>
+        <RadzenColumn Size="12" SizeMD="3" SizeSM="6">
             <SummaryCard Title="Efficiency" Value="@GetEfficiency()" />
-        </div>
-    </div>
+        </RadzenColumn>
+    </RadzenRow>
 
     @if (_singleItem.Sleep.Summary.Stages is not null)
     {
-        <div class="card mb-4">
-            <div class="card-header"><strong>Sleep Stages</strong></div>
-            <div class="card-body">
-                <div class="row g-3">
-                    <div class="col-md-3 col-sm-6">
-                        <div class="text-center">
-                            <div class="stage-bar stage-deep" style="height: @GetStageHeight(_singleItem.Sleep.Summary.Stages.Deep)px;"></div>
-                            <div class="mt-2"><strong>Deep</strong></div>
-                            <div>@FormatMinutes(_singleItem.Sleep.Summary.Stages.Deep)</div>
-                        </div>
-                    </div>
-                    <div class="col-md-3 col-sm-6">
-                        <div class="text-center">
-                            <div class="stage-bar stage-light" style="height: @GetStageHeight(_singleItem.Sleep.Summary.Stages.Light)px;"></div>
-                            <div class="mt-2"><strong>Light</strong></div>
-                            <div>@FormatMinutes(_singleItem.Sleep.Summary.Stages.Light)</div>
-                        </div>
-                    </div>
-                    <div class="col-md-3 col-sm-6">
-                        <div class="text-center">
-                            <div class="stage-bar stage-rem" style="height: @GetStageHeight(_singleItem.Sleep.Summary.Stages.Rem)px;"></div>
-                            <div class="mt-2"><strong>REM</strong></div>
-                            <div>@FormatMinutes(_singleItem.Sleep.Summary.Stages.Rem)</div>
-                        </div>
-                    </div>
-                    <div class="col-md-3 col-sm-6">
-                        <div class="text-center">
-                            <div class="stage-bar stage-wake" style="height: @GetStageHeight(_singleItem.Sleep.Summary.Stages.Wake)px;"></div>
-                            <div class="mt-2"><strong>Awake</strong></div>
-                            <div>@FormatMinutes(_singleItem.Sleep.Summary.Stages.Wake)</div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
+        <RadzenText TextStyle="TextStyle.H6" class="rz-mb-2">Sleep Stages</RadzenText>
+        <RadzenRow Gap="1rem" class="rz-mb-4">
+            <RadzenColumn Size="12" SizeMD="3" SizeSM="6">
+                <RadzenStack AlignItems="AlignItems.Center">
+                    <div class="stage-bar stage-deep" style="height: @GetStageHeight(_singleItem.Sleep.Summary.Stages.Deep)px;"></div>
+                    <RadzenText TextStyle="TextStyle.Subtitle2">Deep</RadzenText>
+                    <RadzenText TextStyle="TextStyle.Body2">@FormatMinutes(_singleItem.Sleep.Summary.Stages.Deep)</RadzenText>
+                </RadzenStack>
+            </RadzenColumn>
+            <RadzenColumn Size="12" SizeMD="3" SizeSM="6">
+                <RadzenStack AlignItems="AlignItems.Center">
+                    <div class="stage-bar stage-light" style="height: @GetStageHeight(_singleItem.Sleep.Summary.Stages.Light)px;"></div>
+                    <RadzenText TextStyle="TextStyle.Subtitle2">Light</RadzenText>
+                    <RadzenText TextStyle="TextStyle.Body2">@FormatMinutes(_singleItem.Sleep.Summary.Stages.Light)</RadzenText>
+                </RadzenStack>
+            </RadzenColumn>
+            <RadzenColumn Size="12" SizeMD="3" SizeSM="6">
+                <RadzenStack AlignItems="AlignItems.Center">
+                    <div class="stage-bar stage-rem" style="height: @GetStageHeight(_singleItem.Sleep.Summary.Stages.Rem)px;"></div>
+                    <RadzenText TextStyle="TextStyle.Subtitle2">REM</RadzenText>
+                    <RadzenText TextStyle="TextStyle.Body2">@FormatMinutes(_singleItem.Sleep.Summary.Stages.Rem)</RadzenText>
+                </RadzenStack>
+            </RadzenColumn>
+            <RadzenColumn Size="12" SizeMD="3" SizeSM="6">
+                <RadzenStack AlignItems="AlignItems.Center">
+                    <div class="stage-bar stage-wake" style="height: @GetStageHeight(_singleItem.Sleep.Summary.Stages.Wake)px;"></div>
+                    <RadzenText TextStyle="TextStyle.Subtitle2">Awake</RadzenText>
+                    <RadzenText TextStyle="TextStyle.Body2">@FormatMinutes(_singleItem.Sleep.Summary.Stages.Wake)</RadzenText>
+                </RadzenStack>
+            </RadzenColumn>
+        </RadzenRow>
     }
 
     @if (_singleItem.Sleep.Sleep.Any())
     {
-        <div class="card mb-4">
-            <div class="card-header"><strong>Sleep Logs</strong></div>
-            <div class="card-body">
-                <div class="table-responsive">
-                    <table class="table table-sm mb-0">
-                        <thead>
-                            <tr>
-                                <th>Start</th>
-                                <th>End</th>
-                                <th>Duration</th>
-                                <th>Asleep</th>
-                                <th>Awake</th>
-                                <th>Efficiency</th>
-                                <th>Type</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @foreach (var record in _singleItem.Sleep.Sleep)
-                            {
-                                <tr>
-                                    <td>@record.StartTime.ToString("HH:mm")</td>
-                                    <td>@record.EndTime.ToString("HH:mm")</td>
-                                    <td>@FormatMinutes(record.TimeInBed)</td>
-                                    <td>@FormatMinutes(record.MinutesAsleep)</td>
-                                    <td>@FormatMinutes(record.MinutesAwake)</td>
-                                    <td>@record.Efficiency%</td>
-                                    <td><span class="badge @(record.IsMainSleep ? "bg-primary" : "bg-secondary")">@(record.IsMainSleep ? "Main" : "Nap")</span></td>
-                                </tr>
-                            }
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
+        <RadzenText TextStyle="TextStyle.H6" class="rz-mb-2">Sleep Logs</RadzenText>
+        <RadzenDataGrid Data="@_singleItem.Sleep.Sleep" TItem="SleepRecord" Density="Density.Compact" AllowPaging="false" class="rz-mb-4">
+            <Columns>
+                <RadzenDataGridColumn TItem="SleepRecord" Title="Start">
+                    <Template Context="record">@record.StartTime.ToString("HH:mm")</Template>
+                </RadzenDataGridColumn>
+                <RadzenDataGridColumn TItem="SleepRecord" Title="End">
+                    <Template Context="record">@record.EndTime.ToString("HH:mm")</Template>
+                </RadzenDataGridColumn>
+                <RadzenDataGridColumn TItem="SleepRecord" Title="Duration">
+                    <Template Context="record">@FormatMinutes(record.TimeInBed)</Template>
+                </RadzenDataGridColumn>
+                <RadzenDataGridColumn TItem="SleepRecord" Title="Asleep">
+                    <Template Context="record">@FormatMinutes(record.MinutesAsleep)</Template>
+                </RadzenDataGridColumn>
+                <RadzenDataGridColumn TItem="SleepRecord" Title="Awake">
+                    <Template Context="record">@FormatMinutes(record.MinutesAwake)</Template>
+                </RadzenDataGridColumn>
+                <RadzenDataGridColumn TItem="SleepRecord" Title="Efficiency">
+                    <Template Context="record">@record.Efficiency%</Template>
+                </RadzenDataGridColumn>
+                <RadzenDataGridColumn TItem="SleepRecord" Title="Type">
+                    <Template Context="record">
+                        <RadzenBadge Text="@(record.IsMainSleep ? "Main" : "Nap")" BadgeStyle="@(record.IsMainSleep ? BadgeStyle.Primary : BadgeStyle.Secondary)" />
+                    </Template>
+                </RadzenDataGridColumn>
+            </Columns>
+        </RadzenDataGrid>
     }
 }
 
 @if (!_isLoading && _rangeItems is not null && _mode == "range")
 {
-    <div class="card mb-4">
-        <div class="card-header"><strong>Sleep Records</strong></div>
-        <div class="card-body">
-            <div class="table-responsive">
-                <table class="table table-sm table-hover mb-0">
-                    <thead>
-                        <tr>
-                            <th>Date</th>
-                            <th>Time Asleep</th>
-                            <th>Time in Bed</th>
-                            <th>Records</th>
-                            <th>Deep</th>
-                            <th>Light</th>
-                            <th>REM</th>
-                            <th>Awake</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach (var item in _rangeItems.Items)
-                        {
-                            <tr>
-                                <td>@item.Date</td>
-                                <td>@FormatMinutes(item.Sleep.Summary.TotalMinutesAsleep)</td>
-                                <td>@FormatMinutes(item.Sleep.Summary.TotalTimeInBed)</td>
-                                <td>@item.Sleep.Summary.TotalSleepRecords</td>
-                                <td>@FormatMinutes(item.Sleep.Summary.Stages?.Deep ?? 0)</td>
-                                <td>@FormatMinutes(item.Sleep.Summary.Stages?.Light ?? 0)</td>
-                                <td>@FormatMinutes(item.Sleep.Summary.Stages?.Rem ?? 0)</td>
-                                <td>@FormatMinutes(item.Sleep.Summary.Stages?.Wake ?? 0)</td>
-                            </tr>
-                        }
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    </div>
-
-    <PaginationControls PageNumber="@_rangeItems.PageNumber" TotalPages="@_rangeItems.TotalPages"
-                        TotalCount="@_rangeItems.TotalCount" HasPreviousPage="@_rangeItems.HasPreviousPage"
-                        HasNextPage="@_rangeItems.HasNextPage" OnPageChanged="OnPageChanged" />
+    <RadzenText TextStyle="TextStyle.H6" class="rz-mb-2">Sleep Records</RadzenText>
+    <RadzenDataGrid Data="@_rangeItems.Items" TItem="SleepItem" Density="Density.Compact"
+                    AllowPaging="true" PageSize="10" Count="@_rangeItems.TotalCount" LoadData="@OnLoadData" class="rz-mb-4">
+        <Columns>
+            <RadzenDataGridColumn TItem="SleepItem" Property="Date" Title="Date" />
+            <RadzenDataGridColumn TItem="SleepItem" Title="Time Asleep">
+                <Template Context="item">@FormatMinutes(item.Sleep.Summary.TotalMinutesAsleep)</Template>
+            </RadzenDataGridColumn>
+            <RadzenDataGridColumn TItem="SleepItem" Title="Time in Bed">
+                <Template Context="item">@FormatMinutes(item.Sleep.Summary.TotalTimeInBed)</Template>
+            </RadzenDataGridColumn>
+            <RadzenDataGridColumn TItem="SleepItem" Title="Records">
+                <Template Context="item">@item.Sleep.Summary.TotalSleepRecords</Template>
+            </RadzenDataGridColumn>
+            <RadzenDataGridColumn TItem="SleepItem" Title="Deep">
+                <Template Context="item">@FormatMinutes(item.Sleep.Summary.Stages?.Deep ?? 0)</Template>
+            </RadzenDataGridColumn>
+            <RadzenDataGridColumn TItem="SleepItem" Title="Light">
+                <Template Context="item">@FormatMinutes(item.Sleep.Summary.Stages?.Light ?? 0)</Template>
+            </RadzenDataGridColumn>
+            <RadzenDataGridColumn TItem="SleepItem" Title="REM">
+                <Template Context="item">@FormatMinutes(item.Sleep.Summary.Stages?.Rem ?? 0)</Template>
+            </RadzenDataGridColumn>
+            <RadzenDataGridColumn TItem="SleepItem" Title="Awake">
+                <Template Context="item">@FormatMinutes(item.Sleep.Summary.Stages?.Wake ?? 0)</Template>
+            </RadzenDataGridColumn>
+        </Columns>
+    </RadzenDataGrid>
 }
 
 @if (!_isLoading && _singleItem is null && _mode == "date" && _errorMessage is null)
 {
-    <div class="alert alert-info">No sleep data found for @_selectedDate.</div>
+    <RadzenAlert AlertStyle="AlertStyle.Info" Variant="Variant.Flat" ShowIcon="true">No sleep data found for @_selectedDate.</RadzenAlert>
 }
 
 @code {
@@ -227,6 +205,12 @@
         {
             _isLoading = false;
         }
+    }
+
+    private async Task OnLoadData(LoadDataArgs args)
+    {
+        _currentPage = (int)((args.Skip ?? 0) / 10) + 1;
+        await LoadRangePage();
     }
 
     private static string FormatMinutes(int minutes)

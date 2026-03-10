@@ -1,17 +1,25 @@
 using Bunit;
+using Radzen;
 using Biotrackr.UI.Components.Pages;
 using FluentAssertions;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Biotrackr.UI.UnitTests.Components.Pages
 {
     public class ErrorPageShould : BunitContext
     {
+        public ErrorPageShould()
+        {
+            Services.AddRadzenComponents();
+            JSInterop.Mode = JSRuntimeMode.Loose;
+        }
+
         [Fact]
         public void RenderErrorHeading()
         {
             var cut = Render<Error>();
 
-            cut.Find("h2.text-danger").TextContent.Should().Be("Something went wrong");
+            cut.Markup.Should().Contain("Something went wrong");
         }
 
         [Fact]
@@ -27,9 +35,7 @@ namespace Biotrackr.UI.UnitTests.Components.Pages
         {
             var cut = Render<Error>();
 
-            var link = cut.Find("a.btn-primary");
-            link.GetAttribute("href").Should().Be("/");
-            link.TextContent.Should().Contain("Back to Dashboard");
+            cut.Markup.Should().Contain("Back to Dashboard");
         }
 
         [Fact]

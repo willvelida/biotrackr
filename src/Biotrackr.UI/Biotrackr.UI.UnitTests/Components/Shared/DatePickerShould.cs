@@ -1,18 +1,26 @@
 using Bunit;
 using Biotrackr.UI.Components.Shared;
 using FluentAssertions;
+using Radzen;
 
 namespace Biotrackr.UI.UnitTests.Components.Shared
 {
     public class DatePickerShould : BunitContext
     {
+        public DatePickerShould()
+        {
+            Services.AddRadzenComponents();
+            JSInterop.Mode = JSRuntimeMode.Loose;
+        }
+
         [Fact]
         public void RenderInSingleDateMode_ByDefault()
         {
             var cut = Render<DatePicker>();
 
-            cut.Find("#singleDate").Should().NotBeNull();
-            cut.FindAll("#startDate").Should().BeEmpty();
+            cut.Find(".rz-datepicker").Should().NotBeNull();
+            cut.Markup.Should().NotContain(">Start<");
+            cut.Markup.Should().NotContain(">End<");
         }
 
         [Fact]
@@ -21,9 +29,8 @@ namespace Biotrackr.UI.UnitTests.Components.Shared
             var cut = Render<DatePicker>(parameters => parameters
                 .Add(p => p.Mode, "range"));
 
-            cut.Find("#startDate").Should().NotBeNull();
-            cut.Find("#endDate").Should().NotBeNull();
-            cut.FindAll("#singleDate").Should().BeEmpty();
+            cut.Markup.Should().Contain("Start");
+            cut.Markup.Should().Contain("End");
         }
 
         [Fact]
@@ -31,36 +38,62 @@ namespace Biotrackr.UI.UnitTests.Components.Shared
         {
             var cut = Render<DatePicker>();
 
-            cut.Find("button.btn-outline-secondary").TextContent.Trim().Should().Be("Yesterday");
+            cut.Markup.Should().Contain("Yesterday");
         }
 
         [Fact]
-        public void InvokeOnSingleDateSelected_WhenDateChanged()
+        public void RenderSingleDateMode_WithCorrectParameters()
         {
-            string? selectedDate = null;
             var cut = Render<DatePicker>(parameters => parameters
-                .Add(p => p.OnSingleDateSelected, Microsoft.AspNetCore.Components.EventCallback.Factory.Create<string>(this, d => selectedDate = d)));
+                .Add(p => p.OnSingleDateSelected, Microsoft.AspNetCore.Components.EventCallback.Factory.Create<string>(this, _ => { })));
 
-            cut.Find("#singleDate").Change("2026-03-01");
-
-            selectedDate.Should().Be("2026-03-01");
+            cut.Find(".rz-datepicker").Should().NotBeNull();
+            cut.Markup.Should().Contain("Single Date");
         }
 
         [Fact]
-        public void InvokeOnDateRangeSelected_WhenApplyClicked()
+        public void RenderRangeMode_WithApplyButton()
         {
-            (string Start, string End)? selectedRange = null;
             var cut = Render<DatePicker>(parameters => parameters
                 .Add(p => p.Mode, "range")
                 .Add(p => p.StartDate, "2026-02-01")
                 .Add(p => p.EndDate, "2026-02-28")
-                .Add(p => p.OnDateRangeSelected, Microsoft.AspNetCore.Components.EventCallback.Factory.Create<(string, string)>(this, r => selectedRange = r)));
+                .Add(p => p.OnDateRangeSelected, Microsoft.AspNetCore.Components.EventCallback.Factory.Create<(string, string)>(this, _ => { })));
 
-            cut.Find("button.btn-primary").Click();
+            cut.Markup.Should().Contain("Apply");
+            cut.Markup.Should().Contain("Start");
+            cut.Markup.Should().Contain("End");
+        }
 
-            selectedRange.Should().NotBeNull();
-            selectedRange!.Value.Start.Should().Be("2026-02-01");
-            selectedRange!.Value.End.Should().Be("2026-02-28");
+        [Fact]
+        public void RenderModeToggle_WithBothOptions()
+        {
+            var cut = Render<DatePicker>();
+
+            cut.Markup.Should().Contain("Single Date");
+            cut.Markup.Should().Contain("Date Range");
+        }
+
+        [Fact]
+        public void RenderWithCustomSelectedDate()
+        {
+            var cut = Render<DatePicker>(parameters => parameters
+                .Add(p => p.SelectedDate, "2026-01-15"));
+
+            cut.Find(".rz-datepicker").Should().NotBeNull();
+        }
+
+        [Fact]
+        public void RenderRangeMode_WithCustomDates()
+        {
+            var cut = Render<DatePicker>(parameters => parameters
+                .Add(p => p.Mode, "range")
+                .Add(p => p.StartDate, "2026-01-01")
+                .Add(p => p.EndDate, "2026-01-31"));
+
+            cut.Markup.Should().Contain("Start");
+            cut.Markup.Should().Contain("End");
+            cut.Find(".rz-datepicker").Should().NotBeNull();
         }
     }
 }

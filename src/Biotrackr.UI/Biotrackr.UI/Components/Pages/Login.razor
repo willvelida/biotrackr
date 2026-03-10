@@ -3,23 +3,22 @@
 
 <PageTitle>Biotrackr - Sign In</PageTitle>
 
-<div class="d-flex justify-content-center align-items-center vh-100">
-    <div class="card shadow-lg" style="max-width: 420px; width: 100%;">
-        <div class="card-body text-center p-5">
-            <div class="mb-4">
+<RadzenStack AlignItems="AlignItems.Center" JustifyContent="JustifyContent.Center"
+             class="rz-vh-100">
+    <RadzenCard Style="max-width: 420px; width: 100%;">
+        <RadzenStack AlignItems="AlignItems.Center" Gap="1rem" class="rz-p-4">
+            <div>
                 <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" fill="#0d6efd" viewBox="0 0 16 16">
                     <path fill-rule="evenodd" d="M6 2a.5.5 0 0 1 .47.33L10 12.036l1.53-4.208A.5.5 0 0 1 12 7.5h3.5a.5.5 0 0 1 0 1h-3.15l-1.88 5.17a.5.5 0 0 1-.94 0L6 3.964 4.47 8.171A.5.5 0 0 1 4 8.5H.5a.5.5 0 0 1 0-1h3.15l1.88-5.17A.5.5 0 0 1 6 2Z"/>
                 </svg>
             </div>
-            <h2 class="mb-2">Biotrackr</h2>
-            <p class="text-muted mb-4">Sign in to view your health data dashboard</p>
-
-            <a href="/.auth/login/aad?post_login_redirect_uri=/" class="btn btn-primary btn-lg w-100 d-flex align-items-center justify-content-center gap-2">
-                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 23 23" fill="currentColor">
-                    <path d="M0 0h11v11H0zM12 0h11v11H12zM0 12h11v11H0zM12 12h11v11H12z"/>
-                </svg>
+            <RadzenText TextStyle="TextStyle.H4">Biotrackr</RadzenText>
+            <RadzenText TextStyle="TextStyle.Body2" class="rz-color-secondary">
+                Sign in to view your health data dashboard
+            </RadzenText>
+            <a href="/.auth/login/aad?post_login_redirect_uri=/" class="rz-button rz-button-lg rz-variant-filled rz-primary" style="width: 100%; text-align: center; text-decoration: none;">
                 Sign in with Microsoft
             </a>
-        </div>
-    </div>
-</div>
+        </RadzenStack>
+    </RadzenCard>
+</RadzenStack>

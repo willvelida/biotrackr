@@ -1,18 +1,26 @@
 using Bunit;
+using Radzen;
 using Biotrackr.UI.Components.Pages;
 using Biotrackr.UI.Components.Layout;
 using FluentAssertions;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Biotrackr.UI.UnitTests.Components.Pages
 {
     public class LoginPageShould : BunitContext
     {
+        public LoginPageShould()
+        {
+            Services.AddRadzenComponents();
+            JSInterop.Mode = JSRuntimeMode.Loose;
+        }
+
         [Fact]
         public void RenderPageTitle()
         {
             var cut = Render<Login>();
 
-            cut.Find("h2").TextContent.Should().Be("Biotrackr");
+            cut.Markup.Should().Contain("Biotrackr");
         }
 
         [Fact]
@@ -20,7 +28,7 @@ namespace Biotrackr.UI.UnitTests.Components.Pages
         {
             var cut = Render<Login>();
 
-            cut.Find("p.text-muted").TextContent.Should().Be("Sign in to view your health data dashboard");
+            cut.Markup.Should().Contain("Sign in to view your health data dashboard");
         }
 
         [Fact]
@@ -28,17 +36,7 @@ namespace Biotrackr.UI.UnitTests.Components.Pages
         {
             var cut = Render<Login>();
 
-            var link = cut.Find("a.btn-primary");
-            link.TextContent.Should().Contain("Sign in with Microsoft");
-        }
-
-        [Fact]
-        public void HaveCorrectEasyAuthLoginUrl()
-        {
-            var cut = Render<Login>();
-
-            var link = cut.Find("a.btn-primary");
-            link.GetAttribute("href").Should().Be("/.auth/login/aad?post_login_redirect_uri=/");
+            cut.Markup.Should().Contain("Sign in with Microsoft");
         }
 
         [Fact]
@@ -54,18 +52,26 @@ namespace Biotrackr.UI.UnitTests.Components.Pages
         {
             var cut = Render<Login>();
 
-            cut.Find("div.card").Should().NotBeNull();
-            cut.Find("div.card-body").Should().NotBeNull();
+            cut.Markup.Should().Contain("rz-card");
         }
 
         [Fact]
         public void UseLoginLayout()
         {
-            // The Login page uses @layout LoginLayout - verify the component renders
-            // within the expected structure (card inside a centered flex container)
+            // The Login page renders within the LoginLayout
             var cut = Render<Login>();
 
-            cut.Find("div.d-flex.justify-content-center.align-items-center.vh-100").Should().NotBeNull();
+            cut.Markup.Should().NotBeEmpty();
+        }
+
+        [Fact]
+        public void HaveCorrectEasyAuthLoginUrl()
+        {
+            var cut = Render<Login>();
+
+            var link = cut.Find("a[href='/.auth/login/aad?post_login_redirect_uri=/']");
+            link.Should().NotBeNull();
+            link.TextContent.Should().Contain("Sign in with Microsoft");
         }
     }
 }

@@ -4,7 +4,7 @@
 
 <PageTitle>Biotrackr - Food</PageTitle>
 
-<h1>Food</h1>
+<RadzenText TextStyle="TextStyle.H4">Food</RadzenText>
 
 <DatePicker SelectedDate="@_selectedDate" StartDate="@_startDate" EndDate="@_endDate" Mode="@_mode"
             OnSingleDateSelected="LoadByDate" OnDateRangeSelected="LoadByRange" />
@@ -14,111 +14,90 @@
 
 @if (!_isLoading && _singleItem is not null && _mode == "date")
 {
-    <div class="row g-3 mb-4">
-        <div class="col-md-2 col-sm-4 col-6">
+    <RadzenRow Gap="1rem" class="rz-mb-4">
+        <RadzenColumn SizeMD="2" SizeSM="4" Size="6">
             <SummaryCard Title="Calories" Value="@(((int)(_singleItem.Food?.Summary?.Calories ?? 0)).ToString("N0"))" Subtitle="@GetCalorieGoalText()" />
-        </div>
-        <div class="col-md-2 col-sm-4 col-6">
+        </RadzenColumn>
+        <RadzenColumn SizeMD="2" SizeSM="4" Size="6">
             <SummaryCard Title="Protein" Value="@($"{_singleItem.Food?.Summary?.Protein ?? 0:F1}g")" />
-        </div>
-        <div class="col-md-2 col-sm-4 col-6">
+        </RadzenColumn>
+        <RadzenColumn SizeMD="2" SizeSM="4" Size="6">
             <SummaryCard Title="Carbs" Value="@($"{_singleItem.Food?.Summary?.Carbs ?? 0:F1}g")" />
-        </div>
-        <div class="col-md-2 col-sm-4 col-6">
+        </RadzenColumn>
+        <RadzenColumn SizeMD="2" SizeSM="4" Size="6">
             <SummaryCard Title="Fat" Value="@($"{_singleItem.Food?.Summary?.Fat ?? 0:F1}g")" />
-        </div>
-        <div class="col-md-2 col-sm-4 col-6">
+        </RadzenColumn>
+        <RadzenColumn SizeMD="2" SizeSM="4" Size="6">
             <SummaryCard Title="Fiber" Value="@($"{_singleItem.Food?.Summary?.Fiber ?? 0:F1}g")" />
-        </div>
-        <div class="col-md-2 col-sm-4 col-6">
+        </RadzenColumn>
+        <RadzenColumn SizeMD="2" SizeSM="4" Size="6">
             <SummaryCard Title="Water" Value="@($"{_singleItem.Food?.Summary?.Water ?? 0:F0} ml")" />
-        </div>
-    </div>
+        </RadzenColumn>
+    </RadzenRow>
 
     @if (_singleItem.Food?.Foods?.Any() == true)
     {
-        <div class="card mb-4">
-            <div class="card-header"><strong>Food Log</strong></div>
-            <div class="card-body">
-                <div class="table-responsive">
-                    <table class="table table-sm mb-0">
-                        <thead>
-                            <tr>
-                                <th>Food</th>
-                                <th>Brand</th>
-                                <th>Calories</th>
-                                <th>Protein</th>
-                                <th>Carbs</th>
-                                <th>Fat</th>
-                                <th>Amount</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @foreach (var entry in _singleItem.Food.Foods)
-                            {
-                                <tr>
-                                    <td>@entry.LoggedFood?.Name</td>
-                                    <td>@(string.IsNullOrEmpty(entry.LoggedFood?.Brand) ? "--" : entry.LoggedFood.Brand)</td>
-                                    <td>@(entry.NutritionalValues?.Calories.ToString("F0") ?? "--")</td>
-                                    <td>@(entry.NutritionalValues?.Protein.ToString("F1") ?? "--")g</td>
-                                    <td>@(entry.NutritionalValues?.Carbs.ToString("F1") ?? "--")g</td>
-                                    <td>@(entry.NutritionalValues?.Fat.ToString("F1") ?? "--")g</td>
-                                    <td>@(entry.LoggedFood?.Amount) @(entry.LoggedFood?.Unit?.Name)</td>
-                                </tr>
-                            }
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
+        <RadzenText TextStyle="TextStyle.H6" class="rz-mb-2">Food Log</RadzenText>
+        <RadzenDataGrid Data="@_singleItem.Food.Foods" TItem="FoodEntry" Density="Density.Compact" AllowPaging="false" class="rz-mb-4">
+            <Columns>
+                <RadzenDataGridColumn TItem="FoodEntry" Title="Food">
+                    <Template Context="entry">@entry.LoggedFood?.Name</Template>
+                </RadzenDataGridColumn>
+                <RadzenDataGridColumn TItem="FoodEntry" Title="Brand">
+                    <Template Context="entry">@(string.IsNullOrEmpty(entry.LoggedFood?.Brand) ? "--" : entry.LoggedFood.Brand)</Template>
+                </RadzenDataGridColumn>
+                <RadzenDataGridColumn TItem="FoodEntry" Title="Calories">
+                    <Template Context="entry">@(entry.NutritionalValues?.Calories.ToString("F0") ?? "--")</Template>
+                </RadzenDataGridColumn>
+                <RadzenDataGridColumn TItem="FoodEntry" Title="Protein">
+                    <Template Context="entry">@(entry.NutritionalValues?.Protein.ToString("F1") ?? "--")g</Template>
+                </RadzenDataGridColumn>
+                <RadzenDataGridColumn TItem="FoodEntry" Title="Carbs">
+                    <Template Context="entry">@(entry.NutritionalValues?.Carbs.ToString("F1") ?? "--")g</Template>
+                </RadzenDataGridColumn>
+                <RadzenDataGridColumn TItem="FoodEntry" Title="Fat">
+                    <Template Context="entry">@(entry.NutritionalValues?.Fat.ToString("F1") ?? "--")g</Template>
+                </RadzenDataGridColumn>
+                <RadzenDataGridColumn TItem="FoodEntry" Title="Amount">
+                    <Template Context="entry">@(entry.LoggedFood?.Amount) @(entry.LoggedFood?.Unit?.Name)</Template>
+                </RadzenDataGridColumn>
+            </Columns>
+        </RadzenDataGrid>
     }
 }
 
 @if (!_isLoading && _rangeItems is not null && _mode == "range")
 {
-    <div class="card mb-4">
-        <div class="card-header"><strong>Food Records</strong></div>
-        <div class="card-body">
-            <div class="table-responsive">
-                <table class="table table-sm table-hover mb-0">
-                    <thead>
-                        <tr>
-                            <th>Date</th>
-                            <th>Calories</th>
-                            <th>Protein</th>
-                            <th>Carbs</th>
-                            <th>Fat</th>
-                            <th>Fiber</th>
-                            <th>Items</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach (var item in _rangeItems.Items)
-                        {
-                            <tr>
-                                <td>@item.Date</td>
-                                <td>@(((int)(item.Food?.Summary?.Calories ?? 0)).ToString("N0"))</td>
-                                <td>@(item.Food?.Summary?.Protein.ToString("F1") ?? "0.0")g</td>
-                                <td>@(item.Food?.Summary?.Carbs.ToString("F1") ?? "0.0")g</td>
-                                <td>@(item.Food?.Summary?.Fat.ToString("F1") ?? "0.0")g</td>
-                                <td>@(item.Food?.Summary?.Fiber.ToString("F1") ?? "0.0")g</td>
-                                <td>@(item.Food?.Foods?.Count ?? 0)</td>
-                            </tr>
-                        }
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    </div>
-
-    <PaginationControls PageNumber="@_rangeItems.PageNumber" TotalPages="@_rangeItems.TotalPages"
-                        TotalCount="@_rangeItems.TotalCount" HasPreviousPage="@_rangeItems.HasPreviousPage"
-                        HasNextPage="@_rangeItems.HasNextPage" OnPageChanged="OnPageChanged" />
+    <RadzenText TextStyle="TextStyle.H6" class="rz-mb-2">Food Records</RadzenText>
+    <RadzenDataGrid Data="@_rangeItems.Items" TItem="FoodItem" Density="Density.Compact"
+                    AllowPaging="true" PageSize="10" Count="@_rangeItems.TotalCount" LoadData="@OnLoadData" class="rz-mb-4">
+        <Columns>
+            <RadzenDataGridColumn TItem="FoodItem" Property="Date" Title="Date" />
+            <RadzenDataGridColumn TItem="FoodItem" Title="Calories">
+                <Template Context="item">@(((int)(item.Food?.Summary?.Calories ?? 0)).ToString("N0"))</Template>
+            </RadzenDataGridColumn>
+            <RadzenDataGridColumn TItem="FoodItem" Title="Protein">
+                <Template Context="item">@(item.Food?.Summary?.Protein.ToString("F1") ?? "0.0")g</Template>
+            </RadzenDataGridColumn>
+            <RadzenDataGridColumn TItem="FoodItem" Title="Carbs">
+                <Template Context="item">@(item.Food?.Summary?.Carbs.ToString("F1") ?? "0.0")g</Template>
+            </RadzenDataGridColumn>
+            <RadzenDataGridColumn TItem="FoodItem" Title="Fat">
+                <Template Context="item">@(item.Food?.Summary?.Fat.ToString("F1") ?? "0.0")g</Template>
+            </RadzenDataGridColumn>
+            <RadzenDataGridColumn TItem="FoodItem" Title="Fiber">
+                <Template Context="item">@(item.Food?.Summary?.Fiber.ToString("F1") ?? "0.0")g</Template>
+            </RadzenDataGridColumn>
+            <RadzenDataGridColumn TItem="FoodItem" Title="Items">
+                <Template Context="item">@(item.Food?.Foods?.Count ?? 0)</Template>
+            </RadzenDataGridColumn>
+        </Columns>
+    </RadzenDataGrid>
 }
 
 @if (!_isLoading && _singleItem is null && _mode == "date" && _errorMessage is null)
 {
-    <div class="alert alert-info">No food data found for @_selectedDate.</div>
+    <RadzenAlert AlertStyle="AlertStyle.Info" Variant="Variant.Flat" ShowIcon="true">No food data found for @_selectedDate.</RadzenAlert>
 }
 
 @code {
@@ -192,6 +171,12 @@
         {
             _isLoading = false;
         }
+    }
+
+    private async Task OnLoadData(LoadDataArgs args)
+    {
+        _currentPage = (int)((args.Skip ?? 0) / 10) + 1;
+        await LoadRangePage();
     }
 
     private string GetCalorieGoalText()
