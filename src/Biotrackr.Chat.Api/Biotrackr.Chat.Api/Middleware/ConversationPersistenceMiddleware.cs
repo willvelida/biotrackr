@@ -2,6 +2,7 @@ using Biotrackr.Chat.Api.Services;
 using Microsoft.Agents.AI;
 using Microsoft.Extensions.AI;
 using System.Runtime.CompilerServices;
+using System.Text.Json;
 
 namespace Biotrackr.Chat.Api.Middleware
 {
@@ -51,6 +52,11 @@ namespace Biotrackr.Chat.Api.Middleware
                     else if (content is FunctionCallContent functionCall)
                     {
                         toolCalls.Add(functionCall.Name);
+                        logger.LogInformation(
+                            "Tool call: {ToolName} with arguments: {Arguments} in session {SessionId}",
+                            functionCall.Name,
+                            functionCall.Arguments is not null ? JsonSerializer.Serialize(functionCall.Arguments) : "null",
+                            sessionId);
                     }
                 }
 
