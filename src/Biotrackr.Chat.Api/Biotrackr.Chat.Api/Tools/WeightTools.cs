@@ -1,10 +1,27 @@
 using System.ComponentModel;
+using System.Text.Json;
+using Biotrackr.Chat.Api.Models;
+using Biotrackr.Chat.Api.Models.Weight;
 using Microsoft.Extensions.Caching.Memory;
 
 namespace Biotrackr.Chat.Api.Tools
 {
     public class WeightTools(IHttpClientFactory httpClientFactory, IMemoryCache cache)
     {
+        private static readonly JsonSerializerOptions JsonOptions = new()
+        {
+            PropertyNameCaseInsensitive = true
+        };
+
+        private static string SanitizeResponse<T>(string rawJson, string entityName) where T : class, new()
+        {
+            var typed = JsonSerializer.Deserialize<T>(rawJson, JsonOptions);
+            if (typed is null)
+                return JsonSerializer.Serialize(new { error = $"Failed to parse {entityName} data." });
+
+            return JsonSerializer.Serialize(typed, JsonOptions);
+        }
+
         [Description("Get weight data (weight, BMI, body fat percentage) for a specific date. Date format: YYYY-MM-DD.")]
         public async Task<string> GetWeightByDate(
             [Description("The date to get weight data for, in YYYY-MM-DD format")] string date)
@@ -23,13 +40,14 @@ namespace Biotrackr.Chat.Api.Tools
                 return $"{{\"error\": \"Weight data not found for {date}.\"}}";
 
             var result = await response.Content.ReadAsStringAsync();
+            var sanitized = SanitizeResponse<WeightItem>(result, "weight");
 
             var ttl = DateOnly.Parse(date) == DateOnly.FromDateTime(DateTime.UtcNow)
                 ? TimeSpan.FromMinutes(5)
                 : TimeSpan.FromHours(1);
-            cache.Set(cacheKey, result, ttl);
+            cache.Set(cacheKey, sanitized, ttl);
 
-            return result;
+            return sanitized;
         }
 
         [Description("Get weight data for a date range. Maximum 365 days. Date format: YYYY-MM-DD.")]
@@ -54,8 +72,9 @@ namespace Biotrackr.Chat.Api.Tools
                 return """{"error": "No weight data found for the specified range."}""";
 
             var result = await response.Content.ReadAsStringAsync();
-            cache.Set(cacheKey, result, TimeSpan.FromMinutes(30));
-            return result;
+            var sanitized = SanitizeResponse<PaginatedResponse<WeightItem>>(result, "weight range");
+            cache.Set(cacheKey, sanitized, TimeSpan.FromMinutes(30));
+            return sanitized;
         }
 
         [Description("Get paginated weight records. Returns the most recent records by default.")]
@@ -75,8 +94,9 @@ namespace Biotrackr.Chat.Api.Tools
                 return """{"error": "Failed to retrieve weight records."}""";
 
             var result = await response.Content.ReadAsStringAsync();
-            cache.Set(cacheKey, result, TimeSpan.FromMinutes(15));
-            return result;
+            var sanitized = SanitizeResponse<PaginatedResponse<WeightItem>>(result, "weight records");
+            cache.Set(cacheKey, sanitized, TimeSpan.FromMinutes(15));
+            return sanitized;
         }
     }
 }
