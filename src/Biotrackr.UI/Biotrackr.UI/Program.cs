@@ -1,13 +1,21 @@
 using System.Diagnostics.CodeAnalysis;
 using Azure.Identity;
+using Azure.Monitor.OpenTelemetry.Exporter;
 using Biotrackr.UI.Components;
 using Radzen;
 using Biotrackr.UI.Configuration;
 using Biotrackr.UI.Services;
 using Microsoft.Extensions.Configuration.AzureAppConfiguration;
-using OpenTelemetry;
 using OpenTelemetry.Metrics;
+using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
+
+var resourceAttributes = new Dictionary<string, object>
+{
+    { "service.name", "Biotrackr.UI" },
+    { "service.version", "1.0.0" }
+};
+var resourceBuilder = ResourceBuilder.CreateDefault().AddAttributes(resourceAttributes);
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -41,8 +49,11 @@ builder.Services.AddRazorComponents()
 
 builder.Services.AddRadzenComponents();
 
+var appInsightsConnectionString = builder.Configuration["applicationinsightsconnectionstring"];
+
 builder.Services.AddOpenTelemetry()
-    .WithTracing(b => b.AddSource("Biotrackr.UI")
+    .WithTracing(b => b.SetResourceBuilder(resourceBuilder)
+        .AddSource("Biotrackr.UI")
         .AddAspNetCoreInstrumentation()
         .AddHttpClientInstrumentation(o =>
         {
@@ -51,12 +62,28 @@ builder.Services.AddOpenTelemetry()
             {
                 activity.SetTag("http.request.header.ocp_apim_subscription_key", "[REDACTED]");
             };
+        })
+        .AddAzureMonitorTraceExporter(options =>
+        {
+            options.ConnectionString = appInsightsConnectionString;
         }))
-    .WithMetrics(b => b.AddMeter("Biotrackr.UI")
+    .WithMetrics(b => b.SetResourceBuilder(resourceBuilder)
+        .AddMeter("Biotrackr.UI")
         .AddAspNetCoreInstrumentation()
-        .AddHttpClientInstrumentation())
-    .WithLogging()
-    .UseOtlpExporter();
+        .AddHttpClientInstrumentation()
+        .AddAzureMonitorMetricExporter(options =>
+        {
+            options.ConnectionString = appInsightsConnectionString;
+        }));
+
+builder.Logging.AddOpenTelemetry(log =>
+{
+    log.SetResourceBuilder(resourceBuilder);
+    log.AddAzureMonitorLogExporter(options =>
+    {
+        options.ConnectionString = appInsightsConnectionString;
+    });
+});
 
 builder.Services.AddTransient<ApiKeyDelegatingHandler>();
 
