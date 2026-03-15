@@ -60,7 +60,9 @@ resource excessiveToolCallsAlert 'Microsoft.Insights/scheduledQueryRules@2023-03
       allOf: [
         {
           query: '''
-            AppTraces
+            union isfuzzy=true
+              (datatable(TimeGenerated: datetime, Message: string, Properties: dynamic)[]),
+              (AppTraces)
             | where Message startswith "Tool call invoked:"
             | extend SessionId = tostring(Properties["SessionId"])
             | summarize ToolCallCount = count() by SessionId, bin(TimeGenerated, 5m)
@@ -94,7 +96,9 @@ resource httpErrorSpikeAlert 'Microsoft.Insights/scheduledQueryRules@2023-03-15-
       allOf: [
         {
           query: '''
-            AppRequests
+            union isfuzzy=true
+              (datatable(TimeGenerated: datetime, ResultCode: string)[]),
+              (AppRequests)
             | where ResultCode in ("401", "403")
             | summarize ErrorCount = count() by bin(TimeGenerated, 15m)
             | where ErrorCount > 10
