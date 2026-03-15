@@ -27,6 +27,7 @@ public class ChatApiWebApplicationFactory : WebApplicationFactory<Program>
         Environment.SetEnvironmentVariable("Biotrackr:ChatSystemPrompt", "You are a test assistant.");
         Environment.SetEnvironmentVariable("azureappconfigendpoint", string.Empty);
         Environment.SetEnvironmentVariable("managedidentityclientid", string.Empty);
+        Environment.SetEnvironmentVariable("applicationinsightsconnectionstring", "InstrumentationKey=00000000-0000-0000-0000-000000000000");
         Environment.SetEnvironmentVariable("AzureAd:TenantId", "test-tenant");
         Environment.SetEnvironmentVariable("AzureAd:ClientId", "test-client");
 
