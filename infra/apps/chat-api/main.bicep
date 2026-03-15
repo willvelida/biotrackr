@@ -52,6 +52,9 @@ param agentBlueprintClientId string
 @description('The agent identity ID for Cosmos DB access')
 param agentIdentityId string
 
+@description('Email address for agent alert notifications')
+param alertEmailAddress string
+
 resource uai 'Microsoft.ManagedIdentity/userAssignedIdentities@2023-01-31' existing = {
   name: uaiName
 }
@@ -388,5 +391,18 @@ resource agentIdentityIdSetting 'Microsoft.AppConfiguration/configurationStores/
   parent: appConfig
   properties: {
     value: agentIdentityId
+  }
+}
+
+// Agent alert rules
+module agentAlerts '../../modules/monitoring/agent-alerts.bicep' = {
+  name: 'agent-alerts'
+  params: {
+    baseName: 'biotrackr'
+    environment: tags.Environment
+    location: location
+    appInsightsName: appInsights.name
+    alertEmailAddress: alertEmailAddress
+    tags: tags
   }
 }

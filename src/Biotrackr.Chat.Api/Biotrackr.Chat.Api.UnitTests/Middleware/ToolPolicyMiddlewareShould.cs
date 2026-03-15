@@ -174,6 +174,32 @@ namespace Biotrackr.Chat.Api.UnitTests.Middleware
         }
 
         [Fact]
+        public async Task LogInformation_WhenToolCallInvoked()
+        {
+            // Arrange
+            var functionCall = new FunctionCallContent("call-1", "GetActivityByDate",
+                new Dictionary<string, object?> { ["date"] = "2026-01-15" });
+            var agent = new FakeAgent(functionCall, new TextContent("Here is your data."));
+            var messages = CreateMessages("Show me my activity");
+
+            // Act
+            await foreach (var _ in _sut.HandleAsync(messages, null, null, agent, CancellationToken.None))
+            {
+                // Drain
+            }
+
+            // Assert
+            _loggerMock.Verify(
+                x => x.Log(
+                    LogLevel.Information,
+                    It.IsAny<EventId>(),
+                    It.Is<It.IsAnyType>((o, t) => o.ToString()!.Contains("Tool call invoked:") && o.ToString()!.Contains("GetActivityByDate")),
+                    It.IsAny<Exception?>(),
+                    It.IsAny<Func<It.IsAnyType, Exception?, string>>()),
+                Times.Once);
+        }
+
+        [Fact]
         public async Task TrackBudgetIndependently_ForDifferentSessions()
         {
             // Arrange — use a budget of 3
