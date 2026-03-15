@@ -55,6 +55,7 @@ resource excessiveToolCallsAlert 'Microsoft.Insights/scheduledQueryRules@2023-03
     evaluationFrequency: 'PT5M'
     windowSize: 'PT5M'
     scopes: [appInsights.id]
+    skipQueryValidation: true
     criteria: {
       allOf: [
         {
@@ -88,6 +89,7 @@ resource httpErrorSpikeAlert 'Microsoft.Insights/scheduledQueryRules@2023-03-15-
     evaluationFrequency: 'PT5M'
     windowSize: 'PT15M'
     scopes: [appInsights.id]
+    skipQueryValidation: true
     criteria: {
       allOf: [
         {

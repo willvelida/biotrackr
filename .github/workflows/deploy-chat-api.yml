@@ -96,7 +96,7 @@ jobs:
         with:
           template-file: './infra/apps/chat-api/main.bicep'
           parameters-file: ./infra/apps/chat-api/main.dev.bicepparam
-          parameters: '{"imageName": "${{ needs.retrieve-container-image-dev.outputs.loginServer }}/biotrackr-chat-api:${{ github.sha }}"}'
+          parameters: '{"imageName": "${{ needs.retrieve-container-image-dev.outputs.loginServer }}/biotrackr-chat-api:${{ github.sha }}", "alertEmailAddress": "${{ secrets.ALERT_EMAIL_ADDRESS }}"}'
           scope: resourceGroup
           inject-tenant-id: true
         secrets:
@@ -113,7 +113,7 @@ jobs:
           scope: resourceGroup
           template-file: './infra/apps/chat-api/main.bicep'
           parameters-file: ./infra/apps/chat-api/main.dev.bicepparam
-          parameters: '{"imageName": "${{ needs.retrieve-container-image-dev.outputs.loginServer }}/biotrackr-chat-api:${{ github.sha }}"}'
+          parameters: '{"imageName": "${{ needs.retrieve-container-image-dev.outputs.loginServer }}/biotrackr-chat-api:${{ github.sha }}", "alertEmailAddress": "${{ secrets.ALERT_EMAIL_ADDRESS }}"}'
           inject-tenant-id: true
         secrets:
           client-id: ${{ secrets.AZURE_CLIENT_ID }}
@@ -128,7 +128,7 @@ jobs:
         with:
           template-file: './infra/apps/chat-api/main.bicep'
           parameters-file: ./infra/apps/chat-api/main.dev.bicepparam
-          parameters: '{"imageName": "${{ needs.retrieve-container-image-dev.outputs.loginServer }}/biotrackr-chat-api:${{ github.sha }}"}'
+          parameters: '{"imageName": "${{ needs.retrieve-container-image-dev.outputs.loginServer }}/biotrackr-chat-api:${{ github.sha }}", "alertEmailAddress": "${{ secrets.ALERT_EMAIL_ADDRESS }}"}'
           scope: resourceGroup
           inject-tenant-id: true
           environment: dev
