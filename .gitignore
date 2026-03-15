@@ -404,3 +404,6 @@ docs/blog-post-ideas/*
 
 .github/agents/*
 .github/skills/*
+
+# Chat system prompt — sensitive configuration, stored in Key Vault
+scripts/chat-system-prompt/system-prompt.txt

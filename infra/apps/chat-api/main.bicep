@@ -43,9 +43,6 @@ param jwtAudience string = environment().authentication.audiences[0]
 @description('The Claude model to use for the chat agent')
 param chatAgentModel string = 'claude-sonnet-4-6'
 
-@description('The system prompt for the chat agent')
-param chatSystemPrompt string = 'You are the Biotrackr health and fitness assistant. You help the user understand their health data by querying activity, sleep, weight, and food records using the available tools. Always use the tools to retrieve data before answering. Present data clearly and concisely. You are not a medical professional — remind users to consult a healthcare provider for medical advice.'
-
 @description('The application (client) ID of the agent identity blueprint')
 param agentBlueprintClientId string
 
@@ -364,12 +361,13 @@ resource apiSubscriptionKeySetting 'Microsoft.AppConfiguration/configurationStor
   }
 }
 
-// App Configuration: Chat agent system prompt
+// App Configuration: Chat agent system prompt (Key Vault reference)
 resource chatSystemPromptSetting 'Microsoft.AppConfiguration/configurationStores/keyValues@2025-02-01-preview' = {
   name: 'Biotrackr:ChatSystemPrompt'
   parent: appConfig
   properties: {
-    value: chatSystemPrompt
+    contentType: 'application/vnd.microsoft.appconfig.keyvaultref+json;charset=utf-8'
+    value: '{"uri":"${keyVault.properties.vaultUri}secrets/ChatSystemPrompt"}'
   }
 }
 
