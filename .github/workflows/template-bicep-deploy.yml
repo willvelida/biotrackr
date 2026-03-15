@@ -23,6 +23,10 @@ on:
               required: false
               type: boolean
               default: false
+            inject-alert-email:
+              required: false
+              type: boolean
+              default: false
             environment:
                 required: true
                 type: string
@@ -36,6 +40,8 @@ on:
             resource-group-name:
                 required: false
             easy-auth-client-id:
+              required: false
+            alert-email-address:
               required: false
 
 jobs:
@@ -74,6 +80,10 @@ jobs:
               if [ -n "${{ secrets.easy-auth-client-id }}" ]; then
                 PARAMS=$(echo "$PARAMS" | jq -c --arg easyAuthClientId "${{ secrets.easy-auth-client-id }}" '. + {"easyAuthClientId": $easyAuthClientId}')
               fi
+            fi
+
+            if [ "${{ inputs.inject-alert-email }}" = "true" ]; then
+              PARAMS=$(echo "$PARAMS" | jq -c --arg alertEmailAddress "${{ secrets.alert-email-address }}" '. + {"alertEmailAddress": $alertEmailAddress}')
             fi
 
             echo "params=$PARAMS" >> "$GITHUB_OUTPUT"

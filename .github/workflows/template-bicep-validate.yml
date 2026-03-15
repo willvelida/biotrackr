@@ -23,6 +23,10 @@ on:
               required: false
               type: boolean
               default: false
+            inject-alert-email:
+              required: false
+              type: boolean
+              default: false
         secrets:
             client-id:
                 required: true
@@ -33,6 +37,8 @@ on:
             resource-group-name:
                 required: false
             easy-auth-client-id:
+              required: false
+            alert-email-address:
               required: false
 
 jobs:
@@ -72,14 +78,10 @@ jobs:
                   fi
                 fi
 
-                echo "params=$PARAMS" >> "$GITHUB_OUTPUT"
+            if [ "${{ inputs.inject-alert-email }}" = "true" ]; then
+              PARAMS=$(echo "$PARAMS" | jq -c --arg alertEmailAddress "${{ secrets.alert-email-address }}" '. + {"alertEmailAddress": $alertEmailAddress}')
+            fi
 
-            - uses: azure/bicep-deploy@v2
-              name: Run preflight validation
-              with:
-                type: deployment
-                scope: ${{ inputs.scope }}
-                subscription-id: ${{ secrets.subscription-id }}
                 resource-group-name: ${{ secrets.resource-group-name }}
                 name: ${{ github.run_number }}
                 template-file: ${{ inputs.template-file }}
