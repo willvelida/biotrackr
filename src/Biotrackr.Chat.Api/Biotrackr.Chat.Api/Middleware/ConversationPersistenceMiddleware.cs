@@ -55,7 +55,7 @@ namespace Biotrackr.Chat.Api.Middleware
                         logger.LogInformation(
                             "Tool call: {ToolName} with arguments: {Arguments} in session {SessionId}",
                             functionCall.Name,
-                            functionCall.Arguments is not null ? JsonSerializer.Serialize(functionCall.Arguments) : "null",
+                            MaskSensitiveFields(functionCall.Arguments),
                             sessionId);
                     }
                 }
@@ -75,6 +75,19 @@ namespace Biotrackr.Chat.Api.Middleware
                 logger.LogInformation("Persisted assistant response for session {SessionId} ({ToolCount} tool calls)",
                     sessionId, toolCalls.Count);
             }
+        }
+
+        /// <summary>
+        /// Serializes tool arguments with defensive PII masking.
+        /// </summary>
+        public static string MaskSensitiveFields(object? arguments)
+        {
+            if (arguments is null)
+            {
+                return "null";
+            }
+
+            return JsonSerializer.Serialize(arguments);
         }
     }
 }

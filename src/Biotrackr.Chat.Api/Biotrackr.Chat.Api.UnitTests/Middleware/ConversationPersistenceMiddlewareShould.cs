@@ -100,6 +100,22 @@ namespace Biotrackr.Chat.Api.UnitTests.Middleware
                 Times.Once);
         }
 
+        [Fact]
+        public void MaskSensitiveFields_ShouldReturnNull_WhenArgumentsAreNull()
+        {
+            var result = ConversationPersistenceMiddleware.MaskSensitiveFields(null);
+            result.Should().Be("null");
+        }
+
+        [Fact]
+        public void MaskSensitiveFields_ShouldSerializeArguments_WhenArgumentsAreProvided()
+        {
+            var arguments = new Dictionary<string, object?> { ["date"] = "2026-01-15", ["page"] = 1 };
+            var result = ConversationPersistenceMiddleware.MaskSensitiveFields(arguments);
+            result.Should().Contain("2026-01-15");
+            result.Should().Contain("page");
+        }
+
         /// <summary>
         /// Concrete AIAgent subclass for testing that yields preconfigured content.
         /// </summary>

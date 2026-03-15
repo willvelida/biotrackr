@@ -132,8 +132,18 @@ var chatHistoryRepository = app.Services.GetRequiredService<IChatHistoryReposito
 var persistenceLogger = app.Services.GetRequiredService<ILogger<ConversationPersistenceMiddleware>>();
 var persistenceMiddleware = new ConversationPersistenceMiddleware(chatHistoryRepository, persistenceLogger);
 
+// Wrap agent with tool policy enforcement middleware (rate limiting, allowed tool validation)
+var biotrackrSettings = app.Services.GetRequiredService<Microsoft.Extensions.Options.IOptions<Settings>>().Value;
+var toolPolicyOptions = Microsoft.Extensions.Options.Options.Create(new ToolPolicyOptions
+{
+    MaxToolCallsPerSession = biotrackrSettings.ToolCallBudgetPerSession
+});
+var toolPolicyLogger = app.Services.GetRequiredService<ILogger<ToolPolicyMiddleware>>();
+var toolPolicyMiddleware = new ToolPolicyMiddleware(memoryCache, toolPolicyOptions, toolPolicyLogger);
+
 AIAgent persistentAgent = chatAgent
     .AsBuilder()
+        .Use(runFunc: null, runStreamingFunc: toolPolicyMiddleware.HandleAsync)
         .Use(runFunc: null, runStreamingFunc: persistenceMiddleware.HandleAsync)
     .Build();
 
