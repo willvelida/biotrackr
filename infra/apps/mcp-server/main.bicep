@@ -22,6 +22,9 @@ param uaiName string
 @description('The name of the App Config Store that the MCP Server uses')
 param appConfigName string
 
+@description('The name of the Application Insights instance')
+param appInsightsName string
+
 @description('The name of the API Management instance that this MCP Server uses')
 param apimName string
 
@@ -40,6 +43,10 @@ resource uai 'Microsoft.ManagedIdentity/userAssignedIdentities@2023-01-31' exist
 
 resource appConfig 'Microsoft.AppConfiguration/configurationStores@2024-05-01' existing = {
   name: appConfigName
+}
+
+resource appInsights 'Microsoft.Insights/components@2020-02-02' existing = {
+  name: appInsightsName
 }
 
 resource apim 'Microsoft.ApiManagement/service@2024-06-01-preview' existing = {
@@ -83,6 +90,10 @@ module mcpServer '../../modules/host/container-app-http.bicep' = {
       {
         name: 'managedidentityclientid'
         value: uai.properties.clientId
+      }
+      {
+        name: 'applicationinsightsconnectionstring'
+        value: appInsights.properties.ConnectionString
       }
     ]
   }

@@ -58,6 +58,7 @@ namespace Biotrackr.Mcp.Server.IntegrationTests.Fixtures
             // Override config values via environment variables
             builder.UseSetting("biotrackrapiendpoint", "https://mock-api.test.com");
             builder.UseSetting("biotrackrapisubscriptionkey", "test-sub-key");
+            builder.UseSetting("applicationinsightsconnectionstring", "InstrumentationKey=00000000-0000-0000-0000-000000000000");
         }
     }
 }
