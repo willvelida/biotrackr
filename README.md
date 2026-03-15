@@ -16,6 +16,8 @@
 
 ## 🏗️ Architecture
 
+![](./docs/architecture-diagram.png)
+
 The application follows a **microservices architecture** with separate services for different health domains:
 
 - **Activity Service**: Processes and stores physical activity data from Fitbit
