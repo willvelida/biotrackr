@@ -25,6 +25,9 @@ param appConfigName string
 @description('The name of the Cosmos DB account that this Sleep Api uses')
 param cosmosDbAccountName string
 
+@description('The name of the Application Insights instance')
+param appInsightsName string
+
 @description('The name of the API Management instance that this Api uses')
 param apimName string
 
@@ -47,6 +50,10 @@ resource appConfig 'Microsoft.AppConfiguration/configurationStores@2024-05-01' e
 
 resource cosmosDbAccount 'Microsoft.DocumentDB/databaseAccounts@2024-11-15' existing = {
   name: cosmosDbAccountName
+}
+
+resource appInsights 'Microsoft.Insights/components@2020-02-02' existing = {
+  name: appInsightsName
 }
 
 resource apim 'Microsoft.ApiManagement/service@2024-06-01-preview' existing = {
@@ -92,6 +99,10 @@ module sleepApi '../../modules/host/container-app-http.bicep' = {
       {
         name: 'cosmosdbendpoint'
         value: cosmosDbAccount.properties.documentEndpoint
+      }
+      {
+        name: 'applicationinsightsconnectionstring'
+        value: appInsights.properties.ConnectionString
       }
     ]
   }
