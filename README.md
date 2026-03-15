@@ -50,7 +50,7 @@ Each service consists of:
 
 ### Backend
 - **.NET 10.0**: Modern C# microservices
-- **Azure Functions**: Serverless compute for background processing
+- **Azure Container Apps**: Serverless compute for background processing
 - **Azure Cosmos DB**: NoSQL database for scalable data storage
 - **Azure App Configuration**: Centralized configuration management
 - **Azure Key Vault**: Secure secrets management
