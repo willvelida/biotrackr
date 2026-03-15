@@ -13,6 +13,7 @@ param containerRegistryName = 'acrbiotrackrdev'
 param uaiName = 'uai-biotrackr-dev'
 param appConfigName = 'config-biotrackr-dev'
 param cosmosDbAccountName = 'cosmos-biotrackr-dev'
+param appInsightsName = 'appins-biotrackr-dev'
 param apimName = 'api-biotrackr-dev'
 param enableManagedIdentityAuth = true
 param tenantId = ''
