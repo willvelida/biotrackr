@@ -1,6 +1,5 @@
-using System.Diagnostics.CodeAnalysis;
-using System.Threading.RateLimiting;
 using Azure.Identity;
+using Azure.Monitor.OpenTelemetry.Exporter;
 using Biotrackr.Mcp.Server.Configuration;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
@@ -9,9 +8,18 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Configuration.AzureAppConfiguration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using OpenTelemetry;
 using OpenTelemetry.Metrics;
+using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
+using System.Diagnostics.CodeAnalysis;
+using System.Threading.RateLimiting;
+
+var resourceAttributes = new Dictionary<string, object>
+{
+    { "service.name", "Biotrackr.Mcp.Server" },
+    { "service.version", "1.0.0" }
+};
+var resourceBuilder = ResourceBuilder.CreateDefault().AddAttributes(resourceAttributes);
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -45,8 +53,11 @@ builder.Services
     .WithHttpTransport(o => o.Stateless = true)
     .WithToolsFromAssembly();
 
+var appInsightsConnectionString = builder.Configuration["applicationinsightsconnectionstring"];
+
 builder.Services.AddOpenTelemetry()
-    .WithTracing(b => b.AddSource("Biotrackr.Mcp.Server")
+    .WithTracing(b => b.SetResourceBuilder(resourceBuilder)
+        .AddSource("Biotrackr.Mcp.Server")
         .AddAspNetCoreInstrumentation()
         .AddHttpClientInstrumentation(o =>
         {
@@ -56,12 +67,28 @@ builder.Services.AddOpenTelemetry()
                 // Ensure subscription key header is never captured in traces
                 activity.SetTag("http.request.header.ocp_apim_subscription_key", "[REDACTED]");
             };
+        })
+        .AddAzureMonitorTraceExporter(options =>
+        {
+            options.ConnectionString = appInsightsConnectionString;
         }))
-    .WithMetrics(b => b.AddMeter("Biotrackr.Mcp.Server")
+    .WithMetrics(b => b.SetResourceBuilder(resourceBuilder)
+        .AddMeter("Biotrackr.Mcp.Server")
         .AddAspNetCoreInstrumentation()
-        .AddHttpClientInstrumentation())
-    .WithLogging()
-    .UseOtlpExporter();
+        .AddHttpClientInstrumentation()
+        .AddAzureMonitorMetricExporter(options =>
+        {
+            options.ConnectionString = appInsightsConnectionString;
+        }));
+
+builder.Logging.AddOpenTelemetry(log =>
+{
+    log.SetResourceBuilder(resourceBuilder);
+    log.AddAzureMonitorLogExporter(options =>
+    {
+        options.ConnectionString = appInsightsConnectionString;
+    });
+});
 
 builder.Services.AddTransient<ApiKeyDelegatingHandler>();
 
