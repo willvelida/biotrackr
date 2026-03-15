@@ -11,5 +11,6 @@ namespace Biotrackr.Chat.Api.Configuration
         public string AnthropicApiKey { get; set; }
         public string ChatAgentModel { get; set; }
         public string ChatSystemPrompt { get; set; }
+        public int ToolCallBudgetPerSession { get; set; } = 20;
     }
 }
