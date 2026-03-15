@@ -25,6 +25,7 @@ public class ActivityApiWebApplicationFactory : WebApplicationFactory<Program>
         Environment.SetEnvironmentVariable("Biotrackr:ContainerName", "activity-test");
         Environment.SetEnvironmentVariable("azureappconfigendpoint", string.Empty);
         Environment.SetEnvironmentVariable("managedidentityclientid", string.Empty);
+        Environment.SetEnvironmentVariable("applicationinsightsconnectionstring", "InstrumentationKey=00000000-0000-0000-0000-000000000000");
         
         // Set environment to Test
         builder.UseEnvironment("Test");
