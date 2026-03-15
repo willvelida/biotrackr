@@ -38,6 +38,12 @@ namespace Biotrackr.Chat.Api.Middleware
                 {
                     if (content is FunctionCallContent functionCall)
                     {
+                        // Log every tool invocation for monitoring/alerting
+                        logger.LogInformation(
+                            "Tool call invoked: {ToolName} in session {SessionId}",
+                            functionCall.Name,
+                            sessionId);
+
                         // Validate tool name is in the allowed set
                         if (!policyOptions.AllowedToolNames.Contains(functionCall.Name))
                         {
