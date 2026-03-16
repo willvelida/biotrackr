@@ -8,6 +8,7 @@ using Biotrackr.Chat.Api.Middleware;
 using Biotrackr.Chat.Api.Services;
 using Biotrackr.Chat.Api.Tools;
 using Microsoft.Agents.AI;
+using Microsoft.Agents.AI.Hosting;
 using Microsoft.Agents.AI.Hosting.AGUI.AspNetCore;
 using Microsoft.Azure.Cosmos;
 using Microsoft.Extensions.AI;
@@ -186,10 +187,13 @@ AIAgent persistentAgent = chatAgent
         .Use(runFunc: null, runStreamingFunc: degradationMiddleware.HandleAsync)
     .Build();
 
+// Wrap with AIHostAgent so sessions (and their ConversationId) persist between requests
+var hostedAgent = new AIHostAgent(persistentAgent, new InMemoryAgentSessionStore());
+
 app.MapOpenApi();
 
 // AG-UI endpoint — SSE streaming, session management, protocol events
-app.MapAGUI("/", persistentAgent);
+app.MapAGUI("/", hostedAgent);
 
 // Conversation history + health check endpoints
 app.RegisterChatEndpoints();
