@@ -31,8 +31,17 @@ namespace Biotrackr.Chat.Api.Middleware
                 var userContent = string.Join("", userMessage.Contents.OfType<TextContent>().Select(c => c.Text));
                 if (!string.IsNullOrWhiteSpace(userContent))
                 {
-                    await repository.SaveMessageAsync(sessionId, "user", userContent);
-                    logger.LogInformation("Persisted user message for session {SessionId}", sessionId);
+                    try
+                    {
+                        await repository.SaveMessageAsync(sessionId, "user", userContent);
+                        logger.LogInformation("Persisted user message for session {SessionId}", sessionId);
+                    }
+                    catch (Exception ex)
+                    {
+                        logger.LogError(ex,
+                            "Failed to persist user message for session {SessionId}. Continuing without persistence.",
+                            sessionId);
+                    }
                 }
             }
 
@@ -67,13 +76,23 @@ namespace Biotrackr.Chat.Api.Middleware
             var assistantContent = responseText.ToString();
             if (!string.IsNullOrWhiteSpace(assistantContent))
             {
-                await repository.SaveMessageAsync(
-                    sessionId,
-                    "assistant",
-                    assistantContent,
-                    toolCalls.Count > 0 ? toolCalls : null);
-                logger.LogInformation("Persisted assistant response for session {SessionId} ({ToolCount} tool calls)",
-                    sessionId, toolCalls.Count);
+                try
+                {
+                    await repository.SaveMessageAsync(
+                        sessionId,
+                        "assistant",
+                        assistantContent,
+                        toolCalls.Count > 0 ? toolCalls : null);
+                    logger.LogInformation("Persisted assistant response for session {SessionId} ({ToolCount} tool calls)",
+                        sessionId, toolCalls.Count);
+                }
+                catch (Exception ex)
+                {
+                    logger.LogError(ex,
+                        "Failed to persist assistant response for session {SessionId}. " +
+                        "The response was delivered to the user but will not appear in conversation history.",
+                        sessionId);
+                }
             }
         }
 

@@ -116,6 +116,92 @@ namespace Biotrackr.Chat.Api.UnitTests.Middleware
             result.Should().Contain("page");
         }
 
+        [Fact]
+        public async Task HandleAsync_ShouldContinueStreaming_WhenUserMessagePersistenceFails()
+        {
+            // Arrange
+            _repositoryMock.Setup(r => r.SaveMessageAsync(
+                It.IsAny<string>(), "user", It.IsAny<string>(), null))
+                .ThrowsAsync(new InvalidOperationException("Cosmos DB unavailable"));
+
+            var agent = new FakeAgent(new TextContent("Here is your data."));
+            var messages = CreateMessages("Show me my activity");
+
+            // Act — should not throw
+            var updates = new List<AgentResponseUpdate>();
+            await foreach (var update in _sut.HandleAsync(messages, null, null, agent, CancellationToken.None))
+            {
+                updates.Add(update);
+            }
+
+            // Assert — streaming continued despite persistence failure
+            updates.Should().NotBeEmpty();
+        }
+
+        [Fact]
+        public async Task HandleAsync_ShouldContinueStreaming_WhenAssistantPersistenceFails()
+        {
+            // Arrange — user persistence succeeds, assistant persistence fails
+            _repositoryMock.Setup(r => r.SaveMessageAsync(
+                It.IsAny<string>(), "assistant", It.IsAny<string>(), It.IsAny<List<string>?>()))
+                .ThrowsAsync(new InvalidOperationException("Cosmos DB throttled"));
+
+            var agent = new FakeAgent(new TextContent("Here is your data."));
+            var messages = CreateMessages("Show me my activity");
+
+            // Act — should not throw
+            var updates = new List<AgentResponseUpdate>();
+            await foreach (var update in _sut.HandleAsync(messages, null, null, agent, CancellationToken.None))
+            {
+                updates.Add(update);
+            }
+
+            // Assert — all agent updates were yielded before persistence was attempted
+            updates.Should().NotBeEmpty();
+        }
+
+        [Fact]
+        public async Task HandleAsync_ShouldLogError_WhenUserMessagePersistenceFails()
+        {
+            // Arrange
+            _repositoryMock.Setup(r => r.SaveMessageAsync(
+                It.IsAny<string>(), "user", It.IsAny<string>(), null))
+                .ThrowsAsync(new InvalidOperationException("Cosmos DB unavailable"));
+
+            var agent = new FakeAgent(new TextContent("Here is your data."));
+            var messages = CreateMessages("Show me my activity");
+
+            // Act
+            await foreach (var _ in _sut.HandleAsync(messages, null, null, agent, CancellationToken.None)) { }
+
+            // Assert
+            _loggerMock.VerifyLog(l => l.LogError(
+                It.IsAny<InvalidOperationException>(),
+                It.Is<string>(s => s.Contains("Failed to persist user message"))),
+                Times.Once);
+        }
+
+        [Fact]
+        public async Task HandleAsync_ShouldLogError_WhenAssistantPersistenceFails()
+        {
+            // Arrange
+            _repositoryMock.Setup(r => r.SaveMessageAsync(
+                It.IsAny<string>(), "assistant", It.IsAny<string>(), It.IsAny<List<string>?>()))
+                .ThrowsAsync(new InvalidOperationException("Cosmos DB throttled"));
+
+            var agent = new FakeAgent(new TextContent("Here is your data."));
+            var messages = CreateMessages("Show me my activity");
+
+            // Act
+            await foreach (var _ in _sut.HandleAsync(messages, null, null, agent, CancellationToken.None)) { }
+
+            // Assert
+            _loggerMock.VerifyLog(l => l.LogError(
+                It.IsAny<InvalidOperationException>(),
+                It.Is<string>(s => s.Contains("Failed to persist assistant response"))),
+                Times.Once);
+        }
+
         /// <summary>
         /// Concrete AIAgent subclass for testing that yields preconfigured content.
         /// </summary>

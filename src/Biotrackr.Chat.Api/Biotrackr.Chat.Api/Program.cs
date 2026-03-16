@@ -174,10 +174,15 @@ var toolPolicyOptions = Microsoft.Extensions.Options.Options.Create(new ToolPoli
 var toolPolicyLogger = app.Services.GetRequiredService<ILogger<ToolPolicyMiddleware>>();
 var toolPolicyMiddleware = new ToolPolicyMiddleware(memoryCache, toolPolicyOptions, toolPolicyLogger);
 
+// Wrap agent with graceful degradation middleware (catches Claude API failures)
+var degradationLogger = app.Services.GetRequiredService<ILogger<GracefulDegradationMiddleware>>();
+var degradationMiddleware = new GracefulDegradationMiddleware(degradationLogger);
+
 AIAgent persistentAgent = chatAgent
     .AsBuilder()
         .Use(runFunc: null, runStreamingFunc: toolPolicyMiddleware.HandleAsync)
         .Use(runFunc: null, runStreamingFunc: persistenceMiddleware.HandleAsync)
+        .Use(runFunc: null, runStreamingFunc: degradationMiddleware.HandleAsync)
     .Build();
 
 app.MapOpenApi();
