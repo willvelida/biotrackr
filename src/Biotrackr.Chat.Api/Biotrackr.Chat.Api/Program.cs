@@ -163,7 +163,8 @@ AIAgent chatAgent = anthropicClient.AsAIAgent(
 // Wrap agent with conversation persistence middleware
 var chatHistoryRepository = app.Services.GetRequiredService<IChatHistoryRepository>();
 var persistenceLogger = app.Services.GetRequiredService<ILogger<ConversationPersistenceMiddleware>>();
-var persistenceMiddleware = new ConversationPersistenceMiddleware(chatHistoryRepository, persistenceLogger);
+var conversationPolicyOptions = Microsoft.Extensions.Options.Options.Create(new ConversationPolicyOptions());
+var persistenceMiddleware = new ConversationPersistenceMiddleware(chatHistoryRepository, conversationPolicyOptions, persistenceLogger);
 
 // Wrap agent with tool policy enforcement middleware (rate limiting, allowed tool validation)
 var biotrackrSettings = app.Services.GetRequiredService<Microsoft.Extensions.Options.IOptions<Settings>>().Value;

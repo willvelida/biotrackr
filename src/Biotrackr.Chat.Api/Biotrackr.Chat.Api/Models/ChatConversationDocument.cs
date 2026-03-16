@@ -18,5 +18,11 @@ namespace Biotrackr.Chat.Api.Models
 
         [JsonPropertyName("messages")]
         public List<ChatMessage> Messages { get; set; } = [];
+
+        /// <summary>
+        /// Cosmos DB per-document TTL in seconds. Refreshed on every upsert.
+        /// </summary>
+        [JsonPropertyName("ttl")]
+        public int Ttl { get; set; } = 7776000;
     }
 }

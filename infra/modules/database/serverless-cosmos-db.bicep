@@ -156,6 +156,7 @@ resource conversationsContainer 'Microsoft.DocumentDB/databaseAccounts/sqlDataba
         ]
         kind: 'Hash'
       }
+      defaultTtl: 7776000
       indexingPolicy: {
         indexingMode: 'consistent'
         includedPaths: [
