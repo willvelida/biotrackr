@@ -93,6 +93,7 @@ jobs:
         name: Validate Template
         needs: [lint, retrieve-container-image-dev]
         uses: willvelida/biotrackr/.github/workflows/template-bicep-validate.yml@main
+        with:
           template-file: './infra/apps/chat-api/main.bicep'
           parameters-file: ./infra/apps/chat-api/main.dev.bicepparam
           parameters: '{"imageName": "${{ needs.retrieve-container-image-dev.outputs.loginServer }}/biotrackr-chat-api:${{ github.sha }}"}'
