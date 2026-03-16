@@ -61,6 +61,30 @@ jobs:
           run: |
             docker build -t ${{ steps.getacrserver.outputs.loginServer }}/${{ inputs.app-name }}:${{ github.sha }} .
 
+        - name: Generate SBOM
+          uses: aquasecurity/trivy-action@0.35.0
+          with:
+            image-ref: ${{ steps.getacrserver.outputs.loginServer }}/${{ inputs.app-name }}:${{ github.sha }}
+            format: 'cyclonedx'
+            output: 'sbom.cdx.json'
+          continue-on-error: true
+
+        - name: Upload SBOM as artifact
+          if: always()
+          uses: actions/upload-artifact@v4
+          with:
+            name: sbom-${{ inputs.app-name }}
+            path: sbom.cdx.json
+            retention-days: 90
+
+        - name: Submit SBOM to GitHub Dependency Graph
+          uses: anchore/sbom-action@v0
+          with:
+            image: ${{ steps.getacrserver.outputs.loginServer }}/${{ inputs.app-name }}:${{ github.sha }}
+            dependency-snapshot: true
+            upload-artifact: false
+          continue-on-error: true
+
         - name: Run Dockle
           uses: erzz/dockle-action@v1
           with:
