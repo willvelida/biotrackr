@@ -257,5 +257,71 @@ namespace Biotrackr.Chat.Api.UnitTests.Services
             result.Messages[1].Role.Should().Be("assistant");
             result.Title.Should().Be("Existing conversation"); // Title should not change
         }
+
+        [Fact]
+        public async Task SaveMessageAsync_ShouldSetTtl_FromSettings()
+        {
+            // Arrange
+            var sessionId = "ttl-session";
+            _containerMock.Setup(x => x.ReadItemAsync<ChatConversationDocument>(
+                sessionId, new PartitionKey(sessionId), null, default))
+                .ThrowsAsync(new CosmosException("Not found", HttpStatusCode.NotFound, 0, "", 0));
+
+            var responseMock = new Mock<ItemResponse<ChatConversationDocument>>();
+            ChatConversationDocument? capturedDocument = null;
+            _containerMock.Setup(x => x.UpsertItemAsync(
+                It.IsAny<ChatConversationDocument>(),
+                It.IsAny<PartitionKey>(),
+                null, default))
+                .Callback<ChatConversationDocument, PartitionKey?, ItemRequestOptions?, CancellationToken>(
+                    (doc, _, _, _) => capturedDocument = doc)
+                .ReturnsAsync(responseMock.Object);
+
+            // Act
+            var result = await _sut.SaveMessageAsync(sessionId, "user", "Hello");
+
+            // Assert — TTL should match the default settings value (7,776,000 seconds = 90 days)
+            capturedDocument.Should().NotBeNull();
+            capturedDocument!.Ttl.Should().Be(7_776_000);
+        }
+
+        [Fact]
+        public async Task SaveMessageAsync_ShouldRefreshTtl_WhenAppendingToExistingConversation()
+        {
+            // Arrange
+            var sessionId = "existing-ttl-session";
+            var existingConversation = new ChatConversationDocument
+            {
+                Id = sessionId,
+                SessionId = sessionId,
+                Title = "Existing conversation",
+                Ttl = 1000, // Old TTL value
+                Messages = [new ChatMessage { Role = "user", Content = "First message" }]
+            };
+
+            var readResponseMock = new Mock<ItemResponse<ChatConversationDocument>>();
+            readResponseMock.Setup(x => x.Resource).Returns(existingConversation);
+
+            _containerMock.Setup(x => x.ReadItemAsync<ChatConversationDocument>(
+                sessionId, new PartitionKey(sessionId), null, default))
+                .ReturnsAsync(readResponseMock.Object);
+
+            ChatConversationDocument? capturedDocument = null;
+            var upsertResponseMock = new Mock<ItemResponse<ChatConversationDocument>>();
+            _containerMock.Setup(x => x.UpsertItemAsync(
+                It.IsAny<ChatConversationDocument>(),
+                It.IsAny<PartitionKey>(),
+                null, default))
+                .Callback<ChatConversationDocument, PartitionKey?, ItemRequestOptions?, CancellationToken>(
+                    (doc, _, _, _) => capturedDocument = doc)
+                .ReturnsAsync(upsertResponseMock.Object);
+
+            // Act
+            await _sut.SaveMessageAsync(sessionId, "assistant", "Here is your data.");
+
+            // Assert — TTL should be refreshed to the configured value, not the old value
+            capturedDocument.Should().NotBeNull();
+            capturedDocument!.Ttl.Should().Be(7_776_000);
+        }
     }
 }

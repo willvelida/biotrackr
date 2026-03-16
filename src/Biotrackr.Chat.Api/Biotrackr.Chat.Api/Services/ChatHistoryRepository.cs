@@ -111,6 +111,7 @@ namespace Biotrackr.Chat.Api.Services
                 ToolCalls = toolCalls
             });
             conversation.LastUpdated = DateTime.UtcNow;
+            conversation.Ttl = _settings.ConversationTtlSeconds;
 
             // Auto-title from first user message
             if (conversation.Title == "New conversation" && role == "user")
