@@ -52,7 +52,7 @@ jobs:
     build-container-image-dev:
           name: Build and Push Container Image
           needs: [run-unit-tests, run-contract-tests]
-          uses: willvelida/biotrackr/.github/workflows/template-acr-push-image.yml@main
+          uses: willvelida/biotrackr/.github/workflows/template-acr-push-image.yml@feature/asi04-sbom-generation
           with:
             working-directory: ./src/Biotrackr.Chat.Api
             app-name: biotrackr-chat-api
@@ -92,8 +92,7 @@ jobs:
     validate:
         name: Validate Template
         needs: [lint, retrieve-container-image-dev]
-        uses: willvelida/biotrackr/.github/workflows/template-bicep-validate.yml@feature/asi03-alert-rules
-        with:
+        uses: willvelida/biotrackr/.github/workflows/template-bicep-validate.yml@main
           template-file: './infra/apps/chat-api/main.bicep'
           parameters-file: ./infra/apps/chat-api/main.dev.bicepparam
           parameters: '{"imageName": "${{ needs.retrieve-container-image-dev.outputs.loginServer }}/biotrackr-chat-api:${{ github.sha }}"}'
@@ -110,7 +109,7 @@ jobs:
     preview:
         name: Preview Changes
         needs: [validate, retrieve-container-image-dev]
-        uses: willvelida/biotrackr/.github/workflows/template-bicep-whatif.yml@feature/asi03-alert-rules
+        uses: willvelida/biotrackr/.github/workflows/template-bicep-whatif.yml@main
         with:
           scope: resourceGroup
           template-file: './infra/apps/chat-api/main.bicep'
@@ -128,7 +127,7 @@ jobs:
     deploy-dev:
         name: Deploy Template to Dev
         needs: [preview, retrieve-container-image-dev]
-        uses: willvelida/biotrackr/.github/workflows/template-bicep-deploy.yml@feature/asi03-alert-rules
+        uses: willvelida/biotrackr/.github/workflows/template-bicep-deploy.yml@main
         with:
           template-file: './infra/apps/chat-api/main.bicep'
           parameters-file: ./infra/apps/chat-api/main.dev.bicepparam
