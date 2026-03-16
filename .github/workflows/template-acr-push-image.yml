@@ -77,6 +77,14 @@ jobs:
             path: sbom.cdx.json
             retention-days: 90
 
+        - name: Submit SBOM to GitHub Dependency Graph
+          uses: anchore/sbom-action@v0
+          with:
+            image: ${{ steps.getacrserver.outputs.loginServer }}/${{ inputs.app-name }}:${{ github.sha }}
+            dependency-snapshot: true
+            upload-artifact: false
+          continue-on-error: true
+
         - name: Run Dockle
           uses: erzz/dockle-action@v1
           with:
