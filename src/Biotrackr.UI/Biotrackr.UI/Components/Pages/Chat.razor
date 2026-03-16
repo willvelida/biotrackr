@@ -144,6 +144,7 @@
 
         if (_currentSessionId is null)
         {
+            _currentSessionId = Guid.NewGuid().ToString();
             ChatTelemetry.ConversationsCreated.Add(1);
         }
 

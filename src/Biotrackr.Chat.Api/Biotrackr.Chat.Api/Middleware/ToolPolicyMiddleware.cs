@@ -26,7 +26,7 @@ namespace Biotrackr.Chat.Api.Middleware
             AIAgent innerAgent,
             [EnumeratorCancellation] CancellationToken cancellationToken)
         {
-            var sessionId = session.GetConversationId();
+            var sessionId = runOptions.GetConversationId();
             var budgetKey = $"toolbudget:{sessionId}";
             var policyOptions = options.Value;
 

@@ -1,75 +1,94 @@
 using Biotrackr.Chat.Api.Middleware;
 using FluentAssertions;
 using Microsoft.Agents.AI;
-using System.Reflection;
+using Microsoft.Extensions.AI;
 
 namespace Biotrackr.Chat.Api.UnitTests.Middleware
 {
     public class AgentSessionExtensionsShould
     {
-        /// <summary>
-        /// Creates a <see cref="ChatClientAgentSession"/> via reflection because
-        /// its constructors are internal to the Microsoft.Agents.AI package.
-        /// </summary>
-        private static ChatClientAgentSession CreateChatSession(string conversationId)
+        private static ChatClientAgentRunOptions CreateRunOptions(string? threadId)
         {
-            var ctor = typeof(ChatClientAgentSession).GetConstructor(
-                BindingFlags.NonPublic | BindingFlags.Instance,
-                [typeof(string), typeof(AgentSessionStateBag)]);
-
-            return (ChatClientAgentSession)ctor!.Invoke([conversationId, new AgentSessionStateBag()]);
+            return new ChatClientAgentRunOptions
+            {
+                ChatOptions = new ChatOptions
+                {
+                    AdditionalProperties = new AdditionalPropertiesDictionary
+                    {
+                        ["ag_ui_thread_id"] = threadId
+                    }
+                }
+            };
         }
 
         [Fact]
-        public void ReturnConversationId_WhenSessionIsChatClientAgentSession()
+        public void ReturnThreadId_WhenPresentInRunOptions()
         {
-            var session = CreateChatSession("thread-abc-123");
+            var options = CreateRunOptions("thread-abc-123");
 
-            var result = session.GetConversationId();
+            var result = options.GetConversationId();
 
             result.Should().Be("thread-abc-123");
         }
 
         [Fact]
-        public void ReturnFallback_WhenSessionIsNull()
+        public void ReturnFallback_WhenOptionsAreNull()
         {
-            AgentSession? session = null;
+            AgentRunOptions? options = null;
 
-            var result = session.GetConversationId("my-fallback");
+            var result = options.GetConversationId("my-fallback");
 
             result.Should().Be("my-fallback");
         }
 
         [Fact]
-        public void ReturnDefaultFallback_WhenSessionIsNull()
+        public void ReturnDefaultFallback_WhenOptionsAreNull()
         {
-            AgentSession? session = null;
+            AgentRunOptions? options = null;
 
-            var result = session.GetConversationId();
+            var result = options.GetConversationId();
 
             result.Should().Be("unknown");
         }
 
         [Fact]
-        public void ReturnFallback_WhenSessionIsNotChatClientAgentSession()
+        public void ReturnFallback_WhenOptionsAreNotChatClientAgentRunOptions()
         {
-            var session = new FakeSession();
+            var options = new AgentRunOptions();
 
-            var result = session.GetConversationId("fallback-id");
+            var result = options.GetConversationId("fallback-id");
 
             result.Should().Be("fallback-id");
         }
 
         [Fact]
-        public void ReturnFallback_WhenConversationIdIsEmpty()
+        public void ReturnFallback_WhenThreadIdIsEmpty()
         {
-            var session = CreateChatSession("");
+            var options = CreateRunOptions("");
 
-            var result = session.GetConversationId("fallback-id");
+            var result = options.GetConversationId("fallback-id");
 
             result.Should().Be("fallback-id");
         }
 
-        private sealed class FakeSession : AgentSession;
+        [Fact]
+        public void ReturnFallback_WhenThreadIdIsNull()
+        {
+            var options = CreateRunOptions(null);
+
+            var result = options.GetConversationId("fallback-id");
+
+            result.Should().Be("fallback-id");
+        }
+
+        [Fact]
+        public void ReturnFallback_WhenChatOptionsIsNull()
+        {
+            var options = new ChatClientAgentRunOptions { ChatOptions = null };
+
+            var result = options.GetConversationId("fallback-id");
+
+            result.Should().Be("fallback-id");
+        }
     }
 }

@@ -25,7 +25,7 @@ namespace Biotrackr.Chat.Api.Middleware
             AIAgent innerAgent,
             [EnumeratorCancellation] CancellationToken cancellationToken)
         {
-            var sessionId = session.GetConversationId();
+            var sessionId = options.GetConversationId();
 
             IAsyncEnumerator<AgentResponseUpdate>? enumerator = null;
             try

@@ -30,7 +30,7 @@ namespace Biotrackr.Chat.Api.Middleware
         {
             var policy = policyOptions.Value;
             var userMessage = messages.LastOrDefault(m => m.Role == ChatRole.User);
-            var sessionId = session.GetConversationId(Guid.NewGuid().ToString());
+            var sessionId = options.GetConversationId(Guid.NewGuid().ToString());
 
             var conversationCapReached = await IsConversationCapReachedAsync(sessionId, policy);
 
