@@ -3,6 +3,7 @@
 @inject IChatApiService ChatApiService
 @inject IJSRuntime JS
 @using Biotrackr.UI.Telemetry
+@using Markdig
 @using ChatMessage = Biotrackr.UI.Models.Chat.ChatMessage
 
 <PageTitle>Biotrackr - Chat</PageTitle>
@@ -66,7 +67,14 @@
                 @foreach (var message in _messages)
                 {
                     <div class="message @(message.Role == "user" ? "message-user" : "message-agent")">
-                        <div class="message-content">@message.Content</div>
+                        @if (message.Role == "assistant")
+                        {
+                            <div class="message-content markdown-body">@RenderMarkdown(message.Content)</div>
+                        }
+                        else
+                        {
+                            <div class="message-content">@message.Content</div>
+                        }
                         @if (message.Role == "assistant" && message.ToolCalls is { Count: > 0 })
                         {
                             <div class="message-tool-badges">
@@ -85,7 +93,7 @@
                     <div class="message message-agent">
                         @if (!string.IsNullOrEmpty(_currentResponse))
                         {
-                            <div class="message-content">@_currentResponse</div>
+                            <div class="message-content markdown-body">@RenderMarkdown(_currentResponse)</div>
                         }
                         <div class="typing-indicator">
                             <span></span><span></span><span></span>
@@ -103,6 +111,10 @@
 </div>
 
 @code {
+    private static readonly MarkdownPipeline MarkdownPipeline = new MarkdownPipelineBuilder()
+        .UseAdvancedExtensions()
+        .Build();
+
     private List<ChatMessage> _messages = [];
     private List<ChatConversationSummary> _conversations = [];
     private string? _currentSessionId;
@@ -282,6 +294,12 @@
         _conversations.AddRange(result.Items);
         _hasMoreConversations = result.HasNextPage;
         StateHasChanged();
+    }
+
+    private static MarkupString RenderMarkdown(string content)
+    {
+        var html = Markdown.ToHtml(content, MarkdownPipeline);
+        return new MarkupString(html);
     }
 
     private async Task ScrollToBottom()
