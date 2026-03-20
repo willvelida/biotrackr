@@ -108,7 +108,8 @@ namespace Biotrackr.Chat.Api.UnitTests.Services
             var settings = Options.Create(new Settings
             {
                 McpServerUrl = mcpServerUrl!,
-                ApiSubscriptionKey = subscriptionKey!
+                ApiSubscriptionKey = subscriptionKey!,
+                McpStartupTimeoutSeconds = 3
             });
             var loggerFactory = new Mock<ILoggerFactory>();
             loggerFactory.Setup(f => f.CreateLogger(It.IsAny<string>())).Returns(new Mock<ILogger>().Object);

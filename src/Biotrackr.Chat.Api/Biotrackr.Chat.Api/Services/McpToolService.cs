@@ -18,6 +18,7 @@ namespace Biotrackr.Chat.Api.Services
         private readonly ILogger<McpToolService> _logger;
         private readonly SemaphoreSlim _lock = new(1, 1);
         private readonly TimeSpan _reconnectInterval = TimeSpan.FromSeconds(30);
+        private static readonly TimeSpan RetryDelay = TimeSpan.FromSeconds(3);
 
         private McpClient? _mcpClient;
         private IList<AITool> _tools = [];
@@ -100,44 +101,69 @@ namespace Biotrackr.Chat.Api.Services
                 return;
             }
 
-            await _lock.WaitAsync(cancellationToken);
-            try
-            {
-                var transportOptions = new HttpClientTransportOptions
-                {
-                    Endpoint = new Uri(_settings.McpServerUrl),
-                    TransportMode = HttpTransportMode.Sse,
-                };
+            var startupTimeout = TimeSpan.FromSeconds(_settings.McpStartupTimeoutSeconds);
+            using var timeoutCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+            timeoutCts.CancelAfter(startupTimeout);
 
-                if (!string.IsNullOrWhiteSpace(_settings.ApiSubscriptionKey))
+            var attempt = 0;
+            while (!timeoutCts.Token.IsCancellationRequested)
+            {
+                attempt++;
+                await _lock.WaitAsync(timeoutCts.Token);
+                try
                 {
-                    transportOptions.AdditionalHeaders = new Dictionary<string, string>
+                    var transportOptions = new HttpClientTransportOptions
                     {
-                        [SubscriptionKeyHeader] = _settings.ApiSubscriptionKey
+                        Endpoint = new Uri(_settings.McpServerUrl),
+                        TransportMode = HttpTransportMode.Sse,
                     };
+
+                    if (!string.IsNullOrWhiteSpace(_settings.ApiSubscriptionKey))
+                    {
+                        transportOptions.AdditionalHeaders = new Dictionary<string, string>
+                        {
+                            [SubscriptionKeyHeader] = _settings.ApiSubscriptionKey
+                        };
+                    }
+
+                    var transport = new HttpClientTransport(transportOptions, _loggerFactory);
+                    var client = await McpClient.CreateAsync(transport, loggerFactory: _loggerFactory, cancellationToken: timeoutCts.Token);
+
+                    var tools = await client.ListToolsAsync(cancellationToken: timeoutCts.Token);
+                    _mcpClient = client;
+                    _tools = tools.ToList<AITool>();
+                    IsConnected = true;
+
+                    _logger.LogInformation("Connected to MCP Server on attempt {Attempt} — {ToolCount} tools available: {ToolNames}",
+                        attempt, _tools.Count, string.Join(", ", _tools.Select(t => t.Name)));
+                    return;
+                }
+                catch (OperationCanceledException) when (timeoutCts.Token.IsCancellationRequested)
+                {
+                    break;
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning(ex, "MCP Server connection attempt {Attempt} failed (timeout: {TimeoutSeconds}s)", attempt, _settings.McpStartupTimeoutSeconds);
+                }
+                finally
+                {
+                    _lock.Release();
                 }
 
-                var transport = new HttpClientTransport(transportOptions, _loggerFactory);
-                var client = await McpClient.CreateAsync(transport, loggerFactory: _loggerFactory, cancellationToken: cancellationToken);
+                try
+                {
+                    await Task.Delay(RetryDelay, timeoutCts.Token);
+                }
+                catch (OperationCanceledException)
+                {
+                    break;
+                }
+            }
 
-                var tools = await client.ListToolsAsync(cancellationToken: cancellationToken);
-                _mcpClient = client;
-                _tools = tools.ToList<AITool>();
-                IsConnected = true;
-
-                _logger.LogInformation("Connected to MCP Server — {ToolCount} tools available: {ToolNames}",
-                    _tools.Count, string.Join(", ", _tools.Select(t => t.Name)));
-            }
-            catch (Exception ex)
-            {
-                _logger.LogWarning(ex, "Failed to connect to MCP Server at {McpServerUrl} — starting in degraded mode", _settings.McpServerUrl);
-                IsConnected = false;
-                _tools = [];
-            }
-            finally
-            {
-                _lock.Release();
-            }
+            _logger.LogWarning("MCP Server not available after {TimeoutSeconds}s ({Attempts} attempts) — starting in degraded mode", _settings.McpStartupTimeoutSeconds, attempt);
+            IsConnected = false;
+            _tools = [];
         }
 
         private async Task ReconnectIfNeededAsync()
