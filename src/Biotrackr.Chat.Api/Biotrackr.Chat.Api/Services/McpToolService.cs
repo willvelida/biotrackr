@@ -8,7 +8,8 @@ namespace Biotrackr.Chat.Api.Services
     /// <summary>
     /// Manages MCP client lifecycle — connection, reconnection, and tool listing.
     /// Registered as a singleton hosted service in DI.
-    /// Uses a shared TaskCompletionSource so concurrent callers wait on one connection attempt.
+    /// The MCP Server Container App runs with minReplicas=1, so cold-start is not a concern.
+    /// Reconnection timer handles transient failures (deployments, network blips).
     /// </summary>
     public sealed class McpToolService : IMcpToolService, IHostedService, IAsyncDisposable
     {
@@ -19,13 +20,11 @@ namespace Biotrackr.Chat.Api.Services
         private readonly ILogger<McpToolService> _logger;
         private readonly SemaphoreSlim _connectLock = new(1, 1);
         private readonly TimeSpan _reconnectInterval = TimeSpan.FromSeconds(30);
-        private static readonly TimeSpan RetryDelay = TimeSpan.FromSeconds(3);
 
         private McpClient? _mcpClient;
         private IList<AITool> _tools = [];
         private Timer? _reconnectTimer;
         private bool _disposed;
-        private TaskCompletionSource<bool> _connectionTcs = new(TaskCreationOptions.RunContinuationsAsynchronously);
 
         public McpToolService(
             IOptions<Settings> settings,
@@ -41,35 +40,11 @@ namespace Biotrackr.Chat.Api.Services
 
         public bool IsConnected { get; private set; }
 
-        /// <summary>
-        /// Returns available MCP tools. If not connected, waits for the connection
-        /// to be established (up to McpStartupTimeoutSeconds). All concurrent callers
-        /// share the same wait — no duplicate retry loops.
-        /// </summary>
         public async Task<IList<AITool>> GetToolsAsync(CancellationToken cancellationToken = default)
         {
-            if (IsConnected)
-                return _tools;
-
-            if (_disposed || string.IsNullOrWhiteSpace(_settings.McpServerUrl))
-                return _tools;
-
-            // Wait for the connection to be established (by StartAsync or reconnection timer)
-            var timeout = TimeSpan.FromSeconds(_settings.McpStartupTimeoutSeconds);
-            using var timeoutCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
-            timeoutCts.CancelAfter(timeout);
-
-            try
+            if (!IsConnected && !_disposed)
             {
-                // If no connection attempt is in progress, start one
-                await TryStartConnectionAsync(timeoutCts.Token);
-
-                // Wait for the shared TCS to complete (connection established or timeout)
-                await _connectionTcs.Task.WaitAsync(timeoutCts.Token);
-            }
-            catch (OperationCanceledException)
-            {
-                _logger.LogWarning("Timed out waiting for MCP Server connection ({TimeoutSeconds}s)", _settings.McpStartupTimeoutSeconds);
+                await TryConnectAsync(cancellationToken);
             }
 
             return _tools;
@@ -77,12 +52,11 @@ namespace Biotrackr.Chat.Api.Services
 
         public async Task StartAsync(CancellationToken cancellationToken)
         {
-            _logger.LogInformation("McpToolService starting — will connect to MCP Server at {McpServerUrl}", _settings.McpServerUrl);
+            _logger.LogInformation("McpToolService starting — connecting to MCP Server at {McpServerUrl}", _settings.McpServerUrl);
 
-            // Attempt initial connection (non-blocking — reconnection timer handles ongoing retries)
-            await TryStartConnectionAsync(cancellationToken);
+            await TryConnectAsync(cancellationToken);
 
-            // Start periodic reconnection timer for recovery from disconnection
+            // Reconnection timer for recovery from transient failures (deployments, network blips)
             _reconnectTimer = new Timer(
                 callback: _ => _ = ReconnectIfNeededAsync(),
                 state: null,
@@ -120,12 +94,7 @@ namespace Biotrackr.Chat.Api.Services
             _connectLock.Dispose();
         }
 
-        /// <summary>
-        /// Attempts a single connection to the MCP Server.
-        /// If already connecting or connected, returns immediately.
-        /// On success, completes the shared TaskCompletionSource so all waiters unblock.
-        /// </summary>
-        private async Task TryStartConnectionAsync(CancellationToken cancellationToken)
+        private async Task TryConnectAsync(CancellationToken cancellationToken)
         {
             if (IsConnected || _disposed || string.IsNullOrWhiteSpace(_settings.McpServerUrl))
                 return;
@@ -135,7 +104,7 @@ namespace Biotrackr.Chat.Api.Services
 
             try
             {
-                if (IsConnected) return; // Double-check after acquiring lock
+                if (IsConnected) return;
 
                 var transportOptions = new HttpClientTransportOptions
                 {
@@ -161,13 +130,10 @@ namespace Biotrackr.Chat.Api.Services
 
                 _logger.LogInformation("Connected to MCP Server — {ToolCount} tools available: {ToolNames}",
                     _tools.Count, string.Join(", ", _tools.Select(t => t.Name)));
-
-                // Signal all waiters that connection is ready
-                _connectionTcs.TrySetResult(true);
             }
             catch (OperationCanceledException)
             {
-                // Caller cancelled or timeout — don't log as error
+                // Caller cancelled — don't log as error
             }
             catch (Exception ex)
             {
@@ -185,7 +151,7 @@ namespace Biotrackr.Chat.Api.Services
                 return;
 
             _logger.LogDebug("Attempting MCP Server reconnection");
-            await TryStartConnectionAsync(CancellationToken.None);
+            await TryConnectAsync(CancellationToken.None);
         }
 
         private async Task DisconnectAsync()

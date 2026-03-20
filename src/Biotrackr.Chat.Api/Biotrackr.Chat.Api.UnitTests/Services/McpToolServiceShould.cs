@@ -144,21 +144,12 @@ namespace Biotrackr.Chat.Api.UnitTests.Services
             service.IsConnected.Should().BeFalse();
         }
 
-        [Fact]
-        public void DefaultTimeoutIsSixtySeconds()
-        {
-            var settings = new Settings();
-
-            settings.McpStartupTimeoutSeconds.Should().Be(60);
-        }
-
         private static McpToolService CreateService(string? mcpServerUrl, string? subscriptionKey = null)
         {
             var settings = Options.Create(new Settings
             {
                 McpServerUrl = mcpServerUrl!,
-                ApiSubscriptionKey = subscriptionKey!,
-                McpStartupTimeoutSeconds = 3
+                ApiSubscriptionKey = subscriptionKey!
             });
             var loggerFactory = new Mock<ILoggerFactory>();
             loggerFactory.Setup(f => f.CreateLogger(It.IsAny<string>())).Returns(new Mock<ILogger>().Object);

@@ -69,6 +69,7 @@ module mcpServer '../../modules/host/container-app-http.bicep' = {
     imageName: imageName
     uaiName: uai.name
     targetPort: 8080
+    minReplicas: 1
     healthProbes: [
       {
         type: 'Liveness'
