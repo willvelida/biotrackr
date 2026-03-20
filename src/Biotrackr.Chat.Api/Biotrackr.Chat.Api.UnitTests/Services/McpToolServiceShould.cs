@@ -18,9 +18,30 @@ namespace Biotrackr.Chat.Api.UnitTests.Services
         }
 
         [Fact]
-        public async Task ReturnEmptyToolsWhenNotConnected()
+        public async Task ReturnEmptyToolsWhenUrlIsEmpty()
+        {
+            var service = CreateService(mcpServerUrl: "");
+
+            var tools = await service.GetToolsAsync();
+
+            tools.Should().BeEmpty();
+        }
+
+        [Fact]
+        public async Task ReturnEmptyToolsWhenUrlIsNull()
+        {
+            var service = CreateService(mcpServerUrl: null);
+
+            var tools = await service.GetToolsAsync();
+
+            tools.Should().BeEmpty();
+        }
+
+        [Fact]
+        public async Task ReturnEmptyToolsAfterDispose()
         {
             var service = CreateService(mcpServerUrl: "https://example.com/mcp");
+            await service.DisposeAsync();
 
             var tools = await service.GetToolsAsync();
 
@@ -57,7 +78,16 @@ namespace Biotrackr.Chat.Api.UnitTests.Services
             await service.StartAsync(CancellationToken.None);
 
             service.IsConnected.Should().BeFalse();
+        }
+
+        [Fact]
+        public async Task TimeOutWaitingForUnreachableServer()
+        {
+            var service = CreateService(mcpServerUrl: "https://unreachable-server.example.com/mcp");
+
             var tools = await service.GetToolsAsync();
+
+            service.IsConnected.Should().BeFalse();
             tools.Should().BeEmpty();
         }
 
@@ -93,6 +123,17 @@ namespace Biotrackr.Chat.Api.UnitTests.Services
         }
 
         [Fact]
+        public async Task DisposeIdempotently()
+        {
+            var service = CreateService(mcpServerUrl: "https://example.com/mcp");
+
+            await service.DisposeAsync();
+            await service.DisposeAsync();
+
+            service.IsConnected.Should().BeFalse();
+        }
+
+        [Fact]
         public async Task StopCleanly()
         {
             var service = CreateService(mcpServerUrl: "");
@@ -101,6 +142,14 @@ namespace Biotrackr.Chat.Api.UnitTests.Services
             await service.StopAsync(CancellationToken.None);
 
             service.IsConnected.Should().BeFalse();
+        }
+
+        [Fact]
+        public void DefaultTimeoutIsSixtySeconds()
+        {
+            var settings = new Settings();
+
+            settings.McpStartupTimeoutSeconds.Should().Be(60);
         }
 
         private static McpToolService CreateService(string? mcpServerUrl, string? subscriptionKey = null)
