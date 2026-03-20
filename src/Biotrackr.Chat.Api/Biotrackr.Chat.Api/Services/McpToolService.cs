@@ -38,9 +38,14 @@ namespace Biotrackr.Chat.Api.Services
 
         public bool IsConnected { get; private set; }
 
-        public Task<IList<AITool>> GetToolsAsync(CancellationToken cancellationToken = default)
+        public async Task<IList<AITool>> GetToolsAsync(CancellationToken cancellationToken = default)
         {
-            return Task.FromResult(_tools);
+            if (!IsConnected && !_disposed)
+            {
+                await TryConnectAsync(cancellationToken);
+            }
+
+            return _tools;
         }
 
         public async Task StartAsync(CancellationToken cancellationToken)
