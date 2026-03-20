@@ -115,62 +115,31 @@ builder.Services.AddHealthChecks();
 // AG-UI services
 builder.Services.AddAGUI();
 
+// ChatAgentProvider — builds/rebuilds AIAgent when MCP tools change
+builder.Services.AddSingleton<ChatAgentProvider>();
+
 var app = builder.Build();
 
-// Retrieve MCP tools (may be empty if MCP Server is unreachable — degraded mode)
-var mcpToolService = app.Services.GetRequiredService<IMcpToolService>();
-var memoryCache = app.Services.GetRequiredService<Microsoft.Extensions.Caching.Memory.IMemoryCache>();
-var mcpTools = await mcpToolService.GetToolsAsync();
+// Create a delegating agent that resolves the real agent per-request.
+// This ensures the agent is rebuilt when MCP tools become available after a degraded start.
+var agentProvider = app.Services.GetRequiredService<ChatAgentProvider>();
 
-// Wrap each MCP tool with caching
-var cachingLogger = app.Services.GetRequiredService<ILoggerFactory>().CreateLogger("CachingMcpToolWrapper");
-var wrappedTools = mcpTools
-    .Select(tool => CachingMcpToolWrapper.Wrap(tool, memoryCache, cachingLogger))
-    .ToList();
+// Build an initial agent (may have 0 tools if MCP Server is unreachable)
+var initialAgent = await agentProvider.GetAgentAsync();
 
-// Build the Anthropic-backed AIAgent
-var anthropicApiKey = builder.Configuration.GetValue<string>("Biotrackr:AnthropicApiKey");
-var modelName = builder.Configuration.GetValue<string>("Biotrackr:ChatAgentModel");
-var systemPrompt = builder.Configuration.GetValue<string>("Biotrackr:ChatSystemPrompt")!;
-
-AnthropicClient anthropicClient = new() { ApiKey = anthropicApiKey };
-
-AIAgent chatAgent = anthropicClient.AsAIAgent(
-    model: modelName,
-    name: "BiotrackrChatAgent",
-    instructions: systemPrompt,
-    tools: [.. wrappedTools]);
-
-// Wrap agent with conversation persistence middleware
-var chatHistoryRepository = app.Services.GetRequiredService<IChatHistoryRepository>();
-var persistenceLogger = app.Services.GetRequiredService<ILogger<ConversationPersistenceMiddleware>>();
-var conversationPolicyOptions = Microsoft.Extensions.Options.Options.Create(new ConversationPolicyOptions());
-var persistenceMiddleware = new ConversationPersistenceMiddleware(chatHistoryRepository, conversationPolicyOptions, persistenceLogger);
-
-// Wrap agent with tool policy enforcement middleware (rate limiting, allowed tool validation)
-var biotrackrSettings = app.Services.GetRequiredService<Microsoft.Extensions.Options.IOptions<Settings>>().Value;
-var toolPolicyOptions = Microsoft.Extensions.Options.Options.Create(new ToolPolicyOptions
-{
-    MaxToolCallsPerSession = biotrackrSettings.ToolCallBudgetPerSession
-});
-var toolPolicyLogger = app.Services.GetRequiredService<ILogger<ToolPolicyMiddleware>>();
-var toolPolicyMiddleware = new ToolPolicyMiddleware(memoryCache, toolPolicyOptions, toolPolicyLogger);
-
-// Wrap agent with graceful degradation middleware (catches Claude API failures)
-var degradationLogger = app.Services.GetRequiredService<ILogger<GracefulDegradationMiddleware>>();
-var degradationMiddleware = new GracefulDegradationMiddleware(degradationLogger);
-
-AIAgent persistentAgent = chatAgent
+// Wrap with a delegating layer that always fetches the latest agent
+AIAgent dynamicAgent = initialAgent
     .AsBuilder()
-        .Use(runFunc: null, runStreamingFunc: toolPolicyMiddleware.HandleAsync)
-        .Use(runFunc: null, runStreamingFunc: persistenceMiddleware.HandleAsync)
-        .Use(runFunc: null, runStreamingFunc: degradationMiddleware.HandleAsync)
+    .Use(runFunc: null, runStreamingFunc: (messages, session, options, innerNext, cancellationToken) =>
+    {
+        return agentProvider.RunStreamingWithLatestAgentAsync(messages, session, options, cancellationToken);
+    })
     .Build();
 
 app.MapOpenApi();
 
 // AG-UI endpoint — SSE streaming, session management, protocol events
-app.MapAGUI("/", persistentAgent);
+app.MapAGUI("/", dynamicAgent);
 
 // Conversation history + health check endpoints
 app.RegisterChatEndpoints();
