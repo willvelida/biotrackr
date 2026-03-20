@@ -139,13 +139,13 @@ namespace Biotrackr.Mcp.Server.UnitTests.Tools
         }
 
         [Fact]
-        public void BuildPaginatedEndpoint_ShouldClampPageSizeToMaximumHundred()
+        public void BuildPaginatedEndpoint_ShouldClampPageSizeToMaximumFifty()
         {
             // Act
             var result = TestableBaseTool.BuildPaginatedEndpoint("/activity", 1, 200);
 
             // Assert
-            result.Should().Be("/activity?pageNumber=1&pageSize=100");
+            result.Should().Be("/activity?pageNumber=1&pageSize=50");
         }
 
         [Fact]

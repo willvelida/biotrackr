@@ -357,12 +357,12 @@ resource azureAdClientCredManagedIdentitySetting 'Microsoft.AppConfiguration/con
   }
 }
 
-// App Configuration: APIM base URL for calling other Biotrackr APIs
-resource apiBaseUrlSetting 'Microsoft.AppConfiguration/configurationStores/keyValues@2025-02-01-preview' = {
-  name: 'Biotrackr:ApiBaseUrl'
+// App Configuration: MCP Server APIM gateway URL for tool integration
+resource mcpServerUrlSetting 'Microsoft.AppConfiguration/configurationStores/keyValues@2025-02-01-preview' = {
+  name: 'Biotrackr:McpServerUrl'
   parent: appConfig
   properties: {
-    value: apim.properties.gatewayUrl
+    value: '${apim.properties.gatewayUrl}/mcp'
   }
 }
 

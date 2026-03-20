@@ -2,7 +2,6 @@ using Anthropic;
 using Azure.Identity;
 using Azure.Monitor.OpenTelemetry.Exporter;
 using Biotrackr.Chat.Api.Configuration;
-using Biotrackr.Chat.Api.Configuration;
 using Biotrackr.Chat.Api.Extensions;
 using Biotrackr.Chat.Api.Middleware;
 using Biotrackr.Chat.Api.Services;
@@ -69,16 +68,9 @@ builder.Services.AddScoped<ICosmosClientFactory, AgentIdentityCosmosClientFactor
 builder.Services.AddScoped<IChatHistoryRepository, ChatHistoryRepository>();
 builder.Services.AddMemoryCache();
 
-// HttpClient for calling Biotrackr APIs via APIM
-builder.Services.AddTransient<ApiKeyDelegatingHandler>();
-
-builder.Services.AddHttpClient("BiotrackrApi", (sp, client) =>
-{
-    var settings = sp.GetRequiredService<Microsoft.Extensions.Options.IOptions<Settings>>().Value;
-    client.BaseAddress = new Uri(settings.ApiBaseUrl ?? throw new InvalidOperationException("Biotrackr:ApiBaseUrl is not configured."));
-})
-.AddHttpMessageHandler<ApiKeyDelegatingHandler>()
-.AddStandardResilienceHandler();
+// MCP tool service — manages MCP client lifecycle and tool listing
+builder.Services.AddSingleton<IMcpToolService, McpToolService>();
+builder.Services.AddHostedService(sp => (McpToolService)sp.GetRequiredService<IMcpToolService>());
 
 // OpenTelemetry
 var appInsightsConnectionString = builder.Configuration["applicationinsightsconnectionstring"];
@@ -125,13 +117,16 @@ builder.Services.AddAGUI();
 
 var app = builder.Build();
 
-// Resolve tool dependencies from DI
-var httpClientFactory = app.Services.GetRequiredService<IHttpClientFactory>();
+// Retrieve MCP tools (may be empty if MCP Server is unreachable — degraded mode)
+var mcpToolService = app.Services.GetRequiredService<IMcpToolService>();
 var memoryCache = app.Services.GetRequiredService<Microsoft.Extensions.Caching.Memory.IMemoryCache>();
-var activityTools = new ActivityTools(httpClientFactory, memoryCache);
-var sleepTools = new SleepTools(httpClientFactory, memoryCache);
-var weightTools = new WeightTools(httpClientFactory, memoryCache);
-var foodTools = new FoodTools(httpClientFactory, memoryCache);
+var mcpTools = await mcpToolService.GetToolsAsync();
+
+// Wrap each MCP tool with caching
+var cachingLogger = app.Services.GetRequiredService<ILoggerFactory>().CreateLogger("CachingMcpToolWrapper");
+var wrappedTools = mcpTools
+    .Select(tool => CachingMcpToolWrapper.Wrap(tool, memoryCache, cachingLogger))
+    .ToList();
 
 // Build the Anthropic-backed AIAgent
 var anthropicApiKey = builder.Configuration.GetValue<string>("Biotrackr:AnthropicApiKey");
@@ -144,21 +139,7 @@ AIAgent chatAgent = anthropicClient.AsAIAgent(
     model: modelName,
     name: "BiotrackrChatAgent",
     instructions: systemPrompt,
-    tools:
-    [
-        AIFunctionFactory.Create(activityTools.GetActivityByDate),
-        AIFunctionFactory.Create(activityTools.GetActivityByDateRange),
-        AIFunctionFactory.Create(activityTools.GetActivityRecords),
-        AIFunctionFactory.Create(sleepTools.GetSleepByDate),
-        AIFunctionFactory.Create(sleepTools.GetSleepByDateRange),
-        AIFunctionFactory.Create(sleepTools.GetSleepRecords),
-        AIFunctionFactory.Create(weightTools.GetWeightByDate),
-        AIFunctionFactory.Create(weightTools.GetWeightByDateRange),
-        AIFunctionFactory.Create(weightTools.GetWeightRecords),
-        AIFunctionFactory.Create(foodTools.GetFoodByDate),
-        AIFunctionFactory.Create(foodTools.GetFoodByDateRange),
-        AIFunctionFactory.Create(foodTools.GetFoodRecords),
-    ]);
+    tools: [.. wrappedTools]);
 
 // Wrap agent with conversation persistence middleware
 var chatHistoryRepository = app.Services.GetRequiredService<IChatHistoryRepository>();
