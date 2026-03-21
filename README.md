@@ -20,19 +20,34 @@
 
 The application follows a **microservices architecture** with separate services for different health domains:
 
-- **Activity Service**: Processes and stores physical activity data from Fitbit
-- **Sleep Service**: Manages sleep tracking and analysis
-- **Weight Service**: Handles weight measurements and trends
-- **Food Service**: Tracks nutrition and food logging data from Fitbit
-- **Auth Service**: Manages authentication and authorization with Fitbit API
-- **Chat API**: AI-powered chat agent for querying and analysing health data via natural language
-- **MCP Server**: [Model Context Protocol](https://modelcontextprotocol.io/) server exposing all health data as MCP tools for AI assistants
-- **UI**: Blazor Server dashboard for visualizing activity, sleep, weight, and food data
+### Data Ingestion (Background Workers)
+Scheduled Container App Jobs that fetch data from the Fitbit API:
+- **Auth Service**: Manages OAuth token refresh with Fitbit API, storing tokens in Azure Key Vault
+- **Activity Service**: Daily fetch of physical activity and workout data
+- **Sleep Service**: Daily fetch of sleep tracking and stage analysis data
+- **Weight Service**: Weekly fetch of weight measurements and trends
+- **Food Service**: Daily fetch of nutrition and food logging data
 
-Each service consists of:
-- **API Layer**: RESTful endpoints for data access
-- **Service Layer**: Business logic and integration with Fitbit API
-- **Data Layer**: Azure Cosmos DB for persistence
+### Data Access (REST APIs)
+HTTP-based Container Apps serving data from Cosmos DB via Azure API Management:
+- **Activity API**: Activity data endpoints (`/activity/*`)
+- **Sleep API**: Sleep data endpoints (`/sleep/*`)
+- **Weight API**: Weight data endpoints (`/weight/*`)
+- **Food API**: Food data endpoints (`/food/*`)
+
+### Consumer Layer
+- **Chat API**: AI-powered chat agent (Claude via Microsoft Agent Framework) with AGUI SSE streaming, tool policy enforcement, conversation persistence, and graceful degradation when MCP tools are unavailable
+- **MCP Server**: [Model Context Protocol](https://modelcontextprotocol.io/) server exposing 12 tools across all health domains via Streamable HTTP transport
+- **UI**: Blazor Server dashboard with Radzen components for visualizing activity, sleep, weight, and food data
+
+### Supporting Infrastructure
+- **Azure API Management**: API gateway with JWT validation, subscription key auth, and rate limiting
+- **Azure Cosmos DB**: Serverless NoSQL database for all health data and chat conversation history
+- **Azure Key Vault**: Secure storage for Fitbit OAuth tokens
+- **Azure App Configuration**: Centralized configuration for all 11 services
+- **Azure Container Registry**: Docker image storage
+- **Managed Identity (UAI)**: Passwordless authentication across all Azure resources
+- **Observability**: Application Insights, Log Analytics, OpenTelemetry (traces/metrics), Azure Monitor Alerts
 
 ## ✨ Features
 
@@ -44,7 +59,10 @@ Each service consists of:
 - 📊 **Data Insights**: Analysis and reporting on health metrics
 - 💬 **AI Chat Agent**: Natural language chat interface powered by Claude for querying and analysing health data
 - 🤖 **MCP Integration**: AI-ready via Model Context Protocol server with 12 tools across all health domains
-- 🖥️ **Web Dashboard**: Blazor Server UI for browsing and visualizing health data
+- �️ **Tool Policy Enforcement**: Per-session tool call limits, tool whitelisting, and rate limiting for AI agent safety
+- 🔄 **Graceful Degradation**: Chat API continues operating when MCP tools are unavailable, rebuilding automatically when restored
+- 💾 **Conversation Persistence**: Chat history stored in Cosmos DB with message limits and truncation for context management
+- 🖥️ **Web Dashboard**: Blazor Server UI with Radzen components for browsing and visualizing health data
 - ☁️ **Cloud-Native**: Fully deployed on Azure with auto-scaling
 - 🚀 **CI/CD**: Automated testing, deployment, and infrastructure management
 
@@ -74,6 +92,7 @@ Each service consists of:
 - **FluentAssertions**: Readable test assertions
 - **Moq**: Mocking framework for unit tests
 - **Cosmos DB Emulator**: Local database testing
+
 
 ##  Build Status
 
