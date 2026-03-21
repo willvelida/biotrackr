@@ -14,5 +14,6 @@ param uaiName = 'uai-biotrackr-dev'
 param appConfigName = 'config-biotrackr-dev'
 param appInsightsName = 'appins-biotrackr-dev'
 param apimName = 'api-biotrackr-dev'
+param keyVaultName = 'kv-biotrackr-dev'
 param enableManagedIdentityAuth = true
 param tenantId = ''

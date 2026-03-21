@@ -28,6 +28,9 @@ param appInsightsName string
 @description('The name of the API Management instance that this MCP Server uses')
 param apimName string
 
+@description('The name of the Key Vault instance for storing secrets')
+param keyVaultName string
+
 @description('Enable JWT validation for managed identity authentication')
 param enableManagedIdentityAuth bool = true
 
@@ -51,6 +54,10 @@ resource appInsights 'Microsoft.Insights/components@2020-02-02' existing = {
 
 resource apim 'Microsoft.ApiManagement/service@2024-06-01-preview' existing = {
   name: apimName
+}
+
+resource keyVault 'Microsoft.KeyVault/vaults@2023-07-01' existing = {
+  name: keyVaultName
 }
 
 var apiProductName = 'MCP-Server'
@@ -223,5 +230,25 @@ resource biotrackrApiSubscriptionKeySetting 'Microsoft.AppConfiguration/configur
   parent: appConfig
   properties: {
     value: mcpServerApimSubscription.listSecrets().primaryKey
+  }
+}
+
+// MCP Server API Key: Generate a strong key from deterministic inputs
+var mcpApiKeyValue = '${uniqueString(resourceGroup().id, 'mcp-api-key-1')}${uniqueString(subscription().id, 'mcp-api-key-2')}${uniqueString(keyVault.id, 'mcp-api-key-3')}'
+
+resource mcpServerApiKeySecret 'Microsoft.KeyVault/vaults/secrets@2023-07-01' = {
+  name: 'mcpserverapikey'
+  parent: keyVault
+  properties: {
+    value: mcpApiKeyValue
+  }
+}
+
+resource mcpServerApiKeySetting 'Microsoft.AppConfiguration/configurationStores/keyValues@2025-02-01-preview' = {
+  name: 'mcpserverapikey'
+  parent: appConfig
+  properties: {
+    value: '{"uri":"${keyVault.properties.vaultUri}secrets/mcpserverapikey"}'
+    contentType: 'application/vnd.microsoft.appconfig.keyvaultref+json;charset=utf-8'
   }
 }

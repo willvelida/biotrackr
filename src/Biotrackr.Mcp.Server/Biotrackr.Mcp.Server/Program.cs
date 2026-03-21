@@ -11,6 +11,7 @@ using Microsoft.Extensions.Logging;
 using OpenTelemetry.Metrics;
 using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
+using Biotrackr.Mcp.Server.Middleware;
 using System.Diagnostics.CodeAnalysis;
 using System.Threading.RateLimiting;
 
@@ -106,17 +107,21 @@ builder.Services.AddSingleton<HttpClient>(provider =>
 builder.Services.AddRateLimiter(options =>
 {
     options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
-    options.AddFixedWindowLimiter("McpRateLimit", limiter =>
-    {
-        limiter.PermitLimit = 100;
-        limiter.Window = TimeSpan.FromMinutes(1);
-        limiter.QueueProcessingOrder = QueueProcessingOrder.OldestFirst;
-        limiter.QueueLimit = 10;
-    });
+    options.GlobalLimiter = PartitionedRateLimiter.Create<HttpContext, string>(context =>
+        RateLimitPartition.GetFixedWindowLimiter(
+            partitionKey: context.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+            factory: _ => new FixedWindowRateLimiterOptions
+            {
+                PermitLimit = 100,
+                Window = TimeSpan.FromMinutes(1),
+                QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
+                QueueLimit = 10
+            }));
 });
 
 var app = builder.Build();
 
+app.UseMiddleware<ApiKeyAuthMiddleware>();
 app.UseRateLimiter();
 
 app.MapGet("/api/healthz", async (HttpClient httpClient) =>
@@ -132,7 +137,7 @@ app.MapGet("/api/healthz", async (HttpClient httpClient) =>
     {
         return Results.Ok(new { status = "Degraded", downstream = $"Unreachable: {ex.Message}" });
     }
-}).RequireRateLimiting("McpRateLimit");
+});
 
 app.MapMcp();
 
