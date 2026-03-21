@@ -5,6 +5,7 @@ namespace Biotrackr.Chat.Api.Tools
 {
     /// <summary>
     /// Wraps an MCP-provided AITool with response caching.
+    /// Uses DelegatingAIFunction to preserve the original tool's parameter schema (Name, Description, JsonSchema).
     /// Cache keys are derived from tool name + arguments.
     /// TTLs match the original per-tool caching strategy.
     /// </summary>
@@ -13,6 +14,7 @@ namespace Biotrackr.Chat.Api.Tools
         /// <summary>
         /// Wraps an AITool with caching behavior that intercepts invocations,
         /// checks cache, and stores results with tool-specific TTLs.
+        /// Preserves the original tool's parameter metadata via DelegatingAIFunction.
         /// </summary>
         public static AITool Wrap(AITool innerTool, IMemoryCache cache, ILogger logger)
         {
@@ -20,32 +22,7 @@ namespace Biotrackr.Chat.Api.Tools
             ArgumentNullException.ThrowIfNull(cache);
             ArgumentNullException.ThrowIfNull(logger);
 
-            var innerFunction = (AIFunction)innerTool;
-
-            return AIFunctionFactory.Create(
-                method: async (AIFunctionArguments args, CancellationToken cancellationToken) =>
-                {
-                    var cacheKey = DeriveCacheKey(innerTool.Name, args);
-
-                    if (cache.TryGetValue(cacheKey, out string? cachedResult))
-                    {
-                        logger.LogDebug("Cache hit for {ToolName} with key {CacheKey}", innerTool.Name, cacheKey);
-                        return cachedResult!;
-                    }
-
-                    logger.LogDebug("Cache miss for {ToolName} with key {CacheKey}", innerTool.Name, cacheKey);
-
-                    var result = await innerFunction.InvokeAsync(args, cancellationToken);
-                    var resultString = result?.ToString() ?? string.Empty;
-
-                    var ttl = DetermineTtl(innerTool.Name, args);
-                    cache.Set(cacheKey, resultString, ttl);
-
-                    logger.LogDebug("Cached {ToolName} result with TTL {TtlMinutes}m", innerTool.Name, ttl.TotalMinutes);
-                    return resultString;
-                },
-                name: innerTool.Name,
-                description: innerTool.Description);
+            return new CachingDelegatingFunction((AIFunction)innerTool, cache, logger);
         }
 
         /// <summary>
@@ -117,6 +94,38 @@ namespace Biotrackr.Chat.Api.Tools
             }
 
             return defaultValue;
+        }
+    }
+
+    /// <summary>
+    /// A DelegatingAIFunction that adds caching around the inner MCP tool function.
+    /// Preserves the original tool's Name, Description, JsonSchema, and parameter metadata.
+    /// </summary>
+    internal sealed class CachingDelegatingFunction(AIFunction innerFunction, IMemoryCache cache, ILogger logger)
+        : DelegatingAIFunction(innerFunction)
+    {
+        protected override async ValueTask<object?> InvokeCoreAsync(
+            AIFunctionArguments arguments,
+            CancellationToken cancellationToken)
+        {
+            var cacheKey = CachingMcpToolWrapper.DeriveCacheKey(Name, arguments);
+
+            if (cache.TryGetValue(cacheKey, out string? cachedResult))
+            {
+                logger.LogDebug("Cache hit for {ToolName} with key {CacheKey}", Name, cacheKey);
+                return cachedResult!;
+            }
+
+            logger.LogDebug("Cache miss for {ToolName} with key {CacheKey}", Name, cacheKey);
+
+            var result = await base.InvokeCoreAsync(arguments, cancellationToken);
+            var resultString = result?.ToString() ?? string.Empty;
+
+            var ttl = CachingMcpToolWrapper.DetermineTtl(Name, arguments);
+            cache.Set(cacheKey, resultString, ttl);
+
+            logger.LogDebug("Cached {ToolName} result with TTL {TtlMinutes}m", Name, ttl.TotalMinutes);
+            return resultString;
         }
     }
 }
