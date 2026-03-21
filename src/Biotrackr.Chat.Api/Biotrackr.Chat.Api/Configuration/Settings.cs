@@ -6,7 +6,12 @@ namespace Biotrackr.Chat.Api.Configuration
         public string ConversationsContainerName { get; set; }
         public string CosmosEndpoint { get; set; }
         public string AgentIdentityId { get; set; }
-        public string ApiBaseUrl { get; set; }
+
+        /// <summary>
+        /// APIM gateway URL of the Biotrackr MCP Server (e.g., https://api-biotrackr-dev.azure-api.net/mcp).
+        /// Used by McpToolService with HttpTransportMode.AutoDetect (Streamable HTTP preferred, SSE fallback).
+        /// </summary>
+        public string McpServerUrl { get; set; }
         public string ApiSubscriptionKey { get; set; }
         public string AnthropicApiKey { get; set; }
         public string ChatAgentModel { get; set; }

@@ -2,7 +2,6 @@ using Anthropic;
 using Azure.Identity;
 using Azure.Monitor.OpenTelemetry.Exporter;
 using Biotrackr.Chat.Api.Configuration;
-using Biotrackr.Chat.Api.Configuration;
 using Biotrackr.Chat.Api.Extensions;
 using Biotrackr.Chat.Api.Middleware;
 using Biotrackr.Chat.Api.Services;
@@ -69,16 +68,9 @@ builder.Services.AddScoped<ICosmosClientFactory, AgentIdentityCosmosClientFactor
 builder.Services.AddScoped<IChatHistoryRepository, ChatHistoryRepository>();
 builder.Services.AddMemoryCache();
 
-// HttpClient for calling Biotrackr APIs via APIM
-builder.Services.AddTransient<ApiKeyDelegatingHandler>();
-
-builder.Services.AddHttpClient("BiotrackrApi", (sp, client) =>
-{
-    var settings = sp.GetRequiredService<Microsoft.Extensions.Options.IOptions<Settings>>().Value;
-    client.BaseAddress = new Uri(settings.ApiBaseUrl ?? throw new InvalidOperationException("Biotrackr:ApiBaseUrl is not configured."));
-})
-.AddHttpMessageHandler<ApiKeyDelegatingHandler>()
-.AddStandardResilienceHandler();
+// MCP tool service — manages MCP client lifecycle and tool listing
+builder.Services.AddSingleton<IMcpToolService, McpToolService>();
+builder.Services.AddHostedService(sp => (McpToolService)sp.GetRequiredService<IMcpToolService>());
 
 // OpenTelemetry
 var appInsightsConnectionString = builder.Configuration["applicationinsightsconnectionstring"];
@@ -123,73 +115,31 @@ builder.Services.AddHealthChecks();
 // AG-UI services
 builder.Services.AddAGUI();
 
+// ChatAgentProvider — builds/rebuilds AIAgent when MCP tools change
+builder.Services.AddSingleton<ChatAgentProvider>();
+
 var app = builder.Build();
 
-// Resolve tool dependencies from DI
-var httpClientFactory = app.Services.GetRequiredService<IHttpClientFactory>();
-var memoryCache = app.Services.GetRequiredService<Microsoft.Extensions.Caching.Memory.IMemoryCache>();
-var activityTools = new ActivityTools(httpClientFactory, memoryCache);
-var sleepTools = new SleepTools(httpClientFactory, memoryCache);
-var weightTools = new WeightTools(httpClientFactory, memoryCache);
-var foodTools = new FoodTools(httpClientFactory, memoryCache);
+// Create a delegating agent that resolves the real agent per-request.
+// This ensures the agent is rebuilt when MCP tools become available after a degraded start.
+var agentProvider = app.Services.GetRequiredService<ChatAgentProvider>();
 
-// Build the Anthropic-backed AIAgent
-var anthropicApiKey = builder.Configuration.GetValue<string>("Biotrackr:AnthropicApiKey");
-var modelName = builder.Configuration.GetValue<string>("Biotrackr:ChatAgentModel");
-var systemPrompt = builder.Configuration.GetValue<string>("Biotrackr:ChatSystemPrompt")!;
+// Build an initial agent (may have 0 tools if MCP Server is unreachable)
+var initialAgent = await agentProvider.GetAgentAsync();
 
-AnthropicClient anthropicClient = new() { ApiKey = anthropicApiKey };
-
-AIAgent chatAgent = anthropicClient.AsAIAgent(
-    model: modelName,
-    name: "BiotrackrChatAgent",
-    instructions: systemPrompt,
-    tools:
-    [
-        AIFunctionFactory.Create(activityTools.GetActivityByDate),
-        AIFunctionFactory.Create(activityTools.GetActivityByDateRange),
-        AIFunctionFactory.Create(activityTools.GetActivityRecords),
-        AIFunctionFactory.Create(sleepTools.GetSleepByDate),
-        AIFunctionFactory.Create(sleepTools.GetSleepByDateRange),
-        AIFunctionFactory.Create(sleepTools.GetSleepRecords),
-        AIFunctionFactory.Create(weightTools.GetWeightByDate),
-        AIFunctionFactory.Create(weightTools.GetWeightByDateRange),
-        AIFunctionFactory.Create(weightTools.GetWeightRecords),
-        AIFunctionFactory.Create(foodTools.GetFoodByDate),
-        AIFunctionFactory.Create(foodTools.GetFoodByDateRange),
-        AIFunctionFactory.Create(foodTools.GetFoodRecords),
-    ]);
-
-// Wrap agent with conversation persistence middleware
-var chatHistoryRepository = app.Services.GetRequiredService<IChatHistoryRepository>();
-var persistenceLogger = app.Services.GetRequiredService<ILogger<ConversationPersistenceMiddleware>>();
-var conversationPolicyOptions = Microsoft.Extensions.Options.Options.Create(new ConversationPolicyOptions());
-var persistenceMiddleware = new ConversationPersistenceMiddleware(chatHistoryRepository, conversationPolicyOptions, persistenceLogger);
-
-// Wrap agent with tool policy enforcement middleware (rate limiting, allowed tool validation)
-var biotrackrSettings = app.Services.GetRequiredService<Microsoft.Extensions.Options.IOptions<Settings>>().Value;
-var toolPolicyOptions = Microsoft.Extensions.Options.Options.Create(new ToolPolicyOptions
-{
-    MaxToolCallsPerSession = biotrackrSettings.ToolCallBudgetPerSession
-});
-var toolPolicyLogger = app.Services.GetRequiredService<ILogger<ToolPolicyMiddleware>>();
-var toolPolicyMiddleware = new ToolPolicyMiddleware(memoryCache, toolPolicyOptions, toolPolicyLogger);
-
-// Wrap agent with graceful degradation middleware (catches Claude API failures)
-var degradationLogger = app.Services.GetRequiredService<ILogger<GracefulDegradationMiddleware>>();
-var degradationMiddleware = new GracefulDegradationMiddleware(degradationLogger);
-
-AIAgent persistentAgent = chatAgent
+// Wrap with a delegating layer that always fetches the latest agent
+AIAgent dynamicAgent = initialAgent
     .AsBuilder()
-        .Use(runFunc: null, runStreamingFunc: toolPolicyMiddleware.HandleAsync)
-        .Use(runFunc: null, runStreamingFunc: persistenceMiddleware.HandleAsync)
-        .Use(runFunc: null, runStreamingFunc: degradationMiddleware.HandleAsync)
+    .Use(runFunc: null, runStreamingFunc: (messages, session, options, innerNext, cancellationToken) =>
+    {
+        return agentProvider.RunStreamingWithLatestAgentAsync(messages, session, options, cancellationToken);
+    })
     .Build();
 
 app.MapOpenApi();
 
 // AG-UI endpoint — SSE streaming, session management, protocol events
-app.MapAGUI("/", persistentAgent);
+app.MapAGUI("/", dynamicAgent);
 
 // Conversation history + health check endpoints
 app.RegisterChatEndpoints();

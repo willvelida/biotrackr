@@ -74,7 +74,7 @@ namespace Biotrackr.Mcp.Server.Tools
 
                 success = true;
                 _logger.LogInformation("API response for {OperationName} deserialized successfully. Duration: {DurationMs}ms", operationName, stopwatch.ElapsedMilliseconds);
-                return content;
+                return JsonSerializer.Serialize(result, JsonOptions);
             }
             catch (HttpRequestException ex)
             {
@@ -131,7 +131,7 @@ namespace Biotrackr.Mcp.Server.Tools
         protected static string BuildPaginatedEndpoint(string basePath, int pageNumber, int pageSize)
         {
             pageNumber = Math.Max(1, pageNumber);
-            pageSize = Math.Clamp(pageSize, 1, 100);
+            pageSize = Math.Clamp(pageSize, 1, 50);
             return $"{basePath}?pageNumber={pageNumber}&pageSize={pageSize}";
         }
     }

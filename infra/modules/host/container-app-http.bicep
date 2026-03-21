@@ -34,6 +34,9 @@ param healthProbes array = []
 @description('Custom domain bindings for this Container App')
 param customDomains array = []
 
+@description('Minimum number of replicas. Set to 1 to keep at least one instance always warm.')
+param minReplicas int = 0
+
 resource containerAppEnv 'Microsoft.App/managedEnvironments@2024-03-01' existing = {
   name: containerAppEnvironmentName
 }
@@ -82,7 +85,7 @@ resource httpContainerApp 'Microsoft.App/containerApps@2024-03-01' = {
         }
       ]
       scale: {
-        minReplicas: 0
+        minReplicas: minReplicas
         maxReplicas: 2
         rules: [
           {
