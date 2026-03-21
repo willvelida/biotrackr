@@ -10,10 +10,10 @@ namespace Biotrackr.Chat.Api.UnitTests.Tools
     public class CachingMcpToolWrapperShould
     {
         [Theory]
-        [InlineData("GetActivityByDate", "2026-03-20", "GetActivityByDate:2026-03-20")]
-        [InlineData("GetSleepByDate", "2025-01-01", "GetSleepByDate:2025-01-01")]
-        [InlineData("GetWeightByDate", "2026-12-31", "GetWeightByDate:2026-12-31")]
-        [InlineData("GetFoodByDate", "2026-06-15", "GetFoodByDate:2026-06-15")]
+        [InlineData("get_activity_by_date", "2026-03-20", "get_activity_by_date:2026-03-20")]
+        [InlineData("get_sleep_by_date", "2025-01-01", "get_sleep_by_date:2025-01-01")]
+        [InlineData("get_weight_by_date", "2026-12-31", "get_weight_by_date:2026-12-31")]
+        [InlineData("get_food_by_date", "2026-06-15", "get_food_by_date:2026-06-15")]
         public void DeriveCacheKeyForByDateTools(string toolName, string date, string expectedKey)
         {
             var args = new AIFunctionArguments { ["date"] = date };
@@ -24,8 +24,8 @@ namespace Biotrackr.Chat.Api.UnitTests.Tools
         }
 
         [Theory]
-        [InlineData("GetActivityByDateRange", "2026-01-01", "2026-01-31", "1", "20", "GetActivityByDateRange:2026-01-01:2026-01-31:1:20")]
-        [InlineData("GetSleepByDateRange", "2026-03-01", "2026-03-15", "2", "10", "GetSleepByDateRange:2026-03-01:2026-03-15:2:10")]
+        [InlineData("get_activity_by_date_range", "2026-01-01", "2026-01-31", "1", "20", "get_activity_by_date_range:2026-01-01:2026-01-31:1:20")]
+        [InlineData("get_sleep_by_date_range", "2026-03-01", "2026-03-15", "2", "10", "get_sleep_by_date_range:2026-03-01:2026-03-15:2:10")]
         public void DeriveCacheKeyForByDateRangeTools(string toolName, string startDate, string endDate, string pageNumber, string pageSize, string expectedKey)
         {
             var args = new AIFunctionArguments
@@ -42,7 +42,7 @@ namespace Biotrackr.Chat.Api.UnitTests.Tools
         }
 
         [Theory]
-        [InlineData("GetActivityByDateRange", "2026-01-01", "2026-01-31", "GetActivityByDateRange:2026-01-01:2026-01-31:1:20")]
+        [InlineData("get_activity_by_date_range", "2026-01-01", "2026-01-31", "get_activity_by_date_range:2026-01-01:2026-01-31:1:20")]
         public void DeriveCacheKeyForByDateRangeToolsWithDefaultPagination(string toolName, string startDate, string endDate, string expectedKey)
         {
             var args = new AIFunctionArguments
@@ -57,8 +57,8 @@ namespace Biotrackr.Chat.Api.UnitTests.Tools
         }
 
         [Theory]
-        [InlineData("GetActivityRecords", "1", "10", "GetActivityRecords:1:10")]
-        [InlineData("GetSleepRecords", "3", "50", "GetSleepRecords:3:50")]
+        [InlineData("get_activity_records", "1", "10", "get_activity_records:1:10")]
+        [InlineData("get_sleep_records", "3", "50", "get_sleep_records:3:50")]
         public void DeriveCacheKeyForRecordsTools(string toolName, string pageNumber, string pageSize, string expectedKey)
         {
             var args = new AIFunctionArguments
@@ -78,7 +78,7 @@ namespace Biotrackr.Chat.Api.UnitTests.Tools
             var today = DateOnly.FromDateTime(DateTime.UtcNow).ToString("yyyy-MM-dd");
             var args = new AIFunctionArguments { ["date"] = today };
 
-            var ttl = CachingMcpToolWrapper.DetermineTtl("GetActivityByDate", args);
+            var ttl = CachingMcpToolWrapper.DetermineTtl("get_activity_by_date", args);
 
             ttl.Should().Be(TimeSpan.FromMinutes(5));
         }
@@ -88,16 +88,16 @@ namespace Biotrackr.Chat.Api.UnitTests.Tools
         {
             var args = new AIFunctionArguments { ["date"] = "2020-01-01" };
 
-            var ttl = CachingMcpToolWrapper.DetermineTtl("GetActivityByDate", args);
+            var ttl = CachingMcpToolWrapper.DetermineTtl("get_activity_by_date", args);
 
             ttl.Should().Be(TimeSpan.FromHours(1));
         }
 
         [Theory]
-        [InlineData("GetActivityByDateRange")]
-        [InlineData("GetSleepByDateRange")]
-        [InlineData("GetWeightByDateRange")]
-        [InlineData("GetFoodByDateRange")]
+        [InlineData("get_activity_by_date_range")]
+        [InlineData("get_sleep_by_date_range")]
+        [InlineData("get_weight_by_date_range")]
+        [InlineData("get_food_by_date_range")]
         public void DetermineTtlForDateRangeToolReturnsThirtyMinutes(string toolName)
         {
             var args = new AIFunctionArguments
@@ -112,10 +112,10 @@ namespace Biotrackr.Chat.Api.UnitTests.Tools
         }
 
         [Theory]
-        [InlineData("GetActivityRecords")]
-        [InlineData("GetSleepRecords")]
-        [InlineData("GetWeightRecords")]
-        [InlineData("GetFoodRecords")]
+        [InlineData("get_activity_records")]
+        [InlineData("get_sleep_records")]
+        [InlineData("get_weight_records")]
+        [InlineData("get_food_records")]
         public void DetermineTtlForRecordsToolReturnsFifteenMinutes(string toolName)
         {
             var args = new AIFunctionArguments

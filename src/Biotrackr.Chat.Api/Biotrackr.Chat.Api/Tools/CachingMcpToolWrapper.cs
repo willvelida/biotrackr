@@ -53,25 +53,25 @@ namespace Biotrackr.Chat.Api.Tools
         /// </summary>
         public static string DeriveCacheKey(string toolName, AIFunctionArguments args)
         {
-            if (toolName.Contains("ByDate") && !toolName.Contains("ByDateRange"))
+            if (toolName.Contains("by_date") && !toolName.Contains("by_date_range"))
             {
                 var date = GetArgValue(args, "date");
                 return $"{toolName}:{date}";
             }
 
-            if (toolName.Contains("ByDateRange"))
+            if (toolName.Contains("by_date_range"))
             {
-                var startDate = GetArgValue(args, "startDate");
-                var endDate = GetArgValue(args, "endDate");
-                var pageNumber = GetArgValue(args, "pageNumber", "1");
-                var pageSize = GetArgValue(args, "pageSize", "20");
+                var startDate = GetArgValue(args, "startDate", GetArgValue(args, "start_date"));
+                var endDate = GetArgValue(args, "endDate", GetArgValue(args, "end_date"));
+                var pageNumber = GetArgValue(args, "pageNumber", GetArgValue(args, "page_number", "1"));
+                var pageSize = GetArgValue(args, "pageSize", GetArgValue(args, "page_size", "20"));
                 return $"{toolName}:{startDate}:{endDate}:{pageNumber}:{pageSize}";
             }
 
-            if (toolName.Contains("Records"))
+            if (toolName.Contains("records"))
             {
-                var pageNumber = GetArgValue(args, "pageNumber", "1");
-                var pageSize = GetArgValue(args, "pageSize", "20");
+                var pageNumber = GetArgValue(args, "pageNumber", GetArgValue(args, "page_number", "1"));
+                var pageSize = GetArgValue(args, "pageSize", GetArgValue(args, "page_size", "20"));
                 return $"{toolName}:{pageNumber}:{pageSize}";
             }
 
@@ -84,7 +84,7 @@ namespace Biotrackr.Chat.Api.Tools
         /// </summary>
         public static TimeSpan DetermineTtl(string toolName, AIFunctionArguments args)
         {
-            if (toolName.Contains("ByDate") && !toolName.Contains("ByDateRange"))
+            if (toolName.Contains("by_date") && !toolName.Contains("by_date_range"))
             {
                 var date = GetArgValue(args, "date");
                 if (DateOnly.TryParse(date, out var parsedDate) && parsedDate == DateOnly.FromDateTime(DateTime.UtcNow))
@@ -95,12 +95,12 @@ namespace Biotrackr.Chat.Api.Tools
                 return TimeSpan.FromHours(1);
             }
 
-            if (toolName.Contains("ByDateRange"))
+            if (toolName.Contains("by_date_range"))
             {
                 return TimeSpan.FromMinutes(30);
             }
 
-            if (toolName.Contains("Records"))
+            if (toolName.Contains("records"))
             {
                 return TimeSpan.FromMinutes(15);
             }
