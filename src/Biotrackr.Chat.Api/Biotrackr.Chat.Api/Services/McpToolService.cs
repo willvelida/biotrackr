@@ -112,12 +112,21 @@ namespace Biotrackr.Chat.Api.Services
                     TransportMode = HttpTransportMode.AutoDetect,
                 };
 
+                var headers = new Dictionary<string, string>();
+
                 if (!string.IsNullOrWhiteSpace(_settings.ApiSubscriptionKey))
                 {
-                    transportOptions.AdditionalHeaders = new Dictionary<string, string>
-                    {
-                        [SubscriptionKeyHeader] = _settings.ApiSubscriptionKey
-                    };
+                    headers[SubscriptionKeyHeader] = _settings.ApiSubscriptionKey;
+                }
+
+                if (!string.IsNullOrWhiteSpace(_settings.McpServerApiKey))
+                {
+                    headers["X-Api-Key"] = _settings.McpServerApiKey;
+                }
+
+                if (headers.Count > 0)
+                {
+                    transportOptions.AdditionalHeaders = headers;
                 }
 
                 var transport = new HttpClientTransport(transportOptions, _loggerFactory);

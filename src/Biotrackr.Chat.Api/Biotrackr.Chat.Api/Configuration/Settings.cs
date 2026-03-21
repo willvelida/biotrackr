@@ -13,6 +13,7 @@ namespace Biotrackr.Chat.Api.Configuration
         /// </summary>
         public string McpServerUrl { get; set; }
         public string ApiSubscriptionKey { get; set; }
+        public string McpServerApiKey { get; set; }
         public string AnthropicApiKey { get; set; }
         public string ChatAgentModel { get; set; }
         public string ChatSystemPrompt { get; set; }

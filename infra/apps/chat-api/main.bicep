@@ -375,6 +375,16 @@ resource apiSubscriptionKeySetting 'Microsoft.AppConfiguration/configurationStor
   }
 }
 
+// App Configuration: MCP Server API Key (Key Vault reference)
+resource mcpServerApiKeySetting 'Microsoft.AppConfiguration/configurationStores/keyValues@2025-02-01-preview' = {
+  name: 'Biotrackr:McpServerApiKey'
+  parent: appConfig
+  properties: {
+    value: '{"uri":"${keyVault.properties.vaultUri}secrets/mcpserverapikey"}'
+    contentType: 'application/vnd.microsoft.appconfig.keyvaultref+json;charset=utf-8'
+  }
+}
+
 // App Configuration: Chat agent system prompt (Key Vault reference)
 resource chatSystemPromptSetting 'Microsoft.AppConfiguration/configurationStores/keyValues@2025-02-01-preview' = {
   name: 'Biotrackr:ChatSystemPrompt'
