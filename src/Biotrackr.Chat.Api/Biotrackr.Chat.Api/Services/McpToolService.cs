@@ -109,7 +109,7 @@ namespace Biotrackr.Chat.Api.Services
                 var transportOptions = new HttpClientTransportOptions
                 {
                     Endpoint = new Uri(_settings.McpServerUrl),
-                    TransportMode = HttpTransportMode.Sse,
+                    TransportMode = HttpTransportMode.AutoDetect,
                 };
 
                 if (!string.IsNullOrWhiteSpace(_settings.ApiSubscriptionKey))
