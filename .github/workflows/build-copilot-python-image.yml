@@ -13,6 +13,7 @@ permissions:
     id-token: write
     pull-requests: write
     checks: write
+    packages: read
 
 env:
   APP_NAME: biotrackr-copilot-python
@@ -53,6 +54,9 @@ jobs:
 
         - name: Login to Azure Container Registry
           run: az acr login --name ${{ steps.getacrname.outputs.acrName }}
+
+        - name: Login to GitHub Container Registry
+          run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
 
         - name: Build Docker image
           run: |
