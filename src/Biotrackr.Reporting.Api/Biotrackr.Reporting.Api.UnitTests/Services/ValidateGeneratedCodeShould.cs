@@ -65,6 +65,7 @@ namespace Biotrackr.Reporting.Api.UnitTests.Services
         [InlineData("os.popen('id')")]
         public void DetectDangerousCodePatterns(string dangerousCode)
         {
+            Directory.CreateDirectory("/tmp/reports");
             var script = $"import pandas\n{dangerousCode}\nprint('done')";
             File.WriteAllText(Path.Combine("/tmp/reports", $"test_{Guid.NewGuid():N}.py"), script);
 
@@ -86,6 +87,7 @@ namespace Biotrackr.Reporting.Api.UnitTests.Services
         [InlineData("from reportlab.lib.pagesizes import letter\nprint('pdf created')")]
         public void AllowSafePythonCode(string safeCode)
         {
+            Directory.CreateDirectory("/tmp/reports");
             File.WriteAllText(Path.Combine("/tmp/reports", $"safe_{Guid.NewGuid():N}.py"), safeCode);
 
             try
