@@ -209,7 +209,7 @@ namespace Biotrackr.Reporting.Api.Services
         /// Validates generated Python scripts for dangerous code patterns (ASI05).
         /// Returns false if any dangerous pattern is detected.
         /// </summary>
-        private bool ValidateGeneratedCode(string jobId)
+        internal bool ValidateGeneratedCode(string jobId)
         {
             if (!Directory.Exists(ReportsDirectory))
                 return true;
@@ -263,7 +263,7 @@ namespace Biotrackr.Reporting.Api.Services
         /// <summary>
         /// Scans /tmp/reports for artifact files. Logs detailed artifact info and flags anomalies (ASI10).
         /// </summary>
-        private Dictionary<string, byte[]> ScanForArtifacts(string jobId)
+        internal Dictionary<string, byte[]> ScanForArtifacts(string jobId)
         {
             var artifacts = new Dictionary<string, byte[]>();
 

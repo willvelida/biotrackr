@@ -100,7 +100,7 @@ namespace Biotrackr.Reporting.Api.Endpoints
         /// <summary>
         /// Checks whether the source data snapshot is effectively empty (null, empty object, or empty string).
         /// </summary>
-        private static bool IsEmptySnapshot(object snapshot)
+        internal static bool IsEmptySnapshot(object snapshot)
         {
             if (snapshot is JsonElement element)
             {

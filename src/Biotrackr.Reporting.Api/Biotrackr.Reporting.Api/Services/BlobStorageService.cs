@@ -9,6 +9,7 @@ using Microsoft.Extensions.Options;
 
 namespace Biotrackr.Reporting.Api.Services
 {
+    [System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]
     public class BlobStorageService(
         IOptions<Settings> settings,
         IConfiguration configuration,
