@@ -2,17 +2,15 @@
 # This runs as a sidecar container alongside Biotrackr.Reporting.Api
 # Copilot CLI runs headlessly on port 4321, executing Python scripts via bash tool
 
-FROM ghcr.io/github/copilot-cli:latest AS cli
-
 FROM python:3.12-slim-bookworm
 
-# Install ca-certificates for HTTPS and copy Copilot CLI binary
+# Install ca-certificates for HTTPS and curl for Copilot CLI install
 RUN apt-get update && \
-    apt-get install -y --no-install-recommends ca-certificates && \
+    apt-get install -y --no-install-recommends ca-certificates curl && \
     rm -rf /var/lib/apt/lists/*
 
-COPY --from=cli /usr/local/bin/copilot /usr/local/bin/copilot
-RUN chmod +x /usr/local/bin/copilot
+# Install Copilot CLI via the official install script
+RUN curl -fsSL https://gh.io/copilot-install | bash
 
 # Install Python data science and reporting packages
 RUN pip install --no-cache-dir \
