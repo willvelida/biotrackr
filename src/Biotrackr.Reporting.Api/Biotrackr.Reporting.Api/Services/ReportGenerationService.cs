@@ -238,7 +238,7 @@ namespace Biotrackr.Reporting.Api.Services
             return true;
         }
 
-        private async Task UploadArtifactsAsync(
+        internal async Task UploadArtifactsAsync(
             string jobId, Dictionary<string, byte[]> artifacts, string? summary, object sourceDataSnapshot)
         {
             var pdfBytes = Array.Empty<byte>();

@@ -3,6 +3,7 @@ using Microsoft.Agents.AI.Hosting;
 
 namespace Biotrackr.Reporting.Api.Endpoints
 {
+    [System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]
     public static class A2AEndpoints
     {
         public static void MapA2AEndpoints(this WebApplication app, IHostedAgentBuilder reportAgent)

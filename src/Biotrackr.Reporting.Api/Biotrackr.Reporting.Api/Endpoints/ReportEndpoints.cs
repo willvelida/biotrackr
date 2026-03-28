@@ -3,6 +3,7 @@ using Biotrackr.Reporting.Api.Services;
 
 namespace Biotrackr.Reporting.Api.Endpoints
 {
+    [System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]
     public static class ReportEndpoints
     {
         public static void MapReportEndpoints(this WebApplication app)
