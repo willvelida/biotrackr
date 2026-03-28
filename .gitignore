@@ -407,3 +407,9 @@ docs/blog-post-ideas/*
 
 # Chat system prompt — sensitive configuration, stored in Key Vault
 scripts/chat-system-prompt/system-prompt.txt
+
+# Report generator system prompt — sensitive configuration, stored in Key Vault
+scripts/reporting-api-prompts/report-generator-prompt.txt
+
+# Reviewer system prompt — sensitive configuration, stored in Key Vault
+scripts/chat-system-prompt/reviewer-prompt.txt
