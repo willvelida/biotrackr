@@ -1,0 +1,35 @@
+# Copilot CLI + Python sidecar image for report generation
+# This runs as a sidecar container alongside Biotrackr.Reporting.Api
+# Copilot CLI runs headlessly on port 4321, executing Python scripts via bash tool
+
+FROM ghcr.io/github/copilot-cli:latest AS cli
+
+FROM python:3.12-slim-bookworm
+
+# Install ca-certificates for HTTPS and copy Copilot CLI binary
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends ca-certificates && \
+    rm -rf /var/lib/apt/lists/*
+
+COPY --from=cli /usr/local/bin/copilot /usr/local/bin/copilot
+RUN chmod +x /usr/local/bin/copilot
+
+# Install Python data science and reporting packages
+RUN pip install --no-cache-dir \
+    pandas==2.2.3 \
+    matplotlib==3.10.0 \
+    seaborn==0.13.2 \
+    reportlab==4.3.1 \
+    numpy==2.2.3
+
+# Create shared reports directory
+RUN mkdir -p /tmp/reports
+
+# Run as non-root user
+RUN useradd --create-home --shell /bin/bash copilot
+USER copilot
+
+EXPOSE 4321
+
+ENTRYPOINT ["copilot", "--headless", "--port", "4321", "--bind", "0.0.0.0", \
+            "--auth-token-env", "GITHUB_TOKEN", "--no-auto-update"]
