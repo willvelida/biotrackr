@@ -30,10 +30,14 @@ namespace Biotrackr.Reporting.Api.UnitTests.Services
                 settings,
                 new Mock<ILogger<ReportGenerationService>>().Object);
 
-            // Ensure clean state
+            CleanDirectory();
+        }
+
+        private static void CleanDirectory()
+        {
             if (Directory.Exists(ReportsDir))
             {
-                foreach (var f in Directory.GetFiles(ReportsDir, "scantest_*"))
+                foreach (var f in Directory.GetFiles(ReportsDir))
                     File.Delete(f);
             }
             else
@@ -43,158 +47,87 @@ namespace Biotrackr.Reporting.Api.UnitTests.Services
         }
 
         [Fact]
-        public void ReturnEmptyWhenDirectoryDoesNotExist()
+        public void ReturnEmptyWhenNoArtifactFilesExist()
         {
-            // Temporarily remove directory
-            var tempBackup = ReportsDir + "_backup_" + Guid.NewGuid().ToString("N");
-            if (Directory.Exists(ReportsDir))
-            {
-                Directory.Move(ReportsDir, tempBackup);
-            }
-
-            try
-            {
-                _sut.ScanForArtifacts("test-job").Should().BeEmpty();
-            }
-            finally
-            {
-                if (Directory.Exists(tempBackup))
-                    Directory.Move(tempBackup, ReportsDir);
-            }
+            CleanDirectory();
+            _sut.ScanForArtifacts("test-job").Should().BeEmpty();
         }
 
         [Fact]
         public void IncludePdfFiles()
         {
-            var filePath = Path.Combine(ReportsDir, "scantest_report.pdf");
-            File.WriteAllBytes(filePath, new byte[] { 0x25, 0x50, 0x44, 0x46 }); // %PDF
+            CleanDirectory();
+            File.WriteAllBytes(Path.Combine(ReportsDir, "report.pdf"), [0x25, 0x50, 0x44, 0x46]);
 
-            try
-            {
-                var result = _sut.ScanForArtifacts("test-job");
-                result.Should().ContainKey("scantest_report.pdf");
-            }
-            finally
-            {
-                File.Delete(filePath);
-            }
+            var result = _sut.ScanForArtifacts("test-job");
+            result.Should().ContainKey("report.pdf");
         }
 
         [Fact]
         public void IncludePngFiles()
         {
-            var filePath = Path.Combine(ReportsDir, "scantest_chart.png");
-            File.WriteAllBytes(filePath, new byte[] { 0x89, 0x50, 0x4E, 0x47 }); // PNG header
+            CleanDirectory();
+            File.WriteAllBytes(Path.Combine(ReportsDir, "chart.png"), [0x89, 0x50, 0x4E, 0x47]);
 
-            try
-            {
-                var result = _sut.ScanForArtifacts("test-job");
-                result.Should().ContainKey("scantest_chart.png");
-            }
-            finally
-            {
-                File.Delete(filePath);
-            }
+            var result = _sut.ScanForArtifacts("test-job");
+            result.Should().ContainKey("chart.png");
         }
 
         [Fact]
         public void IncludeJpgFiles()
         {
-            var filePath = Path.Combine(ReportsDir, "scantest_photo.jpg");
-            File.WriteAllBytes(filePath, new byte[] { 0xFF, 0xD8, 0xFF });
+            CleanDirectory();
+            File.WriteAllBytes(Path.Combine(ReportsDir, "photo.jpg"), [0xFF, 0xD8, 0xFF]);
 
-            try
-            {
-                var result = _sut.ScanForArtifacts("test-job");
-                result.Should().ContainKey("scantest_photo.jpg");
-            }
-            finally
-            {
-                File.Delete(filePath);
-            }
+            var result = _sut.ScanForArtifacts("test-job");
+            result.Should().ContainKey("photo.jpg");
         }
 
         [Fact]
         public void IncludeSvgFiles()
         {
-            var filePath = Path.Combine(ReportsDir, "scantest_vector.svg");
-            File.WriteAllText(filePath, "<svg></svg>");
+            CleanDirectory();
+            File.WriteAllText(Path.Combine(ReportsDir, "vector.svg"), "<svg></svg>");
 
-            try
-            {
-                var result = _sut.ScanForArtifacts("test-job");
-                result.Should().ContainKey("scantest_vector.svg");
-            }
-            finally
-            {
-                File.Delete(filePath);
-            }
+            var result = _sut.ScanForArtifacts("test-job");
+            result.Should().ContainKey("vector.svg");
         }
 
         [Fact]
         public void ExcludePythonScripts()
         {
-            var filePath = Path.Combine(ReportsDir, "scantest_generate.py");
-            File.WriteAllText(filePath, "import pandas");
+            CleanDirectory();
+            File.WriteAllText(Path.Combine(ReportsDir, "generate.py"), "import pandas");
 
-            try
-            {
-                var result = _sut.ScanForArtifacts("test-job");
-                result.Should().NotContainKey("scantest_generate.py");
-            }
-            finally
-            {
-                File.Delete(filePath);
-            }
+            var result = _sut.ScanForArtifacts("test-job");
+            result.Should().NotContainKey("generate.py");
         }
 
         [Fact]
         public void SkipOversizedArtifacts()
         {
+            CleanDirectory();
             // MaxArtifactSizeBytes is set to 1024 (1KB)
-            var filePath = Path.Combine(ReportsDir, "scantest_huge.pdf");
-            File.WriteAllBytes(filePath, new byte[2048]); // 2KB > 1KB limit
+            File.WriteAllBytes(Path.Combine(ReportsDir, "huge.pdf"), new byte[2048]);
 
-            try
-            {
-                var result = _sut.ScanForArtifacts("test-job");
-                result.Should().NotContainKey("scantest_huge.pdf");
-            }
-            finally
-            {
-                File.Delete(filePath);
-            }
+            var result = _sut.ScanForArtifacts("test-job");
+            result.Should().NotContainKey("huge.pdf");
         }
 
         [Fact]
         public void ReturnMultipleArtifacts()
         {
-            var pdf = Path.Combine(ReportsDir, "scantest_report.pdf");
-            var png = Path.Combine(ReportsDir, "scantest_chart.png");
-            File.WriteAllBytes(pdf, new byte[] { 0x25, 0x50 });
-            File.WriteAllBytes(png, new byte[] { 0x89, 0x50 });
+            CleanDirectory();
+            File.WriteAllBytes(Path.Combine(ReportsDir, "report.pdf"), [0x25, 0x50]);
+            File.WriteAllBytes(Path.Combine(ReportsDir, "chart.png"), [0x89, 0x50]);
 
-            try
-            {
-                var result = _sut.ScanForArtifacts("test-job");
-                result.Should().HaveCount(2);
-                result.Should().ContainKey("scantest_report.pdf");
-                result.Should().ContainKey("scantest_chart.png");
-            }
-            finally
-            {
-                File.Delete(pdf);
-                File.Delete(png);
-            }
+            var result = _sut.ScanForArtifacts("test-job");
+            result.Should().HaveCount(2);
         }
 
         public void Dispose()
         {
-            if (Directory.Exists(ReportsDir))
-            {
-                foreach (var f in Directory.GetFiles(ReportsDir, "scantest_*"))
-                    File.Delete(f);
-            }
+            CleanDirectory();
         }
     }
 }

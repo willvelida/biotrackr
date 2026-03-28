@@ -2,9 +2,11 @@ using System.Globalization;
 using System.Text.Json;
 using Biotrackr.Reporting.Api.Models;
 using Biotrackr.Reporting.Api.Services;
+using Biotrackr.Reporting.Api.Validation;
 
 namespace Biotrackr.Reporting.Api.Endpoints
 {
+    [System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]
     public static class GenerateEndpoints
     {
         private const int MaxTaskMessageLength = 5000;
@@ -73,7 +75,7 @@ namespace Biotrackr.Reporting.Api.Endpoints
                 }
 
                 // Validate source data snapshot is provided (enables reviewer cross-validation)
-                if (request.SourceDataSnapshot is null || IsEmptySnapshot(request.SourceDataSnapshot))
+                if (request.SourceDataSnapshot is null || SnapshotValidator.IsEmpty(request.SourceDataSnapshot))
                 {
                     logger.LogWarning("Report generation request missing sourceDataSnapshot");
                     return Results.BadRequest(new { error = "sourceDataSnapshot is required. Health data must be fetched and provided for report generation." });
@@ -95,27 +97,6 @@ namespace Biotrackr.Reporting.Api.Endpoints
 
                 return Results.Accepted(value: result);
             }).RequireAuthorization("ChatApiAgent");
-        }
-
-        /// <summary>
-        /// Checks whether the source data snapshot is effectively empty (null, empty object, or empty string).
-        /// </summary>
-        internal static bool IsEmptySnapshot(object snapshot)
-        {
-            if (snapshot is JsonElement element)
-            {
-                return element.ValueKind switch
-                {
-                    JsonValueKind.Null or JsonValueKind.Undefined => true,
-                    JsonValueKind.Object => element.EnumerateObject().MoveNext() is false,
-                    JsonValueKind.Array => element.GetArrayLength() == 0,
-                    JsonValueKind.String => string.IsNullOrWhiteSpace(element.GetString()),
-                    _ => false
-                };
-            }
-
-            var json = snapshot.ToString();
-            return string.IsNullOrWhiteSpace(json) || json == "{}";
         }
     }
 

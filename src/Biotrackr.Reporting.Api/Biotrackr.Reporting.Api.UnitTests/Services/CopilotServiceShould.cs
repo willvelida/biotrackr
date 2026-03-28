@@ -76,6 +76,37 @@ namespace Biotrackr.Reporting.Api.UnitTests.Services
             isHealthy.Should().BeFalse();
         }
 
+        [Fact]
+        public async Task DisposeCleanlyWhenClientNotCreated()
+        {
+            var sut = CreateService();
+
+            await sut.DisposeAsync();
+
+            // Should not throw — no client was created
+        }
+
+        [Fact]
+        public void CreateClientWithConfiguredCliUrl()
+        {
+            var sut = CreateService(copilotCliUrl: "http://sidecar:4321");
+
+            var client = sut.Client;
+
+            client.Should().NotBeNull();
+        }
+
+        [Fact]
+        public void ReturnSameClientOnMultipleAccesses()
+        {
+            var sut = CreateService();
+
+            var client1 = sut.Client;
+            var client2 = sut.Client;
+
+            client1.Should().BeSameAs(client2);
+        }
+
         private CopilotService CreateService(string copilotCliUrl = "http://localhost:4321")
         {
             var settings = Options.Create(new Settings
