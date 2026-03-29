@@ -38,6 +38,9 @@ if (!string.IsNullOrWhiteSpace(azureAppConfigEndpoint))
     });
 }
 
+// Re-add env vars so they override App Configuration values (e.g. AzureAd:ClientId)
+builder.Configuration.AddEnvironmentVariables();
+
 builder.Services.Configure<Settings>(builder.Configuration.GetSection("Biotrackr"));
 
 // Authentication with Microsoft Identity Web (ASI03 — defense-in-depth)
