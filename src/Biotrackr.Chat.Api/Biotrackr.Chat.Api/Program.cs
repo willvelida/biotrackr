@@ -89,8 +89,9 @@ builder.Services.AddHttpClient("ReportingApi", client =>
     options.TotalRequestTimeout.Timeout = TimeSpan.FromMinutes(3);
     options.AttemptTimeout.Timeout = TimeSpan.FromSeconds(90);
     options.CircuitBreaker.SamplingDuration = TimeSpan.FromMinutes(3);
-    options.Retry.MaxRetryAttempts = 3;
-    options.Retry.Delay = TimeSpan.FromSeconds(5);
+    options.Retry.MaxRetryAttempts = 5;
+    options.Retry.Delay = TimeSpan.FromSeconds(15);
+    options.Retry.BackoffType = Polly.DelayBackoffType.Linear;
 });
 
 builder.Services.AddSingleton<ReportReviewerService>();
