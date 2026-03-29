@@ -3,9 +3,9 @@ using Azure.Monitor.OpenTelemetry.Exporter;
 using Biotrackr.Reporting.Api.Configuration;
 using Biotrackr.Reporting.Api.Endpoints;
 using Biotrackr.Reporting.Api.Services;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.Agents.AI.Hosting;
 using Microsoft.Extensions.Configuration.AzureAppConfiguration;
-using Microsoft.Identity.Web;
 using OpenTelemetry.Metrics;
 using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
@@ -43,9 +43,24 @@ builder.Configuration.AddEnvironmentVariables();
 
 builder.Services.Configure<Settings>(builder.Configuration.GetSection("Biotrackr"));
 
-// Authentication with Microsoft Identity Web (ASI03 — defense-in-depth)
-builder.Services.AddAuthentication(Microsoft.AspNetCore.Authentication.JwtBearer.JwtBearerDefaults.AuthenticationScheme)
-    .AddMicrosoftIdentityWebApi(builder.Configuration.GetSection("AzureAd"));
+// Authentication — validate incoming JWT Bearer tokens (ASI03 — defense-in-depth)
+var azureAdClientId = builder.Configuration.GetValue<string>("AzureAd:ClientId") ?? string.Empty;
+var azureAdTenantId = builder.Configuration.GetValue<string>("AzureAd:TenantId") ?? string.Empty;
+var azureAdInstance = builder.Configuration.GetValue<string>("AzureAd:Instance") ?? "https://login.microsoftonline.com/";
+
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(options =>
+    {
+        options.Authority = $"{azureAdInstance.TrimEnd('/')}/{azureAdTenantId}/v2.0";
+        options.Audience = azureAdClientId;
+        options.TokenValidationParameters = new Microsoft.IdentityModel.Tokens.TokenValidationParameters
+        {
+            ValidateIssuer = true,
+            ValidateAudience = true,
+            ValidateLifetime = true,
+            ValidAudiences = new[] { azureAdClientId, $"api://{azureAdClientId}" },
+        };
+    });
 
 // Authorization policy: restrict to Chat.Api's agent identity (ASI07 — mutual A2A auth)
 var chatApiAgentIdentityId = builder.Configuration.GetValue<string>("Biotrackr:ChatApiAgentIdentityId") ?? string.Empty;
