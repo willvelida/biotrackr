@@ -88,7 +88,14 @@ builder.Services.AddHttpClient("ReportingApi", client =>
         client.DefaultRequestHeaders.Add("Ocp-Apim-Subscription-Key", subscriptionKey);
     }
 }).AddHttpMessageHandler<AgentIdentityTokenHandler>()
-.AddStandardResilienceHandler();
+.AddStandardResilienceHandler(options =>
+{
+    // Allow longer timeouts for Reporting.Api cold starts (scale-to-zero Container App + sidecar)
+    options.TotalRequestTimeout.Timeout = TimeSpan.FromMinutes(3);
+    options.AttemptTimeout.Timeout = TimeSpan.FromSeconds(90);
+    options.Retry.MaxRetryAttempts = 3;
+    options.Retry.Delay = TimeSpan.FromSeconds(5);
+});
 
 builder.Services.AddSingleton<ReportReviewerService>();
 builder.Services.AddSingleton<RequestReportTool>();
