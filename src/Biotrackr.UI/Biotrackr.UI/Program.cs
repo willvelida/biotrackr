@@ -29,11 +29,8 @@ if (!string.IsNullOrWhiteSpace(azureAppConfigEndpoint))
     builder.Configuration.AddAzureAppConfiguration(config =>
     {
         config.Connect(new Uri(azureAppConfigEndpoint), credential)
-        .Select(keyFilter: KeyFilter.Any, LabelFilter.Null)
-        .ConfigureKeyVault(kv =>
-        {
-            kv.SetCredential(credential);
-        });
+        .Select("biotrackrapiendpoint", LabelFilter.Null)
+        .Select("biotrackrapisubscriptionkey", LabelFilter.Null);
     });
 }
 
