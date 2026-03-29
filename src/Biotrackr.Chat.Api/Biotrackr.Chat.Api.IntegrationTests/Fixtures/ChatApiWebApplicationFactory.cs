@@ -30,6 +30,9 @@ public class ChatApiWebApplicationFactory : WebApplicationFactory<Program>
         Environment.SetEnvironmentVariable("applicationinsightsconnectionstring", "InstrumentationKey=00000000-0000-0000-0000-000000000000");
         Environment.SetEnvironmentVariable("AzureAd:TenantId", "test-tenant");
         Environment.SetEnvironmentVariable("AzureAd:ClientId", "test-client");
+        Environment.SetEnvironmentVariable("Biotrackr:ReportingApiUrl", "https://localhost:5555");
+        Environment.SetEnvironmentVariable("Biotrackr:ReportingApiScope", "api://test/.default");
+        Environment.SetEnvironmentVariable("Biotrackr:ReviewerSystemPrompt", "");
 
         builder.UseEnvironment("Test");
 
@@ -41,6 +44,14 @@ public class ChatApiWebApplicationFactory : WebApplicationFactory<Program>
             {
                 services.Remove(factoryDescriptor);
             }
+
+            // Remove the real IAgentTokenProvider (depends on Azure Identity) and replace with a no-op
+            var tokenProviderDescriptor = services.SingleOrDefault(d => d.ServiceType == typeof(IAgentTokenProvider));
+            if (tokenProviderDescriptor != null)
+            {
+                services.Remove(tokenProviderDescriptor);
+            }
+            services.AddSingleton<IAgentTokenProvider, NoOpAgentTokenProvider>();
 
             // Register a test factory that returns a Cosmos Client connected to the local emulator
             services.AddScoped<ICosmosClientFactory, EmulatorCosmosClientFactory>();
@@ -71,5 +82,14 @@ public class ChatApiWebApplicationFactory : WebApplicationFactory<Program>
                     })
                 });
         }
+    }
+
+    /// <summary>
+    /// No-op token provider for integration tests — skips Azure Identity.
+    /// </summary>
+    private class NoOpAgentTokenProvider : IAgentTokenProvider
+    {
+        public Task<string?> AcquireTokenForReportingApiAsync(CancellationToken cancellationToken = default)
+            => Task.FromResult<string?>(null);
     }
 }

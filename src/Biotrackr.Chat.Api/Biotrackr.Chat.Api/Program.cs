@@ -93,6 +93,7 @@ builder.Services.AddHttpClient("ReportingApi", client =>
     // Allow longer timeouts for Reporting.Api cold starts (scale-to-zero Container App + sidecar)
     options.TotalRequestTimeout.Timeout = TimeSpan.FromMinutes(3);
     options.AttemptTimeout.Timeout = TimeSpan.FromSeconds(90);
+    options.CircuitBreaker.SamplingDuration = TimeSpan.FromMinutes(3);
     options.Retry.MaxRetryAttempts = 3;
     options.Retry.Delay = TimeSpan.FromSeconds(5);
 });
