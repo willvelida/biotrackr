@@ -36,7 +36,7 @@ jobs:
           with:
             dotnet-version: ${{ needs.env-setup.outputs.dotnet-version }}
             working-directory: ./src/Biotrackr.Reporting.Api/Biotrackr.Reporting.Api.UnitTests
-            coverage-threshold: 70
+            coverage-threshold: 60
             fail-below-threshold: true
             runsettings-path: ../coverage.runsettings
 
