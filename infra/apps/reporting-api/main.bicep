@@ -137,6 +137,14 @@ module reportingApi '../../modules/host/container-app-http-sidecar.bicep' = {
         name: 'BlobStorageEndpoint'
         value: storageAccount.properties.primaryEndpoints.blob
       }
+      {
+        name: 'AzureAd__ClientId'
+        value: !empty(agentBlueprintClientId) ? agentBlueprintClientId : ''
+      }
+      {
+        name: 'AzureAd__TenantId'
+        value: tenantId
+      }
     ]
     sidecarContainers: [
       {

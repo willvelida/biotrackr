@@ -18,4 +18,5 @@ param apimName = 'api-biotrackr-dev'
 param keyVaultName = 'kv-biotrackr-dev'
 param enableManagedIdentityAuth = true
 param tenantId = ''
+param agentBlueprintClientId = '1d7df96b-ba77-459b-a777-8de9e94206d8'
 param storageAccountName = 'stbiotrackrreportsdev'
