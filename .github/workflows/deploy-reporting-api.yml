@@ -65,16 +65,52 @@ jobs:
     build-sidecar-image-dev:
           name: Build and Push Sidecar Image
           needs: [run-unit-tests, run-contract-tests]
-          uses: willvelida/biotrackr/.github/workflows/template-acr-push-image.yml@main
-          with:
-            working-directory: ./src/Biotrackr.Reporting.Api
-            app-name: biotrackr-copilot-python
-            dockerfile: Dockerfile.sidecar
-          secrets:
-            client-id: ${{ secrets.AZURE_CLIENT_ID }}
-            tenant-id: ${{ secrets.AZURE_TENANT_ID }}
-            subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-            resource-group-name: ${{ secrets.AZURE_RG_NAME_DEV }}
+          runs-on: ubuntu-latest
+          defaults:
+            run:
+              working-directory: ./src/Biotrackr.Reporting.Api
+          steps:
+            - name: Checkout code
+              uses: actions/checkout@v5
+
+            - name: Azure login
+              uses: azure/login@v2
+              with:
+                client-id: ${{ secrets.AZURE_CLIENT_ID }}
+                tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+                subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+            - name: Set up Docker Buildx
+              uses: docker/setup-buildx-action@v4
+
+            - name: Get ACR details
+              id: acr
+              run: |
+                acrName=$(az acr list --resource-group ${{ secrets.AZURE_RG_NAME_DEV }} --query "[0].name" -o tsv)
+                loginServer=$(az acr list --resource-group ${{ secrets.AZURE_RG_NAME_DEV }} --query "[0].loginServer" -o tsv)
+                echo "acrName=$acrName" >> "$GITHUB_OUTPUT"
+                echo "loginServer=$loginServer" >> "$GITHUB_OUTPUT"
+
+            - name: Login to Azure Container Registry
+              run: az acr login --name ${{ steps.acr.outputs.acrName }}
+
+            - name: Build Docker image
+              run: |
+                docker build -f Dockerfile.sidecar -t ${{ steps.acr.outputs.loginServer }}/biotrackr-copilot-python:${{ github.sha }} .
+
+            - name: Run Trivy vulnerability scanner
+              uses: aquasecurity/trivy-action@0.35.0
+              with:
+                image-ref: ${{ steps.acr.outputs.loginServer }}/biotrackr-copilot-python:${{ github.sha }}
+                format: 'table'
+                exit-code: '1'
+                ignore-unfixed: true
+                vuln-type: 'os,library'
+                severity: 'CRITICAL,HIGH'
+
+            - name: Push Docker image
+              run: |
+                docker push ${{ steps.acr.outputs.loginServer }}/biotrackr-copilot-python:${{ github.sha }}
 
     retrieve-container-image-dev:
         name: Retrieve Container Image
