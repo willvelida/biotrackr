@@ -20,23 +20,6 @@ var resourceBuilder = ResourceBuilder.CreateDefault().AddAttributes(resourceAttr
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Configuration.AddEnvironmentVariables();
-var managedIdentityClientId = builder.Configuration.GetValue<string>("managedidentityclientid");
-var azureAppConfigEndpoint = builder.Configuration.GetValue<string>("azureappconfigendpoint");
-
-if (!string.IsNullOrWhiteSpace(azureAppConfigEndpoint))
-{
-    var credential = new ManagedIdentityCredential(managedIdentityClientId);
-    builder.Configuration.AddAzureAppConfiguration(config =>
-    {
-        config.Connect(new Uri(azureAppConfigEndpoint), credential)
-        .Select("biotrackrapiendpoint", LabelFilter.Null)
-        .Select("biotrackrapisubscriptionkey", LabelFilter.Null);
-        config.ConfigureStartupOptions(startup =>
-        {
-            startup.Timeout = TimeSpan.FromSeconds(60);
-        });
-    });
-}
 
 builder.Services.AddOptions<BiotrackrApiSettings>()
     .Configure<IConfiguration>((settings, configuration) =>
