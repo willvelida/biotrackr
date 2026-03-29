@@ -44,7 +44,7 @@ builder.Configuration.AddEnvironmentVariables();
 builder.Services.Configure<Settings>(builder.Configuration.GetSection("Biotrackr"));
 
 // Authentication with Microsoft Identity Web (ASI03 — defense-in-depth)
-builder.Services.AddAuthentication()
+builder.Services.AddAuthentication(Microsoft.AspNetCore.Authentication.JwtBearer.JwtBearerDefaults.AuthenticationScheme)
     .AddMicrosoftIdentityWebApi(builder.Configuration.GetSection("AzureAd"));
 
 // Authorization policy: restrict to Chat.Api's agent identity (ASI07 — mutual A2A auth)

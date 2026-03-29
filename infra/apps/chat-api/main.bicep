@@ -98,6 +98,17 @@ module chatApi '../../modules/host/container-app-http.bicep' = {
     targetPort: 8080
     healthProbes: [
       {
+        type: 'Startup'
+        httpGet: {
+          port: 8080
+          path: '/healthz/liveness'
+        }
+        initialDelaySeconds: 5
+        periodSeconds: 5
+        failureThreshold: 30
+        timeoutSeconds: 3
+      }
+      {
         type: 'Liveness'
         httpGet: {
           port: 8080
