@@ -410,6 +410,6 @@ resource reportGeneratorSystemPromptSetting 'Microsoft.AppConfiguration/configur
   parent: appConfig
   properties: {
     contentType: 'application/vnd.microsoft.appconfig.keyvaultref+json;charset=utf-8'
-    value: '{"uri":"${keyVault.properties.vaultUri}secrets/ReportGeneratorSystemPrompt"}'
+    value: '{"uri":"${keyVault.properties.vaultUri}secrets/ReportGeneratorPrompt"}'
   }
 }
