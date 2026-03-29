@@ -404,15 +404,6 @@ resource azureAdClientIdSetting 'Microsoft.AppConfiguration/configurationStores/
   }
 }
 
-// GitHub Copilot Token stored in Key Vault (referenced by Container App secret)
-resource gitHubCopilotTokenSecret 'Microsoft.KeyVault/vaults/secrets@2023-07-01' = {
-  name: 'GitHubCopilotToken'
-  parent: keyVault
-  properties: {
-    value: '' // Populated manually or via deployment pipeline
-  }
-}
-
 // App Configuration: Report Generator System Prompt (Key Vault reference)
 resource reportGeneratorSystemPromptSetting 'Microsoft.AppConfiguration/configurationStores/keyValues@2025-02-01-preview' = {
   name: 'Biotrackr:ReportGeneratorSystemPrompt'
