@@ -82,11 +82,6 @@ builder.Services.AddHttpClient("ReportingApi", client =>
     {
         client.BaseAddress = new Uri(reportingApiUrl);
     }
-    var subscriptionKey = builder.Configuration.GetValue<string>("Biotrackr:ApiSubscriptionKey");
-    if (!string.IsNullOrWhiteSpace(subscriptionKey))
-    {
-        client.DefaultRequestHeaders.Add("Ocp-Apim-Subscription-Key", subscriptionKey);
-    }
 }).AddHttpMessageHandler<AgentIdentityTokenHandler>()
 .AddStandardResilienceHandler(options =>
 {

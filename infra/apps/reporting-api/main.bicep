@@ -334,12 +334,12 @@ module reportingApiProduct '../../modules/apim/apim-products.bicep' = {
   }
 }
 
-// App Configuration: Reporting API APIM gateway URL
+// App Configuration: Reporting API internal URL (direct A2A, bypasses APIM)
 resource reportingApiEndpointSetting 'Microsoft.AppConfiguration/configurationStores/keyValues@2025-02-01-preview' = {
   name: reportingApiEndpointConfigName
   parent: appConfig
   properties: {
-    value: '${apim.properties.gatewayUrl}/reporting'
+    value: 'https://${reportingApi.outputs.fqdn}'
   }
 }
 
