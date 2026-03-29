@@ -1,0 +1,72 @@
+name: Build Copilot Python Sidecar Image
+
+on:
+    workflow_dispatch:
+
+permissions:
+    contents: write
+    id-token: write
+    pull-requests: write
+    checks: write
+    packages: read
+
+env:
+  APP_NAME: biotrackr-copilot-python
+  WORKING_DIRECTORY: ./src/Biotrackr.Reporting.Api
+
+jobs:
+    build-sidecar-image:
+      name: Build and Push Sidecar Image
+      runs-on: ubuntu-latest
+      defaults:
+        run:
+          working-directory: ${{ env.WORKING_DIRECTORY }}
+      steps:
+        - name: Checkout code
+          uses: actions/checkout@v5
+
+        - name: Azure login
+          uses: azure/login@v2
+          with:
+            client-id: ${{ secrets.AZURE_CLIENT_ID }}
+            tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+            subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+        - name: Set up Docker Buildx
+          uses: docker/setup-buildx-action@v4
+
+        - name: Get ACR name
+          id: getacrname
+          run: |
+            acrName=$(az acr list --resource-group ${{ secrets.AZURE_RG_NAME_DEV }} --query "[0].name" -o tsv)
+            echo "acrName=$acrName" >> "$GITHUB_OUTPUT"
+
+        - name: Get ACR Server
+          id: getacrserver
+          run: |
+            loginServer=$(az acr list --resource-group ${{ secrets.AZURE_RG_NAME_DEV }} --query "[0].loginServer" -o tsv)
+            echo "loginServer=$loginServer" >> "$GITHUB_OUTPUT"
+
+        - name: Login to Azure Container Registry
+          run: az acr login --name ${{ steps.getacrname.outputs.acrName }}
+
+        - name: Login to GitHub Container Registry
+          run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+
+        - name: Build Docker image
+          run: |
+            docker build -f Dockerfile.sidecar -t ${{ steps.getacrserver.outputs.loginServer }}/${{ env.APP_NAME }}:${{ github.sha }} .
+
+        - name: Run Trivy vulnerability scanner
+          uses: aquasecurity/trivy-action@0.35.0
+          with:
+            image-ref: ${{ steps.getacrserver.outputs.loginServer }}/${{ env.APP_NAME }}:${{ github.sha }}
+            format: 'table'
+            exit-code: '1'
+            ignore-unfixed: true
+            vuln-type: 'os,library'
+            severity: 'CRITICAL,HIGH'
+
+        - name: Push Docker image
+          run: |
+            docker push ${{ steps.getacrserver.outputs.loginServer }}/${{ env.APP_NAME }}:${{ github.sha }}

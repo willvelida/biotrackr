@@ -72,6 +72,34 @@ builder.Services.AddMemoryCache();
 builder.Services.AddSingleton<IMcpToolService, McpToolService>();
 builder.Services.AddHostedService(sp => (McpToolService)sp.GetRequiredService<IMcpToolService>());
 
+// Reporting tools — native function tools for report generation and retrieval
+builder.Services.AddSingleton<IAgentTokenProvider, AgentTokenProvider>();
+builder.Services.AddTransient<AgentIdentityTokenHandler>();
+builder.Services.AddHttpClient("ReportingApi", client =>
+{
+    var reportingApiUrl = builder.Configuration.GetValue<string>("Biotrackr:ReportingApiUrl");
+    if (!string.IsNullOrWhiteSpace(reportingApiUrl))
+    {
+        client.BaseAddress = new Uri(reportingApiUrl);
+    }
+}).AddHttpMessageHandler<AgentIdentityTokenHandler>()
+.AddStandardResilienceHandler(options =>
+{
+    // Allow longer timeouts for Reporting.Api cold starts (scale-to-zero Container App + sidecar)
+    options.TotalRequestTimeout.Timeout = TimeSpan.FromMinutes(3);
+    options.AttemptTimeout.Timeout = TimeSpan.FromSeconds(90);
+    options.CircuitBreaker.SamplingDuration = TimeSpan.FromMinutes(3);
+    options.Retry.MaxRetryAttempts = 5;
+    options.Retry.Delay = TimeSpan.FromSeconds(15);
+    options.Retry.BackoffType = Polly.DelayBackoffType.Linear;
+});
+
+builder.Services.AddSingleton<ReportReviewerService>();
+builder.Services.AddSingleton<RequestReportTool>();
+builder.Services.AddSingleton<GetReportStatusTool>();
+builder.Services.AddSingleton<AIFunction>(sp => sp.GetRequiredService<RequestReportTool>().AsAIFunction());
+builder.Services.AddSingleton<AIFunction>(sp => sp.GetRequiredService<GetReportStatusTool>().AsAIFunction());
+
 // OpenTelemetry
 var appInsightsConnectionString = builder.Configuration["applicationinsightsconnectionstring"];
 

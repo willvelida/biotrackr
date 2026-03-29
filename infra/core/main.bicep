@@ -125,3 +125,13 @@ module apim '../modules/apim/apim-consumption.bicep' = {
     logAnalyticsName: logAnalytics.outputs.logAnalyticsName
   }
 }
+
+module reportStorage '../modules/storage/storage-account.bicep' = {
+  name: 'report-storage'
+  params: {
+    storageAccountName: 'st${replace(baseName, '-', '')}reports${environment}'
+    location: location
+    tags: tags
+    uaiPrincipalId: uai.outputs.prinicpalId
+  }
+}

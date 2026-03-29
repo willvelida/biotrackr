@@ -143,6 +143,8 @@ namespace Biotrackr.Chat.Api.UnitTests.Services
             var serviceProvider = new Mock<IServiceProvider>();
             serviceProvider.Setup(sp => sp.GetService(typeof(IChatHistoryRepository)))
                 .Returns(chatHistoryRepo.Object);
+            serviceProvider.Setup(sp => sp.GetService(typeof(IEnumerable<AIFunction>)))
+                .Returns(Enumerable.Empty<AIFunction>());
 
             return new ChatAgentProvider(toolService, cache, loggerFactory, settings, serviceProvider.Object);
         }

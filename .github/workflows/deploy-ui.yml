@@ -96,26 +96,9 @@ jobs:
       resource-group-name: ${{ secrets.AZURE_RG_NAME_DEV }}
       easy-auth-client-id: ${{ secrets.EASY_AUTH_CLIENT_ID }}
 
-  preview:
-    name: Preview Changes
-    needs: [validate, retrieve-container-image-dev]
-    uses: ./.github/workflows/template-bicep-whatif.yml
-    with:
-      scope: resourceGroup
-      template-file: './infra/apps/ui/main.bicep'
-      parameters-file: ./infra/apps/ui/main.dev.bicepparam
-      parameters: '{"imageName": "${{ needs.retrieve-container-image-dev.outputs.loginServer }}/biotrackr-ui:${{ github.sha }}"}'
-      inject-easy-auth-config: true
-    secrets:
-      client-id: ${{ secrets.AZURE_CLIENT_ID }}
-      tenant-id: ${{ secrets.AZURE_TENANT_ID }}
-      subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-      resource-group-name: ${{ secrets.AZURE_RG_NAME_DEV }}
-      easy-auth-client-id: ${{ secrets.EASY_AUTH_CLIENT_ID }}
-
   deploy-dev:
     name: Deploy Template to Dev
-    needs: [preview, retrieve-container-image-dev]
+    needs: [validate, retrieve-container-image-dev]
     uses: ./.github/workflows/template-bicep-deploy.yml
     with:
       template-file: './infra/apps/ui/main.bicep'

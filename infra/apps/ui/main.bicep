@@ -111,12 +111,12 @@ module ui '../../modules/host/container-app-http.bicep' = {
     ]
     envVariables: [
       {
-        name: 'azureappconfigendpoint'
-        value: appConfig.properties.endpoint
+        name: 'biotrackrapiendpoint'
+        value: apim.properties.gatewayUrl
       }
       {
-        name: 'managedidentityclientid'
-        value: uai.properties.clientId
+        name: 'biotrackrapisubscriptionkey'
+        value: uiApimSubscription.listSecrets().primaryKey
       }
       {
         name: 'applicationinsightsconnectionstring'

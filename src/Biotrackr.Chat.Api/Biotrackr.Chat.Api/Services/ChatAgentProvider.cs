@@ -108,6 +108,11 @@ namespace Biotrackr.Chat.Api.Services
                 .Select(tool => CachingMcpToolWrapper.Wrap(tool, _memoryCache, cachingLogger))
                 .ToList();
 
+            // Add native report tools (RequestReport, GetReportStatus)
+            var reportTools = _serviceProvider.GetServices<AIFunction>()
+                .Where(f => f.Name is "RequestReport" or "GetReportStatus");
+            wrappedTools.AddRange(reportTools);
+
             AnthropicClient anthropicClient = new() { ApiKey = _settings.AnthropicApiKey };
 
             AIAgent chatAgent = anthropicClient.AsAIAgent(
