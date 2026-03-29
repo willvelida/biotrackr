@@ -55,6 +55,9 @@ param agentIdentityId string
 @description('Email address for agent alert notifications')
 param alertEmailAddress string
 
+@description('The application (client) ID of the Reporting.Api agent identity blueprint for A2A auth scope')
+param reportingAgentBlueprintAppId string = ''
+
 resource uai 'Microsoft.ManagedIdentity/userAssignedIdentities@2023-01-31' existing = {
   name: uaiName
 }
@@ -401,6 +404,43 @@ resource agentIdentityIdSetting 'Microsoft.AppConfiguration/configurationStores/
   parent: appConfig
   properties: {
     value: agentIdentityId
+  }
+}
+
+// App Configuration: Reviewer system prompt (Key Vault reference) — used by Chat.Api's Reviewer Agent
+resource reviewerSystemPromptSetting 'Microsoft.AppConfiguration/configurationStores/keyValues@2025-02-01-preview' = {
+  name: 'Biotrackr:ReviewerSystemPrompt'
+  parent: appConfig
+  properties: {
+    contentType: 'application/vnd.microsoft.appconfig.keyvaultref+json;charset=utf-8'
+    value: '{"uri":"${keyVault.properties.vaultUri}secrets/ReviewerSystemPrompt"}'
+  }
+}
+
+// App Configuration: Reporting API URL — used by Chat.Api's report tools
+resource reportingApiUrlSetting 'Microsoft.AppConfiguration/configurationStores/keyValues@2025-02-01-preview' = {
+  name: 'Biotrackr:ReportingApiUrl'
+  parent: appConfig
+  properties: {
+    value: '' // Set after Reporting.Api is deployed (cross-service dependency)
+  }
+}
+
+// App Configuration: Reporting Blob Storage endpoint — used by Chat.Api's GetReportStatus tool
+resource reportingBlobStorageEndpointSetting 'Microsoft.AppConfiguration/configurationStores/keyValues@2025-02-01-preview' = {
+  name: 'Biotrackr:ReportingBlobStorageEndpoint'
+  parent: appConfig
+  properties: {
+    value: '' // Set after Storage Account is deployed (cross-service dependency)
+  }
+}
+
+// App Configuration: Reporting API scope for agent identity token acquisition (ASI07)
+resource reportingApiScopeSetting 'Microsoft.AppConfiguration/configurationStores/keyValues@2025-02-01-preview' = {
+  name: 'Biotrackr:ReportingApiScope'
+  parent: appConfig
+  properties: {
+    value: !empty(reportingAgentBlueprintAppId) ? 'api://${reportingAgentBlueprintAppId}/.default' : ''
   }
 }
 

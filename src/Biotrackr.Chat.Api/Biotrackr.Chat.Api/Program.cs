@@ -72,6 +72,30 @@ builder.Services.AddMemoryCache();
 builder.Services.AddSingleton<IMcpToolService, McpToolService>();
 builder.Services.AddHostedService(sp => (McpToolService)sp.GetRequiredService<IMcpToolService>());
 
+// Reporting tools — native function tools for report generation and retrieval
+builder.Services.AddSingleton<IAgentTokenProvider, AgentTokenProvider>();
+builder.Services.AddTransient<AgentIdentityTokenHandler>();
+builder.Services.AddHttpClient("ReportingApi", client =>
+{
+    var reportingApiUrl = builder.Configuration.GetValue<string>("Biotrackr:ReportingApiUrl");
+    if (!string.IsNullOrWhiteSpace(reportingApiUrl))
+    {
+        client.BaseAddress = new Uri(reportingApiUrl);
+    }
+    var subscriptionKey = builder.Configuration.GetValue<string>("Biotrackr:ApiSubscriptionKey");
+    if (!string.IsNullOrWhiteSpace(subscriptionKey))
+    {
+        client.DefaultRequestHeaders.Add("Ocp-Apim-Subscription-Key", subscriptionKey);
+    }
+}).AddHttpMessageHandler<AgentIdentityTokenHandler>()
+.AddStandardResilienceHandler();
+
+builder.Services.AddSingleton<ReportReviewerService>();
+builder.Services.AddSingleton<RequestReportTool>();
+builder.Services.AddSingleton<GetReportStatusTool>();
+builder.Services.AddSingleton<AIFunction>(sp => sp.GetRequiredService<RequestReportTool>().AsAIFunction());
+builder.Services.AddSingleton<AIFunction>(sp => sp.GetRequiredService<GetReportStatusTool>().AsAIFunction());
+
 // OpenTelemetry
 var appInsightsConnectionString = builder.Configuration["applicationinsightsconnectionstring"];
 
