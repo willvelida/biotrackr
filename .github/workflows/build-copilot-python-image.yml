@@ -1,11 +1,6 @@
 name: Build Copilot Python Sidecar Image
 
 on:
-    pull_request:
-        branches:
-            - main
-        paths:
-            - 'src/Biotrackr.Reporting.Api/Dockerfile.sidecar'
     workflow_dispatch:
 
 permissions:
