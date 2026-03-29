@@ -31,6 +31,10 @@ if (!string.IsNullOrWhiteSpace(azureAppConfigEndpoint))
         config.Connect(new Uri(azureAppConfigEndpoint), credential)
         .Select("biotrackrapiendpoint", LabelFilter.Null)
         .Select("biotrackrapisubscriptionkey", LabelFilter.Null);
+        config.ConfigureStartupOptions(startup =>
+        {
+            startup.Timeout = TimeSpan.FromSeconds(60);
+        });
     });
 }
 
