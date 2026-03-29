@@ -96,14 +96,6 @@ builder.Services.AddSingleton<IBlobStorageService, BlobStorageService>();
 builder.Services.AddSingleton<ICopilotService, CopilotService>();
 builder.Services.AddSingleton<IReportGenerationService, ReportGenerationService>();
 
-// Register the report generation agent backed by Copilot SDK
-// System prompt loaded from Key Vault via App Config (same pattern as Chat.Api)
-var reportGeneratorPrompt = builder.Configuration.GetValue<string>("Biotrackr:ReportGeneratorSystemPrompt")
-    ?? "You are a report generation agent. You receive structured health data and generate Python scripts to produce PDF reports and chart images.";
-
-var reportAgent = builder.AddAIAgent("report-generator",
-    instructions: reportGeneratorPrompt);
-
 var app = builder.Build();
 
 // Authentication & authorization middleware (ASI03)
@@ -112,11 +104,6 @@ app.UseAuthorization();
 
 // Health check endpoint (no auth — used by Container Apps probes)
 app.MapGet("/api/healthz", () => Results.Ok(new { status = "healthy" })).AllowAnonymous();
-
-// A2A endpoint — exposes the report agent via A2A protocol
-// Agent card: GET /a2a/report/v1/card
-// Messages: POST /a2a/report/v1/message:stream
-app.MapA2AEndpoints(reportAgent);
 
 // Report generation endpoint (202 async pattern)
 app.MapGenerateEndpoints();
