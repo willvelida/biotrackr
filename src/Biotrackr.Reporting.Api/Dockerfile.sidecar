@@ -29,5 +29,4 @@ USER copilot
 
 EXPOSE 4321
 
-ENTRYPOINT ["copilot", "--headless", "--port", "4321", "--bind", "0.0.0.0", \
-            "--auth-token-env", "GITHUB_TOKEN", "--no-auto-update"]
+ENTRYPOINT ["copilot", "--headless", "--port", "4321"]
