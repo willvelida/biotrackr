@@ -62,9 +62,23 @@ jobs:
             subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
             resource-group-name: ${{ secrets.AZURE_RG_NAME_DEV }}
 
+    build-sidecar-image-dev:
+          name: Build and Push Sidecar Image
+          needs: [run-unit-tests, run-contract-tests]
+          uses: willvelida/biotrackr/.github/workflows/template-acr-push-image.yml@main
+          with:
+            working-directory: ./src/Biotrackr.Reporting.Api
+            app-name: biotrackr-copilot-python
+            dockerfile: Dockerfile.sidecar
+          secrets:
+            client-id: ${{ secrets.AZURE_CLIENT_ID }}
+            tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+            subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+            resource-group-name: ${{ secrets.AZURE_RG_NAME_DEV }}
+
     retrieve-container-image-dev:
         name: Retrieve Container Image
-        needs: build-container-image-dev
+        needs: [build-container-image-dev, build-sidecar-image-dev]
         runs-on: ubuntu-latest
         outputs:
           loginServer: ${{ steps.get-acr-server.outputs.loginServer }}
@@ -96,7 +110,7 @@ jobs:
         with:
           template-file: './infra/apps/reporting-api/main.bicep'
           parameters-file: ./infra/apps/reporting-api/main.dev.bicepparam
-          parameters: '{"imageName": "${{ needs.retrieve-container-image-dev.outputs.loginServer }}/biotrackr-reporting-api:${{ github.sha }}", "sidecarImageName": "${{ needs.retrieve-container-image-dev.outputs.loginServer }}/biotrackr-copilot-python:latest"}'
+          parameters: '{"imageName": "${{ needs.retrieve-container-image-dev.outputs.loginServer }}/biotrackr-reporting-api:${{ github.sha }}", "sidecarImageName": "${{ needs.retrieve-container-image-dev.outputs.loginServer }}/biotrackr-copilot-python:${{ github.sha }}"}'
           scope: resourceGroup
           inject-tenant-id: true
         secrets:
@@ -113,7 +127,7 @@ jobs:
           scope: resourceGroup
           template-file: './infra/apps/reporting-api/main.bicep'
           parameters-file: ./infra/apps/reporting-api/main.dev.bicepparam
-          parameters: '{"imageName": "${{ needs.retrieve-container-image-dev.outputs.loginServer }}/biotrackr-reporting-api:${{ github.sha }}", "sidecarImageName": "${{ needs.retrieve-container-image-dev.outputs.loginServer }}/biotrackr-copilot-python:latest"}'
+          parameters: '{"imageName": "${{ needs.retrieve-container-image-dev.outputs.loginServer }}/biotrackr-reporting-api:${{ github.sha }}", "sidecarImageName": "${{ needs.retrieve-container-image-dev.outputs.loginServer }}/biotrackr-copilot-python:${{ github.sha }}"}'
           inject-tenant-id: true
         secrets:
           client-id: ${{ secrets.AZURE_CLIENT_ID }}
@@ -128,7 +142,7 @@ jobs:
         with:
           template-file: './infra/apps/reporting-api/main.bicep'
           parameters-file: ./infra/apps/reporting-api/main.dev.bicepparam
-          parameters: '{"imageName": "${{ needs.retrieve-container-image-dev.outputs.loginServer }}/biotrackr-reporting-api:${{ github.sha }}", "sidecarImageName": "${{ needs.retrieve-container-image-dev.outputs.loginServer }}/biotrackr-copilot-python:latest"}'
+          parameters: '{"imageName": "${{ needs.retrieve-container-image-dev.outputs.loginServer }}/biotrackr-reporting-api:${{ github.sha }}", "sidecarImageName": "${{ needs.retrieve-container-image-dev.outputs.loginServer }}/biotrackr-copilot-python:${{ github.sha }}"}'
           scope: resourceGroup
           inject-tenant-id: true
           environment: dev
