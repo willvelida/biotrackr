@@ -36,10 +36,22 @@ namespace Biotrackr.Reporting.Api.Services
 
         public SessionConfig CreateSessionConfig()
         {
-            return new SessionConfig
+            var config = new SessionConfig
             {
                 OnPermissionRequest = HandlePermissionRequest,
             };
+
+            var systemPrompt = settings.Value.ReportGeneratorSystemPrompt;
+            if (!string.IsNullOrWhiteSpace(systemPrompt))
+            {
+                config.SystemMessage = new SystemMessageConfig
+                {
+                    Mode = SystemMessageMode.Append,
+                    Content = systemPrompt,
+                };
+            }
+
+            return config;
         }
 
         /// <summary>
