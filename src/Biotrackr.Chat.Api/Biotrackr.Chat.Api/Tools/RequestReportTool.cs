@@ -39,13 +39,20 @@ namespace Biotrackr.Chat.Api.Tools
         {
             _logger.LogInformation("RequestReport called: {ReportType} from {StartDate} to {EndDate}", reportType, startDate, endDate);
 
+            var snapshot = DeserializeSnapshot(sourceDataSnapshot);
+            if (snapshot is null)
+            {
+                _logger.LogError("Failed to parse sourceDataSnapshot ({Length} chars)", sourceDataSnapshot?.Length ?? 0);
+                return "Sorry, I couldn't process the health data for your report. Please try again.";
+            }
+
             var request = new
             {
                 reportType,
                 startDate,
                 endDate,
                 taskMessage,
-                sourceDataSnapshot = (object?)DeserializeSnapshot(sourceDataSnapshot) ?? new { }
+                sourceDataSnapshot = snapshot.Value
             };
 
             var response = await _httpClient.PostAsJsonAsync("/api/reports/generate", request);
@@ -74,14 +81,15 @@ namespace Biotrackr.Chat.Api.Tools
                 "Available report types: weekly_summary, monthly_summary, trend_analysis, diet_analysis, correlation_report.");
         }
 
-        private static object? DeserializeSnapshot(string sourceDataSnapshot)
+        private static JsonElement? DeserializeSnapshot(string sourceDataSnapshot)
         {
             if (string.IsNullOrWhiteSpace(sourceDataSnapshot))
                 return null;
 
             try
             {
-                return JsonSerializer.Deserialize<JsonElement>(sourceDataSnapshot);
+                using var doc = JsonDocument.Parse(sourceDataSnapshot);
+                return doc.RootElement.Clone();
             }
             catch (JsonException)
             {
