@@ -1,0 +1,552 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "metadata": {
+    "_generator": {
+      "name": "bicep",
+      "version": "0.36.1.42791",
+      "templateHash": "5198711002095936402"
+    }
+  },
+  "parameters": {
+    "name": {
+      "type": "string",
+      "metadata": {
+        "description": "The name of the Sleep Api application"
+      }
+    },
+    "imageName": {
+      "type": "string",
+      "metadata": {
+        "description": "The image that the Sleep Api will use"
+      }
+    },
+    "location": {
+      "type": "string",
+      "metadata": {
+        "description": "The region where the Sleep Api will be deployed"
+      }
+    },
+    "tags": {
+      "type": "object",
+      "metadata": {
+        "description": "The tags that will be applied to the Sleep Api"
+      }
+    },
+    "containerAppEnvironmentName": {
+      "type": "string",
+      "metadata": {
+        "description": "The name of the Container App Environment that this Sleep Api will be deployed to"
+      }
+    },
+    "containerRegistryName": {
+      "type": "string",
+      "metadata": {
+        "description": "The name of the Container Registry that this Sleep Api will pull images from"
+      }
+    },
+    "uaiName": {
+      "type": "string",
+      "metadata": {
+        "description": "The name of the user-assigned identity that the Sleep Api will use"
+      }
+    },
+    "appConfigName": {
+      "type": "string",
+      "metadata": {
+        "description": "The name of the App Config Store that the Sleep Api uses"
+      }
+    },
+    "cosmosDbAccountName": {
+      "type": "string",
+      "metadata": {
+        "description": "The name of the Cosmos DB account that this Sleep Api uses"
+      }
+    },
+    "apimName": {
+      "type": "string",
+      "metadata": {
+        "description": "The name of the API Management instance that this Api uses"
+      }
+    },
+    "enableManagedIdentityAuth": {
+      "type": "bool",
+      "defaultValue": true,
+      "metadata": {
+        "description": "Enable JWT validation for managed identity authentication"
+      }
+    },
+    "tenantId": {
+      "type": "string",
+      "metadata": {
+        "description": "Azure AD tenant ID for JWT issuer validation"
+      }
+    },
+    "jwtAudience": {
+      "type": "string",
+      "defaultValue": "[environment().authentication.audiences[0]]",
+      "metadata": {
+        "description": "JWT audience to validate (uses default Azure Management API audience)"
+      }
+    }
+  },
+  "variables": {
+    "openidConfigUrl": "[format('{0}{1}/v2.0/.well-known/openid-configuration', environment().authentication.loginEndpoint, parameters('tenantId'))]",
+    "jwtIssuer": "[format('{0}{1}/', environment().authentication.loginEndpoint, parameters('tenantId'))]",
+    "apiProductName": "Sleep",
+    "sleepApiEndpointConfigName": "Biotrackr:SleepApiUrl"
+  },
+  "resources": [
+    {
+      "type": "Microsoft.ApiManagement/service/apis",
+      "apiVersion": "2024-06-01-preview",
+      "name": "[format('{0}/{1}', parameters('apimName'), 'sleep')]",
+      "properties": {
+        "path": "sleep",
+        "displayName": "Sleep API",
+        "description": "Endpoints for Biotrackr Sleep API",
+        "subscriptionRequired": true,
+        "protocols": [
+          "https"
+        ],
+        "serviceUrl": "[format('https://{0}', reference(resourceId('Microsoft.Resources/deployments', 'sleep-api'), '2022-09-01').outputs.fqdn.value)]"
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Resources/deployments', 'sleep-api')]"
+      ]
+    },
+    {
+      "type": "Microsoft.ApiManagement/service/apis/policies",
+      "apiVersion": "2024-06-01-preview",
+      "name": "[format('{0}/{1}/{2}', parameters('apimName'), 'sleep', 'policy')]",
+      "properties": {
+        "value": "[if(parameters('enableManagedIdentityAuth'), '      <policies>\r\n        <inbound>\r\n          <base />\r\n          <choose>\r\n            <when condition=\"@(context.Request.Headers.GetValueOrDefault(\"Authorization\",\"\").StartsWith(\"Bearer \"))\">\r\n              <validate-jwt header-name=\"Authorization\" failed-validation-httpcode=\"401\" failed-validation-error-message=\"Unauthorized: Invalid or missing JWT token\">\r\n                <openid-config url=\"${openidConfigUrl}\" />\r\n                <audiences>\r\n                  <audience>${jwtAudience}</audience>\r\n                </audiences>\r\n                <issuers>\r\n                  <issuer>${jwtIssuer}</issuer>\r\n                </issuers>\r\n              </validate-jwt>\r\n            </when>\r\n            <otherwise>\r\n              <check-header name=\"Ocp-Apim-Subscription-Key\" failed-check-httpcode=\"401\" failed-check-error-message=\"Unauthorized: Missing or invalid subscription key\" />\r\n            </otherwise>\r\n          </choose>\r\n        </inbound>\r\n        <backend>\r\n          <base />\r\n        </backend>\r\n        <outbound>\r\n          <base />\r\n        </outbound>\r\n        <on-error>\r\n          <base />\r\n        </on-error>\r\n      </policies>\r\n      ', '      <policies>\r\n        <inbound>\r\n          <base />\r\n          <check-header name=\"Ocp-Apim-Subscription-Key\" failed-check-httpcode=\"401\" failed-check-error-message=\"Unauthorized: Missing or invalid subscription key\" />\r\n        </inbound>\r\n        <backend>\r\n          <base />\r\n        </backend>\r\n        <outbound>\r\n          <base />\r\n        </outbound>\r\n        <on-error>\r\n          <base />\r\n        </on-error>\r\n      </policies>\r\n      ')]",
+        "format": "xml"
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.ApiManagement/service/apis', parameters('apimName'), 'sleep')]"
+      ]
+    },
+    {
+      "type": "Microsoft.ApiManagement/service/apis/operations",
+      "apiVersion": "2024-06-01-preview",
+      "name": "[format('{0}/{1}/{2}', parameters('apimName'), 'sleep', 'sleep-getall')]",
+      "properties": {
+        "displayName": "GetAllSleeps",
+        "method": "GET",
+        "urlTemplate": "/",
+        "description": "Gets all sleep documents",
+        "request": {
+          "queryParameters": [
+            {
+              "name": "pageNumber",
+              "description": "The page number to retrieve (default: 1)",
+              "type": "integer",
+              "required": false,
+              "defaultValue": "1",
+              "values": []
+            },
+            {
+              "name": "pageSize",
+              "description": "The number of items per page (default: 20, max: 100)",
+              "type": "integer",
+              "required": false,
+              "defaultValue": "20",
+              "values": []
+            }
+          ]
+        }
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.ApiManagement/service/apis', parameters('apimName'), 'sleep')]"
+      ]
+    },
+    {
+      "type": "Microsoft.ApiManagement/service/apis/operations",
+      "apiVersion": "2024-06-01-preview",
+      "name": "[format('{0}/{1}/{2}', parameters('apimName'), 'sleep', 'sleep-getbydate')]",
+      "properties": {
+        "displayName": "GetSleepByDate",
+        "method": "get",
+        "urlTemplate": "/{date}",
+        "description": "Gets a sleep document by date",
+        "templateParameters": [
+          {
+            "name": "date",
+            "description": "The date for the activity summary in YYYY-MM-DD format",
+            "type": "string",
+            "required": true
+          }
+        ]
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.ApiManagement/service/apis', parameters('apimName'), 'sleep')]"
+      ]
+    },
+    {
+      "type": "Microsoft.ApiManagement/service/apis/operations",
+      "apiVersion": "2024-06-01-preview",
+      "name": "[format('{0}/{1}/{2}', parameters('apimName'), 'sleep', 'sleep-getbydaterange')]",
+      "properties": {
+        "displayName": "GetSleepsByDateRange",
+        "method": "GET",
+        "urlTemplate": "/range/{startDate}/{endDate}",
+        "description": "Gets paginated sleep documents within a date range",
+        "templateParameters": [
+          {
+            "name": "startDate",
+            "description": "The start date for the range in YYYY-MM-DD format",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "endDate",
+            "description": "The end date for the range in YYYY-MM-DD format",
+            "type": "string",
+            "required": true
+          }
+        ],
+        "request": {
+          "queryParameters": [
+            {
+              "name": "pageNumber",
+              "description": "The page number to retrieve (default: 1)",
+              "type": "integer",
+              "required": false,
+              "defaultValue": "1",
+              "values": []
+            },
+            {
+              "name": "pageSize",
+              "description": "The number of items per page (default: 20, max: 100)",
+              "type": "integer",
+              "required": false,
+              "defaultValue": "20",
+              "values": []
+            }
+          ]
+        }
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.ApiManagement/service/apis', parameters('apimName'), 'sleep')]"
+      ]
+    },
+    {
+      "type": "Microsoft.ApiManagement/service/apis/operations",
+      "apiVersion": "2024-06-01-preview",
+      "name": "[format('{0}/{1}/{2}', parameters('apimName'), 'sleep', 'sleep-healthcheck')]",
+      "properties": {
+        "displayName": "LivenessCheck",
+        "method": "GET",
+        "urlTemplate": "/healthz/liveness",
+        "description": "Liveness Health Check Endpoint"
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.ApiManagement/service/apis', parameters('apimName'), 'sleep')]"
+      ]
+    },
+    {
+      "type": "Microsoft.AppConfiguration/configurationStores/keyValues",
+      "apiVersion": "2025-02-01-preview",
+      "name": "[format('{0}/{1}', parameters('appConfigName'), variables('sleepApiEndpointConfigName'))]",
+      "properties": {
+        "value": "[format('{0}/sleep', reference(resourceId('Microsoft.ApiManagement/service', parameters('apimName')), '2024-06-01-preview').gatewayUrl)]"
+      }
+    },
+    {
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2022-09-01",
+      "name": "sleep-api",
+      "properties": {
+        "expressionEvaluationOptions": {
+          "scope": "inner"
+        },
+        "mode": "Incremental",
+        "parameters": {
+          "name": {
+            "value": "[parameters('name')]"
+          },
+          "location": {
+            "value": "[parameters('location')]"
+          },
+          "tags": {
+            "value": "[parameters('tags')]"
+          },
+          "containerAppEnvironmentName": {
+            "value": "[parameters('containerAppEnvironmentName')]"
+          },
+          "containerRegistryName": {
+            "value": "[parameters('containerRegistryName')]"
+          },
+          "imageName": {
+            "value": "[parameters('imageName')]"
+          },
+          "uaiName": {
+            "value": "[parameters('uaiName')]"
+          },
+          "targetPort": {
+            "value": 8080
+          },
+          "healthProbes": {
+            "value": [
+              {
+                "type": "Liveness",
+                "httpGet": {
+                  "port": 8080,
+                  "path": "/healthz/liveness"
+                },
+                "initialDelaySeconds": 15,
+                "periodSeconds": 30,
+                "failureThreshold": 3,
+                "timeoutSeconds": 1
+              }
+            ]
+          },
+          "envVariables": {
+            "value": [
+              {
+                "name": "azureappconfigendpoint",
+                "value": "[reference(resourceId('Microsoft.AppConfiguration/configurationStores', parameters('appConfigName')), '2024-05-01').endpoint]"
+              },
+              {
+                "name": "managedidentityclientid",
+                "value": "[reference(resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', parameters('uaiName')), '2023-01-31').clientId]"
+              },
+              {
+                "name": "cosmosdbendpoint",
+                "value": "[reference(resourceId('Microsoft.DocumentDB/databaseAccounts', parameters('cosmosDbAccountName')), '2024-11-15').documentEndpoint]"
+              }
+            ]
+          }
+        },
+        "template": {
+          "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+          "contentVersion": "1.0.0.0",
+          "metadata": {
+            "_generator": {
+              "name": "bicep",
+              "version": "0.36.1.42791",
+              "templateHash": "911193897816939224"
+            },
+            "name": "HTTP Container App",
+            "description": "Deploys a Container App with public ingress enabled"
+          },
+          "parameters": {
+            "name": {
+              "type": "string",
+              "metadata": {
+                "description": "The name of the Container App"
+              }
+            },
+            "location": {
+              "type": "string",
+              "metadata": {
+                "description": "The location that the Container App will be deployed to"
+              }
+            },
+            "tags": {
+              "type": "object",
+              "metadata": {
+                "description": "The tags that will be applied to the Container App"
+              }
+            },
+            "containerAppEnvironmentName": {
+              "type": "string",
+              "metadata": {
+                "description": "The name of the Container App Environment that this Container App will be deployed to"
+              }
+            },
+            "containerRegistryName": {
+              "type": "string",
+              "metadata": {
+                "description": "The name of the Container Registry that this Container App will pull images from"
+              }
+            },
+            "uaiName": {
+              "type": "string",
+              "metadata": {
+                "description": "The name of the user-assigned identity that this Container App will use"
+              }
+            },
+            "imageName": {
+              "type": "string",
+              "metadata": {
+                "description": "The Container Image that this Container App will use"
+              }
+            },
+            "targetPort": {
+              "type": "int",
+              "metadata": {
+                "description": "The target port that this Container App uses"
+              }
+            },
+            "envVariables": {
+              "type": "array",
+              "defaultValue": [],
+              "metadata": {
+                "description": "The Environment variables for this Container App"
+              }
+            },
+            "healthProbes": {
+              "type": "array",
+              "defaultValue": [],
+              "metadata": {
+                "description": "The Health Probes configured for this Container App"
+              }
+            }
+          },
+          "resources": [
+            {
+              "type": "Microsoft.App/containerApps",
+              "apiVersion": "2024-03-01",
+              "name": "[parameters('name')]",
+              "location": "[parameters('location')]",
+              "tags": "[parameters('tags')]",
+              "properties": {
+                "environmentId": "[resourceId('Microsoft.App/managedEnvironments', parameters('containerAppEnvironmentName'))]",
+                "configuration": {
+                  "activeRevisionsMode": "Multiple",
+                  "ingress": {
+                    "external": true,
+                    "transport": "http",
+                    "targetPort": "[parameters('targetPort')]",
+                    "allowInsecure": false
+                  },
+                  "registries": [
+                    {
+                      "server": "[reference(resourceId('Microsoft.ContainerRegistry/registries', parameters('containerRegistryName')), '2023-07-01').loginServer]",
+                      "identity": "[resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', parameters('uaiName'))]"
+                    }
+                  ]
+                },
+                "template": {
+                  "containers": [
+                    {
+                      "name": "[parameters('name')]",
+                      "image": "[parameters('imageName')]",
+                      "env": "[parameters('envVariables')]",
+                      "probes": "[parameters('healthProbes')]",
+                      "resources": {
+                        "cpu": "[json('0.25')]",
+                        "memory": "0.5Gi"
+                      }
+                    }
+                  ],
+                  "scale": {
+                    "minReplicas": 0,
+                    "maxReplicas": 2,
+                    "rules": [
+                      {
+                        "name": "[format('http-rule-{0}', parameters('name'))]",
+                        "http": {
+                          "metadata": {
+                            "concurrentRequests": "100"
+                          }
+                        }
+                      }
+                    ]
+                  }
+                }
+              },
+              "identity": {
+                "type": "UserAssigned",
+                "userAssignedIdentities": {
+                  "[format('{0}', resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', parameters('uaiName')))]": {}
+                }
+              }
+            }
+          ],
+          "outputs": {
+            "fqdn": {
+              "type": "string",
+              "metadata": {
+                "description": "The FQDN of the deployed Container App"
+              },
+              "value": "[reference(resourceId('Microsoft.App/containerApps', parameters('name')), '2024-03-01').configuration.ingress.fqdn]"
+            }
+          }
+        }
+      }
+    },
+    {
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2022-09-01",
+      "name": "sleep-product",
+      "properties": {
+        "expressionEvaluationOptions": {
+          "scope": "inner"
+        },
+        "mode": "Incremental",
+        "parameters": {
+          "apiName": {
+            "value": "sleep"
+          },
+          "apimName": {
+            "value": "[parameters('apimName')]"
+          },
+          "productName": {
+            "value": "[variables('apiProductName')]"
+          }
+        },
+        "template": {
+          "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+          "contentVersion": "1.0.0.0",
+          "metadata": {
+            "_generator": {
+              "name": "bicep",
+              "version": "0.36.1.42791",
+              "templateHash": "15759943014391316880"
+            }
+          },
+          "parameters": {
+            "apimName": {
+              "type": "string",
+              "metadata": {
+                "description": "The name of the API Management instance that this Product will be deployed to"
+              }
+            },
+            "productName": {
+              "type": "string",
+              "metadata": {
+                "description": "The name of the Product"
+              }
+            },
+            "apiName": {
+              "type": "string",
+              "metadata": {
+                "description": "The name of the API that will be linked to this Product"
+              }
+            }
+          },
+          "resources": [
+            {
+              "type": "Microsoft.ApiManagement/service/products",
+              "apiVersion": "2024-06-01-preview",
+              "name": "[format('{0}/{1}', parameters('apimName'), parameters('productName'))]",
+              "properties": {
+                "displayName": "[parameters('productName')]",
+                "approvalRequired": false,
+                "state": "published",
+                "subscriptionRequired": true
+              }
+            },
+            {
+              "type": "Microsoft.ApiManagement/service/products/apiLinks",
+              "apiVersion": "2024-06-01-preview",
+              "name": "[format('{0}/{1}/{2}', parameters('apimName'), parameters('productName'), format('{0}-link', parameters('apiName')))]",
+              "properties": {
+                "apiId": "[resourceId('Microsoft.ApiManagement/service/apis', parameters('apimName'), parameters('apiName'))]"
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.ApiManagement/service/products', parameters('apimName'), parameters('productName'))]"
+              ]
+            }
+          ]
+        }
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.ApiManagement/service/apis', parameters('apimName'), 'sleep')]"
+      ]
+    }
+  ]
+}
