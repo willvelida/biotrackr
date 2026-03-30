@@ -135,3 +135,16 @@ module reportStorage '../modules/storage/storage-account.bicep' = {
     uaiPrincipalId: uai.outputs.prinicpalId
   }
 }
+
+module foundry '../modules/ai/foundry.bicep' = {
+  name: 'foundry'
+  params: {
+    name: 'ai-${baseName}-${environment}'
+    projectName: '${baseName}-genaiops'
+    location: location
+    tags: union(tags, { Component: 'AI' })
+    appInsightsName: appInsights.outputs.appInsightsName
+    logAnalyticsName: logAnalytics.outputs.logAnalyticsName
+    uaiName: uai.outputs.uaiName
+  }
+}
