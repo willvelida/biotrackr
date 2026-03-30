@@ -429,23 +429,10 @@ resource reviewerSystemPromptSetting 'Microsoft.AppConfiguration/configurationSt
   }
 }
 
-// App Configuration: Reporting API URL — used by Chat.Api's report tools
-resource reportingApiUrlSetting 'Microsoft.AppConfiguration/configurationStores/keyValues@2025-02-01-preview' = {
-  name: 'Biotrackr:ReportingApiUrl'
-  parent: appConfig
-  properties: {
-    value: '' // Set after Reporting.Api is deployed (cross-service dependency)
-  }
-}
-
-// App Configuration: Reporting Blob Storage endpoint — used by Chat.Api's GetReportStatus tool
-resource reportingBlobStorageEndpointSetting 'Microsoft.AppConfiguration/configurationStores/keyValues@2025-02-01-preview' = {
-  name: 'Biotrackr:ReportingBlobStorageEndpoint'
-  parent: appConfig
-  properties: {
-    value: '' // Set after Storage Account is deployed (cross-service dependency)
-  }
-}
+// NOTE: Biotrackr:ReportingApiUrl and Biotrackr:ReportingBlobStorageEndpoint are
+// owned by the Reporting.Api Bicep template (infra/apps/reporting-api/main.bicep)
+// which sets them to the actual container app FQDN and storage endpoint.
+// Do not declare empty placeholders here — they overwrite the real values.
 
 // App Configuration: Reporting API scope for agent identity token acquisition (ASI07)
 resource reportingApiScopeSetting 'Microsoft.AppConfiguration/configurationStores/keyValues@2025-02-01-preview' = {
