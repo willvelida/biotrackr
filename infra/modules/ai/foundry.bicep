@@ -64,6 +64,9 @@ resource foundryProject 'Microsoft.CognitiveServices/accounts/projects@2025-09-0
   name: projectName
   location: location
   tags: tags
+  identity: {
+    type: 'SystemAssigned'
+  }
   properties: {
     displayName: projectName
     description: 'Biotrackr GenAIOps — evaluation, monitoring, and tracing for Claude-powered agents'
