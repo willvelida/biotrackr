@@ -12,7 +12,10 @@ RUN apt-get update && \
 # Install Copilot CLI via the official install script
 # Pin to v1.0.4 (released 2026-03-11, same day as SDK 1.0.0-preview.260311.1)
 # to maintain protocol v2 compatibility with Microsoft.Agents.AI.GitHub.Copilot
-RUN export VERSION=1.0.4 && curl -fsSL https://gh.io/copilot-install | bash
+RUN curl -fsSL https://gh.io/copilot-install | VERSION="1.0.4" bash
+
+# Disable auto-updates so the pinned version persists at runtime
+ENV COPILOT_AGENT_AUTO_UPDATE=disabled
 
 # Install Python data science and reporting packages
 RUN pip install --no-cache-dir \
@@ -27,6 +30,12 @@ RUN mkdir -p /tmp/reports
 
 # Run as non-root user
 RUN useradd --create-home --shell /bin/bash copilot
+
+# Write Copilot CLI config to disable auto-updates
+RUN mkdir -p /home/copilot/.copilot && \
+    echo '{"autoUpdatesChannel": "disabled"}' > /home/copilot/.copilot/config.json && \
+    chown -R copilot:copilot /home/copilot/.copilot
+
 USER copilot
 
 EXPOSE 4321
