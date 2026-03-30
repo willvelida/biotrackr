@@ -2,7 +2,6 @@ using System.Text.Json;
 using Biotrackr.Reporting.Api.Configuration;
 using Biotrackr.Reporting.Api.Models;
 using GitHub.Copilot.SDK;
-using Microsoft.Agents.AI.GitHub.Copilot;
 using Microsoft.Extensions.Options;
 
 namespace Biotrackr.Reporting.Api.Services
@@ -145,16 +144,20 @@ namespace Biotrackr.Reporting.Api.Services
 
                 try
                 {
-                    // Send the task message to the Copilot agent via CopilotClient
+                    // Create a Copilot CLI session and send the task message directly via the SDK
                     await using var client = _copilotService.Client;
-                    await client.StartAsync();
+                    await client.StartAsync(cancellationToken);
 
                     var sessionConfig = _copilotService.CreateSessionConfig();
-                    var agent = client.AsAIAgent(sessionConfig);
+                    await using var session = await client.CreateSessionAsync(sessionConfig, cancellationToken);
 
-                    var response = await agent.RunAsync(taskMessage);
-                    _logger.LogInformation("Copilot agent completed for job {JobId}. Response length: {Length}",
-                        jobId, response?.ToString()?.Length ?? 0);
+                    var result = await session.SendAndWaitAsync(
+                        new MessageOptions { Prompt = taskMessage },
+                        cancellationToken: cancellationToken);
+                    var responseText = result?.Data?.Content;
+
+                    _logger.LogInformation("Copilot session completed for job {JobId}. Response length: {Length}",
+                        jobId, responseText?.Length ?? 0);
 
                     // Code validation gate — scan generated Python scripts for dangerous patterns (ASI05)
                     if (!ValidateGeneratedCode(jobId))
@@ -169,7 +172,7 @@ namespace Biotrackr.Reporting.Api.Services
                     if (artifacts.Count > 0)
                     {
                         success = true;
-                        await UploadArtifactsAsync(jobId, artifacts, response?.ToString(), sourceDataSnapshot);
+                        await UploadArtifactsAsync(jobId, artifacts, responseText, sourceDataSnapshot);
                         _logger.LogInformation("Report job {JobId} completed with {Count} artifacts",
                             jobId, artifacts.Count);
                     }

@@ -16,8 +16,6 @@
     <PackageReference Include="Azure.Monitor.OpenTelemetry.Exporter" Version="1.4.0" />
     <PackageReference Include="Azure.Storage.Blobs" Version="12.24.0" />
     <PackageReference Include="GitHub.Copilot.SDK" Version="0.2.1-preview.1" />
-    <PackageReference Include="Microsoft.Agents.AI" Version="1.0.0-rc4" />
-    <PackageReference Include="Microsoft.Agents.AI.GitHub.Copilot" Version="1.0.0-preview.260311.1" />
     <PackageReference Include="Microsoft.Agents.AI.Hosting" Version="1.0.0-preview.260311.1" />
     <PackageReference Include="Microsoft.Agents.AI.Hosting.A2A.AspNetCore" Version="1.0.0-preview.260311.1" />
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.5" />

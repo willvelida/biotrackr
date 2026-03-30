@@ -145,10 +145,6 @@ module reportingApi '../../modules/host/container-app-http-sidecar.bicep' = {
         name: 'AzureAd__TenantId'
         value: tenantId
       }
-      {
-        name: 'GITHUB_TOKEN'
-        secretRef: 'github-copilot-token'
-      }
     ]
     sidecarContainers: [
       {
