@@ -151,8 +151,14 @@ namespace Biotrackr.Reporting.Api.Services
                     var sessionConfig = _copilotService.CreateSessionConfig();
                     await using var session = await client.CreateSessionAsync(sessionConfig, cancellationToken);
 
+                    // Combine the task message with the source data snapshot as a JSON block
+                    // The system prompt instructs the sidecar to parse the ```json block
+                    var dataJson = System.Text.Json.JsonSerializer.Serialize(sourceDataSnapshot,
+                        new System.Text.Json.JsonSerializerOptions { WriteIndented = false });
+                    var fullPrompt = $"{taskMessage}\n\n```json\n{dataJson}\n```";
+
                     var result = await session.SendAndWaitAsync(
-                        new MessageOptions { Prompt = taskMessage },
+                        new MessageOptions { Prompt = fullPrompt },
                         cancellationToken: cancellationToken);
                     var responseText = result?.Data?.Content;
 
