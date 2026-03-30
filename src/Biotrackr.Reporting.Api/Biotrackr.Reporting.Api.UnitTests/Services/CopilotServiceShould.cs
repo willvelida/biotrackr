@@ -42,7 +42,7 @@ namespace Biotrackr.Reporting.Api.UnitTests.Services
 
             var result = await config.OnPermissionRequest!(request, invocation);
 
-            result.Kind.Should().Be("approved");
+            result.Kind.Should().Be(PermissionRequestResultKind.Approved);
         }
 
         [Theory]
@@ -62,7 +62,7 @@ namespace Biotrackr.Reporting.Api.UnitTests.Services
 
             var result = await config.OnPermissionRequest!(request, invocation);
 
-            result.Kind.Should().Be("denied-by-rules");
+            result.Kind.Should().Be(PermissionRequestResultKind.DeniedByRules);
         }
 
         [Fact]

@@ -36,7 +36,8 @@ namespace Biotrackr.Reporting.Api.Endpoints
                 // Generate fresh SAS URLs for artifacts if report is generated
                 if (metadata.Status is ReportStatus.Generated or ReportStatus.Reviewed && metadata.Artifacts.Count > 0)
                 {
-                    var blobPath = $"{metadata.DateRange.Start}_{metadata.DateRange.End}/{metadata.ReportType}";
+                    var blobPath = metadata.BlobPath
+                        ?? $"{metadata.DateRange.Start}_{metadata.DateRange.End}/{metadata.ReportType}";
                     var artifactUrls = new Dictionary<string, string>();
 
                     foreach (var artifact in metadata.Artifacts)

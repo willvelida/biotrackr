@@ -387,30 +387,10 @@ resource chatApiAgentIdentityIdSetting 'Microsoft.AppConfiguration/configuration
   }
 }
 
-// App Configuration: Azure AD settings for Reporting.Api agent identity auth
-resource azureAdInstanceSetting 'Microsoft.AppConfiguration/configurationStores/keyValues@2025-02-01-preview' = if (enableManagedIdentityAuth) {
-  name: 'AzureAd:Instance'
-  parent: appConfig
-  properties: {
-    value: environment().authentication.loginEndpoint
-  }
-}
-
-resource azureAdTenantIdSetting 'Microsoft.AppConfiguration/configurationStores/keyValues@2025-02-01-preview' = if (enableManagedIdentityAuth) {
-  name: 'AzureAd:TenantId'
-  parent: appConfig
-  properties: {
-    value: tenantId
-  }
-}
-
-resource azureAdClientIdSetting 'Microsoft.AppConfiguration/configurationStores/keyValues@2025-02-01-preview' = if (enableManagedIdentityAuth && !empty(agentBlueprintClientId)) {
-  name: 'AzureAd:ClientId'
-  parent: appConfig
-  properties: {
-    value: agentBlueprintClientId
-  }
-}
+// NOTE: AzureAd settings (Instance, TenantId, ClientId) are passed via container
+// environment variables (AzureAd__ClientId, AzureAd__TenantId) rather than App
+// Configuration to avoid key collisions with Chat.Api, which shares the same
+// App Config store and uses the AzureAd:* keys for its own agent blueprint.
 
 // App Configuration: Report Generator System Prompt (Key Vault reference)
 resource reportGeneratorSystemPromptSetting 'Microsoft.AppConfiguration/configurationStores/keyValues@2025-02-01-preview' = {

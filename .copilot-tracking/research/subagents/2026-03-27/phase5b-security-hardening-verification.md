@@ -1,0 +1,176 @@
+# Phase 5b: Security Hardening Verification
+
+## Research Topics
+
+1. Verify 6 security hardening items (5b.1–5b.6) in Reporting.Api
+2. Follow-up checks from previous subagents (server-side validation, HttpClient registration, ReviewerSystemPrompt wiring)
+
+---
+
+## 5b.1: CopilotService Permission Handler Audit Logging + Explicit Kind Allowlist
+
+**File:** `src/Biotrackr.Reporting.Api/Biotrackr.Reporting.Api/Services/CopilotClientFactory.cs`
+
+**STATUS: MATCH** (with naming deviation noted)
+
+**Note:** The file is actually named `CopilotClientFactory.cs` but contains the class `CopilotService` (not `CopilotClientFactory`). The service class name matches the expected behavior.
+
+**Evidence:**
+
+- `AllowedPermissionKinds` array: `["shell", "read", "write"]` — **MATCH** (line 20)
+- Audit logging via `SafeSerialize(invocation)` on every permission request — **MATCH** (lines 83–86)
+- Deny-by-default for unknown kinds — **MATCH** (lines 90–93: checks `!AllowedPermissionKinds.Contains(request.Kind)`)
+- Returns `"denied-by-rules"` for denied requests — **MATCH** (line 93: `Kind = "denied-by-rules"`)
+- Returns `"approved"` for allowed requests — **MATCH** (line 96: `Kind = "approved"`)
+- `SafeSerialize` helper uses `JsonSerializer.Serialize` with fallback to `ToString()` — **MATCH** (lines 99–108)
+
+---
+
+## 5b.2: Code Validation Gate in ReportGenerationService
+
+**File:** `src/Biotrackr.Reporting.Api/Biotrackr.Reporting.Api/Services/ReportGenerationService.cs`
+
+**STATUS: MATCH**
+
+**Evidence:**
+
+- `DangerousCodePatterns` array — **MATCH** (lines 25–33): Contains `os.system`, `subprocess`, `socket.`, `urllib`, `requests.`, `__import__`, `eval(`, `exec(`, `shutil.rmtree`, `os.remove`, `open('/etc`, `open("/etc`, `curl `, `wget `, `nc `, `bash `, `sh -c`, `os.popen`
+- `ValidateGeneratedCode` method — **MATCH** (lines 218–248): Scans `.py` files in `/tmp/reports`, uses `StringComparison.OrdinalIgnoreCase`, returns `false` on any pattern match
+- Blocks generation if dangerous patterns found — **MATCH** (lines 161–165): Updates job status to `Failed` with message "Generated code failed safety validation."
+
+---
+
+## 5b.3: Prompt-Injection Detection in GenerateEndpoints
+
+**File:** `src/Biotrackr.Reporting.Api/Biotrackr.Reporting.Api/Endpoints/GenerateEndpoints.cs`
+
+**STATUS: MATCH**
+
+**Evidence:**
+
+- `InjectionPatterns` array — **MATCH** (lines 13–20): Contains 14 patterns including `ignore previous`, `system prompt`, `you are now`, `override instructions`, `act as`, etc.
+- `MaxTaskMessageLength = 5000` — **MATCH** (line 10)
+- Length validation returning 400 — **MATCH** (lines 64–68)
+- Injection pattern detection returning 400 — **MATCH** (lines 71–76): Uses `ToLowerInvariant()` + `Contains`, logs warning, returns `"taskMessage contains disallowed content."`
+- Report type validation (against `ReportType.All`) — **MATCH** (lines 31–34)
+- Date format validation (`yyyy-MM-dd` via `DateOnly.TryParseExact`) — **MATCH** (lines 37–48)
+- 365-day max range — **MATCH** (lines 55–58)
+- `endDate >= startDate` — **MATCH** (lines 50–53)
+
+---
+
+## 5b.4: Concurrency Limiter + Timeout in ReportGenerationService
+
+**File:** `src/Biotrackr.Reporting.Api/Biotrackr.Reporting.Api/Services/ReportGenerationService.cs`
+
+**STATUS: MATCH**
+
+**Evidence:**
+
+- `SemaphoreSlim _concurrencyLimiter` — **MATCH** (line 38, initialized at line 47: `new SemaphoreSlim(_settings.MaxConcurrentJobs)`)
+- Non-blocking semaphore check: `_concurrencyLimiter.Wait(0)` — **MATCH** (line 65)
+- `CancellationTokenSource` with timeout: `TimeSpan.FromMinutes(_settings.ReportGenerationTimeoutMinutes)` — **MATCH** (lines 99–100)
+- Semaphore release in `finally` block — **MATCH** (line 113: `_concurrencyLimiter.Release()`)
+- Also releases semaphore on sidecar health check failure (line 76)
+
+---
+
+## 5b.5: Kill Switch + Detailed Artifact Logging
+
+**Settings.cs Evidence:**
+
+- `ReportGenerationEnabled` (default `true`) — **MATCH** (line 14)
+- `MaxConcurrentJobs` (default `3`) — **MATCH** (line 20)
+- `ReportGenerationTimeoutMinutes` (default `10`) — **MATCH** (line 25)
+- `MaxArtifactSizeBytes` (default `50 * 1024 * 1024` = 50 MB) — **MATCH** (line 30)
+
+**ReportGenerationService.cs Evidence:**
+
+- Kill switch check — **MATCH** (lines 53–61): Returns `Failed` with "Report generation is currently disabled."
+- Artifact size checking — **MATCH** (lines 287–293): Compares `bytes.Length > _settings.MaxArtifactSizeBytes`, logs warning, skips oversized artifacts
+- Unexpected file type warnings — **MATCH** (lines 298–302): Logs `Unexpected file type in reports directory` for non `.pdf`, `.png`, `.jpg`, `.svg`, `.py` extensions
+- Detailed artifact logging (name, size, extension) — **MATCH** (lines 282–285)
+
+**STATUS: MATCH**
+
+---
+
+## 5b.6: Health Disclaimer in BlobStorageService
+
+**File:** `src/Biotrackr.Reporting.Api/Biotrackr.Reporting.Api/Services/BlobStorageService.cs`
+
+**STATUS: MATCH**
+
+**Evidence:**
+
+- `ReportDisclaimer` constant — **MATCH** (lines 16–19): "DISCLAIMER: This report was generated by an AI agent. All health data should be reviewed by a qualified healthcare professional. Do not make medical decisions based solely on this report."
+- Prepended to summary in `UploadReportAsync` — **MATCH** (line 98): `metadata.Summary = $"{ReportDisclaimer}\n\n{summary}";`
+
+---
+
+## Follow-up Check 1: Server-Side Validation in GenerateEndpoints.cs
+
+**STATUS: MATCH** — Full server-side validation present
+
+GenerateEndpoints.cs validates all four items, compensating for any missing client-side validation:
+
+| Validation | Status | Evidence |
+|---|---|---|
+| Report type (against valid enum) | MATCH | `ReportType.IsValid(request.ReportType)` — line 31 |
+| Date format (`yyyy-MM-dd`) | MATCH | `DateOnly.TryParseExact` with `"yyyy-MM-dd"` format — lines 37, 43 |
+| 365-day max range | MATCH | `(endDate.DayNumber - startDate.DayNumber) > 365` — line 55 |
+| `endDate >= startDate` | MATCH | `endDate < startDate` check — line 50 |
+
+---
+
+## Follow-up Check 2: ReportingApi HttpClient Registered in Chat.Api
+
+**STATUS: MATCH**
+
+**File:** `src/Biotrackr.Chat.Api/Biotrackr.Chat.Api/Program.cs` (lines 76–88)
+
+```csharp
+builder.Services.AddHttpClient("ReportingApi", client =>
+{
+    var reportingApiUrl = builder.Configuration.GetValue<string>("Biotrackr:ReportingApiUrl");
+    if (!string.IsNullOrWhiteSpace(reportingApiUrl))
+    {
+        client.BaseAddress = new Uri(reportingApiUrl);
+    }
+    var subscriptionKey = builder.Configuration.GetValue<string>("Biotrackr:ApiSubscriptionKey");
+    if (!string.IsNullOrWhiteSpace(subscriptionKey))
+    {
+        client.DefaultRequestHeaders.Add("Ocp-Apim-Subscription-Key", subscriptionKey);
+    }
+}).AddStandardResilienceHandler();
+```
+
+Named `"ReportingApi"` HttpClient with base address from `Biotrackr:ReportingApiUrl`, APIM subscription key header, and `.AddStandardResilienceHandler()` for resilience.
+
+---
+
+## Follow-up Check 3: ReviewerSystemPrompt Wired Up in Chat.Api
+
+**STATUS: MATCH**
+
+- **Settings.cs** (`src/Biotrackr.Chat.Api/Biotrackr.Chat.Api/Configuration/Settings.cs`, line 38): `public string ReviewerSystemPrompt { get; set; }` with XML doc indicating it is "loaded from Key Vault."
+- **Program.cs** (line 52): `builder.Services.Configure<Settings>(builder.Configuration.GetSection("Biotrackr"));` — binds all settings including `ReviewerSystemPrompt`.
+- **ReportReviewerService.cs** (lines 30, 47): Uses `_settings.ReviewerSystemPrompt` — checks for null/whitespace and passes it as `instructions:` parameter.
+
+---
+
+## Summary
+
+| Item | Status |
+|---|---|
+| 5b.1 Permission handler audit logging + allowlist | **MATCH** |
+| 5b.2 Code validation gate | **MATCH** |
+| 5b.3 Prompt-injection detection | **MATCH** |
+| 5b.4 Concurrency limiter + timeout | **MATCH** |
+| 5b.5 Kill switch + artifact logging | **MATCH** |
+| 5b.6 Health disclaimer | **MATCH** |
+| Check 1: Server-side validation | **MATCH** |
+| Check 2: ReportingApi HttpClient | **MATCH** |
+| Check 3: ReviewerSystemPrompt wiring | **MATCH** |
+
+All 9 items verified as **MATCH**. No PARTIAL, MISSING, or DEVIATION findings.

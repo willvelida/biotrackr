@@ -36,10 +36,22 @@ namespace Biotrackr.Reporting.Api.Services
 
         public SessionConfig CreateSessionConfig()
         {
-            return new SessionConfig
+            var config = new SessionConfig
             {
                 OnPermissionRequest = HandlePermissionRequest,
             };
+
+            var systemPrompt = settings.Value.ReportGeneratorSystemPrompt;
+            if (!string.IsNullOrWhiteSpace(systemPrompt))
+            {
+                config.SystemMessage = new SystemMessageConfig
+                {
+                    Mode = SystemMessageMode.Append,
+                    Content = systemPrompt,
+                };
+            }
+
+            return config;
         }
 
         /// <summary>
@@ -79,10 +91,10 @@ namespace Biotrackr.Reporting.Api.Services
             if (!AllowedPermissionKinds.Contains(request.Kind))
             {
                 logger.LogWarning("Denied permission request Kind={Kind}", request.Kind);
-                return Task.FromResult(new PermissionRequestResult { Kind = "denied-by-rules" });
+                return Task.FromResult(new PermissionRequestResult { Kind = PermissionRequestResultKind.DeniedByRules });
             }
 
-            return Task.FromResult(new PermissionRequestResult { Kind = "approved" });
+            return Task.FromResult(new PermissionRequestResult { Kind = PermissionRequestResultKind.Approved });
         }
 
         private static string SafeSerialize(object obj)

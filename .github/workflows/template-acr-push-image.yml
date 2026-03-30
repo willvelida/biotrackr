@@ -11,6 +11,11 @@ on:
                 description: 'The name of the application. Used in the container image name'
                 required: true
                 type: string
+            dockerfile:
+                description: 'The Dockerfile to use for building the image. Defaults to Dockerfile.'
+                required: false
+                type: string
+                default: 'Dockerfile'
       secrets:
             client-id:
                 required: true
@@ -59,7 +64,7 @@ jobs:
   
         - name: Build Docker image
           run: |
-            docker build -t ${{ steps.getacrserver.outputs.loginServer }}/${{ inputs.app-name }}:${{ github.sha }} .
+            docker build -f ${{ inputs.dockerfile }} -t ${{ steps.getacrserver.outputs.loginServer }}/${{ inputs.app-name }}:${{ github.sha }} .
 
         - name: Generate SBOM
           uses: aquasecurity/trivy-action@0.35.0

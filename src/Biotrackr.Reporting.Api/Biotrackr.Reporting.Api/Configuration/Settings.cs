@@ -22,7 +22,7 @@ namespace Biotrackr.Reporting.Api.Configuration
         /// <summary>
         /// Maximum time in minutes for a single report generation job (ASI08).
         /// </summary>
-        public int ReportGenerationTimeoutMinutes { get; set; } = 10;
+        public int ReportGenerationTimeoutMinutes { get; set; } = 15;
 
         /// <summary>
         /// Maximum artifact file size in bytes (ASI10). Default 50 MB.

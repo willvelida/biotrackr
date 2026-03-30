@@ -72,17 +72,6 @@ namespace Biotrackr.Chat.Api.Tools
                 result.Metadata.SourceDataSnapshot,
                 result.Metadata.ReportType);
 
-            if (!reviewResult.Approved)
-            {
-                _logger.LogWarning("Reviewer flagged concerns for job {JobId}: {Concerns}",
-                    result.Metadata.JobId, string.Join("; ", reviewResult.Concerns));
-
-                var concerns = string.Join("\n- ", reviewResult.Concerns);
-                return $"Your report is ready but the reviewer flagged some concerns:\n- {concerns}\n\n" +
-                       $"Summary: {reviewResult.ValidatedSummary}\n\n" +
-                       "Would you like me to regenerate the report?";
-            }
-
             // Build inline images for charts and download links for documents
             var images = new List<string>();
             var downloads = new List<string>();
@@ -105,6 +94,18 @@ namespace Biotrackr.Chat.Api.Tools
             var downloadSection = downloads.Count > 0
                 ? $"\n\n{string.Join("\n", downloads)}"
                 : "";
+
+            if (!reviewResult.Approved)
+            {
+                _logger.LogWarning("Reviewer flagged concerns for job {JobId}: {Concerns}",
+                    result.Metadata.JobId, string.Join("; ", reviewResult.Concerns));
+
+                var concerns = string.Join("\n- ", reviewResult.Concerns);
+                return $"Your report is ready but the reviewer flagged some concerns:\n- {concerns}\n\n" +
+                       $"Summary: {reviewResult.ValidatedSummary}" +
+                       $"{imageSection}{downloadSection}\n\n" +
+                       "Would you like me to regenerate the report?";
+            }
 
             return $"{reviewResult.ValidatedSummary}{imageSection}{downloadSection}";
         }
