@@ -46,6 +46,9 @@ resource foundryAccount 'Microsoft.CognitiveServices/accounts@2025-09-01' = {
   location: location
   tags: tags
   kind: 'AIServices'
+  identity: {
+    type: 'SystemAssigned'
+  }
   sku: {
     name: 'S0'
   }
