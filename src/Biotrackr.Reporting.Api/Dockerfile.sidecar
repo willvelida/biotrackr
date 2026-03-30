@@ -10,6 +10,9 @@ RUN apt-get update && \
     rm -rf /var/lib/apt/lists/*
 
 # Install Copilot CLI via the official install script
+# Pin to v1.0.4 (released 2026-03-11, same day as SDK 1.0.0-preview.260311.1)
+# to maintain protocol v2 compatibility with Microsoft.Agents.AI.GitHub.Copilot
+ENV VERSION=1.0.4
 RUN curl -fsSL https://gh.io/copilot-install | bash
 
 # Install Python data science and reporting packages
