@@ -1,3 +1,4 @@
+// Chat API infrastructure — AzureAd:ClientId is owned by this template
 @description('The name of the Chat Api application')
 param name string
 
