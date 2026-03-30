@@ -47,7 +47,8 @@ namespace Biotrackr.Reporting.Api.Services
                 JobId = jobId,
                 Status = ReportStatus.Generating,
                 ReportType = reportType,
-                DateRange = new ReportDateRange { Start = startDate, End = endDate }
+                DateRange = new ReportDateRange { Start = startDate, End = endDate },
+                BlobPath = blobPath
             };
 
             await UploadMetadataAsync(blobPath, metadata);
@@ -69,7 +70,8 @@ namespace Biotrackr.Reporting.Api.Services
                 throw new InvalidOperationException($"Job {jobId} not found");
             }
 
-            var blobPath = BuildBlobPath(metadata.DateRange.Start, metadata.DateRange.End, metadata.ReportType);
+            var blobPath = metadata.BlobPath
+                ?? BuildBlobPath(metadata.DateRange.Start, metadata.DateRange.End, metadata.ReportType);
             var containerClient = Client.GetBlobContainerClient(ContainerName);
             var artifacts = new List<string>();
 
@@ -118,7 +120,8 @@ namespace Biotrackr.Reporting.Api.Services
                 metadata.Error = error;
             }
 
-            var blobPath = BuildBlobPath(metadata.DateRange.Start, metadata.DateRange.End, metadata.ReportType);
+            var blobPath = metadata.BlobPath
+                ?? BuildBlobPath(metadata.DateRange.Start, metadata.DateRange.End, metadata.ReportType);
             await UploadMetadataAsync(blobPath, metadata);
             logger.LogInformation("Updated job {JobId} status to {Status}", jobId, status);
         }

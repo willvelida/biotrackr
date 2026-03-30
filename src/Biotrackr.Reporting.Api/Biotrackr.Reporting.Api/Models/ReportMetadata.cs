@@ -30,6 +30,9 @@ namespace Biotrackr.Reporting.Api.Models
 
         [JsonPropertyName("error")]
         public string? Error { get; set; }
+
+        [JsonPropertyName("blobPath")]
+        public string? BlobPath { get; set; }
     }
 
     public class ReportDateRange
