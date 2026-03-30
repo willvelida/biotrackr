@@ -18,7 +18,7 @@ namespace Biotrackr.Reporting.Api.UnitTests.Configuration
             settings.ReportGeneratorSystemPrompt.Should().BeEmpty();
             settings.ReportGenerationEnabled.Should().BeTrue();
             settings.MaxConcurrentJobs.Should().Be(3);
-            settings.ReportGenerationTimeoutMinutes.Should().Be(10);
+            settings.ReportGenerationTimeoutMinutes.Should().Be(15);
             settings.MaxArtifactSizeBytes.Should().Be(50 * 1024 * 1024);
         }
 

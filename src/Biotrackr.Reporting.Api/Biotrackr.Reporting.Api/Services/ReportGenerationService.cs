@@ -159,6 +159,7 @@ namespace Biotrackr.Reporting.Api.Services
 
                     var result = await session.SendAndWaitAsync(
                         new MessageOptions { Prompt = fullPrompt },
+                        timeout: TimeSpan.FromMinutes(_settings.ReportGenerationTimeoutMinutes - 1),
                         cancellationToken: cancellationToken);
                     var responseText = result?.Data?.Content;
 
