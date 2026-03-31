@@ -115,11 +115,19 @@ namespace Biotrackr.Chat.Api.Services
 
             AnthropicClient anthropicClient = new() { ApiKey = _settings.AnthropicApiKey };
 
-            AIAgent chatAgent = anthropicClient.AsAIAgent(
+            ChatClientAgent chatAgent = anthropicClient.AsAIAgent(
                 model: _settings.ChatAgentModel,
                 name: "BiotrackrChatAgent",
                 instructions: _settings.ChatSystemPrompt,
                 tools: [.. wrappedTools]);
+
+            // Enable concurrent tool execution — Claude batches parallel tool calls,
+            // but the framework executes them sequentially by default
+            var functionInvoker = chatAgent.ChatClient.GetService<FunctionInvokingChatClient>();
+            if (functionInvoker is not null)
+            {
+                functionInvoker.AllowConcurrentInvocation = true;
+            }
 
             // Middleware pipeline
             var chatHistoryRepository = _serviceProvider.GetRequiredService<IChatHistoryRepository>();

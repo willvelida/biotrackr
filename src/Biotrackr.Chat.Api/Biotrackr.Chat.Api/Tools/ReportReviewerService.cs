@@ -46,7 +46,7 @@ namespace Biotrackr.Chat.Api.Tools
                     name: "BiotrackrReportReviewer",
                     instructions: _settings.ReviewerSystemPrompt);
 
-                var sourceDataJson = JsonSerializer.Serialize(sourceDataSnapshot, new JsonSerializerOptions { WriteIndented = true });
+                var sourceDataJson = JsonSerializer.Serialize(sourceDataSnapshot, new JsonSerializerOptions { WriteIndented = false });
 
                 var reviewPrompt = $"Review the following report for accuracy and safety.\n\n" +
                     $"Report Type: {reportType}\n" +
