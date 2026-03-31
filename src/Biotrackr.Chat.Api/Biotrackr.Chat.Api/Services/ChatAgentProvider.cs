@@ -115,10 +115,12 @@ namespace Biotrackr.Chat.Api.Services
 
             AnthropicClient anthropicClient = new() { ApiKey = _settings.AnthropicApiKey };
 
+            var instructions = $"Today's date is {DateTimeOffset.UtcNow:yyyy-MM-dd} (UTC).\n\n{_settings.ChatSystemPrompt}";
+
             ChatClientAgent chatAgent = anthropicClient.AsAIAgent(
                 model: _settings.ChatAgentModel,
                 name: "BiotrackrChatAgent",
-                instructions: _settings.ChatSystemPrompt,
+                instructions: instructions,
                 tools: [.. wrappedTools]);
 
             // Enable concurrent tool execution — Claude batches parallel tool calls,
