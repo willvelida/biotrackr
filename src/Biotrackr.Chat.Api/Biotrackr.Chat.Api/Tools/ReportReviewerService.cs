@@ -15,13 +15,16 @@ namespace Biotrackr.Chat.Api.Tools
     {
         private readonly Settings _settings;
         private readonly ILogger<ReportReviewerService> _logger;
+        private readonly IHttpClientFactory _httpClientFactory;
 
         public ReportReviewerService(
             IOptions<Settings> settings,
-            ILogger<ReportReviewerService> logger)
+            ILogger<ReportReviewerService> logger,
+            IHttpClientFactory httpClientFactory)
         {
             _settings = settings.Value;
             _logger = logger;
+            _httpClientFactory = httpClientFactory;
         }
 
         public async Task<ReviewResult> ReviewReportAsync(
@@ -40,7 +43,12 @@ namespace Biotrackr.Chat.Api.Tools
 
             try
             {
-                AnthropicClient anthropicClient = new() { ApiKey = _settings.AnthropicApiKey };
+                var httpClient = _httpClientFactory.CreateClient("Anthropic");
+                AnthropicClient anthropicClient = new()
+                {
+                    ApiKey = _settings.AnthropicApiKey,
+                    HttpClient = httpClient
+                };
                 AIAgent reviewer = anthropicClient.AsAIAgent(
                     model: _settings.ChatAgentModel,
                     name: "BiotrackrReportReviewer",

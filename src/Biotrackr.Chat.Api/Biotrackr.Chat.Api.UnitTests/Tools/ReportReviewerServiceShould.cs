@@ -69,7 +69,10 @@ namespace Biotrackr.Chat.Api.UnitTests.Tools
                 ReviewerSystemPrompt = reviewerSystemPrompt
             });
 
-            return new ReportReviewerService(settings, _logger.Object);
+            var httpClientFactory = new Mock<IHttpClientFactory>();
+            httpClientFactory.Setup(f => f.CreateClient("Anthropic")).Returns(new HttpClient());
+
+            return new ReportReviewerService(settings, _logger.Object, httpClientFactory.Object);
         }
     }
 }

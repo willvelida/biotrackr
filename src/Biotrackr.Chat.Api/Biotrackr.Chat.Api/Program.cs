@@ -3,6 +3,7 @@ using Azure.Identity;
 using Azure.Monitor.OpenTelemetry.Exporter;
 using Biotrackr.Chat.Api.Configuration;
 using Biotrackr.Chat.Api.Extensions;
+using Biotrackr.Chat.Api.Handlers;
 using Biotrackr.Chat.Api.Middleware;
 using Biotrackr.Chat.Api.Services;
 using Biotrackr.Chat.Api.Tools;
@@ -95,6 +96,11 @@ builder.Services.AddHttpClient("ReportingApi", client =>
 });
 
 builder.Services.AddSingleton<ReportReviewerService>();
+
+builder.Services.AddTransient<AnthropicMetricsHandler>();
+builder.Services.AddHttpClient("Anthropic")
+    .AddHttpMessageHandler<AnthropicMetricsHandler>();
+
 builder.Services.AddSingleton<RequestReportTool>();
 builder.Services.AddSingleton<GetReportStatusTool>();
 builder.Services.AddSingleton<AIFunction>(sp => sp.GetRequiredService<RequestReportTool>().AsAIFunction());
@@ -119,6 +125,7 @@ builder.Services.AddOpenTelemetry()
         metrics.SetResourceBuilder(resourceBuilder)
             .AddAspNetCoreInstrumentation()
             .AddHttpClientInstrumentation()
+            .AddMeter("Biotrackr.Chat.Anthropic")
             .AddAzureMonitorMetricExporter(options =>
             {
                 options.ConnectionString = appInsightsConnectionString;

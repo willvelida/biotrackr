@@ -21,6 +21,7 @@ namespace Biotrackr.Chat.Api.Services
         private readonly ILoggerFactory _loggerFactory;
         private readonly Settings _settings;
         private readonly IServiceProvider _serviceProvider;
+        private readonly IHttpClientFactory _httpClientFactory;
         private readonly SemaphoreSlim _buildLock = new(1, 1);
 
         private volatile AIAgent? _currentAgent;
@@ -31,19 +32,22 @@ namespace Biotrackr.Chat.Api.Services
             IMemoryCache memoryCache,
             ILoggerFactory loggerFactory,
             IOptions<Settings> settings,
-            IServiceProvider serviceProvider)
+            IServiceProvider serviceProvider,
+            IHttpClientFactory httpClientFactory)
         {
             ArgumentNullException.ThrowIfNull(mcpToolService);
             ArgumentNullException.ThrowIfNull(memoryCache);
             ArgumentNullException.ThrowIfNull(loggerFactory);
             ArgumentNullException.ThrowIfNull(settings);
             ArgumentNullException.ThrowIfNull(serviceProvider);
+            ArgumentNullException.ThrowIfNull(httpClientFactory);
 
             _mcpToolService = mcpToolService;
             _memoryCache = memoryCache;
             _loggerFactory = loggerFactory;
             _settings = settings.Value;
             _serviceProvider = serviceProvider;
+            _httpClientFactory = httpClientFactory;
         }
 
         /// <summary>
@@ -113,7 +117,12 @@ namespace Biotrackr.Chat.Api.Services
                 .Where(f => f.Name is "RequestReport" or "GetReportStatus");
             wrappedTools.AddRange(reportTools);
 
-            AnthropicClient anthropicClient = new() { ApiKey = _settings.AnthropicApiKey };
+            var httpClient = _httpClientFactory.CreateClient("Anthropic");
+            AnthropicClient anthropicClient = new()
+            {
+                ApiKey = _settings.AnthropicApiKey,
+                HttpClient = httpClient
+            };
 
             var instructions = $"Today's date is {DateTimeOffset.UtcNow:yyyy-MM-dd} (UTC).\n\n{_settings.ChatSystemPrompt}";
 
