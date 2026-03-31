@@ -1,7 +1,7 @@
 using System.Text.Json;
 using Anthropic;
+using Anthropic.Models.Messages;
 using Biotrackr.Chat.Api.Configuration;
-using Microsoft.Agents.AI;
 using Microsoft.Extensions.Options;
 
 namespace Biotrackr.Chat.Api.Tools
@@ -49,10 +49,6 @@ namespace Biotrackr.Chat.Api.Tools
                     ApiKey = _settings.AnthropicApiKey,
                     HttpClient = httpClient
                 };
-                AIAgent reviewer = anthropicClient.AsAIAgent(
-                    model: _settings.ChatAgentModel,
-                    name: "BiotrackrReportReviewer",
-                    instructions: _settings.ReviewerSystemPrompt);
 
                 var sourceDataJson = JsonSerializer.Serialize(sourceDataSnapshot, new JsonSerializerOptions { WriteIndented = false });
 
@@ -67,10 +63,27 @@ namespace Biotrackr.Chat.Api.Tools
                     "  \"validatedSummary\": \"the summary with corrections and disclaimers applied\"\n" +
                     "}";
 
-                var response = await reviewer.RunAsync(reviewPrompt);
-                var responseText = response?.ToString() ?? string.Empty;
+                var result = await anthropicClient.Messages.Create(new MessageCreateParams
+                {
+                    MaxTokens = 4096,
+                    Model = _settings.ChatAgentModel,
+                    System = new List<TextBlockParam>
+                    {
+                        new TextBlockParam
+                        {
+                            Text = _settings.ReviewerSystemPrompt,
+                            CacheControl = new CacheControlEphemeral()
+                        }
+                    },
+                    Messages = [new MessageParam { Role = "user", Content = reviewPrompt }]
+                });
 
-                _logger.LogInformation("Reviewer response for {ReportType}: {Length} chars", reportType, responseText.Length);
+                var responseText = string.Join("", result.Content
+                    .OfType<TextBlock>()
+                    .Select(b => b.Text));
+
+                _logger.LogInformation("Reviewer response for {ReportType}: {Length} chars, cache_read_input_tokens: {CacheRead}",
+                    reportType, responseText.Length, result.Usage?.CacheReadInputTokens ?? 0);
 
                 // Parse the reviewer's JSON response
                 return ParseReviewResult(responseText, reportSummary);
