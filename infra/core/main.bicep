@@ -141,7 +141,7 @@ module foundry '../modules/ai/foundry.bicep' = {
   params: {
     name: 'ai-${baseName}-${environment}'
     projectName: '${baseName}-genaiops'
-    location: location
+    location: 'eastus2'
     tags: union(tags, { Component: 'AI' })
     appInsightsName: appInsights.outputs.appInsightsName
     logAnalyticsName: logAnalytics.outputs.logAnalyticsName
