@@ -66,8 +66,9 @@ namespace Biotrackr.Chat.Api.UnitTests.Services
             var loggerFactory = CreateLoggerFactory();
             var settings = Options.Create(CreateSettings());
             var serviceProvider = new Mock<IServiceProvider>().Object;
+            var httpClientFactory = new Mock<IHttpClientFactory>().Object;
 
-            var act = () => new ChatAgentProvider(null!, cache, loggerFactory, settings, serviceProvider);
+            var act = () => new ChatAgentProvider(null!, cache, loggerFactory, settings, serviceProvider, httpClientFactory);
 
             act.Should().Throw<ArgumentNullException>().WithParameterName("mcpToolService");
         }
@@ -79,8 +80,9 @@ namespace Biotrackr.Chat.Api.UnitTests.Services
             var loggerFactory = CreateLoggerFactory();
             var settings = Options.Create(CreateSettings());
             var serviceProvider = new Mock<IServiceProvider>().Object;
+            var httpClientFactory = new Mock<IHttpClientFactory>().Object;
 
-            var act = () => new ChatAgentProvider(toolService, null!, loggerFactory, settings, serviceProvider);
+            var act = () => new ChatAgentProvider(toolService, null!, loggerFactory, settings, serviceProvider, httpClientFactory);
 
             act.Should().Throw<ArgumentNullException>().WithParameterName("memoryCache");
         }
@@ -92,8 +94,9 @@ namespace Biotrackr.Chat.Api.UnitTests.Services
             var cache = new MemoryCache(new MemoryCacheOptions());
             var settings = Options.Create(CreateSettings());
             var serviceProvider = new Mock<IServiceProvider>().Object;
+            var httpClientFactory = new Mock<IHttpClientFactory>().Object;
 
-            var act = () => new ChatAgentProvider(toolService, cache, null!, settings, serviceProvider);
+            var act = () => new ChatAgentProvider(toolService, cache, null!, settings, serviceProvider, httpClientFactory);
 
             act.Should().Throw<ArgumentNullException>().WithParameterName("loggerFactory");
         }
@@ -105,8 +108,9 @@ namespace Biotrackr.Chat.Api.UnitTests.Services
             var cache = new MemoryCache(new MemoryCacheOptions());
             var loggerFactory = CreateLoggerFactory();
             var serviceProvider = new Mock<IServiceProvider>().Object;
+            var httpClientFactory = new Mock<IHttpClientFactory>().Object;
 
-            var act = () => new ChatAgentProvider(toolService, cache, loggerFactory, null!, serviceProvider);
+            var act = () => new ChatAgentProvider(toolService, cache, loggerFactory, null!, serviceProvider, httpClientFactory);
 
             act.Should().Throw<ArgumentNullException>().WithParameterName("settings");
         }
@@ -118,10 +122,25 @@ namespace Biotrackr.Chat.Api.UnitTests.Services
             var cache = new MemoryCache(new MemoryCacheOptions());
             var loggerFactory = CreateLoggerFactory();
             var settings = Options.Create(CreateSettings());
+            var httpClientFactory = new Mock<IHttpClientFactory>().Object;
 
-            var act = () => new ChatAgentProvider(toolService, cache, loggerFactory, settings, null!);
+            var act = () => new ChatAgentProvider(toolService, cache, loggerFactory, settings, null!, httpClientFactory);
 
             act.Should().Throw<ArgumentNullException>().WithParameterName("serviceProvider");
+        }
+
+        [Fact]
+        public void ThrowWhenHttpClientFactoryIsNull()
+        {
+            var toolService = new Mock<IMcpToolService>().Object;
+            var cache = new MemoryCache(new MemoryCacheOptions());
+            var loggerFactory = CreateLoggerFactory();
+            var settings = Options.Create(CreateSettings());
+            var serviceProvider = new Mock<IServiceProvider>().Object;
+
+            var act = () => new ChatAgentProvider(toolService, cache, loggerFactory, settings, serviceProvider, null!);
+
+            act.Should().Throw<ArgumentNullException>().WithParameterName("httpClientFactory");
         }
 
         private static ChatAgentProvider CreateProvider(IList<AITool> mcpTools)
@@ -146,7 +165,10 @@ namespace Biotrackr.Chat.Api.UnitTests.Services
             serviceProvider.Setup(sp => sp.GetService(typeof(IEnumerable<AIFunction>)))
                 .Returns(Enumerable.Empty<AIFunction>());
 
-            return new ChatAgentProvider(toolService, cache, loggerFactory, settings, serviceProvider.Object);
+            var httpClientFactory = new Mock<IHttpClientFactory>();
+            httpClientFactory.Setup(f => f.CreateClient("Anthropic")).Returns(new HttpClient());
+
+            return new ChatAgentProvider(toolService, cache, loggerFactory, settings, serviceProvider.Object, httpClientFactory.Object);
         }
 
         private static Settings CreateSettings()
