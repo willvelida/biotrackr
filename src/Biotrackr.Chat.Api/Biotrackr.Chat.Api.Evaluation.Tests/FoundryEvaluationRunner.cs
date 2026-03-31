@@ -33,8 +33,7 @@ public class FoundryEvaluationRunner
         return await _projectClient.Datasets.UploadFileAsync(
             name: datasetName,
             version: version,
-            filePath: datasetPath,
-            connectionName: "evaluation-storage");
+            filePath: datasetPath);
     }
 
     /// <summary>
