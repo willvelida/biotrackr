@@ -13,9 +13,11 @@ namespace Biotrackr.Mcp.Server.Models.Weight
         [JsonPropertyName("fat")]
         public double Fat { get; set; }
 
+        [JsonIgnore]
         [JsonPropertyName("logId")]
         public object? LogId { get; set; }
 
+        [JsonIgnore]
         [JsonPropertyName("source")]
         public string Source { get; set; } = string.Empty;
 

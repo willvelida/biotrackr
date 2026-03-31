@@ -16,6 +16,7 @@ namespace Biotrackr.Mcp.Server.Models.Sleep
         [JsonPropertyName("endTime")]
         public DateTime EndTime { get; set; }
 
+        [JsonIgnore]
         [JsonPropertyName("infoCode")]
         public int InfoCode { get; set; }
 
@@ -25,6 +26,7 @@ namespace Biotrackr.Mcp.Server.Models.Sleep
         [JsonPropertyName("levels")]
         public SleepLevels Levels { get; set; } = new();
 
+        [JsonIgnore]
         [JsonPropertyName("logId")]
         public long LogId { get; set; }
 
@@ -40,6 +42,7 @@ namespace Biotrackr.Mcp.Server.Models.Sleep
         [JsonPropertyName("minutesToFallAsleep")]
         public int MinutesToFallAsleep { get; set; }
 
+        [JsonIgnore]
         [JsonPropertyName("logType")]
         public string LogType { get; set; } = string.Empty;
 
@@ -49,6 +52,7 @@ namespace Biotrackr.Mcp.Server.Models.Sleep
         [JsonPropertyName("timeInBed")]
         public int TimeInBed { get; set; }
 
+        [JsonIgnore]
         [JsonPropertyName("type")]
         public string Type { get; set; } = string.Empty;
     }
