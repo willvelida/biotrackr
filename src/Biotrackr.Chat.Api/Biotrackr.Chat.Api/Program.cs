@@ -113,6 +113,7 @@ builder.Services.AddOpenTelemetry()
     .WithTracing(tracing =>
     {
         tracing.SetResourceBuilder(resourceBuilder)
+            .AddSource("gen_ai.anthropic")
             .AddAspNetCoreInstrumentation()
             .AddHttpClientInstrumentation()
             .AddAzureMonitorTraceExporter(options =>

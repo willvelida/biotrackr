@@ -2,6 +2,7 @@ using System.Text.Json;
 using Anthropic;
 using Anthropic.Models.Messages;
 using Biotrackr.Chat.Api.Configuration;
+using Biotrackr.Chat.Api.Telemetry;
 using Microsoft.Extensions.Options;
 
 namespace Biotrackr.Chat.Api.Tools
@@ -41,6 +42,7 @@ namespace Biotrackr.Chat.Api.Tools
                 };
             }
 
+            System.Diagnostics.Activity? activity = null;
             try
             {
                 var httpClient = _httpClientFactory.CreateClient("Anthropic");
@@ -63,6 +65,10 @@ namespace Biotrackr.Chat.Api.Tools
                     "  \"validatedSummary\": \"the summary with corrections and disclaimers applied\"\n" +
                     "}";
 
+                activity = AnthropicTelemetry.StartChatActivity(
+                    model: _settings.ChatAgentModel,
+                    agentId: "BiotrackrReportReviewer");
+
                 var result = await anthropicClient.Messages.Create(new MessageCreateParams
                 {
                     MaxTokens = 4096,
@@ -78,6 +84,16 @@ namespace Biotrackr.Chat.Api.Tools
                     Messages = [new MessageParam { Role = "user", Content = reviewPrompt }]
                 });
 
+                AnthropicTelemetry.RecordResponse(
+                    activity,
+                    responseModel: result.Model,
+                    responseId: result.ID,
+                    finishReason: result.StopReason,
+                    inputTokens: result.Usage?.InputTokens ?? 0,
+                    outputTokens: result.Usage?.OutputTokens ?? 0,
+                    cacheReadInputTokens: result.Usage?.CacheReadInputTokens ?? 0,
+                    cacheCreationInputTokens: result.Usage?.CacheCreationInputTokens ?? 0);
+
                 var responseText = string.Join("", result.Content
                     .OfType<TextBlock>()
                     .Select(b => b.Text));
@@ -90,6 +106,7 @@ namespace Biotrackr.Chat.Api.Tools
             }
             catch (Exception ex)
             {
+                AnthropicTelemetry.RecordError(activity, ex);
                 _logger.LogError(ex, "Reviewer agent failed. Passing report through with warning.");
                 return new ReviewResult
                 {
@@ -97,6 +114,10 @@ namespace Biotrackr.Chat.Api.Tools
                     ValidatedSummary = reportSummary + "\n\n⚠️ Note: This report could not be independently reviewed. Please verify the data manually.",
                     Concerns = []
                 };
+            }
+            finally
+            {
+                activity?.Dispose();
             }
         }
 
