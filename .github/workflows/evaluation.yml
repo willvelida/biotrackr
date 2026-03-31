@@ -1,0 +1,70 @@
+name: Evaluate AI Agents
+
+on:
+    workflow_dispatch:
+    push:
+        branches:
+            - main
+        paths:
+            - 'scripts/chat-system-prompt/**'
+            - 'scripts/reporting-api-prompts/**'
+            - 'src/Biotrackr.Chat.Api/Biotrackr.Chat.Api.Evaluation.Tests/**'
+
+permissions:
+    contents: read
+    id-token: write
+
+env:
+    DOTNET_VERSION: 10.0.x
+
+jobs:
+    dataset-validation:
+        name: Validate Evaluation Datasets
+        runs-on: ubuntu-latest
+        steps:
+            - name: Checkout Repository
+              uses: actions/checkout@v5
+
+            - name: Setup .NET
+              uses: actions/setup-dotnet@v5
+              with:
+                  dotnet-version: ${{ env.DOTNET_VERSION }}
+
+            - name: Run Dataset Validation Tests
+              working-directory: ./src/Biotrackr.Chat.Api/Biotrackr.Chat.Api.Evaluation.Tests
+              run: dotnet test --filter "Category=DatasetValidation"
+
+    run-evaluation:
+        name: Run Foundry Evaluation
+        needs: dataset-validation
+        runs-on: ubuntu-latest
+        environment: dev
+        steps:
+            - name: Checkout Repository
+              uses: actions/checkout@v5
+
+            - name: Setup .NET
+              uses: actions/setup-dotnet@v5
+              with:
+                  dotnet-version: ${{ env.DOTNET_VERSION }}
+
+            - name: Azure Login
+              uses: azure/login@v2
+              with:
+                  client-id: ${{ secrets.AZURE_CLIENT_ID }}
+                  tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+                  subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+            - name: Run Evaluation Tests
+              working-directory: ./src/Biotrackr.Chat.Api/Biotrackr.Chat.Api.Evaluation.Tests
+              env:
+                  FOUNDRY_PROJECT_ENDPOINT: ${{ secrets.FOUNDRY_PROJECT_ENDPOINT }}
+              run: |
+                  dotnet test --filter "Category=Evaluation" --logger "trx;LogFileName=evaluation-results.trx"
+
+            - name: Upload Results
+              if: always()
+              uses: actions/upload-artifact@v4
+              with:
+                  name: evaluation-results
+                  path: ./src/Biotrackr.Chat.Api/Biotrackr.Chat.Api.Evaluation.Tests/TestResults/
