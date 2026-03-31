@@ -61,12 +61,12 @@ public class FoundryEvaluationTests
         }
     }
 
-    [Fact(Skip = "Requires live Foundry endpoint — run via evaluation workflow")]
+    [SkippableFact]
     [Trait("Category", "Evaluation")]
     public async Task ChatAgentEvaluation_ShouldComplete()
     {
-        _foundryEndpoint.Should().NotBeNullOrEmpty(
-            because: "FOUNDRY_PROJECT_ENDPOINT must be set for live evaluation tests");
+        Skip.If(string.IsNullOrEmpty(_foundryEndpoint),
+            "FOUNDRY_PROJECT_ENDPOINT not set — skipping live evaluation");
 
         var runner = new FoundryEvaluationRunner(_foundryEndpoint!);
         var datasetPath = GetDatasetPath("chat-agent-eval.jsonl");
@@ -77,12 +77,12 @@ public class FoundryEvaluationTests
         status.Should().Be("completed");
     }
 
-    [Fact(Skip = "Requires live Foundry endpoint — run via evaluation workflow")]
+    [SkippableFact]
     [Trait("Category", "Evaluation")]
     public async Task ReportReviewerEvaluation_ShouldComplete()
     {
-        _foundryEndpoint.Should().NotBeNullOrEmpty(
-            because: "FOUNDRY_PROJECT_ENDPOINT must be set for live evaluation tests");
+        Skip.If(string.IsNullOrEmpty(_foundryEndpoint),
+            "FOUNDRY_PROJECT_ENDPOINT not set — skipping live evaluation");
 
         var runner = new FoundryEvaluationRunner(_foundryEndpoint!);
         var datasetPath = GetDatasetPath("report-reviewer-eval.jsonl");
