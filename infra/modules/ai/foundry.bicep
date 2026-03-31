@@ -170,21 +170,12 @@ resource projectStorageRole 'Microsoft.Authorization/roleAssignments@2022-04-01'
   }
 }
 
-// Connect storage to the Foundry project so the Datasets API can upload files
-resource storageConnection 'Microsoft.CognitiveServices/accounts/projects/connections@2025-12-01' = {
-  parent: foundryProject
-  name: 'evaluation-storage'
-  properties: {
-    category: 'AzureBlob'
-    target: evaluationStorage.properties.primaryEndpoints.blob
-    authType: 'AAD'
-    metadata: {
-      storageAccountResourceId: evaluationStorage.id
-      AccountName: evaluationStorage.name
-      ContainerName: 'evaluation-datasets'
-    }
-  }
-}
+// NOTE: The Foundry project connection for evaluation storage is managed out-of-band
+// via CLI (az rest) because the ARM API only accepts category 'AzureBlob' but the
+// SDK data plane (AzureML asset store) only accepts 'AzureBlobStorage'. This is a
+// known platform category mapping mismatch. The connection was created manually:
+//   az rest --method put --url ".../connections/evaluation-storage?api-version=2025-09-01"
+//   --body "{'properties':{'category':'AzureBlob','target':'https://stbiotrackrevaldev.blob.core.windows.net/',...}}"
 
 @description('The name of the deployed AI Foundry account')
 output foundryAccountName string = foundryAccount.name
