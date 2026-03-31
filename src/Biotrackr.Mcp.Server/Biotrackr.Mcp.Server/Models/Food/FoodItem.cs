@@ -4,6 +4,7 @@ namespace Biotrackr.Mcp.Server.Models.Food
 {
     public class FoodItem
     {
+        [JsonIgnore]
         [JsonPropertyName("id")]
         public string Id { get; set; } = string.Empty;
 
@@ -13,6 +14,7 @@ namespace Biotrackr.Mcp.Server.Models.Food
         [JsonPropertyName("date")]
         public string Date { get; set; } = string.Empty;
 
+        [JsonIgnore]
         [JsonPropertyName("documentType")]
         public string DocumentType { get; set; } = string.Empty;
     }

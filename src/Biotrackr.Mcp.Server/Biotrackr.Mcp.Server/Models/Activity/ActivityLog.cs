@@ -7,9 +7,11 @@ namespace Biotrackr.Mcp.Server.Models.Activity
 {
     public class ActivityLog
     {
+        [JsonIgnore]
         [JsonPropertyName("activityId")]
         public int ActivityId { get; set; }
 
+        [JsonIgnore]
         [JsonPropertyName("activityParentId")]
         public int ActivityParentId { get; set; }
 
@@ -25,18 +27,23 @@ namespace Biotrackr.Mcp.Server.Models.Activity
         [JsonPropertyName("duration")]
         public long Duration { get; set; }
 
+        [JsonIgnore]
         [JsonPropertyName("hasActiveZoneMinutes")]
         public bool HasActiveZoneMinutes { get; set; }
 
+        [JsonIgnore]
         [JsonPropertyName("hasStartTime")]
         public bool HasStartTime { get; set; }
 
+        [JsonIgnore]
         [JsonPropertyName("isFavorite")]
         public bool IsFavorite { get; set; }
 
+        [JsonIgnore]
         [JsonPropertyName("lastModified")]
         public DateTime LastModified { get; set; }
 
+        [JsonIgnore]
         [JsonPropertyName("logId")]
         public long LogId { get; set; }
 

@@ -7,12 +7,14 @@ namespace Biotrackr.Mcp.Server.Models.Activity
 {
     public class ActivitySummary
     {
+        [JsonIgnore]
         [JsonPropertyName("activeScore")]
         public int ActiveScore { get; set; }
 
         [JsonPropertyName("activityCalories")]
         public int ActivityCalories { get; set; }
 
+        [JsonIgnore]
         [JsonPropertyName("calorieEstimationMu")]
         public int CalorieEstimationMu { get; set; }
 
@@ -22,6 +24,7 @@ namespace Biotrackr.Mcp.Server.Models.Activity
         [JsonPropertyName("caloriesOut")]
         public int CaloriesOut { get; set; }
 
+        [JsonIgnore]
         [JsonPropertyName("caloriesOutUnestimated")]
         public int CaloriesOutUnestimated { get; set; }
 
@@ -43,6 +46,7 @@ namespace Biotrackr.Mcp.Server.Models.Activity
         [JsonPropertyName("lightlyActiveMinutes")]
         public int LightlyActiveMinutes { get; set; }
 
+        [JsonIgnore]
         [JsonPropertyName("marginalCalories")]
         public int MarginalCalories { get; set; }
 
@@ -55,6 +59,7 @@ namespace Biotrackr.Mcp.Server.Models.Activity
         [JsonPropertyName("steps")]
         public int Steps { get; set; }
 
+        [JsonIgnore]
         [JsonPropertyName("useEstimation")]
         public bool UseEstimation { get; set; }
 

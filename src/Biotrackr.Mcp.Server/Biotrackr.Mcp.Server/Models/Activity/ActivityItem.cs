@@ -7,6 +7,7 @@ namespace Biotrackr.Mcp.Server.Models.Activity
 {
     public class ActivityItem
     {
+        [JsonIgnore]
         [JsonPropertyName("id")]
         public string Id { get; set; } = string.Empty;
 
@@ -16,6 +17,7 @@ namespace Biotrackr.Mcp.Server.Models.Activity
         [JsonPropertyName("date")]
         public string Date { get; set; } = string.Empty;
 
+        [JsonIgnore]
         [JsonPropertyName("documentType")]
         public string DocumentType { get; set; } = string.Empty;
     }
