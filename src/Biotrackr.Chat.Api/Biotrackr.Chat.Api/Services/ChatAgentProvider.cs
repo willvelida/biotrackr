@@ -1,6 +1,7 @@
 using Anthropic;
 using Biotrackr.Chat.Api.Configuration;
 using Biotrackr.Chat.Api.Middleware;
+using Biotrackr.Chat.Api.Telemetry;
 using Biotrackr.Chat.Api.Tools;
 using Microsoft.Agents.AI;
 using Microsoft.Extensions.AI;
@@ -98,10 +99,37 @@ namespace Biotrackr.Chat.Api.Services
             AgentRunOptions? options,
             [System.Runtime.CompilerServices.EnumeratorCancellation] CancellationToken cancellationToken)
         {
+            using var activity = AnthropicTelemetry.StartChatActivity(
+                model: _settings.ChatAgentModel,
+                agentId: "BiotrackrChatAgent");
+
             var currentAgent = await GetAgentAsync(cancellationToken);
-            await foreach (var update in currentAgent.RunStreamingAsync(messages, session, options, cancellationToken))
+            var enumerator = currentAgent.RunStreamingAsync(messages, session, options, cancellationToken)
+                .GetAsyncEnumerator(cancellationToken);
+
+            try
             {
-                yield return update;
+                while (true)
+                {
+                    AgentResponseUpdate current;
+                    try
+                    {
+                        if (!await enumerator.MoveNextAsync())
+                            break;
+                        current = enumerator.Current;
+                    }
+                    catch (Exception ex)
+                    {
+                        AnthropicTelemetry.RecordError(activity, ex);
+                        throw;
+                    }
+
+                    yield return current;
+                }
+            }
+            finally
+            {
+                await enumerator.DisposeAsync();
             }
         }
 
