@@ -146,5 +146,6 @@ module foundry '../modules/ai/foundry.bicep' = {
     appInsightsName: appInsights.outputs.appInsightsName
     logAnalyticsName: logAnalytics.outputs.logAnalyticsName
     uaiName: uai.outputs.uaiName
+    evaluationStorageAccountName: 'st${replace(baseName, '-', '')}eval${environment}'
   }
 }

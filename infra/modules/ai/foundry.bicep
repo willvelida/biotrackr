@@ -29,6 +29,11 @@ param logAnalyticsName string
 @description('The name of the user-assigned identity to grant Cognitive Services User role')
 param uaiName string
 
+@description('The name of the evaluation storage account for dataset uploads')
+@minLength(3)
+@maxLength(24)
+param evaluationStorageAccountName string
+
 resource uai 'Microsoft.ManagedIdentity/userAssignedIdentities@2023-01-31' existing = {
   name: uaiName
 }
@@ -108,6 +113,79 @@ resource cognitiveServicesUserRole 'Microsoft.Authorization/roleAssignments@2022
   }
 }
 
+// --- Evaluation Storage ---
+// Dedicated storage account for Foundry evaluation dataset uploads.
+// The SDK's UploadFileAsync requires a connected storage resource on the project.
+resource evaluationStorage 'Microsoft.Storage/storageAccounts@2024-01-01' = {
+  name: evaluationStorageAccountName
+  location: location
+  tags: tags
+  kind: 'StorageV2'
+  sku: {
+    name: 'Standard_LRS'
+  }
+  properties: {
+    accessTier: 'Hot'
+    allowBlobPublicAccess: false
+    minimumTlsVersion: 'TLS1_2'
+    supportsHttpsTrafficOnly: true
+  }
+}
+
+resource evaluationBlobService 'Microsoft.Storage/storageAccounts/blobServices@2024-01-01' = {
+  name: 'default'
+  parent: evaluationStorage
+}
+
+resource evaluationDatasetsContainer 'Microsoft.Storage/storageAccounts/blobServices/containers@2024-01-01' = {
+  name: 'evaluation-datasets'
+  parent: evaluationBlobService
+  properties: {
+    publicAccess: 'None'
+  }
+}
+
+// Storage Blob Data Contributor for the Foundry account's system-assigned identity
+// so the SDK can upload datasets via PendingUpload
+var storageBlobDataContributorRoleId = 'ba92f5b4-2d11-453d-a403-e96b0029c9fe'
+
+resource foundryStorageRole 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+  name: guid(evaluationStorage.id, foundryAccount.id, storageBlobDataContributorRoleId)
+  scope: evaluationStorage
+  properties: {
+    principalId: foundryAccount.identity.principalId
+    roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', storageBlobDataContributorRoleId)
+    principalType: 'ServicePrincipal'
+  }
+}
+
+// Storage Blob Data Contributor for the project's system-assigned identity
+resource projectStorageRole 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+  name: guid(evaluationStorage.id, foundryProject.id, storageBlobDataContributorRoleId)
+  scope: evaluationStorage
+  properties: {
+    principalId: foundryProject.identity.principalId
+    roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', storageBlobDataContributorRoleId)
+    principalType: 'ServicePrincipal'
+  }
+}
+
+// Connect storage to the Foundry project so the Datasets API can upload files
+resource storageConnection 'Microsoft.CognitiveServices/accounts/projects/connections@2025-12-01' = {
+  parent: foundryProject
+  name: 'evaluation-storage'
+  properties: {
+    category: 'AzureBlob'
+    target: evaluationStorage.properties.primaryEndpoints.blob
+    authType: 'AAD'
+    metadata: {
+      storageAccountResourceId: evaluationStorage.id
+      AccountName: evaluationStorage.name
+      ContainerName: 'evaluation-datasets'
+    }
+  }
+}
+
 @description('The name of the deployed AI Foundry account')
 output foundryAccountName string = foundryAccount.name
 
@@ -122,3 +200,9 @@ output foundryProjectName string = foundryProject.name
 
 @description('The Application Insights resource ID (for portal connection)')
 output appInsightsResourceId string = appInsights.id
+
+@description('The project endpoint for SDK calls (e.g., evaluations, datasets)')
+output foundryProjectEndpoint string = foundryProject.properties.endpoints['AI Foundry API']
+
+@description('The name of the evaluation storage account')
+output evaluationStorageAccountName string = evaluationStorage.name
