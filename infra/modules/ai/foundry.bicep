@@ -12,9 +12,6 @@ param name string
 param projectName string
 
 @description('The location for all resources')
-@allowed([
-  'australiaeast'
-])
 param location string
 
 @description('Tags to apply to all resources')
@@ -176,6 +173,23 @@ resource projectStorageRole 'Microsoft.Authorization/roleAssignments@2022-04-01'
 // known platform category mapping mismatch. The connection was created manually:
 //   az rest --method put --url ".../connections/evaluation-storage?api-version=2025-09-01"
 //   --body "{'properties':{'category':'AzureBlob','target':'https://stbiotrackrevaldev.blob.core.windows.net/',...}}"
+
+// Connect Application Insights to the Foundry project for trace correlation and monitoring
+resource appInsightsConnection 'Microsoft.CognitiveServices/accounts/projects/connections@2025-09-01' = {
+  parent: foundryProject
+  name: 'app-insights'
+  properties: {
+    category: 'AppInsights'
+    target: appInsights.properties.ConnectionString
+    authType: 'ApiKey'
+    credentials: {
+      key: appInsights.properties.InstrumentationKey
+    }
+    metadata: {
+      ResourceId: appInsights.id
+    }
+  }
+}
 
 @description('The name of the deployed AI Foundry account')
 output foundryAccountName string = foundryAccount.name
