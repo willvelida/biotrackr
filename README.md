@@ -51,7 +51,8 @@ HTTP-based Container Apps serving data from Cosmos DB via Azure API Management:
 - **Azure Blob Storage**: Report artifact storage (PDFs, charts) with SAS URL generation
 - **GitHub Copilot**: Coding agent sidecar for Reporting API that generates and executes Python report scripts
 - **Managed Identity (UAI)**: Passwordless authentication across all Azure resources
-- **Observability**: Application Insights, Log Analytics, OpenTelemetry (traces/metrics), Azure Monitor Alerts
+- **Observability**: Application Insights, Log Analytics, OpenTelemetry (traces/metrics), Azure Monitor Alerts, Azure AI Foundry (evaluation)
+- **Azure AI Foundry**: GenAIOps evaluation and monitoring — safety evaluators, groundedness checking, and evaluation pipeline via Foundry project in East US 2
 
 ## ✨ Features
 
@@ -68,6 +69,7 @@ HTTP-based Container Apps serving data from Cosmos DB via Azure API Management:
 - 🔄 **Graceful Degradation**: Chat API continues operating when MCP tools are unavailable, rebuilding automatically when restored
 - 💾 **Conversation Persistence**: Chat history stored in Cosmos DB with message limits and truncation for context management
 - 🖥️ **Web Dashboard**: Blazor Server UI with Radzen components for browsing and visualizing health data
+- 🧪 **AI Safety Evaluation**: Automated safety + groundedness evaluations via Azure AI Foundry with violence, self-harm, sexual content, and hate/unfairness detection
 - ☁️ **Cloud-Native**: Fully deployed on Azure with auto-scaling
 - 🚀 **CI/CD**: Automated testing, deployment, and infrastructure management
 
@@ -87,6 +89,7 @@ HTTP-based Container Apps serving data from Cosmos DB via Azure API Management:
 - **Docker**: Containerization for consistent environments
 - **Azure API Management**: API gateway with JWT validation for secure managed identity authentication
 - **ModelContextProtocol SDK**: MCP server with Streamable HTTP transport
+- **Azure AI Foundry**: GenAIOps evaluation pipeline with safety evaluators
 
 ### Frontend
 - **Blazor Server**: Interactive server-rendered UI with .NET 10.0
@@ -116,6 +119,7 @@ HTTP-based Container Apps serving data from Cosmos DB via Azure API Management:
 | **Chat API** | [![Deploy Chat Api](https://github.com/willvelida/biotrackr/actions/workflows/deploy-chat-api.yml/badge.svg)](https://github.com/willvelida/biotrackr/actions/workflows/deploy-chat-api.yml) | ![Code Coverage](https://img.shields.io/badge/Code%20Coverage-86%25-brightgreen?style=flat) | ![Integration Tests](https://img.shields.io/badge/Tests-2%20Passing-brightgreen?style=flat) |
 | **MCP Server** | [![Deploy MCP Server](https://github.com/willvelida/biotrackr/actions/workflows/deploy-mcp-server.yml/badge.svg)](https://github.com/willvelida/biotrackr/actions/workflows/deploy-mcp-server.yml) | ![Code Coverage](https://img.shields.io/badge/Code%20Coverage-76%25-yellow?style=flat) | ![Integration Tests](https://img.shields.io/badge/Tests-13%20Passing-brightgreen?style=flat) |
 | **Reporting API** | [![Deploy Reporting Api](https://github.com/willvelida/biotrackr/actions/workflows/deploy-reporting-api.yml/badge.svg)](https://github.com/willvelida/biotrackr/actions/workflows/deploy-reporting-api.yml) | ![Code Coverage](https://img.shields.io/badge/Code%20Coverage-TBD-lightgrey?style=flat) | ![Integration Tests](https://img.shields.io/badge/Tests-TBD-lightgrey?style=flat) |
+| **AI Evaluation** | [![Evaluate AI Agents](https://github.com/willvelida/biotrackr/actions/workflows/evaluation.yml/badge.svg)](https://github.com/willvelida/biotrackr/actions/workflows/evaluation.yml) | N/A | N/A |
 | **UI** | [![Deploy UI](https://github.com/willvelida/biotrackr/actions/workflows/deploy-ui.yml/badge.svg)](https://github.com/willvelida/biotrackr/actions/workflows/deploy-ui.yml) | N/A | N/A |
 
 ##  License
