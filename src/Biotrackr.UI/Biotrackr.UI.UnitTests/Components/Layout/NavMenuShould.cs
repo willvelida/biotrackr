@@ -55,11 +55,11 @@ namespace Biotrackr.UI.UnitTests.Components.Layout
         }
 
         [Fact]
-        public void RenderSignOutLink()
+        public void NotRenderSignOutLink_WhenMovedToProfileDropdown()
         {
             var cut = Render<NavMenu>();
 
-            cut.Markup.Should().Contain("Sign Out");
+            cut.Markup.Should().NotContain("Sign Out");
         }
     }
 }

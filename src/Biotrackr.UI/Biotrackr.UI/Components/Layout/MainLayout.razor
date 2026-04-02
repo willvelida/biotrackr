@@ -1,16 +1,52 @@
 ﻿@inherits LayoutComponentBase
+@inject IUserInfoService UserInfoService
 
-<RadzenLayout>
+<RadzenLayout style="position: relative;">
     <RadzenHeader>
-        <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0" class="rz-p-x-2">
-            <RadzenSidebarToggle Click="@(() => _sidebarExpanded = !_sidebarExpanded)" />
-            <RadzenText Text="Biotrackr" TextStyle="TextStyle.H6" class="rz-m-0 rz-color-white" />
+        <RadzenStack Orientation="Orientation.Horizontal"
+                     AlignItems="AlignItems.Center" Gap="0"
+                     JustifyContent="JustifyContent.SpaceBetween"
+                     class="rz-p-x-2" Style="width: 100%;">
+            <RadzenStack Orientation="Orientation.Horizontal"
+                         AlignItems="AlignItems.Center" Gap="0">
+                <RadzenSidebarToggle Click="@(() => _sidebarExpanded = !_sidebarExpanded)" />
+                <RadzenText Text="Biotrackr" TextStyle="TextStyle.H6"
+                            class="rz-m-0 rz-color-white" />
+            </RadzenStack>
+            <RadzenStack Orientation="Orientation.Horizontal"
+                         AlignItems="AlignItems.Center" Gap="0.5rem">
+                <RadzenAppearanceToggle />
+                <RadzenProfileMenu>
+                    <Template>
+                        <RadzenStack Orientation="Orientation.Horizontal"
+                                     AlignItems="AlignItems.Center" Gap="0.5rem">
+                            <RadzenGravatar Email="@_userInfo.Email" Size="32" />
+                            <RadzenText TextStyle="TextStyle.Body2"
+                                        class="rz-m-0 rz-color-white rz-display-none rz-display-md-block">
+                                @_userInfo.DisplayName
+                            </RadzenText>
+                        </RadzenStack>
+                    </Template>
+                    <ChildContent>
+                        <RadzenProfileMenuItem Text="Profile" Icon="account_circle"
+                                               Style="opacity: 0.5; pointer-events: none;" />
+                        <RadzenProfileMenuItem Text="Sign Out" Icon="logout"
+                                               Path=".auth/logout?post_logout_redirect_uri=/login" />
+                    </ChildContent>
+                </RadzenProfileMenu>
+            </RadzenStack>
         </RadzenStack>
     </RadzenHeader>
 
-    <RadzenSidebar @bind-Expanded="@_sidebarExpanded">
+    <RadzenSidebar @bind-Expanded="@_sidebarExpanded"
+                   Style="position: absolute; z-index: 3;">
         <NavMenu />
     </RadzenSidebar>
+
+    @if (_sidebarExpanded)
+    {
+        <div class="sidebar-overlay" @onclick="@(() => _sidebarExpanded = false)"></div>
+    }
 
     <RadzenBody>
         <div class="rz-p-4">
@@ -22,5 +58,16 @@
 <RadzenComponents @rendermode="InteractiveServer" />
 
 @code {
-    private bool _sidebarExpanded = true;
+    private bool _sidebarExpanded = false;
+    private UserInfo _userInfo = new();
+
+    [Inject] private IHttpContextAccessor HttpContextAccessor { get; set; } = default!;
+
+    protected override void OnInitialized()
+    {
+        if (HttpContextAccessor.HttpContext is not null)
+        {
+            _userInfo = UserInfoService.GetUserInfo(HttpContextAccessor.HttpContext);
+        }
+    }
 }

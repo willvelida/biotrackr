@@ -22,3 +22,23 @@
 </body>
 
 </html>
+
+@code {
+    [CascadingParameter]
+    private HttpContext? HttpContext { get; set; }
+
+    [Inject]
+    private ThemeService ThemeService { get; set; } = default!;
+
+    protected override void OnInitialized()
+    {
+        if (HttpContext is not null)
+        {
+            var theme = HttpContext.Request.Cookies["BiotrackrTheme"];
+            if (!string.IsNullOrEmpty(theme))
+            {
+                ThemeService.SetTheme(theme, false);
+            }
+        }
+    }
+}

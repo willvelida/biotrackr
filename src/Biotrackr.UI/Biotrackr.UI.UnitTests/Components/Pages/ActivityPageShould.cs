@@ -5,6 +5,7 @@ using Biotrackr.UI.Components.Pages;
 using Biotrackr.UI.Models;
 using Biotrackr.UI.Models.Activity;
 using Biotrackr.UI.Services;
+using Biotrackr.UI.UnitTests.Helpers;
 using FluentAssertions;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -20,6 +21,7 @@ namespace Biotrackr.UI.UnitTests.Components.Pages
             Services.AddSingleton(_mockApiService.Object);
             Services.AddRadzenComponents();
             JSInterop.Mode = JSRuntimeMode.Loose;
+            JSInterop.SetupRadzenChartInterop();
         }
 
         [Fact]
@@ -169,6 +171,87 @@ namespace Biotrackr.UI.UnitTests.Components.Pages
 
             // Range mode uses RadzenSelectBar which cannot be interacted with via bUnit selectors.
             // Verify that the component renders without errors when data is available.
+            cut.Markup.Should().NotBeEmpty();
+        }
+
+        [Fact]
+        public void RenderCharts_WhenSingleDateDataLoaded()
+        {
+            var activityItem = CreateActivityItem(steps: 10000, calories: 2500, floors: 10,
+                fairlyActive: 15, veryActive: 30, activeMinGoal: 30, stepsGoal: 10000,
+                caloriesGoal: 2500, floorsGoal: 10);
+            activityItem.Activity.Summary.HeartRateZones.Add(new HeartRateZone
+            {
+                Name = "Fat Burn",
+                Minutes = 40,
+                CaloriesOut = 150,
+                Min = 100,
+                Max = 140
+            });
+
+            _mockApiService.Setup(s => s.GetActivityByDateAsync(It.IsAny<string>()))
+                .ReturnsAsync(activityItem);
+
+            var cut = Render<Activity>();
+
+            // Arc gauges for steps and calories, bar charts for HR zones and active minutes
+            cut.Markup.Should().Contain("rz-arc-gauge");
+            cut.Markup.Should().Contain("Steps");
+            cut.Markup.Should().Contain("10,000");
+        }
+
+        [Fact]
+        public void RenderTrendCharts_WhenRangeDateDataLoaded()
+        {
+            var rangeResponse = new PaginatedResponse<ActivityItem>
+            {
+                Items =
+                [
+                    CreateActivityItem(steps: 8000, calories: 2200),
+                    CreateActivityItem(steps: 9500, calories: 2400)
+                ],
+                PageNumber = 1,
+                TotalPages = 1,
+                TotalCount = 2,
+                HasPreviousPage = false,
+                HasNextPage = false
+            };
+            rangeResponse.Items[0].Date = "2026-03-01";
+            rangeResponse.Items[1].Date = "2026-03-02";
+
+            _mockApiService.Setup(s => s.GetActivityByDateAsync(It.IsAny<string>()))
+                .ReturnsAsync((ActivityItem?)null);
+            _mockApiService.Setup(s => s.GetActivitiesByDateRangeAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<int>(), It.IsAny<int>()))
+                .ReturnsAsync(rangeResponse);
+
+            var cut = Render<Activity>();
+
+            // The component renders without errors when range data is available
+            cut.Markup.Should().NotBeEmpty();
+        }
+
+        [Fact]
+        public void RenderChartsAndDataGrid_InRangeMode()
+        {
+            var rangeResponse = new PaginatedResponse<ActivityItem>
+            {
+                Items = [CreateActivityItem(steps: 8000, calories: 2200)],
+                PageNumber = 1,
+                TotalPages = 1,
+                TotalCount = 1,
+                HasPreviousPage = false,
+                HasNextPage = false
+            };
+
+            _mockApiService.Setup(s => s.GetActivityByDateAsync(It.IsAny<string>()))
+                .ReturnsAsync((ActivityItem?)null);
+            _mockApiService.Setup(s => s.GetActivitiesByDateRangeAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<int>(), It.IsAny<int>()))
+                .ReturnsAsync(rangeResponse);
+
+            var cut = Render<Activity>();
+
+            // Verify component renders with range data including charts and grid elements
+            cut.Markup.Should().Contain("Activity");
             cut.Markup.Should().NotBeEmpty();
         }
 

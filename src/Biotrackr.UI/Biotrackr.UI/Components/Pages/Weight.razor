@@ -69,6 +69,15 @@
                     </RadzenColumn>
                 }
             </RadzenRow>
+
+            @if (GetBodyCompositionData().Any())
+            {
+                <RadzenText TextStyle="TextStyle.H6" class="rz-mb-2">Body Composition</RadzenText>
+                <RadzenChart Style="height: 300px;" class="rz-mb-4">
+                    <RadzenDonutSeries Data="@GetBodyCompositionData()" CategoryProperty="Component"
+                        ValueProperty="Mass" Title="Body Composition (kg)" />
+                </RadzenChart>
+            }
         }
     }
     else
@@ -79,6 +88,42 @@
 
 @if (!_isLoading && _rangeItems is not null && _mode == "range")
 {
+    @if (_rangeItems.Items.Any())
+    {
+        <RadzenText TextStyle="TextStyle.H6" class="rz-mb-2">Weight Over Time</RadzenText>
+        <RadzenChart Style="height: 300px;" class="rz-mb-4">
+            <RadzenLineSeries Data="@GetRangeWeightData()" CategoryProperty="Date" ValueProperty="Value"
+                Title="Weight (kg)" Smooth="true" />
+            <RadzenCategoryAxis Padding="20" />
+            <RadzenValueAxis>
+                <RadzenGridLines Visible="true" />
+            </RadzenValueAxis>
+        </RadzenChart>
+
+        <RadzenText TextStyle="TextStyle.H6" class="rz-mb-2">BMI Over Time</RadzenText>
+        <RadzenChart Style="height: 300px;" class="rz-mb-4">
+            <RadzenLineSeries Data="@GetRangeBmiData()" CategoryProperty="Date" ValueProperty="Value"
+                Title="BMI" Smooth="true" />
+            <RadzenCategoryAxis Padding="20" />
+            <RadzenValueAxis>
+                <RadzenGridLines Visible="true" />
+            </RadzenValueAxis>
+        </RadzenChart>
+
+        @if (GetRangeBodyFatData().Any())
+        {
+            <RadzenText TextStyle="TextStyle.H6" class="rz-mb-2">Body Fat % Over Time</RadzenText>
+            <RadzenChart Style="height: 300px;" class="rz-mb-4">
+                <RadzenLineSeries Data="@GetRangeBodyFatData()" CategoryProperty="Date" ValueProperty="Value"
+                    Title="Body Fat %" Smooth="true" />
+                <RadzenCategoryAxis Padding="20" />
+                <RadzenValueAxis>
+                    <RadzenGridLines Visible="true" />
+                </RadzenValueAxis>
+            </RadzenChart>
+        }
+    }
+
     <RadzenText TextStyle="TextStyle.H6" class="rz-mb-2">Weight Records</RadzenText>
     <RadzenDataGrid Data="@_rangeItems.Items" TItem="WeightItem" Density="Density.Compact"
                     AllowPaging="true" PageSize="10" Count="@_rangeItems.TotalCount" LoadData="@OnLoadData" class="rz-mb-4">
@@ -203,4 +248,28 @@
         if (bmi < 30.0) return "Overweight";
         return "Obese";
     }
+
+    private record BodyCompositionItem(string Component, double Mass);
+
+    private List<BodyCompositionItem> GetBodyCompositionData()
+    {
+        var w = _singleItem!.Weight;
+        var items = new List<BodyCompositionItem>();
+        if (w.FatMassKg is not null) items.Add(new("Fat", w.FatMassKg.Value));
+        if (w.MuscleMassKg is not null) items.Add(new("Muscle", w.MuscleMassKg.Value));
+        if (w.BoneMassKg is not null) items.Add(new("Bone", w.BoneMassKg.Value));
+        if (w.WaterMassKg is not null) items.Add(new("Water", w.WaterMassKg.Value));
+        return items;
+    }
+
+    private record ChartDataPoint(string Date, double Value);
+
+    private List<ChartDataPoint> GetRangeWeightData() =>
+        _rangeItems!.Items.Where(w => w.Weight.Weight > 0).Select(w => new ChartDataPoint(w.Date, w.Weight.Weight)).ToList();
+
+    private List<ChartDataPoint> GetRangeBmiData() =>
+        _rangeItems!.Items.Where(w => w.Weight.Bmi > 0).Select(w => new ChartDataPoint(w.Date, Math.Round(w.Weight.Bmi, 1))).ToList();
+
+    private List<ChartDataPoint> GetRangeBodyFatData() =>
+        _rangeItems!.Items.Where(w => w.Weight.Fat > 0).Select(w => new ChartDataPoint(w.Date, Math.Round(w.Weight.Fat, 1))).ToList();
 }

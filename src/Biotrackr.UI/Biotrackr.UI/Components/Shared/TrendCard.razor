@@ -1,0 +1,32 @@
+<RadzenCard class="@($"rz-h-100 summary-card {CardClass}")">
+    <RadzenStack Orientation="Orientation.Vertical"
+                 AlignItems="AlignItems.Center" Gap="0.25rem">
+        @if (IconContent is not null)
+        {
+            <div class="card-icon">@IconContent</div>
+        }
+        <RadzenText TextStyle="TextStyle.Overline" class="rz-color-secondary">@Title</RadzenText>
+        <RadzenText TextStyle="TextStyle.H5" class="rz-mb-0">@Value</RadzenText>
+        @if (!string.IsNullOrEmpty(Subtitle))
+        {
+            <RadzenText TextStyle="TextStyle.Caption" class="rz-color-secondary">@Subtitle</RadzenText>
+        }
+        @if (TrendData is not null && TrendData.Any())
+        {
+            <RadzenSparkline Style="width: 100%; height: 40px;">
+                <RadzenAreaSeries Smooth="true" Data="@TrendData"
+                    CategoryProperty="Date" ValueProperty="Value" />
+                <RadzenCategoryAxis Visible="false" Padding="-20" />
+            </RadzenSparkline>
+        }
+    </RadzenStack>
+</RadzenCard>
+
+@code {
+    [Parameter] public string Title { get; set; } = "";
+    [Parameter] public string Value { get; set; } = "";
+    [Parameter] public string? Subtitle { get; set; }
+    [Parameter] public string? CardClass { get; set; }
+    [Parameter] public RenderFragment? IconContent { get; set; }
+    [Parameter] public IEnumerable<TrendDataPoint>? TrendData { get; set; }
+}
