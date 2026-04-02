@@ -19,15 +19,25 @@ IHost host = Host.CreateDefaultBuilder(args)
 
         services.AddSingleton(new SecretClient(new Uri(keyVaultUrl!), new DefaultAzureCredential(defaultCredentialOptions)));
 
-        services.AddHttpClient<IRefreshTokenService, RefreshTokenService>()
-            .AddStandardResilienceHandler();
+        var provider = context.Configuration["provider"] ?? "fitbit";
+
+        if (provider.Equals("withings", StringComparison.OrdinalIgnoreCase))
+        {
+            services.AddHttpClient<IWithingsRefreshTokenService, WithingsRefreshTokenService>()
+                .AddStandardResilienceHandler();
+            services.AddHostedService<WithingsAuthWorker>();
+        }
+        else
+        {
+            services.AddHttpClient<IRefreshTokenService, RefreshTokenService>()
+                .AddStandardResilienceHandler();
+            services.AddHostedService<AuthWorker>();
+        }
 
         services.AddApplicationInsightsTelemetryWorkerService(options =>
         {
             options.ConnectionString = context.Configuration["applicationinsightsconnectionstring"];
         });
-
-        services.AddHostedService<AuthWorker>();
     })
     .Build();
 
