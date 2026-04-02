@@ -2,11 +2,13 @@ using Bunit;
 using Moq;
 using Radzen;
 using Biotrackr.UI.Components.Pages;
+using Biotrackr.UI.Models;
 using Biotrackr.UI.Models.Activity;
 using Biotrackr.UI.Models.Food;
 using Biotrackr.UI.Models.Sleep;
 using Biotrackr.UI.Models.Weight;
 using Biotrackr.UI.Services;
+using Biotrackr.UI.UnitTests.Helpers;
 using FluentAssertions;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -22,6 +24,7 @@ namespace Biotrackr.UI.UnitTests.Components.Pages
             Services.AddSingleton(_mockApiService.Object);
             Services.AddRadzenComponents();
             JSInterop.Mode = JSRuntimeMode.Loose;
+            JSInterop.SetupRadzenChartInterop();
         }
 
         [Fact]
@@ -135,7 +138,90 @@ namespace Biotrackr.UI.UnitTests.Components.Pages
 
             var cut = Render<Home>();
 
-            cut.Markup.Should().Contain("BMI: 23.1");
+            cut.Markup.Should().Contain("BMI");
+            cut.Markup.Should().Contain("23.1");
+        }
+
+        [Fact]
+        public void RenderDomainSections_WhenAllDataLoaded()
+        {
+            SetupEmptyApiResponses();
+            SetupEmptyRangeResponses();
+
+            var cut = Render<Home>();
+
+            cut.Markup.Should().Contain("Activity");
+            cut.Markup.Should().Contain("Sleep");
+            cut.Markup.Should().Contain("Weight");
+            cut.Markup.Should().Contain("Food");
+        }
+
+        [Fact]
+        public void RenderTrendCards_WithSparklines_WhenRangeDataAvailable()
+        {
+            SetupEmptyApiResponses();
+            _mockApiService.Setup(s => s.GetActivitiesByDateRangeAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<int>(), It.IsAny<int>()))
+                .ReturnsAsync(new PaginatedResponse<ActivityItem>
+                {
+                    Items =
+                    [
+                        new ActivityItem { Date = "2026-03-01", Activity = new ActivityData { Summary = new ActivitySummary { Steps = 8000, CaloriesOut = 2200, FairlyActiveMinutes = 10, VeryActiveMinutes = 20, Floors = 5, RestingHeartRate = 62 }, Goals = new ActivityGoals() } },
+                        new ActivityItem { Date = "2026-03-02", Activity = new ActivityData { Summary = new ActivitySummary { Steps = 9500, CaloriesOut = 2400, FairlyActiveMinutes = 15, VeryActiveMinutes = 25, Floors = 7, RestingHeartRate = 60 }, Goals = new ActivityGoals() } }
+                    ],
+                    TotalCount = 2
+                });
+            SetupEmptyRangeResponses(skipActivity: true);
+
+            var cut = Render<Home>();
+
+            // TrendCard renders sparklines via RadzenSparkline (which extends RadzenChart)
+            cut.Markup.Should().Contain("rz-chart");
+        }
+
+        [Fact]
+        public void RenderDefaultValues_WhenDomainApiFailsSilently()
+        {
+            // Single-day data loads normally
+            _mockApiService.Setup(s => s.GetActivityByDateAsync(It.IsAny<string>()))
+                .ReturnsAsync(new ActivityItem
+                {
+                    Activity = new ActivityData
+                    {
+                        Summary = new ActivitySummary { Steps = 5000 },
+                        Goals = new ActivityGoals()
+                    }
+                });
+            _mockApiService.Setup(s => s.GetFoodLogByDateAsync(It.IsAny<string>()))
+                .ReturnsAsync(new FoodItem());
+            _mockApiService.Setup(s => s.GetSleepByDateAsync(It.IsAny<string>()))
+                .ReturnsAsync(new SleepItem());
+            _mockApiService.Setup(s => s.GetWeightByDateAsync(It.IsAny<string>()))
+                .ReturnsAsync(new WeightItem());
+
+            // Range API throws — trend data should silently degrade
+            _mockApiService.Setup(s => s.GetActivitiesByDateRangeAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<int>(), It.IsAny<int>()))
+                .ThrowsAsync(new HttpRequestException("API error"));
+            SetupEmptyRangeResponses(skipActivity: true);
+
+            var cut = Render<Home>();
+
+            // Dashboard still renders with single-day data
+            cut.Markup.Should().Contain("5,000");
+            cut.Markup.Should().Contain("Activity");
+        }
+
+        [Fact]
+        public void FetchSevenDayRangeData_OnLoad()
+        {
+            SetupEmptyApiResponses();
+            SetupEmptyRangeResponses();
+
+            var cut = Render<Home>();
+
+            _mockApiService.Verify(s => s.GetActivitiesByDateRangeAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<int>(), It.IsAny<int>()), Times.Once);
+            _mockApiService.Verify(s => s.GetSleepByDateRangeAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<int>(), It.IsAny<int>()), Times.Once);
+            _mockApiService.Verify(s => s.GetWeightByDateRangeAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<int>(), It.IsAny<int>()), Times.Once);
+            _mockApiService.Verify(s => s.GetFoodLogsByDateRangeAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<int>(), It.IsAny<int>()), Times.Once);
         }
 
         private void SetupEmptyApiResponses()
@@ -148,6 +234,22 @@ namespace Biotrackr.UI.UnitTests.Components.Pages
                 .ReturnsAsync(new SleepItem());
             _mockApiService.Setup(s => s.GetWeightByDateAsync(It.IsAny<string>()))
                 .ReturnsAsync(new WeightItem());
+        }
+
+        private void SetupEmptyRangeResponses(bool skipActivity = false, bool skipSleep = false, bool skipWeight = false, bool skipFood = false)
+        {
+            if (!skipActivity)
+                _mockApiService.Setup(s => s.GetActivitiesByDateRangeAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<int>(), It.IsAny<int>()))
+                    .ReturnsAsync(new PaginatedResponse<ActivityItem> { Items = [], TotalCount = 0 });
+            if (!skipSleep)
+                _mockApiService.Setup(s => s.GetSleepByDateRangeAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<int>(), It.IsAny<int>()))
+                    .ReturnsAsync(new PaginatedResponse<SleepItem> { Items = [], TotalCount = 0 });
+            if (!skipWeight)
+                _mockApiService.Setup(s => s.GetWeightByDateRangeAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<int>(), It.IsAny<int>()))
+                    .ReturnsAsync(new PaginatedResponse<WeightItem> { Items = [], TotalCount = 0 });
+            if (!skipFood)
+                _mockApiService.Setup(s => s.GetFoodLogsByDateRangeAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<int>(), It.IsAny<int>()))
+                    .ReturnsAsync(new PaginatedResponse<FoodItem> { Items = [], TotalCount = 0 });
         }
     }
 }

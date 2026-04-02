@@ -35,6 +35,29 @@
         </RadzenColumn>
     </RadzenRow>
 
+    @if (_singleItem.Food?.Summary is not null)
+    {
+        <RadzenRow Gap="1rem" class="rz-mb-4" AlignItems="AlignItems.Center">
+            <RadzenColumn Size="12" SizeMD="6" SizeSM="12">
+                <RadzenText TextStyle="TextStyle.H6" class="rz-mb-2">Macronutrient Split</RadzenText>
+                <RadzenChart Style="height: 300px;">
+                    <RadzenDonutSeries Data="@GetMacroData()" CategoryProperty="Nutrient"
+                        ValueProperty="Grams" Title="Macronutrients (g)" />
+                </RadzenChart>
+            </RadzenColumn>
+            @if (_singleItem.Food.Goals.Calories > 0)
+            {
+                <RadzenColumn Size="12" SizeMD="6" SizeSM="12">
+                    <RadzenText TextStyle="TextStyle.H6" class="rz-mb-2">Calories vs Goal</RadzenText>
+                    <RadzenStack Gap="0.25rem">
+                        <RadzenText TextStyle="TextStyle.Subtitle2">@($"{_singleItem.Food.Summary.Calories:N0} / {_singleItem.Food.Goals.Calories:N0}")</RadzenText>
+                        <RadzenProgressBar Value="@(Math.Min(_singleItem.Food.Summary.Calories / _singleItem.Food.Goals.Calories * 100, 100))" ShowValue="true" Mode="ProgressBarMode.Determinate" Style="height: 20px;" />
+                    </RadzenStack>
+                </RadzenColumn>
+            }
+        </RadzenRow>
+    }
+
     @if (_singleItem.Food?.Foods?.Any() == true)
     {
         <RadzenText TextStyle="TextStyle.H6" class="rz-mb-2">Food Log</RadzenText>
@@ -68,6 +91,42 @@
 
 @if (!_isLoading && _rangeItems is not null && _mode == "range")
 {
+    <RadzenTabs>
+        <Tabs>
+            <RadzenTabsItem Text="Charts">
+    @if (_rangeItems.Items.Any())
+    {
+        <RadzenText TextStyle="TextStyle.H6" class="rz-mb-2">Calories Over Time</RadzenText>
+        <RadzenChart Style="height: 300px;" class="rz-mb-4">
+            <RadzenLineSeries Data="@GetRangeCaloriesData()" CategoryProperty="Date" ValueProperty="Value"
+                Title="Calories" Smooth="true" />
+            @if (GetRangeGoalLineData().Any())
+            {
+                <RadzenLineSeries Data="@GetRangeGoalLineData()" CategoryProperty="Date" ValueProperty="Value"
+                    Title="Goal" LineType="LineType.Dashed" />
+            }
+            <RadzenCategoryAxis Padding="20" />
+            <RadzenValueAxis>
+                <RadzenGridLines Visible="true" />
+            </RadzenValueAxis>
+        </RadzenChart>
+
+        <RadzenText TextStyle="TextStyle.H6" class="rz-mb-2">Macronutrients Over Time</RadzenText>
+        <RadzenChart Style="height: 300px;" class="rz-mb-4">
+            <RadzenAreaSeries Data="@GetRangeCarbsData()" CategoryProperty="Date" ValueProperty="Value"
+                Title="Carbs" Smooth="true" />
+            <RadzenAreaSeries Data="@GetRangeFatData()" CategoryProperty="Date" ValueProperty="Value"
+                Title="Fat" Smooth="true" />
+            <RadzenAreaSeries Data="@GetRangeProteinData()" CategoryProperty="Date" ValueProperty="Value"
+                Title="Protein" Smooth="true" />
+            <RadzenCategoryAxis Padding="20" />
+            <RadzenValueAxis>
+                <RadzenGridLines Visible="true" />
+            </RadzenValueAxis>
+        </RadzenChart>
+    }
+            </RadzenTabsItem>
+            <RadzenTabsItem Text="Table">
     <RadzenText TextStyle="TextStyle.H6" class="rz-mb-2">Food Records</RadzenText>
     <RadzenDataGrid Data="@_rangeItems.Items" TItem="FoodItem" Density="Density.Compact"
                     AllowPaging="true" PageSize="10" Count="@_rangeItems.TotalCount" LoadData="@OnLoadData" class="rz-mb-4">
@@ -93,6 +152,9 @@
             </RadzenDataGridColumn>
         </Columns>
     </RadzenDataGrid>
+            </RadzenTabsItem>
+        </Tabs>
+    </RadzenTabs>
 }
 
 @if (!_isLoading && _singleItem is null && _mode == "date" && _errorMessage is null)
@@ -187,4 +249,38 @@
         var pct = summary.Calories / _singleItem.Food.Goals.Calories * 100;
         return $"{pct:F0}% of {_singleItem.Food.Goals.Calories:N0} goal";
     }
+
+    private record MacroDataPoint(string Nutrient, double Grams);
+
+    private List<MacroDataPoint> GetMacroData()
+    {
+        var s = _singleItem!.Food!.Summary!;
+        return
+        [
+            new("Protein", Math.Round(s.Protein, 1)),
+            new("Carbs", Math.Round(s.Carbs, 1)),
+            new("Fat", Math.Round(s.Fat, 1))
+        ];
+    }
+
+    private record ChartDataPoint(string Date, double Value);
+
+    private List<ChartDataPoint> GetRangeCaloriesData() =>
+        _rangeItems!.Items.Select(f => new ChartDataPoint(f.Date, f.Food?.Summary?.Calories ?? 0)).ToList();
+
+    private List<ChartDataPoint> GetRangeGoalLineData()
+    {
+        var goal = _rangeItems!.Items.FirstOrDefault()?.Food?.Goals?.Calories ?? 0;
+        if (goal == 0) return [];
+        return _rangeItems.Items.Select(f => new ChartDataPoint(f.Date, goal)).ToList();
+    }
+
+    private List<ChartDataPoint> GetRangeCarbsData() =>
+        _rangeItems!.Items.Select(f => new ChartDataPoint(f.Date, f.Food?.Summary?.Carbs ?? 0)).ToList();
+
+    private List<ChartDataPoint> GetRangeFatData() =>
+        _rangeItems!.Items.Select(f => new ChartDataPoint(f.Date, f.Food?.Summary?.Fat ?? 0)).ToList();
+
+    private List<ChartDataPoint> GetRangeProteinData() =>
+        _rangeItems!.Items.Select(f => new ChartDataPoint(f.Date, f.Food?.Summary?.Protein ?? 0)).ToList();
 }

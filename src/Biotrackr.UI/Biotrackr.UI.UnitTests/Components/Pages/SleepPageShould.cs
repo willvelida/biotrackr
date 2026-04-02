@@ -5,6 +5,7 @@ using Biotrackr.UI.Components.Pages;
 using Biotrackr.UI.Models;
 using Biotrackr.UI.Models.Sleep;
 using Biotrackr.UI.Services;
+using Biotrackr.UI.UnitTests.Helpers;
 using FluentAssertions;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -20,6 +21,7 @@ namespace Biotrackr.UI.UnitTests.Components.Pages
             Services.AddSingleton(_mockApiService.Object);
             Services.AddRadzenComponents();
             JSInterop.Mode = JSRuntimeMode.Loose;
+            JSInterop.SetupRadzenChartInterop();
         }
 
         [Fact]
@@ -158,6 +160,89 @@ namespace Biotrackr.UI.UnitTests.Components.Pages
 
             // Range mode uses RadzenSelectBar which cannot be interacted with via bUnit selectors.
             // Verify that the component renders without errors when data is available.
+            cut.Markup.Should().NotBeEmpty();
+        }
+
+        [Fact]
+        public void RenderCharts_WhenSingleDateDataLoaded()
+        {
+            var sleepItem = CreateSleepItem(minutesAsleep: 420, timeInBed: 480, records: 1);
+            sleepItem.Sleep.Summary.Stages = new SleepStages
+            {
+                Deep = 90,
+                Light = 180,
+                Rem = 100,
+                Wake = 30
+            };
+            sleepItem.Sleep.Sleep.Add(new SleepRecord
+            {
+                IsMainSleep = true,
+                Efficiency = 88,
+                StartTime = DateTime.Now.AddHours(-8),
+                EndTime = DateTime.Now
+            });
+
+            _mockApiService.Setup(s => s.GetSleepByDateAsync(It.IsAny<string>()))
+                .ReturnsAsync(sleepItem);
+
+            var cut = Render<Sleep>();
+
+            // Donut chart for sleep stages and arc gauge for efficiency
+            cut.Markup.Should().Contain("Sleep Stages");
+            cut.Markup.Should().Contain("rz-progressbar");
+        }
+
+        [Fact]
+        public void RenderTrendCharts_WhenRangeDateDataLoaded()
+        {
+            var rangeResponse = new PaginatedResponse<SleepItem>
+            {
+                Items =
+                [
+                    CreateSleepItem(minutesAsleep: 400, timeInBed: 450, records: 1),
+                    CreateSleepItem(minutesAsleep: 420, timeInBed: 470, records: 1)
+                ],
+                PageNumber = 1,
+                TotalPages = 1,
+                TotalCount = 2,
+                HasPreviousPage = false,
+                HasNextPage = false
+            };
+            rangeResponse.Items[0].Date = "2026-03-01";
+            rangeResponse.Items[1].Date = "2026-03-02";
+
+            _mockApiService.Setup(s => s.GetSleepByDateAsync(It.IsAny<string>()))
+                .ReturnsAsync((SleepItem?)null);
+            _mockApiService.Setup(s => s.GetSleepByDateRangeAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<int>(), It.IsAny<int>()))
+                .ReturnsAsync(rangeResponse);
+
+            var cut = Render<Sleep>();
+
+            // The component renders without errors when range data is available
+            cut.Markup.Should().NotBeEmpty();
+        }
+
+        [Fact]
+        public void RenderChartsAndDataGrid_InRangeMode()
+        {
+            var rangeResponse = new PaginatedResponse<SleepItem>
+            {
+                Items = [CreateSleepItem(minutesAsleep: 400, timeInBed: 450, records: 1)],
+                PageNumber = 1,
+                TotalPages = 1,
+                TotalCount = 1,
+                HasPreviousPage = false,
+                HasNextPage = false
+            };
+
+            _mockApiService.Setup(s => s.GetSleepByDateAsync(It.IsAny<string>()))
+                .ReturnsAsync((SleepItem?)null);
+            _mockApiService.Setup(s => s.GetSleepByDateRangeAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<int>(), It.IsAny<int>()))
+                .ReturnsAsync(rangeResponse);
+
+            var cut = Render<Sleep>();
+
+            cut.Markup.Should().Contain("Sleep");
             cut.Markup.Should().NotBeEmpty();
         }
 

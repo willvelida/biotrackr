@@ -12,82 +12,119 @@
 
 @if (!_isLoading)
 {
+    <RadzenText TextStyle="TextStyle.H5" class="rz-mb-2">Activity</RadzenText>
     <RadzenRow Gap="1rem" class="rz-mb-4">
         <RadzenColumn Size="12" SizeMD="3" SizeSM="6">
-            <SummaryCard Title="Steps" Value="@FormatNumber(_activitySummary?.Steps)" CardClass="card-activity">
+            <TrendCard Title="Steps" Value="@FormatNumber(_activitySummary?.Steps)" CardClass="card-activity" TrendData="@_stepsTrend" GaugeValue="@(_activitySummary?.Steps ?? 0)" GaugeMax="@(_activityGoals?.Steps ?? 0)">
                 <IconContent>
                     <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" fill="#0d6efd" viewBox="0 0 16 16">
                         <path fill-rule="evenodd" d="M6 2a.5.5 0 0 1 .47.33L10 12.036l1.53-4.208A.5.5 0 0 1 12 7.5h3.5a.5.5 0 0 1 0 1h-3.15l-1.88 5.17a.5.5 0 0 1-.94 0L6 3.964 4.47 8.171A.5.5 0 0 1 4 8.5H.5a.5.5 0 0 1 0-1h3.15l1.88-5.17A.5.5 0 0 1 6 2Z"/>
                     </svg>
                 </IconContent>
-            </SummaryCard>
+            </TrendCard>
         </RadzenColumn>
         <RadzenColumn Size="12" SizeMD="3" SizeSM="6">
-            <SummaryCard Title="Calories Burned" Value="@FormatNumber(_activitySummary?.CaloriesOut)" Subtitle="@GetCalorieGoalText()" CardClass="card-calories">
+            <TrendCard Title="Calories Burned" Value="@FormatNumber(_activitySummary?.CaloriesOut)" Subtitle="@GetCalorieGoalText()" CardClass="card-calories" TrendData="@_caloriesBurnedTrend" GaugeValue="@(_activitySummary?.CaloriesOut ?? 0)" GaugeMax="@(_activityGoals?.CaloriesOut ?? 0)">
                 <IconContent>
                     <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" fill="#dc3545" viewBox="0 0 16 16">
                         <path d="M8 16c3.314 0 6-2.686 6-6 0-2.61-1.72-4.865-3.313-6.558A26 26 0 0 0 8 1.02a26 26 0 0 0-2.687 2.422C3.72 5.135 2 7.39 2 10c0 3.314 2.686 6 6 6M6.5 10a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0"/>
                     </svg>
                 </IconContent>
-            </SummaryCard>
+            </TrendCard>
         </RadzenColumn>
         <RadzenColumn Size="12" SizeMD="3" SizeSM="6">
-            <SummaryCard Title="Calories Consumed" Value="@FormatCalories(_foodSummary?.Calories)" Subtitle="@GetFoodGoalText()" CardClass="card-food">
-                <IconContent>
-                    <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" fill="#198754" viewBox="0 0 16 16">
-                        <path d="M2.5 13.5A.5.5 0 0 1 3 13h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5zM13.991 3l.024.001a1.46 1.46 0 0 1 .538.143.757.757 0 0 1 .302.254c.067.1.145.277.145.602v.669a.72.72 0 0 1-.038.258.67.67 0 0 1-.1.18c-.07.08-.164.15-.283.207a.86.86 0 0 1-.382.104h-.001c-.16.006-.32-.012-.478-.04a4.7 4.7 0 0 1-.36-.09c-.172-.05-.324-.115-.464-.197a2.3 2.3 0 0 1-.118-.08l-.012-.009a.6.6 0 0 1-.1-.112A4 4 0 0 0 8 3.5a4 4 0 0 0-4.664.895.6.6 0 0 1-.1.112l-.012.009a2.3 2.3 0 0 1-.118.08c-.14.082-.292.147-.464.197a4.7 4.7 0 0 1-.36.09c-.158.028-.318.046-.478.04h-.001a.86.86 0 0 1-.382-.104.67.67 0 0 1-.283-.207.72.72 0 0 1-.1-.18A.72.72 0 0 1 1 4.669V4c0-.325.078-.502.145-.602a.757.757 0 0 1 .302-.254A1.46 1.46 0 0 1 1.985 3L2.01 3zM1 6a.5.5 0 0 1 .5-.5h13a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-.1a3 3 0 0 0-.4 1.475c-.1.476-.2 1.007-.406 1.465-.206.458-.504.876-.979 1.06H3.384c-.475-.184-.773-.602-.978-1.06a8 8 0 0 1-.407-1.465A3 3 0 0 0 1.6 7.5H1.5A.5.5 0 0 1 1 7V6z"/>
-                    </svg>
-                </IconContent>
-            </SummaryCard>
-        </RadzenColumn>
-        <RadzenColumn Size="12" SizeMD="3" SizeSM="6">
-            <SummaryCard Title="Sleep" Value="@FormatSleepDuration()" CardClass="card-sleep">
-                <IconContent>
-                    <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" fill="#6f42c1" viewBox="0 0 16 16">
-                        <path d="M6 .278a.77.77 0 0 1 .08.858 7.2 7.2 0 0 0-.878 3.46c0 4.021 3.278 7.277 7.318 7.277q.792-.001 1.533-.16a.79.79 0 0 1 .81.316.73.73 0 0 1-.031.893A8.35 8.35 0 0 1 8.344 16C3.734 16 0 12.286 0 7.71 0 4.266 2.114 1.312 5.124.06A.75.75 0 0 1 6 .278"/>
-                    </svg>
-                </IconContent>
-            </SummaryCard>
-        </RadzenColumn>
-    </RadzenRow>
-
-    <RadzenRow Gap="1rem" class="rz-mb-4">
-        <RadzenColumn Size="12" SizeMD="3" SizeSM="6">
-            <SummaryCard Title="Weight" Value="@FormatWeight()" Subtitle="@GetBmiText()" CardClass="card-weight">
-                <IconContent>
-                    <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" fill="#fd7e14" viewBox="0 0 16 16">
-                        <path d="M8 1a2 2 0 0 1 2 2v.5H6V3a2 2 0 0 1 2-2m3 2.5V3a3 3 0 1 0-6 0v.5H1.5A.5.5 0 0 0 1 4v1.419l.027.058.054.127c.05.114.124.27.225.467.201.395.516.904.958 1.407C3.16 8.494 4.475 9.5 6.5 9.5c.673 0 1.27-.116 1.79-.318a.5.5 0 1 1 .38.926A5.6 5.6 0 0 1 6.5 10.5c-2.35 0-3.87-1.168-4.813-2.25A10.3 10.3 0 0 1 .618 6.5H.5v8a.5.5 0 0 0 .5.5h14a.5.5 0 0 0 .5-.5v-8h-.118q-.149.232-.354.492c-.526.636-1.32 1.41-2.4 2.04a.5.5 0 1 1-.51-.858C13.487 7.47 14.2 6.794 14.66 6.24c.231-.28.397-.524.505-.72a4 4 0 0 0 .173-.37L15.5 5V4a.5.5 0 0 0-.5-.5z"/>
-                    </svg>
-                </IconContent>
-            </SummaryCard>
-        </RadzenColumn>
-        <RadzenColumn Size="12" SizeMD="3" SizeSM="6">
-            <SummaryCard Title="Active Minutes" Value="@FormatActiveMinutes()" Subtitle="@GetActiveMinutesGoalText()" CardClass="card-active">
+            <TrendCard Title="Active Minutes" Value="@FormatActiveMinutes()" Subtitle="@GetActiveMinutesGoalText()" CardClass="card-active" TrendData="@_activeMinutesTrend">
                 <IconContent>
                     <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" fill="#20c997" viewBox="0 0 16 16">
                         <path d="M8 3.5a.5.5 0 0 0-1 0V9a.5.5 0 0 0 .252.434l3.5 2a.5.5 0 0 0 .496-.868L8 8.71z"/>
                         <path d="M8 16A8 8 0 1 0 8 0a8 8 0 0 0 0 16m7-8A7 7 0 1 1 1 8a7 7 0 0 1 14 0"/>
                     </svg>
                 </IconContent>
-            </SummaryCard>
+            </TrendCard>
         </RadzenColumn>
         <RadzenColumn Size="12" SizeMD="3" SizeSM="6">
-            <SummaryCard Title="Resting Heart Rate" Value="@FormatHeartRate()" Subtitle="bpm" CardClass="card-heart">
+            <TrendCard Title="Resting Heart Rate" Value="@FormatHeartRate()" Subtitle="bpm" CardClass="card-heart" TrendData="@_restingHrTrend">
                 <IconContent>
                     <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" fill="#e91e63" viewBox="0 0 16 16">
                         <path fill-rule="evenodd" d="M8 1.314C12.438-3.248 23.534 4.735 8 15-7.534 4.736 3.562-3.248 8 1.314"/>
                     </svg>
                 </IconContent>
-            </SummaryCard>
+            </TrendCard>
         </RadzenColumn>
         <RadzenColumn Size="12" SizeMD="3" SizeSM="6">
-            <SummaryCard Title="Floors" Value="@FormatNumber(_activitySummary?.Floors)" Subtitle="@GetFloorsGoalText()" CardClass="card-floors">
+            <TrendCard Title="Floors" Value="@FormatNumber(_activitySummary?.Floors)" Subtitle="@GetFloorsGoalText()" CardClass="card-floors" TrendData="@_floorsTrend">
                 <IconContent>
                     <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" fill="#6610f2" viewBox="0 0 16 16">
                         <path d="M8 0a.5.5 0 0 1 .5.5v2a.5.5 0 0 1-1 0v-2A.5.5 0 0 1 8 0m0 13a.5.5 0 0 1 .5.5v2a.5.5 0 0 1-1 0v-2A.5.5 0 0 1 8 13m8-5a.5.5 0 0 1-.5.5h-2a.5.5 0 0 1 0-1h2a.5.5 0 0 1 .5.5M3 8a.5.5 0 0 1-.5.5h-2a.5.5 0 0 1 0-1h2A.5.5 0 0 1 3 8m10.657-5.657a.5.5 0 0 1 0 .707l-1.414 1.414a.5.5 0 1 1-.707-.707l1.414-1.414a.5.5 0 0 1 .707 0m-9.193 9.193a.5.5 0 0 1 0 .707L3.05 13.657a.5.5 0 0 1-.707-.707l1.414-1.414a.5.5 0 0 1 .707 0m9.193 2.121a.5.5 0 0 1-.707 0l-1.414-1.414a.5.5 0 0 1 .707-.707l1.414 1.414a.5.5 0 0 1 0 .707M3.757 4.464a.5.5 0 0 1-.707 0L1.636 3.05a.5.5 0 0 1 .707-.707l1.414 1.414a.5.5 0 0 1 0 .707"/>
                     </svg>
                 </IconContent>
-            </SummaryCard>
+            </TrendCard>
+        </RadzenColumn>
+    </RadzenRow>
+
+    <RadzenText TextStyle="TextStyle.H5" class="rz-mb-2">Sleep</RadzenText>
+    <RadzenRow Gap="1rem" class="rz-mb-4">
+        <RadzenColumn Size="12" SizeMD="3" SizeSM="6">
+            <TrendCard Title="Sleep Duration" Value="@FormatSleepDuration()" CardClass="card-sleep" TrendData="@_sleepDurationTrend">
+                <IconContent>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" fill="#6f42c1" viewBox="0 0 16 16">
+                        <path d="M6 .278a.77.77 0 0 1 .08.858 7.2 7.2 0 0 0-.878 3.46c0 4.021 3.278 7.277 7.318 7.277q.792-.001 1.533-.16a.79.79 0 0 1 .81.316.73.73 0 0 1-.031.893A8.35 8.35 0 0 1 8.344 16C3.734 16 0 12.286 0 7.71 0 4.266 2.114 1.312 5.124.06A.75.75 0 0 1 6 .278"/>
+                    </svg>
+                </IconContent>
+            </TrendCard>
+        </RadzenColumn>
+        <RadzenColumn Size="12" SizeMD="3" SizeSM="6">
+            <TrendCard Title="Sleep Efficiency" Value="@FormatSleepEfficiency()" Subtitle="%" CardClass="card-sleep" TrendData="@_sleepEfficiencyTrend">
+                <IconContent>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" fill="#6f42c1" viewBox="0 0 16 16">
+                        <path d="M6 .278a.77.77 0 0 1 .08.858 7.2 7.2 0 0 0-.878 3.46c0 4.021 3.278 7.277 7.318 7.277q.792-.001 1.533-.16a.79.79 0 0 1 .81.316.73.73 0 0 1-.031.893A8.35 8.35 0 0 1 8.344 16C3.734 16 0 12.286 0 7.71 0 4.266 2.114 1.312 5.124.06A.75.75 0 0 1 6 .278"/>
+                    </svg>
+                </IconContent>
+            </TrendCard>
+        </RadzenColumn>
+    </RadzenRow>
+
+    <RadzenText TextStyle="TextStyle.H5" class="rz-mb-2">Weight</RadzenText>
+    <RadzenRow Gap="1rem" class="rz-mb-4">
+        <RadzenColumn Size="12" SizeMD="3" SizeSM="6">
+            <TrendCard Title="Weight" Value="@FormatWeight()" CardClass="card-weight" TrendData="@_weightTrend">
+                <IconContent>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" fill="#fd7e14" viewBox="0 0 16 16">
+                        <path d="M8 1a2 2 0 0 1 2 2v.5H6V3a2 2 0 0 1 2-2m3 2.5V3a3 3 0 1 0-6 0v.5H1.5A.5.5 0 0 0 1 4v1.419l.027.058.054.127c.05.114.124.27.225.467.201.395.516.904.958 1.407C3.16 8.494 4.475 9.5 6.5 9.5c.673 0 1.27-.116 1.79-.318a.5.5 0 1 1 .38.926A5.6 5.6 0 0 1 6.5 10.5c-2.35 0-3.87-1.168-4.813-2.25A10.3 10.3 0 0 1 .618 6.5H.5v8a.5.5 0 0 0 .5.5h14a.5.5 0 0 0 .5-.5v-8h-.118q-.149.232-.354.492c-.526.636-1.32 1.41-2.4 2.04a.5.5 0 1 1-.51-.858C13.487 7.47 14.2 6.794 14.66 6.24c.231-.28.397-.524.505-.72a4 4 0 0 0 .173-.37L15.5 5V4a.5.5 0 0 0-.5-.5z"/>
+                    </svg>
+                </IconContent>
+            </TrendCard>
+        </RadzenColumn>
+        <RadzenColumn Size="12" SizeMD="3" SizeSM="6">
+            <TrendCard Title="BMI" Value="@FormatBmi()" CardClass="card-weight" TrendData="@_bmiTrend">
+                <IconContent>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" fill="#fd7e14" viewBox="0 0 16 16">
+                        <path d="M8 1a2 2 0 0 1 2 2v.5H6V3a2 2 0 0 1 2-2m3 2.5V3a3 3 0 1 0-6 0v.5H1.5A.5.5 0 0 0 1 4v1.419l.027.058.054.127c.05.114.124.27.225.467.201.395.516.904.958 1.407C3.16 8.494 4.475 9.5 6.5 9.5c.673 0 1.27-.116 1.79-.318a.5.5 0 1 1 .38.926A5.6 5.6 0 0 1 6.5 10.5c-2.35 0-3.87-1.168-4.813-2.25A10.3 10.3 0 0 1 .618 6.5H.5v8a.5.5 0 0 0 .5.5h14a.5.5 0 0 0 .5-.5v-8h-.118q-.149.232-.354.492c-.526.636-1.32 1.41-2.4 2.04a.5.5 0 1 1-.51-.858C13.487 7.47 14.2 6.794 14.66 6.24c.231-.28.397-.524.505-.72a4 4 0 0 0 .173-.37L15.5 5V4a.5.5 0 0 0-.5-.5z"/>
+                    </svg>
+                </IconContent>
+            </TrendCard>
+        </RadzenColumn>
+    </RadzenRow>
+
+    <RadzenText TextStyle="TextStyle.H5" class="rz-mb-2">Food</RadzenText>
+    <RadzenRow Gap="1rem" class="rz-mb-4">
+        <RadzenColumn Size="12" SizeMD="3" SizeSM="6">
+            <TrendCard Title="Calories Consumed" Value="@FormatCalories(_foodSummary?.Calories)" Subtitle="@GetFoodGoalText()" CardClass="card-food" TrendData="@_caloriesConsumedTrend" GaugeValue="@(_foodSummary?.Calories ?? 0)" GaugeMax="@(_foodGoals?.Calories ?? 0)">
+                <IconContent>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" fill="#198754" viewBox="0 0 16 16">
+                        <path d="M2.5 13.5A.5.5 0 0 1 3 13h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5zM13.991 3l.024.001a1.46 1.46 0 0 1 .538.143.757.757 0 0 1 .302.254c.067.1.145.277.145.602v.669a.72.72 0 0 1-.038.258.67.67 0 0 1-.1.18c-.07.08-.164.15-.283.207a.86.86 0 0 1-.382.104h-.001c-.16.006-.32-.012-.478-.04a4.7 4.7 0 0 1-.36-.09c-.172-.05-.324-.115-.464-.197a2.3 2.3 0 0 1-.118-.08l-.012-.009a.6.6 0 0 1-.1-.112A4 4 0 0 0 8 3.5a4 4 0 0 0-4.664.895.6.6 0 0 1-.1.112l-.012.009a2.3 2.3 0 0 1-.118.08c-.14.082-.292.147-.464.197a4.7 4.7 0 0 1-.36.09c-.158.028-.318.046-.478.04h-.001a.86.86 0 0 1-.382-.104.67.67 0 0 1-.283-.207.72.72 0 0 1-.1-.18A.72.72 0 0 1 1 4.669V4c0-.325.078-.502.145-.602a.757.757 0 0 1 .302-.254A1.46 1.46 0 0 1 1.985 3L2.01 3zM1 6a.5.5 0 0 1 .5-.5h13a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-.1a3 3 0 0 0-.4 1.475c-.1.476-.2 1.007-.406 1.465-.206.458-.504.876-.979 1.06H3.384c-.475-.184-.773-.602-.978-1.06a8 8 0 0 1-.407-1.465A3 3 0 0 0 1.6 7.5H1.5A.5.5 0 0 1 1 7V6z"/>
+                    </svg>
+                </IconContent>
+            </TrendCard>
+        </RadzenColumn>
+        <RadzenColumn Size="12" SizeMD="3" SizeSM="6">
+            <TrendCard Title="Protein" Value="@FormatProtein()" CardClass="card-food" TrendData="@_proteinTrend">
+                <IconContent>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" fill="#198754" viewBox="0 0 16 16">
+                        <path d="M2.5 13.5A.5.5 0 0 1 3 13h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5zM13.991 3l.024.001a1.46 1.46 0 0 1 .538.143.757.757 0 0 1 .302.254c.067.1.145.277.145.602v.669a.72.72 0 0 1-.038.258.67.67 0 0 1-.1.18c-.07.08-.164.15-.283.207a.86.86 0 0 1-.382.104h-.001c-.16.006-.32-.012-.478-.04a4.7 4.7 0 0 1-.36-.09c-.172-.05-.324-.115-.464-.197a2.3 2.3 0 0 1-.118-.08l-.012-.009a.6.6 0 0 1-.1-.112A4 4 0 0 0 8 3.5a4 4 0 0 0-4.664.895.6.6 0 0 1-.1.112l-.012.009a2.3 2.3 0 0 1-.118.08c-.14.082-.292.147-.464.197a4.7 4.7 0 0 1-.36.09c-.158.028-.318.046-.478.04h-.001a.86.86 0 0 1-.382-.104.67.67 0 0 1-.283-.207.72.72 0 0 1-.1-.18A.72.72 0 0 1 1 4.669V4c0-.325.078-.502.145-.602a.757.757 0 0 1 .302-.254A1.46 1.46 0 0 1 1.985 3L2.01 3zM1 6a.5.5 0 0 1 .5-.5h13a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-.1a3 3 0 0 0-.4 1.475c-.1.476-.2 1.007-.406 1.465-.206.458-.504.876-.979 1.06H3.384c-.475-.184-.773-.602-.978-1.06a8 8 0 0 1-.407-1.465A3 3 0 0 0 1.6 7.5H1.5A.5.5 0 0 1 1 7V6z"/>
+                    </svg>
+                </IconContent>
+            </TrendCard>
         </RadzenColumn>
     </RadzenRow>
 }
@@ -103,6 +140,19 @@
     private SleepSummary? _sleepSummary;
     private WeightData? _latestWeight;
 
+    // Trend data (7-day sparklines)
+    private List<TrendDataPoint>? _stepsTrend;
+    private List<TrendDataPoint>? _caloriesBurnedTrend;
+    private List<TrendDataPoint>? _activeMinutesTrend;
+    private List<TrendDataPoint>? _restingHrTrend;
+    private List<TrendDataPoint>? _floorsTrend;
+    private List<TrendDataPoint>? _sleepDurationTrend;
+    private List<TrendDataPoint>? _sleepEfficiencyTrend;
+    private List<TrendDataPoint>? _weightTrend;
+    private List<TrendDataPoint>? _bmiTrend;
+    private List<TrendDataPoint>? _caloriesConsumedTrend;
+    private List<TrendDataPoint>? _proteinTrend;
+
     protected override async Task OnInitializedAsync()
     {
         await LoadTodayData();
@@ -116,13 +166,22 @@
         try
         {
             var today = DateOnly.FromDateTime(DateTime.Today.AddDays(-1)).ToString("yyyy-MM-dd");
+            var sevenDaysAgo = DateOnly.FromDateTime(DateTime.Today.AddDays(-8)).ToString("yyyy-MM-dd");
 
+            // Single-day data
             var activityTask = ApiService.GetActivityByDateAsync(today);
             var foodTask = ApiService.GetFoodLogByDateAsync(today);
             var sleepTask = ApiService.GetSleepByDateAsync(today);
             var weightTask = ApiService.GetWeightByDateAsync(today);
 
-            await Task.WhenAll(activityTask, foodTask, sleepTask, weightTask);
+            // 7-day trend data (each domain has own error handling)
+            var activityTrendTask = LoadActivityTrendsAsync(sevenDaysAgo, today);
+            var sleepTrendTask = LoadSleepTrendsAsync(sevenDaysAgo, today);
+            var weightTrendTask = LoadWeightTrendsAsync(sevenDaysAgo, today);
+            var foodTrendTask = LoadFoodTrendsAsync(sevenDaysAgo, today);
+
+            await Task.WhenAll(activityTask, foodTask, sleepTask, weightTask,
+                activityTrendTask, sleepTrendTask, weightTrendTask, foodTrendTask);
 
             var activity = await activityTask;
             _activitySummary = activity?.Activity?.Summary;
@@ -148,6 +207,74 @@
         }
     }
 
+    private async Task LoadActivityTrendsAsync(string from, string to)
+    {
+        try
+        {
+            var result = await ApiService.GetActivitiesByDateRangeAsync(from, to, 1, 100);
+            if (result?.Items is { Count: > 0 })
+            {
+                var ordered = result.Items.OrderBy(a => a.Date).ToList();
+                _stepsTrend = ordered.Select(a => new TrendDataPoint { Date = a.Date, Value = a.Activity.Summary.Steps }).ToList();
+                _caloriesBurnedTrend = ordered.Select(a => new TrendDataPoint { Date = a.Date, Value = a.Activity.Summary.CaloriesOut }).ToList();
+                _activeMinutesTrend = ordered.Select(a => new TrendDataPoint { Date = a.Date, Value = a.Activity.Summary.FairlyActiveMinutes + a.Activity.Summary.VeryActiveMinutes }).ToList();
+                _restingHrTrend = ordered.Where(a => a.Activity.Summary.RestingHeartRate > 0).Select(a => new TrendDataPoint { Date = a.Date, Value = a.Activity.Summary.RestingHeartRate }).ToList();
+                _floorsTrend = ordered.Select(a => new TrendDataPoint { Date = a.Date, Value = a.Activity.Summary.Floors }).ToList();
+            }
+        }
+        catch { /* silent degradation */ }
+    }
+
+    private async Task LoadSleepTrendsAsync(string from, string to)
+    {
+        try
+        {
+            var result = await ApiService.GetSleepByDateRangeAsync(from, to, 1, 100);
+            if (result?.Items is { Count: > 0 })
+            {
+                var ordered = result.Items.OrderBy(s => s.Date).ToList();
+                _sleepDurationTrend = ordered
+                    .Select(s => new TrendDataPoint { Date = s.Date, Value = s.Sleep.Summary.TotalMinutesAsleep / 60.0 })
+                    .ToList();
+                _sleepEfficiencyTrend = ordered
+                    .Where(s => s.Sleep.Summary.TotalTimeInBed > 0)
+                    .Select(s => new TrendDataPoint { Date = s.Date, Value = Math.Round((double)s.Sleep.Summary.TotalMinutesAsleep / s.Sleep.Summary.TotalTimeInBed * 100, 0) })
+                    .ToList();
+            }
+        }
+        catch { /* silent degradation */ }
+    }
+
+    private async Task LoadWeightTrendsAsync(string from, string to)
+    {
+        try
+        {
+            var result = await ApiService.GetWeightByDateRangeAsync(from, to, 1, 100);
+            if (result?.Items is { Count: > 0 })
+            {
+                var ordered = result.Items.OrderBy(w => w.Date).ToList();
+                _weightTrend = ordered.Where(w => w.Weight.Weight > 0).Select(w => new TrendDataPoint { Date = w.Date, Value = w.Weight.Weight }).ToList();
+                _bmiTrend = ordered.Where(w => w.Weight.Bmi > 0).Select(w => new TrendDataPoint { Date = w.Date, Value = w.Weight.Bmi }).ToList();
+            }
+        }
+        catch { /* silent degradation */ }
+    }
+
+    private async Task LoadFoodTrendsAsync(string from, string to)
+    {
+        try
+        {
+            var result = await ApiService.GetFoodLogsByDateRangeAsync(from, to, 1, 100);
+            if (result?.Items is { Count: > 0 })
+            {
+                var ordered = result.Items.OrderBy(f => f.Date).ToList();
+                _caloriesConsumedTrend = ordered.Select(f => new TrendDataPoint { Date = f.Date, Value = f.Food.Summary.Calories }).ToList();
+                _proteinTrend = ordered.Select(f => new TrendDataPoint { Date = f.Date, Value = f.Food.Summary.Protein }).ToList();
+            }
+        }
+        catch { /* silent degradation */ }
+    }
+
     private static string FormatNumber(int? value) => value.HasValue ? value.Value.ToString("N0") : "--";
     private static string FormatCalories(double? value) => value.HasValue ? ((int)value.Value).ToString("N0") : "--";
 
@@ -159,16 +286,23 @@
         return $"{hours}h {mins}m";
     }
 
+    private string FormatSleepEfficiency()
+    {
+        if (_sleepSummary is null || _sleepSummary.TotalTimeInBed == 0) return "--";
+        var efficiency = (double)_sleepSummary.TotalMinutesAsleep / _sleepSummary.TotalTimeInBed * 100;
+        return $"{efficiency:F0}";
+    }
+
     private string FormatWeight()
     {
         if (_latestWeight is null || _latestWeight.Weight == 0) return "--";
         return $"{_latestWeight.Weight:F1} kg";
     }
 
-    private string GetBmiText()
+    private string FormatBmi()
     {
-        if (_latestWeight is null || _latestWeight.Bmi == 0) return "";
-        return $"BMI: {_latestWeight.Bmi:F1}";
+        if (_latestWeight is null || _latestWeight.Bmi == 0) return "--";
+        return $"{_latestWeight.Bmi:F1}";
     }
 
     private string FormatActiveMinutes()
@@ -182,6 +316,12 @@
     {
         if (_activitySummary is null || _activitySummary.RestingHeartRate == 0) return "--";
         return _activitySummary.RestingHeartRate.ToString();
+    }
+
+    private string FormatProtein()
+    {
+        if (_foodSummary is null) return "--";
+        return $"{_foodSummary.Protein:F0}g";
     }
 
     private string GetCalorieGoalText()

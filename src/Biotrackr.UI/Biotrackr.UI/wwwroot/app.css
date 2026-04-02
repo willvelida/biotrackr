@@ -338,4 +338,57 @@
         max-width: 85%;
     }
 }
+
+/* Dark mode overrides */
+.rz-material-dark .chat-main {
+    background-color: #1e1e1e;
+}
+
+.rz-material-dark .message-agent {
+    background-color: #2d2d2d;
+    color: #e0e0e0;
+}
+
+.rz-material-dark .chat-input-area {
+    background-color: #2d2d2d;
+    border-top-color: #444;
+}
+
+.rz-material-dark .chat-empty-state {
+    color: #999;
+}
+
+.rz-material-dark .markdown-body th,
+.rz-material-dark .markdown-body td {
+    border-color: #444;
+}
+
+.rz-material-dark .markdown-body th {
+    background-color: rgba(255, 255, 255, 0.05);
+}
+
+.rz-material-dark .markdown-body code {
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+.rz-material-dark .markdown-body pre {
+    background-color: rgba(255, 255, 255, 0.08);
+}
+
+.rz-material-dark .markdown-body blockquote {
+    border-left-color: #555;
+    color: #999;
+}
+
+.rz-material-dark .markdown-body hr {
+    border-top-color: #444;
+}
+
+.rz-material-dark .chat-sidebar-item-date {
+    color: #aaa;
+}
+
+.rz-material-dark .summary-card:hover {
+    box-shadow: 0 4px 12px rgba(255, 255, 255, 0.1);
+}
 /* trigger rebuild */

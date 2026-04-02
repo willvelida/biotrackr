@@ -29,6 +29,26 @@
         </RadzenColumn>
     </RadzenRow>
 
+    <RadzenRow Gap="1rem" class="rz-mb-4" AlignItems="AlignItems.Center">
+        @if (_singleItem.Sleep.Summary.Stages is not null)
+        {
+            <RadzenColumn Size="12" SizeMD="6" SizeSM="12">
+                <RadzenText TextStyle="TextStyle.H6" class="rz-mb-2">Sleep Stages</RadzenText>
+                <RadzenChart Style="height: 300px;">
+                    <RadzenDonutSeries Data="@GetSleepStagesData()" CategoryProperty="Stage"
+                        ValueProperty="Minutes" Title="Sleep Stages" />
+                </RadzenChart>
+            </RadzenColumn>
+        }
+        <RadzenColumn Size="12" SizeMD="6" SizeSM="12">
+            <RadzenText TextStyle="TextStyle.H6" class="rz-mb-2">Sleep Efficiency</RadzenText>
+            <RadzenStack Gap="0.25rem">
+                <RadzenText TextStyle="TextStyle.Subtitle2">@($"{GetEfficiencyValue():F0}%")</RadzenText>
+                <RadzenProgressBar Value="@GetEfficiencyValue()" ShowValue="false" Mode="ProgressBarMode.Determinate" Style="height: 20px;" />
+            </RadzenStack>
+        </RadzenColumn>
+    </RadzenRow>
+
     @if (_singleItem.Sleep.Summary.Stages is not null)
     {
         <RadzenText TextStyle="TextStyle.H6" class="rz-mb-2">Sleep Stages</RadzenText>
@@ -62,6 +82,19 @@
                 </RadzenStack>
             </RadzenColumn>
         </RadzenRow>
+    }
+
+    @if (_hypnogramData is not null && _hypnogramData.Any())
+    {
+        <RadzenText TextStyle="TextStyle.Subtitle1" class="rz-mb-2">Sleep Timeline</RadzenText>
+        <RadzenChart Style="height: 200px;" class="rz-mb-4">
+            <RadzenAreaSeries Data="@_hypnogramData" CategoryProperty="Time" ValueProperty="Level"
+                Smooth="false" StrokeWidth="1" Title="Sleep Stage" />
+            <RadzenCategoryAxis Padding="20" />
+            <RadzenValueAxis Min="0" Max="3">
+                <RadzenGridLines Visible="true" />
+            </RadzenValueAxis>
+        </RadzenChart>
     }
 
     @if (_singleItem.Sleep.Sleep.Any())
@@ -99,6 +132,49 @@
 
 @if (!_isLoading && _rangeItems is not null && _mode == "range")
 {
+    <RadzenTabs>
+        <Tabs>
+            <RadzenTabsItem Text="Charts">
+    @if (_rangeItems.Items.Any())
+    {
+        <RadzenText TextStyle="TextStyle.H6" class="rz-mb-2">Sleep Duration Over Time</RadzenText>
+        <RadzenChart Style="height: 300px;" class="rz-mb-4">
+            <RadzenLineSeries Data="@GetRangeDurationData()" CategoryProperty="Date" ValueProperty="Value"
+                Title="Hours Asleep" Smooth="true" />
+            <RadzenCategoryAxis Padding="20" />
+            <RadzenValueAxis>
+                <RadzenGridLines Visible="true" />
+            </RadzenValueAxis>
+        </RadzenChart>
+
+        <RadzenText TextStyle="TextStyle.H6" class="rz-mb-2">Sleep Efficiency Over Time</RadzenText>
+        <RadzenChart Style="height: 300px;" class="rz-mb-4">
+            <RadzenLineSeries Data="@GetRangeEfficiencyData()" CategoryProperty="Date" ValueProperty="Value"
+                Title="Efficiency %" Smooth="true" />
+            <RadzenCategoryAxis Padding="20" />
+            <RadzenValueAxis>
+                <RadzenGridLines Visible="true" />
+            </RadzenValueAxis>
+        </RadzenChart>
+
+        <RadzenText TextStyle="TextStyle.H6" class="rz-mb-2">Sleep Stages Over Time</RadzenText>
+        <RadzenChart Style="height: 300px;" class="rz-mb-4">
+            <RadzenAreaSeries Data="@GetRangeDeepData()" CategoryProperty="Date" ValueProperty="Value"
+                Title="Deep" Smooth="true" />
+            <RadzenAreaSeries Data="@GetRangeLightData()" CategoryProperty="Date" ValueProperty="Value"
+                Title="Light" Smooth="true" />
+            <RadzenAreaSeries Data="@GetRangeRemData()" CategoryProperty="Date" ValueProperty="Value"
+                Title="REM" Smooth="true" />
+            <RadzenAreaSeries Data="@GetRangeWakeData()" CategoryProperty="Date" ValueProperty="Value"
+                Title="Awake" Smooth="true" />
+            <RadzenCategoryAxis Padding="20" />
+            <RadzenValueAxis>
+                <RadzenGridLines Visible="true" />
+            </RadzenValueAxis>
+        </RadzenChart>
+    }
+            </RadzenTabsItem>
+            <RadzenTabsItem Text="Table">
     <RadzenText TextStyle="TextStyle.H6" class="rz-mb-2">Sleep Records</RadzenText>
     <RadzenDataGrid Data="@_rangeItems.Items" TItem="SleepItem" Density="Density.Compact"
                     AllowPaging="true" PageSize="10" Count="@_rangeItems.TotalCount" LoadData="@OnLoadData" class="rz-mb-4">
@@ -127,6 +203,9 @@
             </RadzenDataGridColumn>
         </Columns>
     </RadzenDataGrid>
+            </RadzenTabsItem>
+        </Tabs>
+    </RadzenTabs>
 }
 
 @if (!_isLoading && _singleItem is null && _mode == "date" && _errorMessage is null)
@@ -145,6 +224,9 @@
 
     private SleepItem? _singleItem;
     private PaginatedResponse<SleepItem>? _rangeItems;
+    private List<HypnogramPoint>? _hypnogramData;
+
+    private record HypnogramPoint(string Time, int Level);
 
     protected override async Task OnInitializedAsync()
     {
@@ -158,10 +240,22 @@
         _isLoading = true;
         _errorMessage = null;
         _singleItem = null;
+        _hypnogramData = null;
 
         try
         {
             _singleItem = await ApiService.GetSleepByDateAsync(date);
+
+            var mainSleep = _singleItem?.Sleep?.Sleep?.FirstOrDefault(r => r.IsMainSleep);
+            if (mainSleep?.Levels?.Data is { Count: > 0 })
+            {
+                _hypnogramData = mainSleep.Levels.Data
+                    .OrderBy(d => d.DateTime)
+                    .Select(d => new HypnogramPoint(
+                        d.DateTime.ToString("HH:mm"),
+                        d.Level switch { "wake" => 3, "rem" => 2, "light" => 1, "deep" => 0, _ => 0 }))
+                    .ToList();
+            }
         }
         catch (Exception)
         {
@@ -226,6 +320,48 @@
         var mainSleep = _singleItem?.Sleep.Sleep.FirstOrDefault(s => s.IsMainSleep);
         return mainSleep is not null ? $"{mainSleep.Efficiency}%" : "--";
     }
+
+    private double GetEfficiencyValue()
+    {
+        var mainSleep = _singleItem?.Sleep.Sleep.FirstOrDefault(s => s.IsMainSleep);
+        return mainSleep?.Efficiency ?? 0;
+    }
+
+    private record SleepStageDataPoint(string Stage, int Minutes);
+
+    private List<SleepStageDataPoint> GetSleepStagesData()
+    {
+        var stages = _singleItem!.Sleep.Summary.Stages;
+        return
+        [
+            new("Deep", stages.Deep),
+            new("Light", stages.Light),
+            new("REM", stages.Rem),
+            new("Awake", stages.Wake)
+        ];
+    }
+
+    private record ChartDataPoint(string Date, double Value);
+
+    private List<ChartDataPoint> GetRangeDurationData() =>
+        _rangeItems!.Items.Select(s => new ChartDataPoint(s.Date, Math.Round(s.Sleep.Summary.TotalMinutesAsleep / 60.0, 1))).ToList();
+
+    private List<ChartDataPoint> GetRangeEfficiencyData() =>
+        _rangeItems!.Items
+            .Where(s => s.Sleep.Sleep.Any(r => r.IsMainSleep))
+            .Select(s => new ChartDataPoint(s.Date, s.Sleep.Sleep.First(r => r.IsMainSleep).Efficiency)).ToList();
+
+    private List<ChartDataPoint> GetRangeDeepData() =>
+        _rangeItems!.Items.Select(s => new ChartDataPoint(s.Date, s.Sleep.Summary.Stages?.Deep ?? 0)).ToList();
+
+    private List<ChartDataPoint> GetRangeLightData() =>
+        _rangeItems!.Items.Select(s => new ChartDataPoint(s.Date, s.Sleep.Summary.Stages?.Light ?? 0)).ToList();
+
+    private List<ChartDataPoint> GetRangeRemData() =>
+        _rangeItems!.Items.Select(s => new ChartDataPoint(s.Date, s.Sleep.Summary.Stages?.Rem ?? 0)).ToList();
+
+    private List<ChartDataPoint> GetRangeWakeData() =>
+        _rangeItems!.Items.Select(s => new ChartDataPoint(s.Date, s.Sleep.Summary.Stages?.Wake ?? 0)).ToList();
 
     private int GetStageHeight(int minutes)
     {

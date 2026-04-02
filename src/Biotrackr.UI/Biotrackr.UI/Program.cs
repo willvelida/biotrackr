@@ -32,6 +32,13 @@ builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
 
 builder.Services.AddRadzenComponents();
+builder.Services.AddHttpContextAccessor();
+builder.Services.AddScoped<IUserInfoService, UserInfoService>();
+builder.Services.AddRadzenCookieThemeService(options =>
+{
+    options.Name = "BiotrackrTheme";
+    options.Duration = TimeSpan.FromDays(365);
+});
 
 var appInsightsConnectionString = builder.Configuration["applicationinsightsconnectionstring"];
 

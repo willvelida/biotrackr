@@ -5,6 +5,7 @@ using Biotrackr.UI.Components.Pages;
 using Biotrackr.UI.Models;
 using Biotrackr.UI.Models.Weight;
 using Biotrackr.UI.Services;
+using Biotrackr.UI.UnitTests.Helpers;
 using FluentAssertions;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -20,6 +21,7 @@ namespace Biotrackr.UI.UnitTests.Components.Pages
             Services.AddSingleton(_mockApiService.Object);
             Services.AddRadzenComponents();
             JSInterop.Mode = JSRuntimeMode.Loose;
+            JSInterop.SetupRadzenChartInterop();
         }
 
         [Fact]
@@ -188,6 +190,75 @@ namespace Biotrackr.UI.UnitTests.Components.Pages
 
             // Range mode uses RadzenSelectBar which cannot be interacted with via bUnit selectors.
             // Verify that the component renders without errors when data is available.
+            cut.Markup.Should().NotBeEmpty();
+        }
+
+        [Fact]
+        public void RenderCharts_WhenSingleDateDataLoaded()
+        {
+            var weightItem = CreateWeightItem(weight: 80, bmi: 22.7, muscleMass: 45.2, fatMass: 15.23, boneMass: 3.1, waterMass: 48.9, visceralFat: 10);
+
+            _mockApiService.Setup(s => s.GetWeightByDateAsync(It.IsAny<string>()))
+                .ReturnsAsync(weightItem);
+
+            var cut = Render<Weight>();
+
+            // Donut chart for body composition
+            cut.Markup.Should().Contain("Body Composition");
+            cut.Markup.Should().Contain("80");
+        }
+
+        [Fact]
+        public void RenderTrendCharts_WhenRangeDateDataLoaded()
+        {
+            var rangeResponse = new PaginatedResponse<WeightItem>
+            {
+                Items =
+                [
+                    CreateWeightItem(weight: 80.5, bmi: 24.5),
+                    CreateWeightItem(weight: 80.2, bmi: 24.4)
+                ],
+                PageNumber = 1,
+                TotalPages = 1,
+                TotalCount = 2,
+                HasPreviousPage = false,
+                HasNextPage = false
+            };
+            rangeResponse.Items[0].Date = "2026-03-01";
+            rangeResponse.Items[1].Date = "2026-03-02";
+
+            _mockApiService.Setup(s => s.GetWeightByDateAsync(It.IsAny<string>()))
+                .ReturnsAsync((WeightItem?)null);
+            _mockApiService.Setup(s => s.GetWeightByDateRangeAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<int>(), It.IsAny<int>()))
+                .ReturnsAsync(rangeResponse);
+
+            var cut = Render<Weight>();
+
+            // The component renders without errors when range data is available
+            cut.Markup.Should().NotBeEmpty();
+        }
+
+        [Fact]
+        public void RenderChartsAndDataGrid_InRangeMode()
+        {
+            var rangeResponse = new PaginatedResponse<WeightItem>
+            {
+                Items = [CreateWeightItem(weight: 81.2, bmi: 25.1)],
+                PageNumber = 1,
+                TotalPages = 1,
+                TotalCount = 1,
+                HasPreviousPage = false,
+                HasNextPage = false
+            };
+
+            _mockApiService.Setup(s => s.GetWeightByDateAsync(It.IsAny<string>()))
+                .ReturnsAsync((WeightItem?)null);
+            _mockApiService.Setup(s => s.GetWeightByDateRangeAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<int>(), It.IsAny<int>()))
+                .ReturnsAsync(rangeResponse);
+
+            var cut = Render<Weight>();
+
+            cut.Markup.Should().Contain("Weight");
             cut.Markup.Should().NotBeEmpty();
         }
 
