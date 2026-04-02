@@ -189,7 +189,7 @@ namespace Biotrackr.UI.UnitTests.Components.Pages
 
             // Donut chart for sleep stages and arc gauge for efficiency
             cut.Markup.Should().Contain("Sleep Stages");
-            cut.Markup.Should().Contain("rz-arc-gauge");
+            cut.Markup.Should().Contain("rz-progressbar");
         }
 
         [Fact]

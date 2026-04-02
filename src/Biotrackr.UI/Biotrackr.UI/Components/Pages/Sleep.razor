@@ -42,12 +42,9 @@
         }
         <RadzenColumn Size="12" SizeMD="6" SizeSM="12">
             <RadzenText TextStyle="TextStyle.H6" class="rz-mb-2">Sleep Efficiency</RadzenText>
-            <RadzenStack AlignItems="AlignItems.Center">
-                <RadzenArcGauge Style="width: 200px; height: 200px;">
-                    <RadzenArcGaugeScale Min="0" Max="100" Step="25" TickPosition="GaugeTickPosition.Outside">
-                        <RadzenArcGaugeScaleValue Value="@GetEfficiencyValue()" ShowValue="true" />
-                    </RadzenArcGaugeScale>
-                </RadzenArcGauge>
+            <RadzenStack Gap="0.25rem">
+                <RadzenText TextStyle="TextStyle.Subtitle2">@($"{GetEfficiencyValue():F0}%")</RadzenText>
+                <RadzenProgressBar Value="@GetEfficiencyValue()" ShowValue="false" Mode="ProgressBarMode.Determinate" Style="height: 20px;" />
             </RadzenStack>
         </RadzenColumn>
     </RadzenRow>

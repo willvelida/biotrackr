@@ -195,7 +195,7 @@ namespace Biotrackr.UI.UnitTests.Components.Pages
             var cut = Render<Activity>();
 
             // Arc gauges for steps and calories, bar charts for HR zones and active minutes
-            cut.Markup.Should().Contain("rz-arc-gauge");
+            cut.Markup.Should().Contain("rz-progressbar");
             cut.Markup.Should().Contain("Steps");
             cut.Markup.Should().Contain("10,000");
         }

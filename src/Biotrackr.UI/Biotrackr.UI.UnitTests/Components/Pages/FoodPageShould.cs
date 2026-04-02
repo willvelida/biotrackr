@@ -156,7 +156,7 @@ namespace Biotrackr.UI.UnitTests.Components.Pages
 
             // Donut chart for macros and arc gauge for calorie goal
             cut.Markup.Should().Contain("2,500");
-            cut.Markup.Should().Contain("rz-arc-gauge");
+            cut.Markup.Should().Contain("rz-progressbar");
         }
 
         [Fact]

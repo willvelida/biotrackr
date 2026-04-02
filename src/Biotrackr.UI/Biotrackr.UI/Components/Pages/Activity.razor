@@ -36,23 +36,15 @@
     <RadzenText TextStyle="TextStyle.H6" class="rz-mb-2">Goal Progress</RadzenText>
     <RadzenRow Gap="1rem" class="rz-mb-4" AlignItems="AlignItems.Center">
         <RadzenColumn Size="12" SizeMD="6" SizeSM="6">
-            <RadzenStack AlignItems="AlignItems.Center" Gap="0.25rem">
-                <RadzenText TextStyle="TextStyle.Subtitle2">Steps</RadzenText>
-                <RadzenArcGauge Style="width: 200px; height: 200px;">
-                    <RadzenArcGaugeScale Min="0" Max="@(Math.Max(_singleItem.Activity.Goals.Steps, 1))" Step="@(Math.Max(_singleItem.Activity.Goals.Steps / 4, 1))" TickPosition="GaugeTickPosition.Outside">
-                        <RadzenArcGaugeScaleValue Value="@((double)_singleItem.Activity.Summary.Steps)" ShowValue="true" />
-                    </RadzenArcGaugeScale>
-                </RadzenArcGauge>
+            <RadzenStack Gap="0.25rem">
+                <RadzenText TextStyle="TextStyle.Subtitle2">Steps: @_singleItem.Activity.Summary.Steps.ToString("N0") / @_singleItem.Activity.Goals.Steps.ToString("N0")</RadzenText>
+                <RadzenProgressBar Value="@GetGoalPercent(_singleItem.Activity.Summary.Steps, _singleItem.Activity.Goals.Steps)" ShowValue="true" Mode="ProgressBarMode.Determinate" Style="height: 20px;" />
             </RadzenStack>
         </RadzenColumn>
         <RadzenColumn Size="12" SizeMD="6" SizeSM="6">
-            <RadzenStack AlignItems="AlignItems.Center" Gap="0.25rem">
-                <RadzenText TextStyle="TextStyle.Subtitle2">Calories Burned</RadzenText>
-                <RadzenArcGauge Style="width: 200px; height: 200px;">
-                    <RadzenArcGaugeScale Min="0" Max="@(Math.Max(_singleItem.Activity.Goals.CaloriesOut, 1))" Step="@(Math.Max(_singleItem.Activity.Goals.CaloriesOut / 4, 1))" TickPosition="GaugeTickPosition.Outside">
-                        <RadzenArcGaugeScaleValue Value="@((double)_singleItem.Activity.Summary.CaloriesOut)" ShowValue="true" />
-                    </RadzenArcGaugeScale>
-                </RadzenArcGauge>
+            <RadzenStack Gap="0.25rem">
+                <RadzenText TextStyle="TextStyle.Subtitle2">Calories Burned: @_singleItem.Activity.Summary.CaloriesOut.ToString("N0") / @_singleItem.Activity.Goals.CaloriesOut.ToString("N0")</RadzenText>
+                <RadzenProgressBar Value="@GetGoalPercent(_singleItem.Activity.Summary.CaloriesOut, _singleItem.Activity.Goals.CaloriesOut)" ShowValue="true" Mode="ProgressBarMode.Determinate" Style="height: 20px;" />
             </RadzenStack>
         </RadzenColumn>
     </RadzenRow>
@@ -292,6 +284,12 @@
         if (goal == 0) return "";
         var pct = (double)actual / goal * 100;
         return $"{pct:F0}% of {goal:N0} goal";
+    }
+
+    private static double GetGoalPercent(int actual, int goal)
+    {
+        if (goal == 0) return 0;
+        return Math.Min((double)actual / goal * 100, 100);
     }
 
     private static string FormatDuration(long milliseconds)
