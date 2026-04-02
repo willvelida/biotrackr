@@ -23,16 +23,53 @@
             <RadzenColumn Size="12" SizeMD="3" SizeSM="6">
                 <SummaryCard Title="BMI" Value="@($"{_singleItem.Weight.Bmi:F1}")" Subtitle="@GetBmiCategory(_singleItem.Weight.Bmi)" />
             </RadzenColumn>
-            @if (_singleItem.Weight.Fat > 0)
-            {
-                <RadzenColumn Size="12" SizeMD="3" SizeSM="6">
-                    <SummaryCard Title="Body Fat" Value="@($"{_singleItem.Weight.Fat:F1}%")" />
-                </RadzenColumn>
-            }
             <RadzenColumn Size="12" SizeMD="3" SizeSM="6">
-                <SummaryCard Title="Recorded" Value="@_singleItem.Weight.Time" Subtitle="@_singleItem.Weight.Source" />
+                <SummaryCard Title="Recorded" Value="@_singleItem.Weight.Time" Subtitle="@(_singleItem.Provider ?? _singleItem.Weight.Source)" />
             </RadzenColumn>
         </RadzenRow>
+
+        @if (_singleItem.Weight.MuscleMassKg is not null || _singleItem.Weight.FatMassKg is not null)
+        {
+            <RadzenText TextStyle="TextStyle.H6" class="rz-mb-2">Body Composition</RadzenText>
+            <RadzenRow Gap="1rem" class="rz-mb-4">
+                @if (_singleItem.Weight.FatMassKg is not null)
+                {
+                    <RadzenColumn Size="12" SizeMD="2" SizeSM="4">
+                        <SummaryCard Title="Fat Mass" Value="@($"{_singleItem.Weight.FatMassKg:F1} kg")" />
+                    </RadzenColumn>
+                }
+                @if (_singleItem.Weight.FatFreeMassKg is not null)
+                {
+                    <RadzenColumn Size="12" SizeMD="2" SizeSM="4">
+                        <SummaryCard Title="Fat-Free Mass" Value="@($"{_singleItem.Weight.FatFreeMassKg:F1} kg")" />
+                    </RadzenColumn>
+                }
+                @if (_singleItem.Weight.MuscleMassKg is not null)
+                {
+                    <RadzenColumn Size="12" SizeMD="2" SizeSM="4">
+                        <SummaryCard Title="Muscle Mass" Value="@($"{_singleItem.Weight.MuscleMassKg:F1} kg")" />
+                    </RadzenColumn>
+                }
+                @if (_singleItem.Weight.BoneMassKg is not null)
+                {
+                    <RadzenColumn Size="12" SizeMD="2" SizeSM="4">
+                        <SummaryCard Title="Bone Mass" Value="@($"{_singleItem.Weight.BoneMassKg:F1} kg")" />
+                    </RadzenColumn>
+                }
+                @if (_singleItem.Weight.WaterMassKg is not null)
+                {
+                    <RadzenColumn Size="12" SizeMD="2" SizeSM="4">
+                        <SummaryCard Title="Water Mass" Value="@($"{_singleItem.Weight.WaterMassKg:F1} kg")" />
+                    </RadzenColumn>
+                }
+                @if (_singleItem.Weight.VisceralFatIndex is not null)
+                {
+                    <RadzenColumn Size="12" SizeMD="2" SizeSM="4">
+                        <SummaryCard Title="Visceral Fat" Value="@($"{_singleItem.Weight.VisceralFatIndex}")" />
+                    </RadzenColumn>
+                }
+            </RadzenRow>
+        }
     }
     else
     {
@@ -53,14 +90,23 @@
             <RadzenDataGridColumn TItem="WeightItem" Title="BMI">
                 <Template Context="item">@item.Weight.Bmi.ToString("F1")</Template>
             </RadzenDataGridColumn>
-            <RadzenDataGridColumn TItem="WeightItem" Title="Body Fat %">
-                <Template Context="item">@(item.Weight.Fat > 0 ? item.Weight.Fat.ToString("F1") : "--")</Template>
+            <RadzenDataGridColumn TItem="WeightItem" Title="Muscle (kg)">
+                <Template Context="item">@(item.Weight.MuscleMassKg?.ToString("F1") ?? "--")</Template>
+            </RadzenDataGridColumn>
+            <RadzenDataGridColumn TItem="WeightItem" Title="Fat Mass (kg)">
+                <Template Context="item">@(item.Weight.FatMassKg?.ToString("F1") ?? "--")</Template>
+            </RadzenDataGridColumn>
+            <RadzenDataGridColumn TItem="WeightItem" Title="Bone (kg)">
+                <Template Context="item">@(item.Weight.BoneMassKg?.ToString("F1") ?? "--")</Template>
+            </RadzenDataGridColumn>
+            <RadzenDataGridColumn TItem="WeightItem" Title="Water (kg)">
+                <Template Context="item">@(item.Weight.WaterMassKg?.ToString("F1") ?? "--")</Template>
             </RadzenDataGridColumn>
             <RadzenDataGridColumn TItem="WeightItem" Title="Time">
                 <Template Context="item">@item.Weight.Time</Template>
             </RadzenDataGridColumn>
-            <RadzenDataGridColumn TItem="WeightItem" Title="Source">
-                <Template Context="item">@item.Weight.Source</Template>
+            <RadzenDataGridColumn TItem="WeightItem" Title="Provider">
+                <Template Context="item">@(item.Provider ?? item.Weight.Source)</Template>
             </RadzenDataGridColumn>
         </Columns>
     </RadzenDataGrid>

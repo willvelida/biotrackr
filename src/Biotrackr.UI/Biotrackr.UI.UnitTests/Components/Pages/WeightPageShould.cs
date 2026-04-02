@@ -100,17 +100,35 @@ namespace Biotrackr.UI.UnitTests.Components.Pages
         }
 
         [Fact]
-        public void RenderBodyFat_WhenGreaterThanZero()
+        public void RenderBodyComposition_WhenWithingsDataAvailable()
         {
-            var weightItem = CreateWeightItem(weight: 80, bmi: 24.5, fat: 18.5);
+            var weightItem = CreateWeightItem(weight: 80, bmi: 22.7, muscleMass: 45.2, fatMass: 15.23, boneMass: 3.1, waterMass: 48.9, visceralFat: 10);
 
             _mockApiService.Setup(s => s.GetWeightByDateAsync(It.IsAny<string>()))
                 .ReturnsAsync(weightItem);
 
             var cut = Render<Weight>();
 
-            cut.Markup.Should().Contain("Body Fat");
-            cut.Markup.Should().Contain("18.5%");
+            cut.Markup.Should().Contain("Body Composition");
+            cut.Markup.Should().Contain("Muscle Mass");
+            cut.Markup.Should().Contain("45.2 kg");
+            cut.Markup.Should().Contain("Fat Mass");
+            cut.Markup.Should().Contain("15.2 kg");
+            cut.Markup.Should().Contain("Bone Mass");
+            cut.Markup.Should().Contain("3.1 kg");
+        }
+
+        [Fact]
+        public void NotRenderBodyComposition_WhenFitbitDataOnly()
+        {
+            var weightItem = CreateWeightItem(weight: 80, bmi: 24.5);
+
+            _mockApiService.Setup(s => s.GetWeightByDateAsync(It.IsAny<string>()))
+                .ReturnsAsync(weightItem);
+
+            var cut = Render<Weight>();
+
+            cut.Markup.Should().NotContain("Body Composition");
         }
 
         [Fact]
@@ -173,19 +191,29 @@ namespace Biotrackr.UI.UnitTests.Components.Pages
             cut.Markup.Should().NotBeEmpty();
         }
 
-        private static WeightItem CreateWeightItem(double weight = 0, double bmi = 0, double fat = 0)
+        private static WeightItem CreateWeightItem(
+            double weight = 0, double bmi = 0, double fat = 0,
+            double? muscleMass = null, double? fatMass = null,
+            double? boneMass = null, double? waterMass = null,
+            int? visceralFat = null, string provider = "Withings")
         {
             return new WeightItem
             {
                 Id = "test-id",
                 Date = "2026-03-05",
+                Provider = provider,
                 Weight = new WeightData
                 {
                     Weight = weight,
                     Bmi = bmi,
                     Fat = fat,
-                    Source = "Fitbit",
-                    Time = "08:00:00"
+                    Source = provider,
+                    Time = "08:00:00",
+                    MuscleMassKg = muscleMass,
+                    FatMassKg = fatMass,
+                    BoneMassKg = boneMass,
+                    WaterMassKg = waterMass,
+                    VisceralFatIndex = visceralFat
                 }
             };
         }
