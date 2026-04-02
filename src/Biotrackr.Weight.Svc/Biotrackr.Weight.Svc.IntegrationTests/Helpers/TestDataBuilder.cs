@@ -82,7 +82,7 @@ namespace Biotrackr.Weight.Svc.IntegrationTests.Helpers
                 Status = 0,
                 Body = new WithingsMeasureBody
                 {
-                    UpdateTime = DateTimeOffset.UtcNow.ToUnixTimeSeconds().ToString(),
+                    UpdateTime = DateTimeOffset.UtcNow.ToUnixTimeSeconds(),
                     Timezone = "Australia/Sydney",
                     MeasureGroups = groups,
                     More = 0,
