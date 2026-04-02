@@ -4,7 +4,7 @@
 [![.NET](https://img.shields.io/badge/.NET-10.0-purple.svg)](https://dotnet.microsoft.com/)
 [![Azure](https://img.shields.io/badge/Azure-Cloud-0078D4.svg)](https://azure.microsoft.com/)
 
-**biotrackr** is a personal health platform that integrates with the Fitbit API to collect, analyze, and provide insights on health and fitness data. The application follows a microservices architecture deployed on Azure, with comprehensive CI/CD pipelines and infrastructure as code.
+**biotrackr** is a personal health platform that integrates with the Fitbit API and Withings API to collect, analyze, and provide insights on health and fitness data. The application follows a microservices architecture deployed on Azure, with comprehensive CI/CD pipelines and infrastructure as code.
 
 ## 📋 Table of Contents
 
@@ -21,12 +21,13 @@
 The application follows a **microservices architecture** with separate services for different health domains:
 
 ### Data Ingestion (Background Workers)
-Scheduled Container App Jobs that fetch data from the Fitbit API:
-- **Auth Service**: Manages OAuth token refresh with Fitbit API, storing tokens in Azure Key Vault
-- **Activity Service**: Daily fetch of physical activity and workout data
-- **Sleep Service**: Daily fetch of sleep tracking and stage analysis data
-- **Weight Service**: Weekly fetch of weight measurements and trends
-- **Food Service**: Daily fetch of nutrition and food logging data
+Scheduled Container App Jobs that fetch data from the Fitbit and Withings APIs:
+- **Auth Fitbit Service**: Manages OAuth token refresh with Fitbit API (every 6 hours), storing tokens in Azure Key Vault
+- **Auth Withings Service**: Manages OAuth token refresh with Withings API (every 2 hours), storing rotating tokens in Azure Key Vault
+- **Activity Service**: Daily fetch of physical activity and workout data from Fitbit
+- **Sleep Service**: Daily fetch of sleep tracking and stage analysis data from Fitbit
+- **Weight Service**: Daily fetch of weight and body composition data from Withings (muscle mass, bone mass, water mass, fat mass, fat-free mass, visceral fat index)
+- **Food Service**: Daily fetch of nutrition and food logging data from Fitbit
 
 ### Data Access (REST APIs)
 HTTP-based Container Apps serving data from Cosmos DB via Azure API Management:
@@ -45,7 +46,7 @@ HTTP-based Container Apps serving data from Cosmos DB via Azure API Management:
 ### Supporting Infrastructure
 - **Azure API Management**: API gateway with JWT validation, subscription key auth, and rate limiting
 - **Azure Cosmos DB**: Serverless NoSQL database for all health data and chat conversation history
-- **Azure Key Vault**: Secure storage for Fitbit OAuth tokens
+- **Azure Key Vault**: Secure storage for Fitbit and Withings OAuth tokens
 - **Azure App Configuration**: Centralized configuration for all services
 - **Azure Container Registry**: Docker image storage
 - **Azure Blob Storage**: Report artifact storage (PDFs, charts) with SAS URL generation
@@ -58,9 +59,9 @@ HTTP-based Container Apps serving data from Cosmos DB via Azure API Management:
 
 - 🏃 **Activity Tracking**: Comprehensive workout and activity data collection
 - 😴 **Sleep Analysis**: Sleep patterns, stages, and quality metrics
-- ⚖️ **Weight Management**: Weight tracking and trend visualization
+- ⚖️ **Weight Management**: Weight tracking with Withings Body Comp data (muscle mass, bone mass, water mass, fat mass, visceral fat) and Fitbit trend visualization
 - 🍎 **Food Logging**: Nutrition tracking and food diary management
-- 🔐 **Secure Authentication**: OAuth integration with Fitbit
+- 🔐 **Secure Authentication**: OAuth integration with Fitbit and Withings
 - 📊 **Data Insights**: Analysis and reporting on health metrics
 - 📝 **Report Generation**: Automated PDF reports and data visualizations via a Copilot coding agent with code validation and AI review
 - 💬 **AI Chat Agent**: Natural language chat interface powered by Claude for querying and analysing health data
@@ -107,7 +108,8 @@ HTTP-based Container Apps serving data from Cosmos DB via Azure API Management:
 | Component | Deployment Status | Unit Test Coverage | Integration Test Coverage |
 | --------- | ----------------- | ------------------ | ------------------------- |
 | **Infrastructure** | [![Deploy Core Biotrackr Infrastructure](https://github.com/willvelida/biotrackr/actions/workflows/deploy-core-infra.yml/badge.svg)](https://github.com/willvelida/biotrackr/actions/workflows/deploy-core-infra.yml) | N/A | N/A |
-| **Auth Service** | [![Deploy Auth Service](https://github.com/willvelida/biotrackr/actions/workflows/deploy-auth-service.yml/badge.svg)](https://github.com/willvelida/biotrackr/actions/workflows/deploy-auth-service.yml) | ![Code Coverage](https://img.shields.io/badge/Code%20Coverage-97.5%25-brightgreen?style=flat) | ![Integration Tests](https://img.shields.io/badge/Tests-14%20Passing-brightgreen?style=flat) |
+| **Auth Fitbit Service** | [![Deploy Auth Fitbit Service](https://github.com/willvelida/biotrackr/actions/workflows/deploy-auth-fitbit-service.yml/badge.svg)](https://github.com/willvelida/biotrackr/actions/workflows/deploy-auth-fitbit-service.yml) | ![Code Coverage](https://img.shields.io/badge/Code%20Coverage-97.5%25-brightgreen?style=flat) | ![Integration Tests](https://img.shields.io/badge/Tests-19%20Passing-brightgreen?style=flat) |
+| **Auth Withings Service** | [![Deploy Auth Withings Service](https://github.com/willvelida/biotrackr/actions/workflows/deploy-auth-withings-service.yml/badge.svg)](https://github.com/willvelida/biotrackr/actions/workflows/deploy-auth-withings-service.yml) | ![Code Coverage](https://img.shields.io/badge/Code%20Coverage-97.5%25-brightgreen?style=flat) | ![Integration Tests](https://img.shields.io/badge/Tests-19%20Passing-brightgreen?style=flat) |
 | **Activity Service** | [![Deploy Activity Service](https://github.com/willvelida/biotrackr/actions/workflows/deploy-activity-service.yml/badge.svg)](https://github.com/willvelida/biotrackr/actions/workflows/deploy-activity-service.yml) | ![Code Coverage](https://img.shields.io/badge/Code%20Coverage-100%25-brightgreen?style=flat) | ![Integration Tests](https://img.shields.io/badge/Tests-17%20Passing-brightgreen?style=flat) |
 | **Activity API** | [![Deploy Activity Api](https://github.com/willvelida/biotrackr/actions/workflows/deploy-activity-api.yml/badge.svg)](https://github.com/willvelida/biotrackr/actions/workflows/deploy-activity-api.yml) | ![Code Coverage](https://img.shields.io/badge/Code%20Coverage-79.3%25-yellow?style=flat) | ![Integration Tests](https://img.shields.io/badge/Tests-30%20Passing-brightgreen?style=flat) |
 | **Sleep API** | [![Deploy Sleep Api](https://github.com/willvelida/biotrackr/actions/workflows/deploy-sleep-api.yml/badge.svg)](https://github.com/willvelida/biotrackr/actions/workflows/deploy-sleep-api.yml) | ![Code Coverage](https://img.shields.io/badge/Code%20Coverage-87%25-brightgreen?style=flat) | ![Integration Tests](https://img.shields.io/badge/Tests-19%20Passing-brightgreen?style=flat) |
