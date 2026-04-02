@@ -19,6 +19,14 @@
                 <RadzenCategoryAxis Visible="false" Padding="-20" />
             </RadzenSparkline>
         }
+        @if (GaugeMax > 0)
+        {
+            <RadzenArcGauge Style="width: 100%; height: 60px;">
+                <RadzenArcGaugeScale Min="0" Max="@GaugeMax">
+                    <RadzenArcGaugeScaleValue Value="@GaugeValue" ShowValue="false" />
+                </RadzenArcGaugeScale>
+            </RadzenArcGauge>
+        }
     </RadzenStack>
 </RadzenCard>
 
@@ -29,4 +37,6 @@
     [Parameter] public string? CardClass { get; set; }
     [Parameter] public RenderFragment? IconContent { get; set; }
     [Parameter] public IEnumerable<TrendDataPoint>? TrendData { get; set; }
+    [Parameter] public double GaugeValue { get; set; }
+    [Parameter] public double GaugeMax { get; set; }
 }

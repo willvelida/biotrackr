@@ -133,6 +133,9 @@
 
 @if (!_isLoading && _rangeItems is not null && _mode == "range")
 {
+    <RadzenTabs>
+        <Tabs>
+            <RadzenTabsItem Text="Charts">
     @if (_rangeItems.Items.Any())
     {
         <RadzenText TextStyle="TextStyle.H6" class="rz-mb-2">Steps Over Time</RadzenText>
@@ -171,7 +174,8 @@
             </RadzenValueAxis>
         </RadzenChart>
     }
-
+            </RadzenTabsItem>
+            <RadzenTabsItem Text="Table">
     <RadzenText TextStyle="TextStyle.H6" class="rz-mb-2">Activity Records</RadzenText>
     <RadzenDataGrid Data="@_rangeItems.Items" TItem="ActivityItem" Density="Density.Compact"
                     AllowPaging="true" PageSize="10" Count="@_rangeItems.TotalCount" LoadData="@OnLoadData" class="rz-mb-4">
@@ -194,6 +198,9 @@
             </RadzenDataGridColumn>
         </Columns>
     </RadzenDataGrid>
+            </RadzenTabsItem>
+        </Tabs>
+    </RadzenTabs>
 }
 
 @if (!_isLoading && _singleItem is null && _mode == "date" && _errorMessage is null)

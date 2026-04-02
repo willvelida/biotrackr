@@ -87,6 +87,19 @@
         </RadzenRow>
     }
 
+    @if (_hypnogramData is not null && _hypnogramData.Any())
+    {
+        <RadzenText TextStyle="TextStyle.Subtitle1" class="rz-mb-2">Sleep Timeline</RadzenText>
+        <RadzenChart Style="height: 200px;" class="rz-mb-4">
+            <RadzenAreaSeries Data="@_hypnogramData" CategoryProperty="Time" ValueProperty="Level"
+                Smooth="false" StrokeWidth="1" Title="Sleep Stage" />
+            <RadzenCategoryAxis Padding="20" />
+            <RadzenValueAxis Min="0" Max="3">
+                <RadzenGridLines Visible="true" />
+            </RadzenValueAxis>
+        </RadzenChart>
+    }
+
     @if (_singleItem.Sleep.Sleep.Any())
     {
         <RadzenText TextStyle="TextStyle.H6" class="rz-mb-2">Sleep Logs</RadzenText>
@@ -122,6 +135,9 @@
 
 @if (!_isLoading && _rangeItems is not null && _mode == "range")
 {
+    <RadzenTabs>
+        <Tabs>
+            <RadzenTabsItem Text="Charts">
     @if (_rangeItems.Items.Any())
     {
         <RadzenText TextStyle="TextStyle.H6" class="rz-mb-2">Sleep Duration Over Time</RadzenText>
@@ -160,7 +176,8 @@
             </RadzenValueAxis>
         </RadzenChart>
     }
-
+            </RadzenTabsItem>
+            <RadzenTabsItem Text="Table">
     <RadzenText TextStyle="TextStyle.H6" class="rz-mb-2">Sleep Records</RadzenText>
     <RadzenDataGrid Data="@_rangeItems.Items" TItem="SleepItem" Density="Density.Compact"
                     AllowPaging="true" PageSize="10" Count="@_rangeItems.TotalCount" LoadData="@OnLoadData" class="rz-mb-4">
@@ -189,6 +206,9 @@
             </RadzenDataGridColumn>
         </Columns>
     </RadzenDataGrid>
+            </RadzenTabsItem>
+        </Tabs>
+    </RadzenTabs>
 }
 
 @if (!_isLoading && _singleItem is null && _mode == "date" && _errorMessage is null)
@@ -207,6 +227,9 @@
 
     private SleepItem? _singleItem;
     private PaginatedResponse<SleepItem>? _rangeItems;
+    private List<HypnogramPoint>? _hypnogramData;
+
+    private record HypnogramPoint(string Time, int Level);
 
     protected override async Task OnInitializedAsync()
     {
@@ -220,10 +243,22 @@
         _isLoading = true;
         _errorMessage = null;
         _singleItem = null;
+        _hypnogramData = null;
 
         try
         {
             _singleItem = await ApiService.GetSleepByDateAsync(date);
+
+            var mainSleep = _singleItem?.Sleep?.Sleep?.FirstOrDefault(r => r.IsMainSleep);
+            if (mainSleep?.Levels?.Data is { Count: > 0 })
+            {
+                _hypnogramData = mainSleep.Levels.Data
+                    .OrderBy(d => d.DateTime)
+                    .Select(d => new HypnogramPoint(
+                        d.DateTime.ToString("HH:mm"),
+                        d.Level switch { "wake" => 3, "rem" => 2, "light" => 1, "deep" => 0, _ => 0 }))
+                    .ToList();
+            }
         }
         catch (Exception)
         {

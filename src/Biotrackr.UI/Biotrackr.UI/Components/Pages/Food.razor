@@ -94,6 +94,9 @@
 
 @if (!_isLoading && _rangeItems is not null && _mode == "range")
 {
+    <RadzenTabs>
+        <Tabs>
+            <RadzenTabsItem Text="Charts">
     @if (_rangeItems.Items.Any())
     {
         <RadzenText TextStyle="TextStyle.H6" class="rz-mb-2">Calories Over Time</RadzenText>
@@ -125,7 +128,8 @@
             </RadzenValueAxis>
         </RadzenChart>
     }
-
+            </RadzenTabsItem>
+            <RadzenTabsItem Text="Table">
     <RadzenText TextStyle="TextStyle.H6" class="rz-mb-2">Food Records</RadzenText>
     <RadzenDataGrid Data="@_rangeItems.Items" TItem="FoodItem" Density="Density.Compact"
                     AllowPaging="true" PageSize="10" Count="@_rangeItems.TotalCount" LoadData="@OnLoadData" class="rz-mb-4">
@@ -151,6 +155,9 @@
             </RadzenDataGridColumn>
         </Columns>
     </RadzenDataGrid>
+            </RadzenTabsItem>
+        </Tabs>
+    </RadzenTabs>
 }
 
 @if (!_isLoading && _singleItem is null && _mode == "date" && _errorMessage is null)

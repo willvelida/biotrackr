@@ -15,7 +15,7 @@
     <RadzenText TextStyle="TextStyle.H5" class="rz-mb-2">Activity</RadzenText>
     <RadzenRow Gap="1rem" class="rz-mb-4">
         <RadzenColumn Size="12" SizeMD="3" SizeSM="6">
-            <TrendCard Title="Steps" Value="@FormatNumber(_activitySummary?.Steps)" CardClass="card-activity" TrendData="@_stepsTrend">
+            <TrendCard Title="Steps" Value="@FormatNumber(_activitySummary?.Steps)" CardClass="card-activity" TrendData="@_stepsTrend" GaugeValue="@(_activitySummary?.Steps ?? 0)" GaugeMax="@(_activityGoals?.Steps ?? 0)">
                 <IconContent>
                     <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" fill="#0d6efd" viewBox="0 0 16 16">
                         <path fill-rule="evenodd" d="M6 2a.5.5 0 0 1 .47.33L10 12.036l1.53-4.208A.5.5 0 0 1 12 7.5h3.5a.5.5 0 0 1 0 1h-3.15l-1.88 5.17a.5.5 0 0 1-.94 0L6 3.964 4.47 8.171A.5.5 0 0 1 4 8.5H.5a.5.5 0 0 1 0-1h3.15l1.88-5.17A.5.5 0 0 1 6 2Z"/>
@@ -24,7 +24,7 @@
             </TrendCard>
         </RadzenColumn>
         <RadzenColumn Size="12" SizeMD="3" SizeSM="6">
-            <TrendCard Title="Calories Burned" Value="@FormatNumber(_activitySummary?.CaloriesOut)" Subtitle="@GetCalorieGoalText()" CardClass="card-calories" TrendData="@_caloriesBurnedTrend">
+            <TrendCard Title="Calories Burned" Value="@FormatNumber(_activitySummary?.CaloriesOut)" Subtitle="@GetCalorieGoalText()" CardClass="card-calories" TrendData="@_caloriesBurnedTrend" GaugeValue="@(_activitySummary?.CaloriesOut ?? 0)" GaugeMax="@(_activityGoals?.CaloriesOut ?? 0)">
                 <IconContent>
                     <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" fill="#dc3545" viewBox="0 0 16 16">
                         <path d="M8 16c3.314 0 6-2.686 6-6 0-2.61-1.72-4.865-3.313-6.558A26 26 0 0 0 8 1.02a26 26 0 0 0-2.687 2.422C3.72 5.135 2 7.39 2 10c0 3.314 2.686 6 6 6M6.5 10a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0"/>
@@ -109,7 +109,7 @@
     <RadzenText TextStyle="TextStyle.H5" class="rz-mb-2">Food</RadzenText>
     <RadzenRow Gap="1rem" class="rz-mb-4">
         <RadzenColumn Size="12" SizeMD="3" SizeSM="6">
-            <TrendCard Title="Calories Consumed" Value="@FormatCalories(_foodSummary?.Calories)" Subtitle="@GetFoodGoalText()" CardClass="card-food" TrendData="@_caloriesConsumedTrend">
+            <TrendCard Title="Calories Consumed" Value="@FormatCalories(_foodSummary?.Calories)" Subtitle="@GetFoodGoalText()" CardClass="card-food" TrendData="@_caloriesConsumedTrend" GaugeValue="@(_foodSummary?.Calories ?? 0)" GaugeMax="@(_foodGoals?.Calories ?? 0)">
                 <IconContent>
                     <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" fill="#198754" viewBox="0 0 16 16">
                         <path d="M2.5 13.5A.5.5 0 0 1 3 13h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5zM13.991 3l.024.001a1.46 1.46 0 0 1 .538.143.757.757 0 0 1 .302.254c.067.1.145.277.145.602v.669a.72.72 0 0 1-.038.258.67.67 0 0 1-.1.18c-.07.08-.164.15-.283.207a.86.86 0 0 1-.382.104h-.001c-.16.006-.32-.012-.478-.04a4.7 4.7 0 0 1-.36-.09c-.172-.05-.324-.115-.464-.197a2.3 2.3 0 0 1-.118-.08l-.012-.009a.6.6 0 0 1-.1-.112A4 4 0 0 0 8 3.5a4 4 0 0 0-4.664.895.6.6 0 0 1-.1.112l-.012.009a2.3 2.3 0 0 1-.118.08c-.14.082-.292.147-.464.197a4.7 4.7 0 0 1-.36.09c-.158.028-.318.046-.478.04h-.001a.86.86 0 0 1-.382-.104.67.67 0 0 1-.283-.207.72.72 0 0 1-.1-.18A.72.72 0 0 1 1 4.669V4c0-.325.078-.502.145-.602a.757.757 0 0 1 .302-.254A1.46 1.46 0 0 1 1.985 3L2.01 3zM1 6a.5.5 0 0 1 .5-.5h13a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-.1a3 3 0 0 0-.4 1.475c-.1.476-.2 1.007-.406 1.465-.206.458-.504.876-.979 1.06H3.384c-.475-.184-.773-.602-.978-1.06a8 8 0 0 1-.407-1.465A3 3 0 0 0 1.6 7.5H1.5A.5.5 0 0 1 1 7V6z"/>
