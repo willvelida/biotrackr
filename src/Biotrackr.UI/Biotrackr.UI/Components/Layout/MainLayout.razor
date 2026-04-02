@@ -38,15 +38,9 @@
         </RadzenStack>
     </RadzenHeader>
 
-    <RadzenSidebar @bind-Expanded="@_sidebarExpanded"
-                   Style="position: absolute; z-index: 3;">
+    <RadzenSidebar @bind-Expanded="@_sidebarExpanded" Responsive="false">
         <NavMenu />
     </RadzenSidebar>
-
-    @if (_sidebarExpanded)
-    {
-        <div class="sidebar-overlay" @onclick="@(() => _sidebarExpanded = false)"></div>
-    }
 
     <RadzenBody>
         <div class="rz-p-4">
@@ -58,7 +52,7 @@
 <RadzenComponents @rendermode="InteractiveServer" />
 
 @code {
-    private bool _sidebarExpanded = false;
+    private bool _sidebarExpanded = true;
     private UserInfo _userInfo = new();
 
     [Inject] private IHttpContextAccessor HttpContextAccessor { get; set; } = default!;
