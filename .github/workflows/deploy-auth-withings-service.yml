@@ -1,13 +1,13 @@
-name: Deploy Auth Service
+name: Deploy Auth Withings Service
 
 on:
     pull_request:
         branches:
             - main
         paths:
-            - 'infra/apps/auth-service/**'
+            - 'infra/apps/auth-withings-service/**'
             - 'src/Biotrackr.Auth.Svc/**'
-            - '.github/workflows/deploy-auth-service.yml'
+            - '.github/workflows/deploy-auth-withings-service.yml'
 
 permissions:
     contents: read
@@ -83,7 +83,7 @@ jobs:
           uses: dorny/test-reporter@v2
           if: always()
           with:
-            name: E2E Test Results
+            name: E2E Test Results (Auth Withings)
             path: ./src/Biotrackr.Auth.Svc/Biotrackr.Auth.Svc.IntegrationTests/TestResults/*.trx
             reporter: dotnet-trx
             fail-on-error: true
@@ -126,15 +126,15 @@ jobs:
         needs: retrieve-container-image-dev
         uses: willvelida/biotrackr/.github/workflows/template-bicep-linter.yml@main
         with:
-            template-file: './infra/apps/auth-service/main.bicep'
+            template-file: './infra/apps/auth-withings-service/main.bicep'
 
   validate:
         name: Validate Template
         needs: [lint, retrieve-container-image-dev]
         uses: willvelida/biotrackr/.github/workflows/template-bicep-validate.yml@main
         with:
-          template-file: './infra/apps/auth-service/main.bicep'
-          parameters-file: ./infra/apps/auth-service/main.dev.bicepparam
+          template-file: './infra/apps/auth-withings-service/main.bicep'
+          parameters-file: ./infra/apps/auth-withings-service/main.dev.bicepparam
           parameters: '{"imageName": "${{ needs.retrieve-container-image-dev.outputs.loginServer }}/biotrackr-auth-svc:${{ github.sha }}"}'
           scope: resourceGroup
         secrets:
@@ -149,8 +149,8 @@ jobs:
         uses: willvelida/biotrackr/.github/workflows/template-bicep-whatif.yml@main
         with:
           scope: resourceGroup
-          template-file: './infra/apps/auth-service/main.bicep'
-          parameters-file: ./infra/apps/auth-service/main.dev.bicepparam
+          template-file: './infra/apps/auth-withings-service/main.bicep'
+          parameters-file: ./infra/apps/auth-withings-service/main.dev.bicepparam
           parameters: '{"imageName": "${{ needs.retrieve-container-image-dev.outputs.loginServer }}/biotrackr-auth-svc:${{ github.sha }}"}'
         secrets:
           client-id: ${{ secrets.AZURE_CLIENT_ID }}
@@ -163,8 +163,8 @@ jobs:
         needs: [preview, retrieve-container-image-dev]
         uses: willvelida/biotrackr/.github/workflows/template-bicep-deploy.yml@main
         with:
-          template-file: './infra/apps/auth-service/main.bicep'
-          parameters-file: ./infra/apps/auth-service/main.dev.bicepparam
+          template-file: './infra/apps/auth-withings-service/main.bicep'
+          parameters-file: ./infra/apps/auth-withings-service/main.dev.bicepparam
           parameters: '{"imageName": "${{ needs.retrieve-container-image-dev.outputs.loginServer }}/biotrackr-auth-svc:${{ github.sha }}"}'
           scope: resourceGroup
           environment: dev

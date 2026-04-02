@@ -1,0 +1,175 @@
+name: Deploy Auth Fitbit Service
+
+on:
+    pull_request:
+        branches:
+            - main
+        paths:
+            - 'infra/apps/auth-fitbit-service/**'
+            - 'src/Biotrackr.Auth.Svc/**'
+            - '.github/workflows/deploy-auth-fitbit-service.yml'
+
+permissions:
+    contents: read
+    id-token: write
+    pull-requests: write
+    checks: write
+
+env:
+  DOTNET_VERSION: 10.0.x
+
+jobs:
+  env-setup:
+        name: Setup Environment
+        runs-on: ubuntu-latest
+        outputs:
+          dotnet-version: ${{ steps.set-output-defaults.outputs.dotnet-version }}
+        steps:
+          - name: set outputs with default values
+            id: set-output-defaults
+            run: |
+              echo "dotnet-version=${{ env.DOTNET_VERSION }}" >> "$GITHUB_OUTPUT"
+
+  run-unit-tests:
+      name: Run Unit Tests
+      needs: env-setup
+      uses: willvelida/biotrackr/.github/workflows/template-dotnet-run-unit-tests.yml@main
+      with:
+        dotnet-version: ${{ needs.env-setup.outputs.dotnet-version }}
+        working-directory: ./src/Biotrackr.Auth.Svc/Biotrackr.Auth.Svc.UnitTests
+        runsettings-path: ../coverage.runsettings
+
+  run-contract-tests:
+      name: Run Contract Tests
+      needs: env-setup
+      uses: willvelida/biotrackr/.github/workflows/template-dotnet-run-contract-tests.yml@main
+      with:
+        dotnet-version: ${{ needs.env-setup.outputs.dotnet-version }}
+        working-directory: ./src/Biotrackr.Auth.Svc/Biotrackr.Auth.Svc.IntegrationTests
+        test-filter: 'FullyQualifiedName~Contract'
+
+  run-e2e-tests:
+      name: Run E2E Tests
+      needs: [env-setup, run-contract-tests]
+      runs-on: ubuntu-latest
+      defaults:
+        run:
+          working-directory: ./src/Biotrackr.Auth.Svc/Biotrackr.Auth.Svc.IntegrationTests
+      steps:
+        - name: Checkout Repository code
+          uses: actions/checkout@v5
+
+        - name: Setup .NET ${{ needs.env-setup.outputs.dotnet-version }}
+          uses: actions/setup-dotnet@v5
+          with:
+            dotnet-version: ${{ needs.env-setup.outputs.dotnet-version }}
+        
+        - name: Install dependencies
+          run: dotnet restore
+
+        - name: Build
+          run: dotnet build --no-restore --verbosity normal
+
+        - name: Run E2E tests
+          run: |
+            dotnet test \
+              --no-build \
+              --verbosity normal \
+              --filter "FullyQualifiedName~E2E" \
+              --logger "trx;LogFileName=e2e-test-results.trx" \
+              --results-directory ./TestResults
+
+        - name: Publish Test Results
+          uses: dorny/test-reporter@v2
+          if: always()
+          with:
+            name: E2E Test Results (Auth Fitbit)
+            path: ./src/Biotrackr.Auth.Svc/Biotrackr.Auth.Svc.IntegrationTests/TestResults/*.trx
+            reporter: dotnet-trx
+            fail-on-error: true
+
+  build-container-image-dev:
+      name: Build and Push Container Image
+      needs: [run-unit-tests, run-contract-tests, run-e2e-tests]
+      uses: willvelida/biotrackr/.github/workflows/template-acr-push-image.yml@main
+      with:
+        working-directory: ./src/Biotrackr.Auth.Svc
+        app-name: biotrackr-auth-svc
+      secrets:
+        client-id: ${{ secrets.AZURE_CLIENT_ID }}
+        tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+        subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+        resource-group-name: ${{ secrets.AZURE_RG_NAME_DEV }}
+
+  retrieve-container-image-dev:
+      name: Retrieve Container Image
+      needs: build-container-image-dev
+      runs-on: ubuntu-latest
+      outputs:
+        loginServer: ${{ steps.get-acr-server.outputs.loginServer }}
+      steps:
+        - name: Azure login
+          uses: azure/login@v2
+          with:
+            client-id: ${{ secrets.AZURE_CLIENT_ID }}
+            tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+            subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+        - name: Get ACR server
+          id: get-acr-server
+          run: |
+            loginServer=$(az acr list --resource-group ${{ secrets.AZURE_RG_NAME_DEV }} --query "[0].loginServer" -o tsv)
+            echo "loginServer=$loginServer" > "$GITHUB_OUTPUT"
+
+  lint:
+        name: Run Bicep Linter
+        needs: retrieve-container-image-dev
+        uses: willvelida/biotrackr/.github/workflows/template-bicep-linter.yml@main
+        with:
+            template-file: './infra/apps/auth-fitbit-service/main.bicep'
+
+  validate:
+        name: Validate Template
+        needs: [lint, retrieve-container-image-dev]
+        uses: willvelida/biotrackr/.github/workflows/template-bicep-validate.yml@main
+        with:
+          template-file: './infra/apps/auth-fitbit-service/main.bicep'
+          parameters-file: ./infra/apps/auth-fitbit-service/main.dev.bicepparam
+          parameters: '{"imageName": "${{ needs.retrieve-container-image-dev.outputs.loginServer }}/biotrackr-auth-svc:${{ github.sha }}"}'
+          scope: resourceGroup
+        secrets:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+          resource-group-name: ${{ secrets.AZURE_RG_NAME_DEV }}
+
+  preview:
+        name: Preview Changes
+        needs: [validate, retrieve-container-image-dev]
+        uses: willvelida/biotrackr/.github/workflows/template-bicep-whatif.yml@main
+        with:
+          scope: resourceGroup
+          template-file: './infra/apps/auth-fitbit-service/main.bicep'
+          parameters-file: ./infra/apps/auth-fitbit-service/main.dev.bicepparam
+          parameters: '{"imageName": "${{ needs.retrieve-container-image-dev.outputs.loginServer }}/biotrackr-auth-svc:${{ github.sha }}"}'
+        secrets:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+          resource-group-name: ${{ secrets.AZURE_RG_NAME_DEV }}
+
+  deploy-dev:
+        name: Deploy Template to Dev
+        needs: [preview, retrieve-container-image-dev]
+        uses: willvelida/biotrackr/.github/workflows/template-bicep-deploy.yml@main
+        with:
+          template-file: './infra/apps/auth-fitbit-service/main.bicep'
+          parameters-file: ./infra/apps/auth-fitbit-service/main.dev.bicepparam
+          parameters: '{"imageName": "${{ needs.retrieve-container-image-dev.outputs.loginServer }}/biotrackr-auth-svc:${{ github.sha }}"}'
+          scope: resourceGroup
+          environment: dev
+        secrets:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+          resource-group-name: ${{ secrets.AZURE_RG_NAME_DEV }}

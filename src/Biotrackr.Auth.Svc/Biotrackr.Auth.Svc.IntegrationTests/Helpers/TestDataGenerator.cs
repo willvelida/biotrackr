@@ -46,5 +46,48 @@ namespace Biotrackr.Auth.Svc.IntegrationTests.Helpers
         {
             return $"test_access_token_{Guid.NewGuid():N}";
         }
+
+        /// <summary>
+        /// Generates a sample WithingsTokenResponse with fake values.
+        /// </summary>
+        public static WithingsTokenResponse CreateWithingsTokenResponse()
+        {
+            return new WithingsTokenResponse
+            {
+                Status = 0,
+                Body = new WithingsTokenBody
+                {
+                    AccessToken = $"withings_access_{Guid.NewGuid():N}",
+                    RefreshToken = $"withings_refresh_{Guid.NewGuid():N}",
+                    ExpiresIn = 10800,
+                    Scope = "user.metrics",
+                    TokenType = "Bearer"
+                }
+            };
+        }
+
+        /// <summary>
+        /// Generates a sample Withings refresh token string.
+        /// </summary>
+        public static string CreateWithingsRefreshToken()
+        {
+            return $"withings_refresh_token_{Guid.NewGuid():N}";
+        }
+
+        /// <summary>
+        /// Generates a sample Withings client ID string.
+        /// </summary>
+        public static string CreateWithingsClientId()
+        {
+            return $"withings_client_id_{Guid.NewGuid():N}";
+        }
+
+        /// <summary>
+        /// Generates a sample Withings client secret string.
+        /// </summary>
+        public static string CreateWithingsClientSecret()
+        {
+            return $"withings_client_secret_{Guid.NewGuid():N}";
+        }
     }
 }
