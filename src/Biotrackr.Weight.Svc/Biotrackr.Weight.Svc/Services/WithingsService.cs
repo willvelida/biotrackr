@@ -88,7 +88,6 @@ namespace Biotrackr.Weight.Svc.Services
             response.EnsureSuccessStatusCode();
 
             var content = await response.Content.ReadAsStringAsync();
-            _logger.LogInformation($"Withings API response (first 500 chars): {content[..Math.Min(content.Length, 500)]}");
 
             var measureResponse = JsonSerializer.Deserialize<WithingsMeasureResponse>(content);
 

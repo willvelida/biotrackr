@@ -28,10 +28,9 @@ namespace Biotrackr.Weight.Svc.Workers
             {
                 _logger.LogInformation($"{nameof(WeightWorker)} executed at: {DateTime.Now}");
 
-                var startDate = DateTime.Now.AddDays(-57).ToString("yyyy-MM-dd"); // TODO: Change to -2 after historical backfill
+                var startDate = DateTime.Now.AddDays(-2).ToString("yyyy-MM-dd");
                 var endDate = DateTime.Now.ToString("yyyy-MM-dd");
 
-                _logger.LogInformation($"Fetching Withings measurements from {startDate} to {endDate}");
 
                 var measureResponse = await _withingsService.GetMeasurements(startDate, endDate);
 
