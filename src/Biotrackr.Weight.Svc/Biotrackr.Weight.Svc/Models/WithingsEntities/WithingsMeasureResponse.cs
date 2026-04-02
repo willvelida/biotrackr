@@ -14,7 +14,7 @@ namespace Biotrackr.Weight.Svc.Models.WithingsEntities
     public class WithingsMeasureBody
     {
         [JsonPropertyName("updatetime")]
-        public string UpdateTime { get; set; } = string.Empty;
+        public long UpdateTime { get; set; }
 
         [JsonPropertyName("timezone")]
         public string Timezone { get; set; } = string.Empty;
