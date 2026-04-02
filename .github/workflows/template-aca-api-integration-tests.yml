@@ -41,7 +41,7 @@ jobs:
             - name: Checkout Repository code
               uses: actions/checkout@v5
 
-            - uses: azure/login@v2
+            - uses: azure/login@v3
               name: Login to Azure
               with:
                 client-id: ${{ secrets.client-id }}
