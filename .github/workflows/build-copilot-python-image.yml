@@ -23,7 +23,7 @@ jobs:
           working-directory: ${{ env.WORKING_DIRECTORY }}
       steps:
         - name: Checkout code
-          uses: actions/checkout@v5
+          uses: actions/checkout@v6
 
         - name: Azure login
           uses: azure/login@v2
