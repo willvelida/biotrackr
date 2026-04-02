@@ -15,5 +15,8 @@ namespace Biotrackr.UI.Models.Weight
 
         [JsonPropertyName("documentType")]
         public string DocumentType { get; set; } = string.Empty;
+
+        [JsonPropertyName("provider")]
+        public string? Provider { get; set; }
     }
 }
