@@ -72,6 +72,8 @@ namespace Biotrackr.Weight.Svc.Services
             _httpClient.DefaultRequestHeaders.Clear();
             _httpClient.DefaultRequestHeaders.Add("Authorization", $"Bearer {accessToken}");
 
+            _logger.LogInformation($"Calling Withings API: startdate={startUnix}, enddate={endUnix}, offset={offset}");
+
             var formContent = new FormUrlEncodedContent(new Dictionary<string, string>
             {
                 ["action"] = "getmeas",
@@ -86,6 +88,8 @@ namespace Biotrackr.Weight.Svc.Services
             response.EnsureSuccessStatusCode();
 
             var content = await response.Content.ReadAsStringAsync();
+            _logger.LogInformation($"Withings API response (first 500 chars): {content[..Math.Min(content.Length, 500)]}");
+
             var measureResponse = JsonSerializer.Deserialize<WithingsMeasureResponse>(content);
 
             if (measureResponse is null || measureResponse.Status != 0)
