@@ -4,6 +4,6 @@ namespace Biotrackr.Weight.Svc.Repositories.Interfaces
 {
     public interface ICosmosRepository
     {
-        Task CreateWeightDocument(WeightDocument weightDocument);
+        Task UpsertWeightDocument(WeightDocument weightDocument);
     }
 }

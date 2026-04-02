@@ -91,7 +91,7 @@ namespace Biotrackr.Weight.Svc.IntegrationTests.Contract
         }
 
         [Fact]
-        public void FitbitService_Is_Registered_As_Transient()
+        public void WithingsService_Is_Registered_As_Transient()
         {
             // Arrange
             var serviceProvider = _fixture.ServiceProvider;
@@ -99,25 +99,25 @@ namespace Biotrackr.Weight.Svc.IntegrationTests.Contract
             // Act - Same scope
             using (var scope1 = serviceProvider.CreateScope())
             {
-                var service1 = scope1.ServiceProvider.GetService<IFitbitService>();
-                var service2 = scope1.ServiceProvider.GetService<IFitbitService>();
+                var service1 = scope1.ServiceProvider.GetService<IWithingsService>();
+                var service2 = scope1.ServiceProvider.GetService<IWithingsService>();
 
                 // Assert - Different instances even in same scope (transient)
                 service1.Should().NotBeSameAs(service2, "transient services should return different instances even within the same scope");
             }
 
             // Act - Different scopes
-            IFitbitService? serviceScope1;
-            IFitbitService? serviceScope2;
+            IWithingsService? serviceScope1;
+            IWithingsService? serviceScope2;
 
             using (var scope1 = serviceProvider.CreateScope())
             {
-                serviceScope1 = scope1.ServiceProvider.GetService<IFitbitService>();
+                serviceScope1 = scope1.ServiceProvider.GetService<IWithingsService>();
             }
 
             using (var scope2 = serviceProvider.CreateScope())
             {
-                serviceScope2 = scope2.ServiceProvider.GetService<IFitbitService>();
+                serviceScope2 = scope2.ServiceProvider.GetService<IWithingsService>();
             }
 
             // Assert - Different instances across scopes (transient)

@@ -60,7 +60,7 @@ module weightService '../../modules/host/container-app-jobs.bicep' = {
     tags: tags
     containerAppEnvironmentName: containerAppEnvironmentName 
     containerRegistryName: containerRegistryName
-    cronExpression: '5 1 * * 1'
+    cronExpression: '5 1 * * *'
     envVariables: [
       {
         name: 'keyvaulturl'
@@ -85,5 +85,13 @@ module weightService '../../modules/host/container-app-jobs.bicep' = {
     ]
     imageName: imageName 
     uaiName: uai.name
+  }
+}
+
+resource userHeightSetting 'Microsoft.AppConfiguration/configurationStores/keyValues@2025-02-01-preview' = {
+  name: 'Biotrackr:UserHeight'
+  parent: appConfig
+  properties: {
+    value: '1.88'
   }
 }

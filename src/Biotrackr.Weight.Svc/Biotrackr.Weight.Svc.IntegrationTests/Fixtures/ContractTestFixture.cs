@@ -68,11 +68,10 @@ namespace Biotrackr.Weight.Svc.IntegrationTests.Fixtures
 
             // Register services with their interfaces (matching Program.cs)
             services.AddScoped<ICosmosRepository, CosmosRepository>();
-            services.AddScoped<IFitbitService, FitbitService>();
             services.AddScoped<IWeightService, WeightService>();
 
-            // Add HttpClient for FitbitService (but don't configure actual HTTP calls)
-            services.AddHttpClient<IFitbitService, FitbitService>();
+            // Add HttpClient for WithingsService (but don't configure actual HTTP calls)
+            services.AddHttpClient<IWithingsService, WithingsService>();
 
             ServiceProvider = services.BuildServiceProvider();
         }

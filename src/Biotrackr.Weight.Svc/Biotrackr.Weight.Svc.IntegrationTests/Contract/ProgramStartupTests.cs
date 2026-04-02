@@ -43,7 +43,7 @@ namespace Biotrackr.Weight.Svc.IntegrationTests.Contract
             // Act - Resolve each required service
             var cosmosRepository = serviceProvider.GetService<ICosmosRepository>();
             var weightService = serviceProvider.GetService<IWeightService>();
-            var fitbitService = serviceProvider.GetService<IFitbitService>();
+            var withingsService = serviceProvider.GetService<IWithingsService>();
 
             // Assert
             cosmosRepository.Should().NotBeNull("ICosmosRepository should be registered");
@@ -52,8 +52,8 @@ namespace Biotrackr.Weight.Svc.IntegrationTests.Contract
             weightService.Should().NotBeNull("IWeightService should be registered");
             weightService.Should().BeAssignableTo<IWeightService>("IWeightService should resolve to correct implementation");
 
-            fitbitService.Should().NotBeNull("IFitbitService should be registered");
-            fitbitService.Should().BeAssignableTo<IFitbitService>("IFitbitService should resolve to correct implementation");
+            withingsService.Should().NotBeNull("IWithingsService should be registered");
+            withingsService.Should().BeAssignableTo<IWithingsService>("IWithingsService should resolve to correct implementation");
         }
 
         [Fact]

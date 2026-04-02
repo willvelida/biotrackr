@@ -1,7 +1,6 @@
 ﻿using Biotrackr.Weight.Svc.Models;
 using Biotrackr.Weight.Svc.Repositories.Interfaces;
 using Biotrackr.Weight.Svc.Services.Interfaces;
-using ent = Biotrackr.Weight.Svc.Models.Entities;
 
 namespace Biotrackr.Weight.Svc.Services
 {
@@ -16,19 +15,20 @@ namespace Biotrackr.Weight.Svc.Services
             _logger = logger;
         }
 
-        public async Task MapAndSaveDocument(string date, ent.Weight weight)
+        public async Task MapAndSaveDocument(string date, WeightMeasurement weight, string provider)
         {
             try
             {
                 WeightDocument weightDocument = new WeightDocument
                 {
-                    Id = Guid.NewGuid().ToString(),
+                    Id = weight.LogId?.ToString() ?? Guid.NewGuid().ToString(),
                     Date = date,
                     Weight = weight,
-                    DocumentType = "Weight"
+                    DocumentType = "Weight",
+                    Provider = provider
                 };
 
-                await _cosmosRepository.CreateWeightDocument(weightDocument);
+                await _cosmosRepository.UpsertWeightDocument(weightDocument);
             }
             catch (Exception ex)
             {

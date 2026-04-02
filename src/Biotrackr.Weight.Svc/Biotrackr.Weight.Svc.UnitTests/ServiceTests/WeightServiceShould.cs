@@ -1,16 +1,10 @@
 ﻿using AutoFixture;
+using Biotrackr.Weight.Svc.Models;
 using Biotrackr.Weight.Svc.Repositories.Interfaces;
 using Biotrackr.Weight.Svc.Services;
-using Microsoft.Extensions.Logging;
-using ent = Biotrackr.Weight.Svc.Models.Entities;
-using Moq;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Biotrackr.Weight.Svc.Models;
 using FluentAssertions;
+using Microsoft.Extensions.Logging;
+using Moq;
 
 namespace Biotrackr.Weight.Svc.UnitTests.ServiceTests
 {
@@ -33,17 +27,17 @@ namespace Biotrackr.Weight.Svc.UnitTests.ServiceTests
             // Arrange
             var date = "2023-01-01";
             var fixture = new Fixture();
-            var weight = fixture.Create<ent.Weight>();
+            var weight = fixture.Create<WeightMeasurement>();
 
-            _cosmosRepositoryMock.Setup(x => x.CreateWeightDocument(It.IsAny<WeightDocument>()))
+            _cosmosRepositoryMock.Setup(x => x.UpsertWeightDocument(It.IsAny<WeightDocument>()))
                 .Returns(Task.CompletedTask);
 
             // Act
-            Func<Task> weightServiceAction = async () => await _weightService.MapAndSaveDocument(date, weight);
+            Func<Task> weightServiceAction = async () => await _weightService.MapAndSaveDocument(date, weight, "Withings");
 
             // Assert
             await weightServiceAction.Should().NotThrowAsync();
-            _cosmosRepositoryMock.Verify(x => x.CreateWeightDocument(It.IsAny<WeightDocument>()), Times.Once);
+            _cosmosRepositoryMock.Verify(x => x.UpsertWeightDocument(It.IsAny<WeightDocument>()), Times.Once);
         }
 
         [Fact]
@@ -52,17 +46,59 @@ namespace Biotrackr.Weight.Svc.UnitTests.ServiceTests
             // Arrange
             var date = "2023-10-01";
             var fixture = new Fixture();
-            var weight = fixture.Create<ent.Weight>();
+            var weight = fixture.Create<WeightMeasurement>();
 
-            _cosmosRepositoryMock.Setup(x => x.CreateWeightDocument(It.IsAny<WeightDocument>()))
+            _cosmosRepositoryMock.Setup(x => x.UpsertWeightDocument(It.IsAny<WeightDocument>()))
                 .ThrowsAsync(new Exception("Test exception"));
 
             // Act
-            Func<Task> activityServiceAction = async () => await _weightService.MapAndSaveDocument(date, weight);
+            Func<Task> weightServiceAction = async () => await _weightService.MapAndSaveDocument(date, weight, "Withings");
 
             // Assert
-            await activityServiceAction.Should().ThrowAsync<Exception>();
+            await weightServiceAction.Should().ThrowAsync<Exception>();
             _loggerMock.VerifyLog(logger => logger.LogError($"Exception thrown in MapAndSaveDocument: Test exception"));
+        }
+
+        [Fact]
+        public async Task MapAndSaveDocument_ShouldSetProviderOnDocument()
+        {
+            // Arrange
+            var date = "2024-01-15";
+            var weight = new WeightMeasurement { WeightKg = 80.25, Date = date, Source = "Withings", LogId = 12345L };
+            WeightDocument? capturedDocument = null;
+
+            _cosmosRepositoryMock.Setup(x => x.UpsertWeightDocument(It.IsAny<WeightDocument>()))
+                .Callback<WeightDocument>(doc => capturedDocument = doc)
+                .Returns(Task.CompletedTask);
+
+            // Act
+            await _weightService.MapAndSaveDocument(date, weight, "Withings");
+
+            // Assert
+            capturedDocument.Should().NotBeNull();
+            capturedDocument!.Provider.Should().Be("Withings");
+            capturedDocument.DocumentType.Should().Be("Weight");
+            capturedDocument.Date.Should().Be(date);
+        }
+
+        [Fact]
+        public async Task MapAndSaveDocument_ShouldUseLogIdAsDocumentId()
+        {
+            // Arrange
+            var date = "2024-01-15";
+            var weight = new WeightMeasurement { WeightKg = 80.25, Date = date, Source = "Withings", LogId = 12345L };
+            WeightDocument? capturedDocument = null;
+
+            _cosmosRepositoryMock.Setup(x => x.UpsertWeightDocument(It.IsAny<WeightDocument>()))
+                .Callback<WeightDocument>(doc => capturedDocument = doc)
+                .Returns(Task.CompletedTask);
+
+            // Act
+            await _weightService.MapAndSaveDocument(date, weight, "Withings");
+
+            // Assert
+            capturedDocument.Should().NotBeNull();
+            capturedDocument!.Id.Should().Be("12345");
         }
     }
 }

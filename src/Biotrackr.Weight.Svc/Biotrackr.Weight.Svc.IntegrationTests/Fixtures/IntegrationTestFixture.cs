@@ -147,13 +147,13 @@ namespace Biotrackr.Weight.Svc.IntegrationTests.Fixtures
             // Add real Cosmos client
             services.AddSingleton(CosmosClient);
 
-            // Register services (SecretClient not needed for E2E tests - FitbitService uses mocked HTTP)
+            // Register services (SecretClient not needed for E2E tests - WithingsService uses mocked HTTP)
             services.AddScoped<ICosmosRepository, CosmosRepository>();
-            services.AddScoped<IFitbitService, FitbitService>();
+            services.AddScoped<IWithingsService, WithingsService>();
             services.AddScoped<IWeightService, WeightService>();
 
             // Add HttpClient with mocked handler
-            services.AddHttpClient<IFitbitService, FitbitService>()
+            services.AddHttpClient<IWithingsService, WithingsService>()
                 .ConfigurePrimaryHttpMessageHandler(() => MockHttpMessageHandler);
 
             ServiceProvider = services.BuildServiceProvider();

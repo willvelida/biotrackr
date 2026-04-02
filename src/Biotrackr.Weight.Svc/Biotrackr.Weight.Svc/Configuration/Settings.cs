@@ -4,5 +4,6 @@
     {
         public string DatabaseName { get; set; }
         public string ContainerName { get; set; }
+        public double UserHeight { get; set; } = 1.88;
     }
 }
