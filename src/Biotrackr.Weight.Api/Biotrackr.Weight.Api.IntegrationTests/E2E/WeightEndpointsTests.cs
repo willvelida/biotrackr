@@ -1,12 +1,10 @@
 using Biotrackr.Weight.Api.Models;
-using Biotrackr.Weight.Api.Models.FitbitEntities;
 using FluentAssertions;
 using Microsoft.Azure.Cosmos;
 using Microsoft.Extensions.DependencyInjection;
 using System.Net;
 using System.Net.Http.Json;
 using Xunit;
-using FitbitWeight = Biotrackr.Weight.Api.Models.FitbitEntities.Weight;
 
 namespace Biotrackr.Weight.Api.IntegrationTests;
 
@@ -58,15 +56,18 @@ public class WeightEndpointsTests : IAsyncLifetime
                 Id = Guid.NewGuid().ToString(),
                 DocumentType = "Weight",
                 Date = "2024-01-01",
-                Weight = new FitbitWeight
+                Provider = "Withings",
+                Weight = new WeightMeasurement
                 {
                     Bmi = 25.5,
                     Date = "2024-01-01",
                     Fat = 18.5,
                     LogId = 1,
-                    Source = "API",
+                    Source = "Withings",
                     Time = "08:00:00",
-                    weight = 75.5
+                    WeightKg = 75.5,
+                    MuscleMassKg = 45.0,
+                    BoneMassKg = 3.1
                 }
             },
             new WeightDocument
@@ -74,15 +75,18 @@ public class WeightEndpointsTests : IAsyncLifetime
                 Id = Guid.NewGuid().ToString(),
                 DocumentType = "Weight",
                 Date = "2024-01-15",
-                Weight = new FitbitWeight
+                Provider = "Withings",
+                Weight = new WeightMeasurement
                 {
                     Bmi = 24.8,
                     Date = "2024-01-15",
                     Fat = 17.2,
                     LogId = 2,
-                    Source = "API",
+                    Source = "Withings",
                     Time = "08:30:00",
-                    weight = 74.0
+                    WeightKg = 74.0,
+                    MuscleMassKg = 45.5,
+                    BoneMassKg = 3.2
                 }
             },
             new WeightDocument
@@ -90,15 +94,18 @@ public class WeightEndpointsTests : IAsyncLifetime
                 Id = Guid.NewGuid().ToString(),
                 DocumentType = "Weight",
                 Date = "2024-01-31",
-                Weight = new FitbitWeight
+                Provider = "Withings",
+                Weight = new WeightMeasurement
                 {
                     Bmi = 24.2,
                     Date = "2024-01-31",
                     Fat = 16.5,
                     LogId = 3,
-                    Source = "API",
+                    Source = "Withings",
                     Time = "09:00:00",
-                    weight = 72.5
+                    WeightKg = 72.5,
+                    MuscleMassKg = 46.0,
+                    BoneMassKg = 3.3
                 }
             }
         };

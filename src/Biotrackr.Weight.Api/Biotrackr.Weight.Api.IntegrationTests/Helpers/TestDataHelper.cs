@@ -1,6 +1,5 @@
 using AutoFixture;
 using Biotrackr.Weight.Api.Models;
-using FitbitWeight = Biotrackr.Weight.Api.Models.FitbitEntities.Weight;
 
 namespace Biotrackr.Weight.Api.IntegrationTests;
 
@@ -17,7 +16,8 @@ public static class TestDataHelper
     public static WeightDocument CreateValidWeightDocument(
         string? id = null,
         string? date = null,
-        double? weightValue = null)
+        double? weightValue = null,
+        string? provider = null)
     {
         var testDate = date ?? DateTime.UtcNow.ToString("yyyy-MM-dd");
         
@@ -26,15 +26,50 @@ public static class TestDataHelper
             Id = id ?? Guid.NewGuid().ToString(),
             Date = testDate,
             DocumentType = "weight",
-            Weight = new FitbitWeight
+            Provider = provider ?? "Withings",
+            Weight = new WeightMeasurement
             {
                 Date = testDate,
-                weight = weightValue ?? _fixture.CreateDouble(50, 150),
+                WeightKg = weightValue ?? _fixture.CreateDouble(50, 150),
                 Bmi = 22.5,
                 Fat = 15.0,
                 Time = DateTime.UtcNow.ToString("HH:mm:ss"),
-                Source = "API",
-                LogId = null!
+                Source = provider ?? "Withings",
+                LogId = _fixture.Create<long>(),
+                FatMassKg = 15.23,
+                FatFreeMassKg = 65.02,
+                MuscleMassKg = 45.2,
+                BoneMassKg = 3.1,
+                WaterMassKg = 48.9,
+                VisceralFatIndex = 10
+            }
+        };
+    }
+
+    /// <summary>
+    /// Creates a legacy Fitbit weight document (no body comp fields) for backward compatibility testing
+    /// </summary>
+    public static WeightDocument CreateLegacyFitbitWeightDocument(
+        string? id = null,
+        string? date = null)
+    {
+        var testDate = date ?? DateTime.UtcNow.ToString("yyyy-MM-dd");
+        
+        return new WeightDocument
+        {
+            Id = id ?? Guid.NewGuid().ToString(),
+            Date = testDate,
+            DocumentType = "weight",
+            Provider = "Fitbit",
+            Weight = new WeightMeasurement
+            {
+                Date = testDate,
+                WeightKg = _fixture.CreateDouble(50, 150),
+                Bmi = 24.1,
+                Fat = 18.5,
+                Time = DateTime.UtcNow.ToString("HH:mm:ss"),
+                Source = "Aria",
+                LogId = _fixture.Create<long>()
             }
         };
     }
@@ -68,7 +103,7 @@ public static class TestDataHelper
                 Id = string.Empty,
                 Date = DateTime.UtcNow.ToString("yyyy-MM-dd"),
                 DocumentType = "weight",
-                Weight = new FitbitWeight { weight = 70.0 }
+                Weight = new WeightMeasurement { WeightKg = 70.0 }
             },
             "future-date" => CreateValidWeightDocument(
                 date: DateTime.UtcNow.AddDays(1).ToString("yyyy-MM-dd")),
