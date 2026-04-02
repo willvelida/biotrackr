@@ -21,7 +21,7 @@ namespace Biotrackr.Weight.Svc.Repositories
             _logger = logger;
         }
 
-        public async Task CreateWeightDocument(WeightDocument weightDocument)
+        public async Task UpsertWeightDocument(WeightDocument weightDocument)
         {
             try
             {
@@ -30,11 +30,11 @@ namespace Biotrackr.Weight.Svc.Repositories
                     EnableContentResponseOnWrite = false
                 };
 
-                await _container.CreateItemAsync(weightDocument, new PartitionKey(weightDocument.DocumentType), itemRequestOptions);
+                await _container.UpsertItemAsync(weightDocument, new PartitionKey(weightDocument.DocumentType), itemRequestOptions);
             }
             catch (Exception ex)
             {
-                _logger.LogError($"Exception thrown in {nameof(CreateWeightDocument)}: {ex.Message}");
+                _logger.LogError($"Exception thrown in {nameof(UpsertWeightDocument)}: {ex.Message}");
                 throw;
             }
         }

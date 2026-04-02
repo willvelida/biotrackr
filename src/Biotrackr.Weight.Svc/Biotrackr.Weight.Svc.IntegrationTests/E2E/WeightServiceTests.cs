@@ -10,10 +10,6 @@ using Xunit;
 
 namespace Biotrackr.Weight.Svc.IntegrationTests.E2E
 {
-    /// <summary>
-    /// E2E tests for WeightService integration with CosmosRepository.
-    /// These tests verify that weight data is correctly mapped and persisted to Cosmos DB.
-    /// </summary>
     [Collection("Integration Tests")]
     public class WeightServiceTests
     {
@@ -24,9 +20,6 @@ namespace Biotrackr.Weight.Svc.IntegrationTests.E2E
             _fixture = fixture;
         }
 
-        /// <summary>
-        /// Clears all documents from the test container to ensure test isolation.
-        /// </summary>
         private async Task ClearContainerAsync()
         {
             var query = new QueryDefinition("SELECT c.id, c.documentType FROM c");
@@ -45,20 +38,17 @@ namespace Biotrackr.Weight.Svc.IntegrationTests.E2E
         }
 
         [Fact]
-        public async Task MapAndSaveDocument_Saves_Weight_Document_To_Cosmos()
+        public async Task MapAndSaveDocument_Saves_Withings_Weight_Document_To_Cosmos()
         {
-            // Arrange - Clear container for test isolation
             await ClearContainerAsync();
-            var weight = TestDataBuilder.BuildWeight(DateTime.UtcNow);
+            var weight = TestDataBuilder.BuildWeightMeasurement(DateTime.UtcNow);
             var date = DateTime.UtcNow.ToString("yyyy-MM-dd");
 
             using var scope = _fixture.ServiceProvider.CreateScope();
             var service = scope.ServiceProvider.GetRequiredService<IWeightService>();
 
-            // Act
-            await service.MapAndSaveDocument(date, weight);
+            await service.MapAndSaveDocument(date, weight, "Withings");
 
-            // Assert - Query by date to find document
             var query = new QueryDefinition(
                 "SELECT * FROM c WHERE c.date = @date AND c.documentType = @docType")
                 .WithParameter("@date", date)
@@ -73,36 +63,30 @@ namespace Biotrackr.Weight.Svc.IntegrationTests.E2E
                 documents.AddRange(response);
             }
 
-            documents.Should().HaveCount(1, "exactly one document should be saved");
+            documents.Should().HaveCount(1);
             var document = documents.First();
-
-            document.Id.Should().NotBeNullOrEmpty("document should have a unique ID");
-            document.Date.Should().Be(date, "document date should match input date");
-            document.Weight.Should().BeEquivalentTo(weight, "document weight should match input weight");
-            document.DocumentType.Should().Be("Weight", "document type should be Weight");
+            document.Provider.Should().Be("Withings");
+            document.Weight.WeightKg.Should().Be(80.25);
+            document.Weight.MuscleMassKg.Should().Be(45.2);
+            document.Weight.BoneMassKg.Should().Be(3.1);
         }
 
         [Fact]
-        public async Task MapAndSaveDocument_Creates_Unique_Document_Ids()
+        public async Task MapAndSaveDocument_Upserts_Same_Document_Without_Duplicates()
         {
-            // Arrange - Clear container for test isolation
             await ClearContainerAsync();
-            
+            var weight = TestDataBuilder.BuildWeightMeasurement(DateTime.UtcNow);
             var date = DateTime.UtcNow.ToString("yyyy-MM-dd");
-            var weight1 = TestDataBuilder.BuildWeight(DateTime.UtcNow);
-            var weight2 = TestDataBuilder.BuildWeight(DateTime.UtcNow);
 
             using var scope = _fixture.ServiceProvider.CreateScope();
             var service = scope.ServiceProvider.GetRequiredService<IWeightService>();
 
-            // Act - Save multiple documents with same date
-            await service.MapAndSaveDocument(date, weight1);
-            await service.MapAndSaveDocument(date, weight2);
+            // Save twice with the same LogId
+            await service.MapAndSaveDocument(date, weight, "Withings");
+            await service.MapAndSaveDocument(date, weight, "Withings");
 
-            // Assert - Query all documents for this date
             var query = new QueryDefinition(
-                "SELECT * FROM c WHERE c.date = @date AND c.documentType = @docType")
-                .WithParameter("@date", date)
+                "SELECT * FROM c WHERE c.documentType = @docType")
                 .WithParameter("@docType", "Weight");
 
             var iterator = _fixture.Container.GetItemQueryIterator<WeightDocument>(query);
@@ -114,11 +98,7 @@ namespace Biotrackr.Weight.Svc.IntegrationTests.E2E
                 documents.AddRange(response);
             }
 
-            documents.Should().HaveCount(2, "both documents should be saved");
-            
-            var ids = documents.Select(d => d.Id).ToList();
-            ids.Should().OnlyHaveUniqueItems("each document should have a unique ID");
-            ids.All(id => !string.IsNullOrEmpty(id)).Should().BeTrue("all IDs should be non-empty");
+            documents.Should().HaveCount(1, "upsert should not create duplicates for same LogId");
         }
     }
 }

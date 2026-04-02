@@ -10,10 +10,6 @@ using Xunit;
 
 namespace Biotrackr.Weight.Svc.IntegrationTests.E2E
 {
-    /// <summary>
-    /// E2E tests for CosmosRepository database operations.
-    /// These tests verify that documents are correctly persisted to Cosmos DB with proper partition keys.
-    /// </summary>
     [Collection("Integration Tests")]
     public class CosmosRepositoryTests
     {
@@ -25,29 +21,27 @@ namespace Biotrackr.Weight.Svc.IntegrationTests.E2E
         }
 
         [Fact]
-        public async Task CreateDocument_Persists_To_Cosmos_With_Correct_PartitionKey()
+        public async Task UpsertDocument_Persists_To_Cosmos_With_Correct_PartitionKey()
         {
-            // Arrange
             var document = TestDataBuilder.BuildWeightDocument(DateTime.UtcNow);
 
             using var scope = _fixture.ServiceProvider.CreateScope();
             var repository = scope.ServiceProvider.GetRequiredService<ICosmosRepository>();
 
-            // Act
-            await repository.CreateWeightDocument(document);
+            await repository.UpsertWeightDocument(document);
 
-            // Assert - Retrieve document directly by ID and partition key
             try
             {
                 var response = await _fixture.Container.ReadItemAsync<WeightDocument>(
                     document.Id,
                     new PartitionKey(document.DocumentType));
 
-                response.Resource.Should().NotBeNull("document should be retrievable");
-                response.Resource.Id.Should().Be(document.Id, "document ID should match");
-                response.Resource.DocumentType.Should().Be("Weight", "partition key should be 'Weight'");
-                response.Resource.Date.Should().Be(document.Date, "date should match");
-                response.Resource.Weight.Should().BeEquivalentTo(document.Weight, "weight data should match");
+                response.Resource.Should().NotBeNull();
+                response.Resource.Id.Should().Be(document.Id);
+                response.Resource.DocumentType.Should().Be("Weight");
+                response.Resource.Provider.Should().Be("Withings");
+                response.Resource.Weight.WeightKg.Should().Be(80.25);
+                response.Resource.Weight.MuscleMassKg.Should().Be(45.2);
             }
             catch (CosmosException ex) when (ex.StatusCode == System.Net.HttpStatusCode.NotFound)
             {
@@ -56,25 +50,24 @@ namespace Biotrackr.Weight.Svc.IntegrationTests.E2E
         }
 
         [Fact]
-        public async Task CreateDocument_Handles_Duplicate_Id_Gracefully()
+        public async Task UpsertDocument_Overwrites_Existing_Document()
         {
-            // Arrange
             var document = TestDataBuilder.BuildWeightDocument(DateTime.UtcNow);
 
             using var scope = _fixture.ServiceProvider.CreateScope();
             var repository = scope.ServiceProvider.GetRequiredService<ICosmosRepository>();
 
-            // Act - Create document first time
-            await repository.CreateWeightDocument(document);
+            await repository.UpsertWeightDocument(document);
 
-            // Act & Assert - Attempt to create same document again (same ID)
-            var act = async () => await repository.CreateWeightDocument(document);
+            // Modify and upsert again
+            document.Weight.WeightKg = 81.5;
+            await repository.UpsertWeightDocument(document);
 
-            // Cosmos DB should throw CosmosException with Conflict status code
-            await act.Should().ThrowAsync<CosmosException>(
-                "duplicate document IDs should cause a conflict")
-                .Where(ex => ex.StatusCode == System.Net.HttpStatusCode.Conflict,
-                "the exception should indicate a conflict");
+            var response = await _fixture.Container.ReadItemAsync<WeightDocument>(
+                document.Id,
+                new PartitionKey(document.DocumentType));
+
+            response.Resource.Weight.WeightKg.Should().Be(81.5, "upsert should overwrite the existing document");
         }
     }
 }

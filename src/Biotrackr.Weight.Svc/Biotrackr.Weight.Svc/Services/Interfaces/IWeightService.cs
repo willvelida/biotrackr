@@ -1,9 +1,9 @@
-﻿using ent = Biotrackr.Weight.Svc.Models.Entities;
+﻿using Biotrackr.Weight.Svc.Models;
 
 namespace Biotrackr.Weight.Svc.Services.Interfaces
 {
     public interface IWeightService
     {
-        Task MapAndSaveDocument(string date, ent.Weight weight);
+        Task MapAndSaveDocument(string date, WeightMeasurement weight, string provider);
     }
 }

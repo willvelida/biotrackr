@@ -67,7 +67,7 @@ IHost host = Host.CreateDefaultBuilder(args)
         services.AddScoped<ICosmosRepository, CosmosRepository>();
         services.AddScoped<IWeightService, WeightService>();
 
-        services.AddHttpClient<IFitbitService, FitbitService>()
+        services.AddHttpClient<IWithingsService, WithingsService>()
             .AddStandardResilienceHandler();
 
         services.AddHostedService<WeightWorker>();

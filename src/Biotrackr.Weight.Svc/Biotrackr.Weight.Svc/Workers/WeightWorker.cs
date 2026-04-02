@@ -1,20 +1,25 @@
-﻿using Biotrackr.Weight.Svc.Services.Interfaces;
+﻿using Biotrackr.Weight.Svc.Adapters;
+using Biotrackr.Weight.Svc.Configuration;
+using Biotrackr.Weight.Svc.Services.Interfaces;
+using Microsoft.Extensions.Options;
 
 namespace Biotrackr.Weight.Svc.Workers
 {
     public class WeightWorker : BackgroundService
     {
-        private readonly IFitbitService _fitbitService;
+        private readonly IWithingsService _withingsService;
         private readonly IWeightService _weightService;
         private readonly ILogger<WeightWorker> _logger;
         private readonly IHostApplicationLifetime _appLifetime;
+        private readonly Settings _settings;
 
-        public WeightWorker(IFitbitService fibitService, IWeightService weightService, ILogger<WeightWorker> logger, IHostApplicationLifetime appLifetime)
+        public WeightWorker(IWithingsService withingsService, IWeightService weightService, ILogger<WeightWorker> logger, IHostApplicationLifetime appLifetime, IOptions<Settings> settings)
         {
-            _fitbitService = fibitService;
+            _withingsService = withingsService;
             _weightService = weightService;
             _logger = logger;
             _appLifetime = appLifetime;
+            _settings = settings.Value;
         }
 
         protected override async Task<int> ExecuteAsync(CancellationToken stoppingToken)
@@ -23,14 +28,15 @@ namespace Biotrackr.Weight.Svc.Workers
             {
                 _logger.LogInformation($"{nameof(WeightWorker)} executed at: {DateTime.Now}");
 
-                var startDate = DateTime.Now.AddDays(-7).ToString("yyyy-MM-dd");
+                var startDate = DateTime.Now.AddDays(-57).ToString("yyyy-MM-dd"); // TODO: Change to -2 after historical backfill
                 var endDate = DateTime.Now.ToString("yyyy-MM-dd");
 
-                var weightResponse = await _fitbitService.GetWeightLogs(startDate, endDate);
+                var measureResponse = await _withingsService.GetMeasurements(startDate, endDate);
 
-                foreach (var weight in weightResponse.Weight)
+                foreach (var measureGroup in measureResponse.Body!.MeasureGroups)
                 {
-                    await _weightService.MapAndSaveDocument(weight.Date, weight);
+                    var weightMeasurement = WithingsWeightAdapter.FromMeasureGroup(measureGroup, _settings.UserHeight);
+                    await _weightService.MapAndSaveDocument(weightMeasurement.Date, weightMeasurement, "Withings");
                 }
 
                 return 0;
