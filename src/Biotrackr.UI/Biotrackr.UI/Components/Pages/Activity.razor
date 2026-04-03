@@ -1,35 +1,35 @@
 @page "/activity"
 @rendermode InteractiveServer
-@inject IBiotrackrApiService ApiService
+@inherits DataPageBase<ActivityItem, ActivityItem>
 
 <PageTitle>Biotrackr - Activity</PageTitle>
 
 <RadzenText TextStyle="TextStyle.H4">Activity</RadzenText>
 
-<DatePicker SelectedDate="@_selectedDate" StartDate="@_startDate" EndDate="@_endDate" Mode="@_mode"
+<DatePicker SelectedDate="@SelectedDate" StartDate="@StartDate" EndDate="@EndDate" Mode="@Mode"
             OnSingleDateSelected="LoadByDate" OnDateRangeSelected="LoadByRange" />
 
-<LoadingSpinner IsLoading="@_isLoading" Message="Loading activity data..." />
-<ErrorDisplay Message="@_errorMessage" />
+<LoadingSpinner IsLoading="@IsLoading" Message="Loading activity data..." />
+<ErrorDisplay Message="@ErrorMessage" />
 
-@if (!_isLoading && _singleItem is not null && _mode == "date")
+@if (!IsLoading && SingleItem is not null && Mode == "date")
 {
     <RadzenRow Gap="1rem" class="rz-mb-4">
         <RadzenColumn Size="12" SizeMD="3" SizeSM="6">
-            <SummaryCard Title="Steps" Value="@(_singleItem.Activity.Summary.Steps.ToString("N0"))" 
-                         Subtitle="@GetGoalProgress(_singleItem.Activity.Summary.Steps, _singleItem.Activity.Goals.Steps)" />
+            <SummaryCard Title="Steps" Value="@(SingleItem.Activity.Summary.Steps.ToString("N0"))" 
+                         Subtitle="@GetGoalProgress(SingleItem.Activity.Summary.Steps, SingleItem.Activity.Goals.Steps)" />
         </RadzenColumn>
         <RadzenColumn Size="12" SizeMD="3" SizeSM="6">
-            <SummaryCard Title="Calories Burned" Value="@(_singleItem.Activity.Summary.CaloriesOut.ToString("N0"))"
-                         Subtitle="@GetGoalProgress(_singleItem.Activity.Summary.CaloriesOut, _singleItem.Activity.Goals.CaloriesOut)" />
+            <SummaryCard Title="Calories Burned" Value="@(SingleItem.Activity.Summary.CaloriesOut.ToString("N0"))"
+                         Subtitle="@GetGoalProgress(SingleItem.Activity.Summary.CaloriesOut, SingleItem.Activity.Goals.CaloriesOut)" />
         </RadzenColumn>
         <RadzenColumn Size="12" SizeMD="3" SizeSM="6">
-            <SummaryCard Title="Active Minutes" Value="@((_singleItem.Activity.Summary.FairlyActiveMinutes + _singleItem.Activity.Summary.VeryActiveMinutes).ToString("N0"))"
-                         Subtitle="@GetGoalProgress(_singleItem.Activity.Summary.FairlyActiveMinutes + _singleItem.Activity.Summary.VeryActiveMinutes, _singleItem.Activity.Goals.ActiveMinutes)" />
+            <SummaryCard Title="Active Minutes" Value="@((SingleItem.Activity.Summary.FairlyActiveMinutes + SingleItem.Activity.Summary.VeryActiveMinutes).ToString("N0"))"
+                         Subtitle="@GetGoalProgress(SingleItem.Activity.Summary.FairlyActiveMinutes + SingleItem.Activity.Summary.VeryActiveMinutes, SingleItem.Activity.Goals.ActiveMinutes)" />
         </RadzenColumn>
         <RadzenColumn Size="12" SizeMD="3" SizeSM="6">
-            <SummaryCard Title="Floors" Value="@(_singleItem.Activity.Summary.Floors.ToString("N0"))"
-                         Subtitle="@GetGoalProgress(_singleItem.Activity.Summary.Floors, _singleItem.Activity.Goals.Floors)" />
+            <SummaryCard Title="Floors" Value="@(SingleItem.Activity.Summary.Floors.ToString("N0"))"
+                         Subtitle="@GetGoalProgress(SingleItem.Activity.Summary.Floors, SingleItem.Activity.Goals.Floors)" />
         </RadzenColumn>
     </RadzenRow>
 
@@ -37,44 +37,50 @@
     <RadzenRow Gap="1rem" class="rz-mb-4" AlignItems="AlignItems.Center">
         <RadzenColumn Size="12" SizeMD="6" SizeSM="6">
             <RadzenStack Gap="0.25rem">
-                <RadzenText TextStyle="TextStyle.Subtitle2">Steps: @_singleItem.Activity.Summary.Steps.ToString("N0") / @_singleItem.Activity.Goals.Steps.ToString("N0")</RadzenText>
-                <RadzenProgressBar Value="@GetGoalPercent(_singleItem.Activity.Summary.Steps, _singleItem.Activity.Goals.Steps)" ShowValue="true" Mode="ProgressBarMode.Determinate" Style="height: 20px;" />
+                <RadzenText TextStyle="TextStyle.Subtitle2">Steps: @SingleItem.Activity.Summary.Steps.ToString("N0") / @SingleItem.Activity.Goals.Steps.ToString("N0")</RadzenText>
+                <RadzenProgressBar Value="@GetGoalPercent(SingleItem.Activity.Summary.Steps, SingleItem.Activity.Goals.Steps)" ShowValue="true" Mode="ProgressBarMode.Determinate" Style="height: 20px;" />
             </RadzenStack>
         </RadzenColumn>
         <RadzenColumn Size="12" SizeMD="6" SizeSM="6">
             <RadzenStack Gap="0.25rem">
-                <RadzenText TextStyle="TextStyle.Subtitle2">Calories Burned: @_singleItem.Activity.Summary.CaloriesOut.ToString("N0") / @_singleItem.Activity.Goals.CaloriesOut.ToString("N0")</RadzenText>
-                <RadzenProgressBar Value="@GetGoalPercent(_singleItem.Activity.Summary.CaloriesOut, _singleItem.Activity.Goals.CaloriesOut)" ShowValue="true" Mode="ProgressBarMode.Determinate" Style="height: 20px;" />
+                <RadzenText TextStyle="TextStyle.Subtitle2">Calories Burned: @SingleItem.Activity.Summary.CaloriesOut.ToString("N0") / @SingleItem.Activity.Goals.CaloriesOut.ToString("N0")</RadzenText>
+                <RadzenProgressBar Value="@GetGoalPercent(SingleItem.Activity.Summary.CaloriesOut, SingleItem.Activity.Goals.CaloriesOut)" ShowValue="true" Mode="ProgressBarMode.Determinate" Style="height: 20px;" />
             </RadzenStack>
         </RadzenColumn>
     </RadzenRow>
 
-    @if (_singleItem.Activity.Summary.HeartRateZones.Any())
+    @if (SingleItem.Activity.Summary.HeartRateZones.Any())
     {
         <RadzenText TextStyle="TextStyle.H6" class="rz-mb-2">Heart Rate Zones Chart</RadzenText>
-        <RadzenChart Style="height: 300px;" class="rz-mb-4">
-            <RadzenBarSeries Data="@_singleItem.Activity.Summary.HeartRateZones" CategoryProperty="Name"
-                ValueProperty="Minutes" Title="Minutes" />
+        <figure role="group" aria-label="Heart rate zones chart">
+            <RadzenChart class="bt-chart rz-mb-4">
+                <RadzenBarSeries Data="@SingleItem.Activity.Summary.HeartRateZones" CategoryProperty="Name"
+                    ValueProperty="Minutes" Title="Minutes" />
+                <RadzenCategoryAxis Padding="20" />
+                <RadzenValueAxis>
+                    <RadzenGridLines Visible="true" />
+                </RadzenValueAxis>
+            </RadzenChart>
+            <figcaption class="sr-only">Bar chart showing minutes spent in each heart rate zone.</figcaption>
+        </figure>
+    }
+
+    <RadzenText TextStyle="TextStyle.H6" class="rz-mb-2">Active Minutes Breakdown</RadzenText>
+    <figure role="group" aria-label="Active minutes breakdown chart">
+        <RadzenChart class="bt-chart rz-mb-4">
+            <RadzenBarSeries Data="@GetActiveMinutesBreakdown()" CategoryProperty="Category" ValueProperty="Minutes" Title="Minutes" />
             <RadzenCategoryAxis Padding="20" />
             <RadzenValueAxis>
                 <RadzenGridLines Visible="true" />
             </RadzenValueAxis>
         </RadzenChart>
-    }
+        <figcaption class="sr-only">Bar chart showing sedentary, lightly active, fairly active, and very active minutes.</figcaption>
+    </figure>
 
-    <RadzenText TextStyle="TextStyle.H6" class="rz-mb-2">Active Minutes Breakdown</RadzenText>
-    <RadzenChart Style="height: 300px;" class="rz-mb-4">
-        <RadzenBarSeries Data="@GetActiveMinutesBreakdown()" CategoryProperty="Category" ValueProperty="Minutes" Title="Minutes" />
-        <RadzenCategoryAxis Padding="20" />
-        <RadzenValueAxis>
-            <RadzenGridLines Visible="true" />
-        </RadzenValueAxis>
-    </RadzenChart>
-
-    @if (_singleItem.Activity.Summary.HeartRateZones.Any())
+    @if (SingleItem.Activity.Summary.HeartRateZones.Any())
     {
         <RadzenText TextStyle="TextStyle.H6" class="rz-mb-2">Heart Rate Zones</RadzenText>
-        <RadzenDataGrid Data="@_singleItem.Activity.Summary.HeartRateZones" TItem="HeartRateZone" Density="Density.Compact" AllowPaging="false" class="rz-mb-4">
+        <RadzenDataGrid Data="@SingleItem.Activity.Summary.HeartRateZones" TItem="HeartRateZone" Density="Density.Compact" AllowPaging="false" Responsive="true" class="rz-mb-4">
             <Columns>
                 <RadzenDataGridColumn TItem="HeartRateZone" Property="Name" Title="Zone" />
                 <RadzenDataGridColumn TItem="HeartRateZone" Property="Minutes" Title="Minutes" />
@@ -88,10 +94,10 @@
         </RadzenDataGrid>
     }
 
-    @if (_singleItem.Activity.Activities.Any())
+    @if (SingleItem.Activity.Activities.Any())
     {
         <RadzenText TextStyle="TextStyle.H6" class="rz-mb-2">Activities</RadzenText>
-        <RadzenDataGrid Data="@_singleItem.Activity.Activities" TItem="ActivityLog" Density="Density.Compact" AllowPaging="false" class="rz-mb-4">
+        <RadzenDataGrid Data="@SingleItem.Activity.Activities" TItem="ActivityLog" Density="Density.Compact" AllowPaging="false" Responsive="true" class="rz-mb-4">
             <Columns>
                 <RadzenDataGridColumn TItem="ActivityLog" Property="Name" Title="Name" />
                 <RadzenDataGridColumn TItem="ActivityLog" Property="Calories" Title="Calories" />
@@ -109,10 +115,10 @@
         </RadzenDataGrid>
     }
 
-    @if (_singleItem.Activity.Summary.Distances.Any())
+    @if (SingleItem.Activity.Summary.Distances.Any())
     {
         <RadzenText TextStyle="TextStyle.H6" class="rz-mb-2">Distances</RadzenText>
-        <RadzenDataGrid Data="@_singleItem.Activity.Summary.Distances" TItem="DistanceData" Density="Density.Compact" AllowPaging="false" class="rz-mb-4">
+        <RadzenDataGrid Data="@SingleItem.Activity.Summary.Distances" TItem="DistanceData" Density="Density.Compact" AllowPaging="false" Responsive="true" class="rz-mb-4">
             <Columns>
                 <RadzenDataGridColumn TItem="DistanceData" Property="Activity" Title="Activity" />
                 <RadzenDataGridColumn TItem="DistanceData" Title="Distance (km)">
@@ -123,54 +129,63 @@
     }
 }
 
-@if (!_isLoading && _rangeItems is not null && _mode == "range")
+@if (!IsLoading && RangeItems is not null && Mode == "range")
 {
     <RadzenTabs>
         <Tabs>
             <RadzenTabsItem Text="Charts">
-    @if (_rangeItems.Items.Any())
+    @if (RangeItems.Items.Any())
     {
         <RadzenText TextStyle="TextStyle.H6" class="rz-mb-2">Steps Over Time</RadzenText>
-        <RadzenChart Style="height: 300px;" class="rz-mb-4">
-            <RadzenLineSeries Data="@GetRangeStepsData()" CategoryProperty="Date" ValueProperty="Value"
-                Title="Steps" Smooth="true" />
-            <RadzenCategoryAxis Padding="20" />
-            <RadzenValueAxis>
-                <RadzenGridLines Visible="true" />
-            </RadzenValueAxis>
-        </RadzenChart>
+        <figure role="group" aria-label="Steps over time chart">
+            <RadzenChart class="bt-chart rz-mb-4">
+                <RadzenLineSeries Data="@GetRangeStepsData()" CategoryProperty="Date" ValueProperty="Value"
+                    Title="Steps" Smooth="true" />
+                <RadzenCategoryAxis Padding="20" />
+                <RadzenValueAxis>
+                    <RadzenGridLines Visible="true" />
+                </RadzenValueAxis>
+            </RadzenChart>
+            <figcaption class="sr-only">Line chart showing daily step count trend. See the Table tab for exact values.</figcaption>
+        </figure>
 
         <RadzenText TextStyle="TextStyle.H6" class="rz-mb-2">Resting Heart Rate Over Time</RadzenText>
-        <RadzenChart Style="height: 300px;" class="rz-mb-4">
-            <RadzenLineSeries Data="@GetRangeRestingHrData()" CategoryProperty="Date" ValueProperty="Value"
-                Title="Resting HR (bpm)" Smooth="true" />
-            <RadzenCategoryAxis Padding="20" />
-            <RadzenValueAxis>
-                <RadzenGridLines Visible="true" />
-            </RadzenValueAxis>
-        </RadzenChart>
+        <figure role="group" aria-label="Resting heart rate over time chart">
+            <RadzenChart class="bt-chart rz-mb-4">
+                <RadzenLineSeries Data="@GetRangeRestingHrData()" CategoryProperty="Date" ValueProperty="Value"
+                    Title="Resting HR (bpm)" Smooth="true" />
+                <RadzenCategoryAxis Padding="20" />
+                <RadzenValueAxis>
+                    <RadzenGridLines Visible="true" />
+                </RadzenValueAxis>
+            </RadzenChart>
+            <figcaption class="sr-only">Line chart showing daily resting heart rate trend. See the Table tab for exact values.</figcaption>
+        </figure>
 
         <RadzenText TextStyle="TextStyle.H6" class="rz-mb-2">Active Minutes Breakdown Over Time</RadzenText>
-        <RadzenChart Style="height: 300px;" class="rz-mb-4">
-            <RadzenAreaSeries Data="@GetRangeSedentaryData()" CategoryProperty="Date" ValueProperty="Value"
-                Title="Sedentary" Smooth="true" />
-            <RadzenAreaSeries Data="@GetRangeLightlyActiveData()" CategoryProperty="Date" ValueProperty="Value"
-                Title="Lightly Active" Smooth="true" />
-            <RadzenAreaSeries Data="@GetRangeFairlyActiveData()" CategoryProperty="Date" ValueProperty="Value"
-                Title="Fairly Active" Smooth="true" />
-            <RadzenAreaSeries Data="@GetRangeVeryActiveData()" CategoryProperty="Date" ValueProperty="Value"
-                Title="Very Active" Smooth="true" />
-            <RadzenCategoryAxis Padding="20" />
-            <RadzenValueAxis>
-                <RadzenGridLines Visible="true" />
-            </RadzenValueAxis>
-        </RadzenChart>
+        <figure role="group" aria-label="Active minutes breakdown over time chart">
+            <RadzenChart class="bt-chart rz-mb-4">
+                <RadzenAreaSeries Data="@GetRangeSedentaryData()" CategoryProperty="Date" ValueProperty="Value"
+                    Title="Sedentary" Smooth="true" />
+                <RadzenAreaSeries Data="@GetRangeLightlyActiveData()" CategoryProperty="Date" ValueProperty="Value"
+                    Title="Lightly Active" Smooth="true" />
+                <RadzenAreaSeries Data="@GetRangeFairlyActiveData()" CategoryProperty="Date" ValueProperty="Value"
+                    Title="Fairly Active" Smooth="true" />
+                <RadzenAreaSeries Data="@GetRangeVeryActiveData()" CategoryProperty="Date" ValueProperty="Value"
+                    Title="Very Active" Smooth="true" />
+                <RadzenCategoryAxis Padding="20" />
+                <RadzenValueAxis>
+                    <RadzenGridLines Visible="true" />
+                </RadzenValueAxis>
+            </RadzenChart>
+            <figcaption class="sr-only">Stacked area chart showing sedentary, lightly active, fairly active, and very active minutes over time. See the Table tab for exact values.</figcaption>
+        </figure>
     }
             </RadzenTabsItem>
             <RadzenTabsItem Text="Table">
     <RadzenText TextStyle="TextStyle.H6" class="rz-mb-2">Activity Records</RadzenText>
-    <RadzenDataGrid Data="@_rangeItems.Items" TItem="ActivityItem" Density="Density.Compact"
-                    AllowPaging="true" PageSize="10" Count="@_rangeItems.TotalCount" LoadData="@OnLoadData" class="rz-mb-4">
+    <RadzenDataGrid Data="@RangeItems.Items" TItem="ActivityItem" Density="Density.Compact"
+                    AllowPaging="true" PageSize="10" Count="@RangeItems.TotalCount" LoadData="@OnLoadData" Responsive="true" class="rz-mb-4">
         <Columns>
             <RadzenDataGridColumn TItem="ActivityItem" Property="Date" Title="Date" />
             <RadzenDataGridColumn TItem="ActivityItem" Title="Steps">
@@ -195,89 +210,19 @@
     </RadzenTabs>
 }
 
-@if (!_isLoading && _singleItem is null && _mode == "date" && _errorMessage is null)
+@if (!IsLoading && SingleItem is null && Mode == "date" && ErrorMessage is null)
 {
-    <RadzenAlert AlertStyle="AlertStyle.Info" Variant="Variant.Flat" ShowIcon="true">No activity data found for @_selectedDate.</RadzenAlert>
+    <RadzenAlert AlertStyle="AlertStyle.Info" Variant="Variant.Flat" ShowIcon="true">No activity data found for @SelectedDate.</RadzenAlert>
 }
 
 @code {
-    private bool _isLoading = true;
-    private string? _errorMessage;
-    private string _mode = "date";
-    private string _selectedDate = DateOnly.FromDateTime(DateTime.Today.AddDays(-1)).ToString("yyyy-MM-dd");
-    private string _startDate = DateOnly.FromDateTime(DateTime.Today.AddDays(-8)).ToString("yyyy-MM-dd");
-    private string _endDate = DateOnly.FromDateTime(DateTime.Today.AddDays(-1)).ToString("yyyy-MM-dd");
-    private int _currentPage = 1;
+    protected override string DataName => "activity";
 
-    private ActivityItem? _singleItem;
-    private PaginatedResponse<ActivityItem>? _rangeItems;
+    protected override Task<ActivityItem?> FetchSingleAsync(string date)
+        => ApiService.GetActivityByDateAsync(date);
 
-    protected override async Task OnInitializedAsync()
-    {
-        await LoadByDate(_selectedDate);
-    }
-
-    private async Task LoadByDate(string date)
-    {
-        _mode = "date";
-        _selectedDate = date;
-        _isLoading = true;
-        _errorMessage = null;
-        _singleItem = null;
-
-        try
-        {
-            _singleItem = await ApiService.GetActivityByDateAsync(date);
-        }
-        catch (Exception)
-        {
-            _errorMessage = "Failed to load activity data. Please try again.";
-        }
-        finally
-        {
-            _isLoading = false;
-        }
-    }
-
-    private async Task LoadByRange((string StartDate, string EndDate) range)
-    {
-        _mode = "range";
-        _startDate = range.StartDate;
-        _endDate = range.EndDate;
-        _currentPage = 1;
-        await LoadRangePage();
-    }
-
-    private async Task OnPageChanged(int page)
-    {
-        _currentPage = page;
-        await LoadRangePage();
-    }
-
-    private async Task LoadRangePage()
-    {
-        _isLoading = true;
-        _errorMessage = null;
-
-        try
-        {
-            _rangeItems = await ApiService.GetActivitiesByDateRangeAsync(_startDate, _endDate, _currentPage);
-        }
-        catch (Exception)
-        {
-            _errorMessage = "Failed to load activity data. Please try again.";
-        }
-        finally
-        {
-            _isLoading = false;
-        }
-    }
-
-    private async Task OnLoadData(LoadDataArgs args)
-    {
-        _currentPage = (int)((args.Skip ?? 0) / 10) + 1;
-        await LoadRangePage();
-    }
+    protected override Task<PaginatedResponse<ActivityItem>> FetchRangeAsync(string start, string end, int page)
+        => ApiService.GetActivitiesByDateRangeAsync(start, end, page);
 
     private static string GetGoalProgress(int actual, int goal)
     {
@@ -302,7 +247,7 @@
 
     private List<ActiveMinuteItem> GetActiveMinutesBreakdown()
     {
-        var s = _singleItem!.Activity.Summary;
+        var s = SingleItem!.Activity.Summary;
         return
         [
             new("Sedentary", s.SedentaryMinutes),
@@ -315,22 +260,22 @@
     private record ChartDataPoint(string Date, double Value);
 
     private List<ChartDataPoint> GetRangeStepsData() =>
-        _rangeItems!.Items.Select(a => new ChartDataPoint(a.Date, a.Activity.Summary.Steps)).ToList();
+        RangeItems!.Items.Select(a => new ChartDataPoint(a.Date, a.Activity.Summary.Steps)).ToList();
 
     private List<ChartDataPoint> GetRangeRestingHrData() =>
-        _rangeItems!.Items
+        RangeItems!.Items
             .Where(a => a.Activity.Summary.RestingHeartRate > 0)
             .Select(a => new ChartDataPoint(a.Date, a.Activity.Summary.RestingHeartRate)).ToList();
 
     private List<ChartDataPoint> GetRangeSedentaryData() =>
-        _rangeItems!.Items.Select(a => new ChartDataPoint(a.Date, a.Activity.Summary.SedentaryMinutes)).ToList();
+        RangeItems!.Items.Select(a => new ChartDataPoint(a.Date, a.Activity.Summary.SedentaryMinutes)).ToList();
 
     private List<ChartDataPoint> GetRangeLightlyActiveData() =>
-        _rangeItems!.Items.Select(a => new ChartDataPoint(a.Date, a.Activity.Summary.LightlyActiveMinutes)).ToList();
+        RangeItems!.Items.Select(a => new ChartDataPoint(a.Date, a.Activity.Summary.LightlyActiveMinutes)).ToList();
 
     private List<ChartDataPoint> GetRangeFairlyActiveData() =>
-        _rangeItems!.Items.Select(a => new ChartDataPoint(a.Date, a.Activity.Summary.FairlyActiveMinutes)).ToList();
+        RangeItems!.Items.Select(a => new ChartDataPoint(a.Date, a.Activity.Summary.FairlyActiveMinutes)).ToList();
 
     private List<ChartDataPoint> GetRangeVeryActiveData() =>
-        _rangeItems!.Items.Select(a => new ChartDataPoint(a.Date, a.Activity.Summary.VeryActiveMinutes)).ToList();
+        RangeItems!.Items.Select(a => new ChartDataPoint(a.Date, a.Activity.Summary.VeryActiveMinutes)).ToList();
 }

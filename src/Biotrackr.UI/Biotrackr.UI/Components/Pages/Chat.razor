@@ -1,53 +1,41 @@
 @page "/chat"
 @rendermode InteractiveServer
+@implements IAsyncDisposable
 @inject IChatApiService ChatApiService
 @inject IJSRuntime JS
+@inject DialogService DialogService
 @using Biotrackr.UI.Telemetry
 @using Markdig
 @using ChatMessage = Biotrackr.UI.Models.Chat.ChatMessage
 
 <PageTitle>Biotrackr - Chat</PageTitle>
 
+<RadzenMediaQuery Query="(max-width: 768px)" Change="@(matches => { _isMobile = matches; StateHasChanged(); })" />
+
 <div class="chat-container">
-    <div class="chat-sidebar-panel">
-        <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.SpaceBetween" AlignItems="AlignItems.Center" class="rz-p-3 chat-sidebar-header">
-            <RadzenText TextStyle="TextStyle.Subtitle2">Conversations</RadzenText>
-            <RadzenButton Text="+ New Chat" Size="ButtonSize.ExtraSmall" ButtonStyle="ButtonStyle.Light" Click="StartNewConversation" Disabled="@_isStreaming" />
-        </RadzenStack>
-
-        @if (_isLoadingConversations)
-        {
-            <div class="chat-sidebar-loading">Loading...</div>
-        }
-        else if (_conversations.Count == 0)
-        {
-            <div class="chat-sidebar-empty">No conversations yet</div>
-        }
-        else
-        {
-            <div class="chat-sidebar-list">
-                @foreach (var conversation in _conversations)
-                {
-                    <div class="chat-sidebar-item @(conversation.SessionId == _currentSessionId ? "active" : "")"
-                         @onclick="() => LoadConversation(conversation.SessionId)">
-                        <div class="chat-sidebar-item-title">@conversation.Title</div>
-                        <div class="chat-sidebar-item-date">@conversation.LastUpdated.ToString("MMM dd, HH:mm")</div>
-                        <button class="chat-sidebar-item-delete" title="Delete conversation"
-                                @onclick="() => DeleteConversation(conversation.SessionId)"
-                                @onclick:stopPropagation="true"
-                                disabled="@_isStreaming">&#x2715;</button>
-                    </div>
-                }
-
-                @if (_hasMoreConversations)
-                {
-                    <RadzenButton Text="Load more" Variant="Variant.Text" Size="ButtonSize.Small" Click="LoadMoreConversations" Disabled="@_isLoadingConversations" Style="width: 100%;" />
-                }
-            </div>
-        }
-    </div>
+    @if (!_isMobile)
+    {
+        <nav class="chat-sidebar-panel" aria-label="Conversations">
+            <ChatSidebar Conversations="_conversations"
+                         CurrentSessionId="_currentSessionId"
+                         IsStreaming="_isStreaming"
+                         IsLoading="_isLoadingConversations"
+                         HasMore="_hasMoreConversations"
+                         OnSelectConversation="LoadConversation"
+                         OnDeleteConversation="DeleteConversation"
+                         OnNewConversation="StartNewConversation"
+                         OnLoadMore="LoadMoreConversations" />
+        </nav>
+    }
 
     <div class="chat-main">
+        @if (_isMobile)
+        {
+            <RadzenStack Orientation="Orientation.Horizontal" class="rz-p-2">
+                <RadzenButton Icon="menu" Variant="Variant.Text" Click="OpenMobileSidebar" aria-label="Open conversations" />
+            </RadzenStack>
+        }
+
         <RadzenAlert AlertStyle="AlertStyle.Warning" Variant="Variant.Flat" ShowIcon="true" AllowClose="false" class="rz-mb-0">
             This AI assistant provides data summaries only. It is not medical advice. Always consult a healthcare professional.
         </RadzenAlert>
@@ -58,15 +46,28 @@
             @if (_messages.Count == 0 && !_isStreaming)
             {
                 <div class="chat-empty-state">
-                    <p>Ask me about your health and fitness data.</p>
-                    <p>Try: <em>"How many steps did I take yesterday?"</em></p>
+                    <RadzenIcon Icon="chat_bubble_outline" Style="font-size: 48px;" />
+                    <RadzenText TextStyle="TextStyle.H6" class="rz-mt-2">Ask about your health data</RadzenText>
+                    <RadzenText TextStyle="TextStyle.Body2" class="rz-color-secondary">
+                        Try one of these prompts to get started:
+                    </RadzenText>
+                    <RadzenStack Orientation="Orientation.Horizontal" Wrap="FlexWrap.Wrap"
+                                 Gap="0.5rem" JustifyContent="JustifyContent.Center" class="rz-mt-3">
+                        @foreach (var suggestion in _suggestions)
+                        {
+                            <RadzenButton Text="@suggestion" Variant="Variant.Outlined"
+                                          ButtonStyle="ButtonStyle.Light" Size="ButtonSize.Small"
+                                          Click="@(() => SendSuggestion(suggestion))"
+                                          aria-label="@($"Send suggestion: {suggestion}")" />
+                        }
+                    </RadzenStack>
                 </div>
             }
             else
             {
                 @foreach (var message in _messages)
                 {
-                    <div class="message @(message.Role == "user" ? "message-user" : "message-agent")">
+                    <div @key="@message.Timestamp" class="message @(message.Role == "user" ? "message-user" : "message-agent")">
                         @if (message.Role == "assistant")
                         {
                             <div class="message-content markdown-body">@RenderMarkdown(message.Content)</div>
@@ -115,6 +116,12 @@
         .UseAdvancedExtensions()
         .Build();
 
+    private readonly Dictionary<int, MarkupString> _markdownCache = new();
+    private PeriodicTimer? _renderTimer;
+    private CancellationTokenSource? _renderCts;
+    private bool _disposed;
+    private bool _isMobile;
+
     private List<ChatMessage> _messages = [];
     private List<ChatConversationSummary> _conversations = [];
     private string? _currentSessionId;
@@ -127,6 +134,14 @@
     private bool _hasMoreConversations;
     private int _conversationPage = 1;
     private ElementReference _messagesContainer;
+
+    private static readonly string[] _suggestions =
+    [
+        "How many steps did I take yesterday?",
+        "Summarize my sleep quality this week",
+        "Compare my calories this week vs last",
+        "What's my weight trend over the past month?"
+    ];
 
     protected override async Task OnInitializedAsync()
     {
@@ -160,6 +175,10 @@
             ChatTelemetry.ConversationsCreated.Add(1);
         }
 
+        _renderCts = new CancellationTokenSource();
+        _renderTimer = new PeriodicTimer(TimeSpan.FromMilliseconds(80));
+        _ = RenderLoopAsync(_renderCts.Token);
+
         try
         {
             await foreach (var evt in ChatApiService.SendMessageAsync(_currentSessionId, messageText))
@@ -168,7 +187,6 @@
                 {
                     case "TEXT_MESSAGE_CONTENT":
                         _currentResponse += evt.Delta;
-                        StateHasChanged();
                         break;
 
                     case "RUN_STARTED":
@@ -211,6 +229,9 @@
         }
         finally
         {
+            _renderCts?.Cancel();
+            _renderTimer?.Dispose();
+            _renderTimer = null;
             _isStreaming = false;
             _currentResponse = string.Empty;
             _currentToolCalls = [];
@@ -219,6 +240,12 @@
 
         await LoadConversationsList();
         await ScrollToBottom();
+    }
+
+    private async Task SendSuggestion(string text)
+    {
+        _inputMessage = text;
+        await SendMessage();
     }
 
     private async Task HandleKeyDown(KeyboardEventArgs e)
@@ -296,10 +323,53 @@
         StateHasChanged();
     }
 
-    private static MarkupString RenderMarkdown(string content)
+    private MarkupString RenderMarkdown(string content)
     {
-        var html = Markdown.ToHtml(content, MarkdownPipeline);
-        return new MarkupString(html);
+        var hash = content.GetHashCode();
+        if (!_markdownCache.TryGetValue(hash, out var cached))
+        {
+            cached = new MarkupString(Markdown.ToHtml(content, MarkdownPipeline));
+            _markdownCache[hash] = cached;
+        }
+        return cached;
+    }
+
+    private async Task RenderLoopAsync(CancellationToken ct)
+    {
+        try
+        {
+            while (await _renderTimer!.WaitForNextTickAsync(ct))
+            {
+                if (_disposed) return;
+                await InvokeAsync(StateHasChanged);
+            }
+        }
+        catch (OperationCanceledException) { }
+    }
+
+    private async Task OpenMobileSidebar()
+    {
+        await DialogService.OpenSideAsync<ChatSidebar>(
+            "Conversations",
+            new Dictionary<string, object?>
+            {
+                { "Conversations", _conversations },
+                { "CurrentSessionId", _currentSessionId! },
+                { "IsStreaming", _isStreaming },
+                { "IsLoading", _isLoadingConversations },
+                { "HasMore", _hasMoreConversations },
+                { "OnSelectConversation", EventCallback.Factory.Create<string>(this, LoadConversation) },
+                { "OnDeleteConversation", EventCallback.Factory.Create<string>(this, DeleteConversation) },
+                { "OnNewConversation", EventCallback.Factory.Create(this, StartNewConversation) },
+                { "OnLoadMore", EventCallback.Factory.Create(this, LoadMoreConversations) }
+            },
+            new SideDialogOptions
+            {
+                Position = DialogPosition.Left,
+                ShowMask = true,
+                Width = "280px",
+                CloseDialogOnOverlayClick = true
+            });
     }
 
     private async Task ScrollToBottom()
@@ -313,5 +383,13 @@
         {
             // JS interop may fail during prerendering
         }
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        _disposed = true;
+        _renderCts?.Cancel();
+        _renderCts?.Dispose();
+        _renderTimer?.Dispose();
     }
 }

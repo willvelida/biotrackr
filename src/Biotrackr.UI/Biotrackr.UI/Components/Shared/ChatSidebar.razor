@@ -1,0 +1,69 @@
+@* ChatSidebar: Conversation list panel with new-chat, selection, deletion, and load-more actions.
+   Parameters:
+     - Conversations (List<ChatConversationSummary>): List of conversation summaries to display
+     - CurrentSessionId (string?): The currently active session ID
+     - IsStreaming (bool): Whether a chat response is in progress
+     - IsLoading (bool): Whether conversations are loading
+     - HasMore (bool): Whether additional pages of conversations exist
+     - OnSelectConversation (EventCallback<string>): Fired when a conversation is selected
+     - OnDeleteConversation (EventCallback<string>): Fired when a conversation is deleted
+     - OnNewConversation (EventCallback): Fired when a new conversation is started
+     - OnLoadMore (EventCallback): Fired when the user requests more conversations
+*@
+@using Biotrackr.UI.Models.Chat
+
+<RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.SpaceBetween" AlignItems="AlignItems.Center" class="rz-p-3 chat-sidebar-header">
+    <RadzenText TextStyle="TextStyle.Subtitle2">Conversations</RadzenText>
+    <RadzenButton Text="+ New Chat" Size="ButtonSize.ExtraSmall" ButtonStyle="ButtonStyle.Light" Click="HandleNewConversation" Disabled="@IsStreaming" />
+</RadzenStack>
+
+@if (IsLoading)
+{
+    <div class="chat-sidebar-loading">Loading...</div>
+}
+else if (Conversations.Count == 0)
+{
+    <div class="chat-sidebar-empty">No conversations yet</div>
+}
+else
+{
+    <div class="chat-sidebar-list" role="list">
+        @foreach (var conversation in Conversations)
+        {
+            <div @key="conversation.SessionId" class="chat-sidebar-item @(conversation.SessionId == CurrentSessionId ? "active" : "")"
+                 role="listitem">
+                <button class="chat-sidebar-item-button"
+                        aria-current="@(conversation.SessionId == CurrentSessionId ? "true" : null)"
+                        @onclick="() => OnSelectConversation.InvokeAsync(conversation.SessionId)">
+                    <span class="chat-sidebar-item-title">@conversation.Title</span>
+                    <span class="chat-sidebar-item-date">@conversation.LastUpdated.ToString("MMM dd, HH:mm")</span>
+                </button>
+                <button class="chat-sidebar-item-delete"
+                        aria-label="Delete conversation: @conversation.Title"
+                        @onclick="() => OnDeleteConversation.InvokeAsync(conversation.SessionId)"
+                        @onclick:stopPropagation="true"
+                        disabled="@IsStreaming">&#x2715;</button>
+            </div>
+        }
+
+        @if (HasMore)
+        {
+            <RadzenButton Text="Load more" Variant="Variant.Text" Size="ButtonSize.Small" Click="HandleLoadMore" Disabled="@IsLoading" Style="width: 100%;" />
+        }
+    </div>
+}
+
+@code {
+    [Parameter] public List<ChatConversationSummary> Conversations { get; set; } = [];
+    [Parameter] public string? CurrentSessionId { get; set; }
+    [Parameter] public bool IsStreaming { get; set; }
+    [Parameter] public bool IsLoading { get; set; }
+    [Parameter] public bool HasMore { get; set; }
+    [Parameter] public EventCallback<string> OnSelectConversation { get; set; }
+    [Parameter] public EventCallback<string> OnDeleteConversation { get; set; }
+    [Parameter] public EventCallback OnNewConversation { get; set; }
+    [Parameter] public EventCallback OnLoadMore { get; set; }
+
+    private async Task HandleNewConversation() => await OnNewConversation.InvokeAsync();
+    private async Task HandleLoadMore() => await OnLoadMore.InvokeAsync();
+}

@@ -50,7 +50,7 @@ namespace Biotrackr.UI.UnitTests.Components.Pages
 
             var cut = Render<Chat>();
 
-            cut.Markup.Should().Contain("Ask me about your health and fitness data");
+            cut.Markup.Should().Contain("Ask about your health data");
         }
 
         [Fact]
@@ -246,7 +246,7 @@ namespace Biotrackr.UI.UnitTests.Components.Pages
 
             var cut = Render<Chat>();
 
-            cut.Find(".chat-sidebar-item").Click();
+            cut.Find(".chat-sidebar-item-button").Click();
 
             cut.Markup.Should().Contain("How many steps?");
             cut.Markup.Should().Contain("You took 10,000 steps.");
@@ -276,7 +276,7 @@ namespace Biotrackr.UI.UnitTests.Components.Pages
 
             var cut = Render<Chat>();
 
-            cut.Find(".chat-sidebar-item").Click();
+            cut.Find(".chat-sidebar-item-button").Click();
 
             cut.Markup.Should().Contain("GetActivity");
             cut.Markup.Should().Contain("GetSteps");
@@ -300,7 +300,7 @@ namespace Biotrackr.UI.UnitTests.Components.Pages
 
             var cut = Render<Chat>();
 
-            cut.Find(".chat-sidebar-item").Click();
+            cut.Find(".chat-sidebar-item-button").Click();
 
             cut.Find(".message-user").Should().NotBeNull();
             cut.Find(".message-agent").Should().NotBeNull();
@@ -324,7 +324,7 @@ namespace Biotrackr.UI.UnitTests.Components.Pages
 
             var cut = Render<Chat>();
 
-            cut.Find(".chat-sidebar-item").Click();
+            cut.Find(".chat-sidebar-item-button").Click();
 
             cut.Find(".message-timestamp").Should().NotBeNull();
             cut.Markup.Should().Contain("14:30");

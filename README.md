@@ -122,7 +122,7 @@ HTTP-based Container Apps serving data from Cosmos DB via Azure API Management:
 | **MCP Server** | [![Deploy MCP Server](https://github.com/willvelida/biotrackr/actions/workflows/deploy-mcp-server.yml/badge.svg)](https://github.com/willvelida/biotrackr/actions/workflows/deploy-mcp-server.yml) | ![Code Coverage](https://img.shields.io/badge/Code%20Coverage-76%25-yellow?style=flat) | ![Integration Tests](https://img.shields.io/badge/Tests-13%20Passing-brightgreen?style=flat) |
 | **Reporting API** | [![Deploy Reporting Api](https://github.com/willvelida/biotrackr/actions/workflows/deploy-reporting-api.yml/badge.svg)](https://github.com/willvelida/biotrackr/actions/workflows/deploy-reporting-api.yml) | ![Code Coverage](https://img.shields.io/badge/Code%20Coverage-TBD-lightgrey?style=flat) | ![Integration Tests](https://img.shields.io/badge/Tests-TBD-lightgrey?style=flat) |
 | **AI Evaluation** | [![Evaluate AI Agents](https://github.com/willvelida/biotrackr/actions/workflows/evaluation.yml/badge.svg)](https://github.com/willvelida/biotrackr/actions/workflows/evaluation.yml) | N/A | N/A |
-| **UI** | [![Deploy UI](https://github.com/willvelida/biotrackr/actions/workflows/deploy-ui.yml/badge.svg)](https://github.com/willvelida/biotrackr/actions/workflows/deploy-ui.yml) | N/A | N/A |
+| **UI** | [![Deploy UI](https://github.com/willvelida/biotrackr/actions/workflows/deploy-ui.yml/badge.svg)](https://github.com/willvelida/biotrackr/actions/workflows/deploy-ui.yml) | ![Code Coverage](https://img.shields.io/badge/Tests-177%20Passing-brightgreen?style=flat) | N/A |
 
 ##  License
 

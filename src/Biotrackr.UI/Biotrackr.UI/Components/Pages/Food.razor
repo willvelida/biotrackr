@@ -1,67 +1,70 @@
 @page "/food"
 @rendermode InteractiveServer
-@inject IBiotrackrApiService ApiService
+@inherits DataPageBase<FoodItem, FoodItem>
 
 <PageTitle>Biotrackr - Food</PageTitle>
 
 <RadzenText TextStyle="TextStyle.H4">Food</RadzenText>
 
-<DatePicker SelectedDate="@_selectedDate" StartDate="@_startDate" EndDate="@_endDate" Mode="@_mode"
+<DatePicker SelectedDate="@SelectedDate" StartDate="@StartDate" EndDate="@EndDate" Mode="@Mode"
             OnSingleDateSelected="LoadByDate" OnDateRangeSelected="LoadByRange" />
 
-<LoadingSpinner IsLoading="@_isLoading" Message="Loading food data..." />
-<ErrorDisplay Message="@_errorMessage" />
+<LoadingSpinner IsLoading="@IsLoading" Message="Loading food data..." />
+<ErrorDisplay Message="@ErrorMessage" />
 
-@if (!_isLoading && _singleItem is not null && _mode == "date")
+@if (!IsLoading && SingleItem is not null && Mode == "date")
 {
     <RadzenRow Gap="1rem" class="rz-mb-4">
         <RadzenColumn SizeMD="2" SizeSM="4" Size="6">
-            <SummaryCard Title="Calories" Value="@(((int)(_singleItem.Food?.Summary?.Calories ?? 0)).ToString("N0"))" Subtitle="@GetCalorieGoalText()" />
+            <SummaryCard Title="Calories" Value="@(((int)(SingleItem.Food?.Summary?.Calories ?? 0)).ToString("N0"))" Subtitle="@GetCalorieGoalText()" />
         </RadzenColumn>
         <RadzenColumn SizeMD="2" SizeSM="4" Size="6">
-            <SummaryCard Title="Protein" Value="@($"{_singleItem.Food?.Summary?.Protein ?? 0:F1}g")" />
+            <SummaryCard Title="Protein" Value="@($"{SingleItem.Food?.Summary?.Protein ?? 0:F1}g")" />
         </RadzenColumn>
         <RadzenColumn SizeMD="2" SizeSM="4" Size="6">
-            <SummaryCard Title="Carbs" Value="@($"{_singleItem.Food?.Summary?.Carbs ?? 0:F1}g")" />
+            <SummaryCard Title="Carbs" Value="@($"{SingleItem.Food?.Summary?.Carbs ?? 0:F1}g")" />
         </RadzenColumn>
         <RadzenColumn SizeMD="2" SizeSM="4" Size="6">
-            <SummaryCard Title="Fat" Value="@($"{_singleItem.Food?.Summary?.Fat ?? 0:F1}g")" />
+            <SummaryCard Title="Fat" Value="@($"{SingleItem.Food?.Summary?.Fat ?? 0:F1}g")" />
         </RadzenColumn>
         <RadzenColumn SizeMD="2" SizeSM="4" Size="6">
-            <SummaryCard Title="Fiber" Value="@($"{_singleItem.Food?.Summary?.Fiber ?? 0:F1}g")" />
+            <SummaryCard Title="Fiber" Value="@($"{SingleItem.Food?.Summary?.Fiber ?? 0:F1}g")" />
         </RadzenColumn>
         <RadzenColumn SizeMD="2" SizeSM="4" Size="6">
-            <SummaryCard Title="Water" Value="@($"{_singleItem.Food?.Summary?.Water ?? 0:F0} ml")" />
+            <SummaryCard Title="Water" Value="@($"{SingleItem.Food?.Summary?.Water ?? 0:F0} ml")" />
         </RadzenColumn>
     </RadzenRow>
 
-    @if (_singleItem.Food?.Summary is not null)
+    @if (SingleItem.Food?.Summary is not null)
     {
         <RadzenRow Gap="1rem" class="rz-mb-4" AlignItems="AlignItems.Center">
             <RadzenColumn Size="12" SizeMD="6" SizeSM="12">
                 <RadzenText TextStyle="TextStyle.H6" class="rz-mb-2">Macronutrient Split</RadzenText>
-                <RadzenChart Style="height: 300px;">
-                    <RadzenDonutSeries Data="@GetMacroData()" CategoryProperty="Nutrient"
-                        ValueProperty="Grams" Title="Macronutrients (g)" />
-                </RadzenChart>
+                <figure role="group" aria-label="Macronutrient split chart">
+                    <RadzenChart class="bt-chart">
+                        <RadzenDonutSeries Data="@GetMacroData()" CategoryProperty="Nutrient"
+                            ValueProperty="Grams" Title="Macronutrients (g)" />
+                    </RadzenChart>
+                    <figcaption class="sr-only">Donut chart showing the proportion of protein, carbs, and fat in grams.</figcaption>
+                </figure>
             </RadzenColumn>
-            @if (_singleItem.Food.Goals.Calories > 0)
+            @if (SingleItem.Food.Goals.Calories > 0)
             {
                 <RadzenColumn Size="12" SizeMD="6" SizeSM="12">
                     <RadzenText TextStyle="TextStyle.H6" class="rz-mb-2">Calories vs Goal</RadzenText>
                     <RadzenStack Gap="0.25rem">
-                        <RadzenText TextStyle="TextStyle.Subtitle2">@($"{_singleItem.Food.Summary.Calories:N0} / {_singleItem.Food.Goals.Calories:N0}")</RadzenText>
-                        <RadzenProgressBar Value="@(Math.Min(_singleItem.Food.Summary.Calories / _singleItem.Food.Goals.Calories * 100, 100))" ShowValue="true" Mode="ProgressBarMode.Determinate" Style="height: 20px;" />
+                        <RadzenText TextStyle="TextStyle.Subtitle2">@($"{SingleItem.Food.Summary.Calories:N0} / {SingleItem.Food.Goals.Calories:N0}")</RadzenText>
+                        <RadzenProgressBar Value="@(Math.Min(SingleItem.Food.Summary.Calories / SingleItem.Food.Goals.Calories * 100, 100))" ShowValue="true" Mode="ProgressBarMode.Determinate" Style="height: 20px;" />
                     </RadzenStack>
                 </RadzenColumn>
             }
         </RadzenRow>
     }
 
-    @if (_singleItem.Food?.Foods?.Any() == true)
+    @if (SingleItem.Food?.Foods?.Any() == true)
     {
         <RadzenText TextStyle="TextStyle.H6" class="rz-mb-2">Food Log</RadzenText>
-        <RadzenDataGrid Data="@_singleItem.Food.Foods" TItem="FoodEntry" Density="Density.Compact" AllowPaging="false" class="rz-mb-4">
+        <RadzenDataGrid Data="@SingleItem.Food.Foods" TItem="FoodEntry" Density="Density.Compact" AllowPaging="false" Responsive="true" class="rz-mb-4">
             <Columns>
                 <RadzenDataGridColumn TItem="FoodEntry" Title="Food">
                     <Template Context="entry">@entry.LoggedFood?.Name</Template>
@@ -89,47 +92,53 @@
     }
 }
 
-@if (!_isLoading && _rangeItems is not null && _mode == "range")
+@if (!IsLoading && RangeItems is not null && Mode == "range")
 {
     <RadzenTabs>
         <Tabs>
             <RadzenTabsItem Text="Charts">
-    @if (_rangeItems.Items.Any())
+    @if (RangeItems.Items.Any())
     {
         <RadzenText TextStyle="TextStyle.H6" class="rz-mb-2">Calories Over Time</RadzenText>
-        <RadzenChart Style="height: 300px;" class="rz-mb-4">
-            <RadzenLineSeries Data="@GetRangeCaloriesData()" CategoryProperty="Date" ValueProperty="Value"
-                Title="Calories" Smooth="true" />
-            @if (GetRangeGoalLineData().Any())
-            {
-                <RadzenLineSeries Data="@GetRangeGoalLineData()" CategoryProperty="Date" ValueProperty="Value"
-                    Title="Goal" LineType="LineType.Dashed" />
-            }
-            <RadzenCategoryAxis Padding="20" />
-            <RadzenValueAxis>
-                <RadzenGridLines Visible="true" />
-            </RadzenValueAxis>
-        </RadzenChart>
+        <figure role="group" aria-label="Calories over time chart">
+            <RadzenChart class="bt-chart rz-mb-4">
+                <RadzenLineSeries Data="@GetRangeCaloriesData()" CategoryProperty="Date" ValueProperty="Value"
+                    Title="Calories" Smooth="true" />
+                @if (GetRangeGoalLineData().Any())
+                {
+                    <RadzenLineSeries Data="@GetRangeGoalLineData()" CategoryProperty="Date" ValueProperty="Value"
+                        Title="Goal" LineType="LineType.Dashed" />
+                }
+                <RadzenCategoryAxis Padding="20" />
+                <RadzenValueAxis>
+                    <RadzenGridLines Visible="true" />
+                </RadzenValueAxis>
+            </RadzenChart>
+            <figcaption class="sr-only">Line chart showing daily calorie intake trend with goal line. See the Table tab for exact values.</figcaption>
+        </figure>
 
         <RadzenText TextStyle="TextStyle.H6" class="rz-mb-2">Macronutrients Over Time</RadzenText>
-        <RadzenChart Style="height: 300px;" class="rz-mb-4">
-            <RadzenAreaSeries Data="@GetRangeCarbsData()" CategoryProperty="Date" ValueProperty="Value"
-                Title="Carbs" Smooth="true" />
-            <RadzenAreaSeries Data="@GetRangeFatData()" CategoryProperty="Date" ValueProperty="Value"
-                Title="Fat" Smooth="true" />
-            <RadzenAreaSeries Data="@GetRangeProteinData()" CategoryProperty="Date" ValueProperty="Value"
-                Title="Protein" Smooth="true" />
-            <RadzenCategoryAxis Padding="20" />
-            <RadzenValueAxis>
-                <RadzenGridLines Visible="true" />
-            </RadzenValueAxis>
-        </RadzenChart>
+        <figure role="group" aria-label="Macronutrients over time chart">
+            <RadzenChart class="bt-chart rz-mb-4">
+                <RadzenAreaSeries Data="@GetRangeCarbsData()" CategoryProperty="Date" ValueProperty="Value"
+                    Title="Carbs" Smooth="true" />
+                <RadzenAreaSeries Data="@GetRangeFatData()" CategoryProperty="Date" ValueProperty="Value"
+                    Title="Fat" Smooth="true" />
+                <RadzenAreaSeries Data="@GetRangeProteinData()" CategoryProperty="Date" ValueProperty="Value"
+                    Title="Protein" Smooth="true" />
+                <RadzenCategoryAxis Padding="20" />
+                <RadzenValueAxis>
+                    <RadzenGridLines Visible="true" />
+                </RadzenValueAxis>
+            </RadzenChart>
+            <figcaption class="sr-only">Stacked area chart showing carbs, fat, and protein intake over time. See the Table tab for exact values.</figcaption>
+        </figure>
     }
             </RadzenTabsItem>
             <RadzenTabsItem Text="Table">
     <RadzenText TextStyle="TextStyle.H6" class="rz-mb-2">Food Records</RadzenText>
-    <RadzenDataGrid Data="@_rangeItems.Items" TItem="FoodItem" Density="Density.Compact"
-                    AllowPaging="true" PageSize="10" Count="@_rangeItems.TotalCount" LoadData="@OnLoadData" class="rz-mb-4">
+    <RadzenDataGrid Data="@RangeItems.Items" TItem="FoodItem" Density="Density.Compact"
+                    AllowPaging="true" PageSize="10" Count="@RangeItems.TotalCount" LoadData="@OnLoadData" Responsive="true" class="rz-mb-4">
         <Columns>
             <RadzenDataGridColumn TItem="FoodItem" Property="Date" Title="Date" />
             <RadzenDataGridColumn TItem="FoodItem" Title="Calories">
@@ -157,104 +166,34 @@
     </RadzenTabs>
 }
 
-@if (!_isLoading && _singleItem is null && _mode == "date" && _errorMessage is null)
+@if (!IsLoading && SingleItem is null && Mode == "date" && ErrorMessage is null)
 {
-    <RadzenAlert AlertStyle="AlertStyle.Info" Variant="Variant.Flat" ShowIcon="true">No food data found for @_selectedDate.</RadzenAlert>
+    <RadzenAlert AlertStyle="AlertStyle.Info" Variant="Variant.Flat" ShowIcon="true">No food data found for @SelectedDate.</RadzenAlert>
 }
 
 @code {
-    private bool _isLoading = true;
-    private string? _errorMessage;
-    private string _mode = "date";
-    private string _selectedDate = DateOnly.FromDateTime(DateTime.Today.AddDays(-1)).ToString("yyyy-MM-dd");
-    private string _startDate = DateOnly.FromDateTime(DateTime.Today.AddDays(-8)).ToString("yyyy-MM-dd");
-    private string _endDate = DateOnly.FromDateTime(DateTime.Today.AddDays(-1)).ToString("yyyy-MM-dd");
-    private int _currentPage = 1;
+    protected override string DataName => "food";
 
-    private FoodItem? _singleItem;
-    private PaginatedResponse<FoodItem>? _rangeItems;
+    protected override Task<FoodItem?> FetchSingleAsync(string date)
+        => ApiService.GetFoodLogByDateAsync(date);
 
-    protected override async Task OnInitializedAsync()
-    {
-        await LoadByDate(_selectedDate);
-    }
-
-    private async Task LoadByDate(string date)
-    {
-        _mode = "date";
-        _selectedDate = date;
-        _isLoading = true;
-        _errorMessage = null;
-        _singleItem = null;
-
-        try
-        {
-            _singleItem = await ApiService.GetFoodLogByDateAsync(date);
-        }
-        catch (Exception)
-        {
-            _errorMessage = "Failed to load food data. Please try again.";
-        }
-        finally
-        {
-            _isLoading = false;
-        }
-    }
-
-    private async Task LoadByRange((string StartDate, string EndDate) range)
-    {
-        _mode = "range";
-        _startDate = range.StartDate;
-        _endDate = range.EndDate;
-        _currentPage = 1;
-        await LoadRangePage();
-    }
-
-    private async Task OnPageChanged(int page)
-    {
-        _currentPage = page;
-        await LoadRangePage();
-    }
-
-    private async Task LoadRangePage()
-    {
-        _isLoading = true;
-        _errorMessage = null;
-
-        try
-        {
-            _rangeItems = await ApiService.GetFoodLogsByDateRangeAsync(_startDate, _endDate, _currentPage);
-        }
-        catch (Exception)
-        {
-            _errorMessage = "Failed to load food data. Please try again.";
-        }
-        finally
-        {
-            _isLoading = false;
-        }
-    }
-
-    private async Task OnLoadData(LoadDataArgs args)
-    {
-        _currentPage = (int)((args.Skip ?? 0) / 10) + 1;
-        await LoadRangePage();
-    }
+    protected override Task<PaginatedResponse<FoodItem>> FetchRangeAsync(string start, string end, int page)
+        => ApiService.GetFoodLogsByDateRangeAsync(start, end, page);
 
     private string GetCalorieGoalText()
     {
-        if (_singleItem?.Food?.Goals is null || _singleItem.Food.Goals.Calories == 0) return "";
-        var summary = _singleItem.Food.Summary;
+        if (SingleItem?.Food?.Goals is null || SingleItem.Food.Goals.Calories == 0) return "";
+        var summary = SingleItem.Food.Summary;
         if (summary is null) return "";
-        var pct = summary.Calories / _singleItem.Food.Goals.Calories * 100;
-        return $"{pct:F0}% of {_singleItem.Food.Goals.Calories:N0} goal";
+        var pct = summary.Calories / SingleItem.Food.Goals.Calories * 100;
+        return $"{pct:F0}% of {SingleItem.Food.Goals.Calories:N0} goal";
     }
 
     private record MacroDataPoint(string Nutrient, double Grams);
 
     private List<MacroDataPoint> GetMacroData()
     {
-        var s = _singleItem!.Food!.Summary!;
+        var s = SingleItem!.Food!.Summary!;
         return
         [
             new("Protein", Math.Round(s.Protein, 1)),
@@ -266,21 +205,21 @@
     private record ChartDataPoint(string Date, double Value);
 
     private List<ChartDataPoint> GetRangeCaloriesData() =>
-        _rangeItems!.Items.Select(f => new ChartDataPoint(f.Date, f.Food?.Summary?.Calories ?? 0)).ToList();
+        RangeItems!.Items.Select(f => new ChartDataPoint(f.Date, f.Food?.Summary?.Calories ?? 0)).ToList();
 
     private List<ChartDataPoint> GetRangeGoalLineData()
     {
-        var goal = _rangeItems!.Items.FirstOrDefault()?.Food?.Goals?.Calories ?? 0;
+        var goal = RangeItems!.Items.FirstOrDefault()?.Food?.Goals?.Calories ?? 0;
         if (goal == 0) return [];
-        return _rangeItems.Items.Select(f => new ChartDataPoint(f.Date, goal)).ToList();
+        return RangeItems.Items.Select(f => new ChartDataPoint(f.Date, goal)).ToList();
     }
 
     private List<ChartDataPoint> GetRangeCarbsData() =>
-        _rangeItems!.Items.Select(f => new ChartDataPoint(f.Date, f.Food?.Summary?.Carbs ?? 0)).ToList();
+        RangeItems!.Items.Select(f => new ChartDataPoint(f.Date, f.Food?.Summary?.Carbs ?? 0)).ToList();
 
     private List<ChartDataPoint> GetRangeFatData() =>
-        _rangeItems!.Items.Select(f => new ChartDataPoint(f.Date, f.Food?.Summary?.Fat ?? 0)).ToList();
+        RangeItems!.Items.Select(f => new ChartDataPoint(f.Date, f.Food?.Summary?.Fat ?? 0)).ToList();
 
     private List<ChartDataPoint> GetRangeProteinData() =>
-        _rangeItems!.Items.Select(f => new ChartDataPoint(f.Date, f.Food?.Summary?.Protein ?? 0)).ToList();
+        RangeItems!.Items.Select(f => new ChartDataPoint(f.Date, f.Food?.Summary?.Protein ?? 0)).ToList();
 }

@@ -1,71 +1,71 @@
 @page "/weight"
 @rendermode InteractiveServer
-@inject IBiotrackrApiService ApiService
+@inherits DataPageBase<WeightItem, WeightItem>
 
 <PageTitle>Biotrackr - Weight</PageTitle>
 
 <RadzenText TextStyle="TextStyle.H4">Weight</RadzenText>
 
-<DatePicker SelectedDate="@_selectedDate" StartDate="@_startDate" EndDate="@_endDate" Mode="@_mode"
+<DatePicker SelectedDate="@SelectedDate" StartDate="@StartDate" EndDate="@EndDate" Mode="@Mode"
             OnSingleDateSelected="LoadByDate" OnDateRangeSelected="LoadByRange" />
 
-<LoadingSpinner IsLoading="@_isLoading" Message="Loading weight data..." />
-<ErrorDisplay Message="@_errorMessage" />
+<LoadingSpinner IsLoading="@IsLoading" Message="Loading weight data..." />
+<ErrorDisplay Message="@ErrorMessage" />
 
-@if (!_isLoading && _singleItem is not null && _mode == "date")
+@if (!IsLoading && SingleItem is not null && Mode == "date")
 {
-    @if (_singleItem.Weight.Weight > 0)
+    @if (SingleItem.Weight.Weight > 0)
     {
         <RadzenRow Gap="1rem" class="rz-mb-4">
             <RadzenColumn Size="12" SizeMD="3" SizeSM="6">
-                <SummaryCard Title="Weight" Value="@($"{_singleItem.Weight.Weight:F1} kg")" />
+                <SummaryCard Title="Weight" Value="@($"{SingleItem.Weight.Weight:F1} kg")" />
             </RadzenColumn>
             <RadzenColumn Size="12" SizeMD="3" SizeSM="6">
-                <SummaryCard Title="BMI" Value="@($"{_singleItem.Weight.Bmi:F1}")" Subtitle="@GetBmiCategory(_singleItem.Weight.Bmi)" />
+                <SummaryCard Title="BMI" Value="@($"{SingleItem.Weight.Bmi:F1}")" Subtitle="@GetBmiCategory(SingleItem.Weight.Bmi)" />
             </RadzenColumn>
             <RadzenColumn Size="12" SizeMD="3" SizeSM="6">
-                <SummaryCard Title="Recorded" Value="@_singleItem.Weight.Time" Subtitle="@(_singleItem.Provider ?? _singleItem.Weight.Source)" />
+                <SummaryCard Title="Recorded" Value="@SingleItem.Weight.Time" Subtitle="@(SingleItem.Provider ?? SingleItem.Weight.Source)" />
             </RadzenColumn>
         </RadzenRow>
 
-        @if (_singleItem.Weight.MuscleMassKg is not null || _singleItem.Weight.FatMassKg is not null)
+        @if (SingleItem.Weight.MuscleMassKg is not null || SingleItem.Weight.FatMassKg is not null)
         {
             <RadzenText TextStyle="TextStyle.H6" class="rz-mb-2">Body Composition</RadzenText>
             <RadzenRow Gap="1rem" class="rz-mb-4">
-                @if (_singleItem.Weight.FatMassKg is not null)
+                @if (SingleItem.Weight.FatMassKg is not null)
                 {
                     <RadzenColumn Size="12" SizeMD="2" SizeSM="4">
-                        <SummaryCard Title="Fat Mass" Value="@($"{_singleItem.Weight.FatMassKg:F1} kg")" />
+                        <SummaryCard Title="Fat Mass" Value="@($"{SingleItem.Weight.FatMassKg:F1} kg")" />
                     </RadzenColumn>
                 }
-                @if (_singleItem.Weight.FatFreeMassKg is not null)
+                @if (SingleItem.Weight.FatFreeMassKg is not null)
                 {
                     <RadzenColumn Size="12" SizeMD="2" SizeSM="4">
-                        <SummaryCard Title="Fat-Free Mass" Value="@($"{_singleItem.Weight.FatFreeMassKg:F1} kg")" />
+                        <SummaryCard Title="Fat-Free Mass" Value="@($"{SingleItem.Weight.FatFreeMassKg:F1} kg")" />
                     </RadzenColumn>
                 }
-                @if (_singleItem.Weight.MuscleMassKg is not null)
+                @if (SingleItem.Weight.MuscleMassKg is not null)
                 {
                     <RadzenColumn Size="12" SizeMD="2" SizeSM="4">
-                        <SummaryCard Title="Muscle Mass" Value="@($"{_singleItem.Weight.MuscleMassKg:F1} kg")" />
+                        <SummaryCard Title="Muscle Mass" Value="@($"{SingleItem.Weight.MuscleMassKg:F1} kg")" />
                     </RadzenColumn>
                 }
-                @if (_singleItem.Weight.BoneMassKg is not null)
+                @if (SingleItem.Weight.BoneMassKg is not null)
                 {
                     <RadzenColumn Size="12" SizeMD="2" SizeSM="4">
-                        <SummaryCard Title="Bone Mass" Value="@($"{_singleItem.Weight.BoneMassKg:F1} kg")" />
+                        <SummaryCard Title="Bone Mass" Value="@($"{SingleItem.Weight.BoneMassKg:F1} kg")" />
                     </RadzenColumn>
                 }
-                @if (_singleItem.Weight.WaterMassKg is not null)
+                @if (SingleItem.Weight.WaterMassKg is not null)
                 {
                     <RadzenColumn Size="12" SizeMD="2" SizeSM="4">
-                        <SummaryCard Title="Water Mass" Value="@($"{_singleItem.Weight.WaterMassKg:F1} kg")" />
+                        <SummaryCard Title="Water Mass" Value="@($"{SingleItem.Weight.WaterMassKg:F1} kg")" />
                     </RadzenColumn>
                 }
-                @if (_singleItem.Weight.VisceralFatIndex is not null)
+                @if (SingleItem.Weight.VisceralFatIndex is not null)
                 {
                     <RadzenColumn Size="12" SizeMD="2" SizeSM="4">
-                        <SummaryCard Title="Visceral Fat" Value="@($"{_singleItem.Weight.VisceralFatIndex}")" />
+                        <SummaryCard Title="Visceral Fat" Value="@($"{SingleItem.Weight.VisceralFatIndex}")" />
                     </RadzenColumn>
                 }
             </RadzenRow>
@@ -73,64 +73,76 @@
             @if (GetBodyCompositionData().Any())
             {
                 <RadzenText TextStyle="TextStyle.H6" class="rz-mb-2">Body Composition</RadzenText>
-                <RadzenChart Style="height: 300px;" class="rz-mb-4">
-                    <RadzenDonutSeries Data="@GetBodyCompositionData()" CategoryProperty="Component"
-                        ValueProperty="Mass" Title="Body Composition (kg)" />
-                </RadzenChart>
+                <figure role="group" aria-label="Body composition chart">
+                    <RadzenChart class="bt-chart rz-mb-4">
+                        <RadzenDonutSeries Data="@GetBodyCompositionData()" CategoryProperty="Component"
+                            ValueProperty="Mass" Title="Body Composition (kg)" />
+                    </RadzenChart>
+                    <figcaption class="sr-only">Donut chart showing body composition breakdown by mass in kilograms.</figcaption>
+                </figure>
             }
         }
     }
     else
     {
-        <RadzenAlert AlertStyle="AlertStyle.Info" Variant="Variant.Flat" ShowIcon="true">No weight entries for @_selectedDate.</RadzenAlert>
+        <RadzenAlert AlertStyle="AlertStyle.Info" Variant="Variant.Flat" ShowIcon="true">No weight entries for @SelectedDate.</RadzenAlert>
     }
 }
 
-@if (!_isLoading && _rangeItems is not null && _mode == "range")
+@if (!IsLoading && RangeItems is not null && Mode == "range")
 {
     <RadzenTabs>
         <Tabs>
             <RadzenTabsItem Text="Charts">
-    @if (_rangeItems.Items.Any())
+    @if (RangeItems.Items.Any())
     {
         <RadzenText TextStyle="TextStyle.H6" class="rz-mb-2">Weight Over Time</RadzenText>
-        <RadzenChart Style="height: 300px;" class="rz-mb-4">
-            <RadzenLineSeries Data="@GetRangeWeightData()" CategoryProperty="Date" ValueProperty="Value"
-                Title="Weight (kg)" Smooth="true" />
-            <RadzenCategoryAxis Padding="20" />
-            <RadzenValueAxis>
-                <RadzenGridLines Visible="true" />
-            </RadzenValueAxis>
-        </RadzenChart>
-
-        <RadzenText TextStyle="TextStyle.H6" class="rz-mb-2">BMI Over Time</RadzenText>
-        <RadzenChart Style="height: 300px;" class="rz-mb-4">
-            <RadzenLineSeries Data="@GetRangeBmiData()" CategoryProperty="Date" ValueProperty="Value"
-                Title="BMI" Smooth="true" />
-            <RadzenCategoryAxis Padding="20" />
-            <RadzenValueAxis>
-                <RadzenGridLines Visible="true" />
-            </RadzenValueAxis>
-        </RadzenChart>
-
-        @if (GetRangeBodyFatData().Any())
-        {
-            <RadzenText TextStyle="TextStyle.H6" class="rz-mb-2">Body Fat % Over Time</RadzenText>
-            <RadzenChart Style="height: 300px;" class="rz-mb-4">
-                <RadzenLineSeries Data="@GetRangeBodyFatData()" CategoryProperty="Date" ValueProperty="Value"
-                    Title="Body Fat %" Smooth="true" />
+        <figure role="group" aria-label="Weight over time chart">
+            <RadzenChart class="bt-chart rz-mb-4">
+                <RadzenLineSeries Data="@GetRangeWeightData()" CategoryProperty="Date" ValueProperty="Value"
+                    Title="Weight (kg)" Smooth="true" />
                 <RadzenCategoryAxis Padding="20" />
                 <RadzenValueAxis>
                     <RadzenGridLines Visible="true" />
                 </RadzenValueAxis>
             </RadzenChart>
+            <figcaption class="sr-only">Line chart showing daily weight trend. See the Table tab for exact values.</figcaption>
+        </figure>
+
+        <RadzenText TextStyle="TextStyle.H6" class="rz-mb-2">BMI Over Time</RadzenText>
+        <figure role="group" aria-label="BMI over time chart">
+            <RadzenChart class="bt-chart rz-mb-4">
+                <RadzenLineSeries Data="@GetRangeBmiData()" CategoryProperty="Date" ValueProperty="Value"
+                    Title="BMI" Smooth="true" />
+                <RadzenCategoryAxis Padding="20" />
+                <RadzenValueAxis>
+                    <RadzenGridLines Visible="true" />
+                </RadzenValueAxis>
+            </RadzenChart>
+            <figcaption class="sr-only">Line chart showing daily BMI trend. See the Table tab for exact values.</figcaption>
+        </figure>
+
+        @if (GetRangeBodyFatData().Any())
+        {
+            <RadzenText TextStyle="TextStyle.H6" class="rz-mb-2">Body Fat % Over Time</RadzenText>
+            <figure role="group" aria-label="Body fat percentage over time chart">
+                <RadzenChart class="bt-chart rz-mb-4">
+                    <RadzenLineSeries Data="@GetRangeBodyFatData()" CategoryProperty="Date" ValueProperty="Value"
+                        Title="Body Fat %" Smooth="true" />
+                    <RadzenCategoryAxis Padding="20" />
+                    <RadzenValueAxis>
+                        <RadzenGridLines Visible="true" />
+                    </RadzenValueAxis>
+                </RadzenChart>
+                <figcaption class="sr-only">Line chart showing daily body fat percentage trend. See the Table tab for exact values.</figcaption>
+            </figure>
         }
     }
             </RadzenTabsItem>
             <RadzenTabsItem Text="Table">
     <RadzenText TextStyle="TextStyle.H6" class="rz-mb-2">Weight Records</RadzenText>
-    <RadzenDataGrid Data="@_rangeItems.Items" TItem="WeightItem" Density="Density.Compact"
-                    AllowPaging="true" PageSize="10" Count="@_rangeItems.TotalCount" LoadData="@OnLoadData" class="rz-mb-4">
+    <RadzenDataGrid Data="@RangeItems.Items" TItem="WeightItem" Density="Density.Compact"
+                    AllowPaging="true" PageSize="10" Count="@RangeItems.TotalCount" LoadData="@OnLoadData" Responsive="true" class="rz-mb-4">
         <Columns>
             <RadzenDataGridColumn TItem="WeightItem" Property="Date" Title="Date" />
             <RadzenDataGridColumn TItem="WeightItem" Title="Weight (kg)">
@@ -164,89 +176,19 @@
     </RadzenTabs>
 }
 
-@if (!_isLoading && _singleItem is null && _mode == "date" && _errorMessage is null)
+@if (!IsLoading && SingleItem is null && Mode == "date" && ErrorMessage is null)
 {
-    <RadzenAlert AlertStyle="AlertStyle.Info" Variant="Variant.Flat" ShowIcon="true">No weight data found for @_selectedDate.</RadzenAlert>
+    <RadzenAlert AlertStyle="AlertStyle.Info" Variant="Variant.Flat" ShowIcon="true">No weight data found for @SelectedDate.</RadzenAlert>
 }
 
 @code {
-    private bool _isLoading = true;
-    private string? _errorMessage;
-    private string _mode = "date";
-    private string _selectedDate = DateOnly.FromDateTime(DateTime.Today.AddDays(-1)).ToString("yyyy-MM-dd");
-    private string _startDate = DateOnly.FromDateTime(DateTime.Today.AddDays(-8)).ToString("yyyy-MM-dd");
-    private string _endDate = DateOnly.FromDateTime(DateTime.Today.AddDays(-1)).ToString("yyyy-MM-dd");
-    private int _currentPage = 1;
+    protected override string DataName => "weight";
 
-    private WeightItem? _singleItem;
-    private PaginatedResponse<WeightItem>? _rangeItems;
+    protected override Task<WeightItem?> FetchSingleAsync(string date)
+        => ApiService.GetWeightByDateAsync(date);
 
-    protected override async Task OnInitializedAsync()
-    {
-        await LoadByDate(_selectedDate);
-    }
-
-    private async Task LoadByDate(string date)
-    {
-        _mode = "date";
-        _selectedDate = date;
-        _isLoading = true;
-        _errorMessage = null;
-        _singleItem = null;
-
-        try
-        {
-            _singleItem = await ApiService.GetWeightByDateAsync(date);
-        }
-        catch (Exception)
-        {
-            _errorMessage = "Failed to load weight data. Please try again.";
-        }
-        finally
-        {
-            _isLoading = false;
-        }
-    }
-
-    private async Task LoadByRange((string StartDate, string EndDate) range)
-    {
-        _mode = "range";
-        _startDate = range.StartDate;
-        _endDate = range.EndDate;
-        _currentPage = 1;
-        await LoadRangePage();
-    }
-
-    private async Task OnPageChanged(int page)
-    {
-        _currentPage = page;
-        await LoadRangePage();
-    }
-
-    private async Task LoadRangePage()
-    {
-        _isLoading = true;
-        _errorMessage = null;
-
-        try
-        {
-            _rangeItems = await ApiService.GetWeightByDateRangeAsync(_startDate, _endDate, _currentPage);
-        }
-        catch (Exception)
-        {
-            _errorMessage = "Failed to load weight data. Please try again.";
-        }
-        finally
-        {
-            _isLoading = false;
-        }
-    }
-
-    private async Task OnLoadData(LoadDataArgs args)
-    {
-        _currentPage = (int)((args.Skip ?? 0) / 10) + 1;
-        await LoadRangePage();
-    }
+    protected override Task<PaginatedResponse<WeightItem>> FetchRangeAsync(string start, string end, int page)
+        => ApiService.GetWeightByDateRangeAsync(start, end, page);
 
     private static string GetBmiCategory(double bmi)
     {
@@ -260,7 +202,7 @@
 
     private List<BodyCompositionItem> GetBodyCompositionData()
     {
-        var w = _singleItem!.Weight;
+        var w = SingleItem!.Weight;
         var items = new List<BodyCompositionItem>();
         if (w.FatMassKg is not null) items.Add(new("Fat", w.FatMassKg.Value));
         if (w.MuscleMassKg is not null) items.Add(new("Muscle", w.MuscleMassKg.Value));
@@ -272,11 +214,11 @@
     private record ChartDataPoint(string Date, double Value);
 
     private List<ChartDataPoint> GetRangeWeightData() =>
-        _rangeItems!.Items.Where(w => w.Weight.Weight > 0).Select(w => new ChartDataPoint(w.Date, w.Weight.Weight)).ToList();
+        RangeItems!.Items.Where(w => w.Weight.Weight > 0).Select(w => new ChartDataPoint(w.Date, w.Weight.Weight)).ToList();
 
     private List<ChartDataPoint> GetRangeBmiData() =>
-        _rangeItems!.Items.Where(w => w.Weight.Bmi > 0).Select(w => new ChartDataPoint(w.Date, Math.Round(w.Weight.Bmi, 1))).ToList();
+        RangeItems!.Items.Where(w => w.Weight.Bmi > 0).Select(w => new ChartDataPoint(w.Date, Math.Round(w.Weight.Bmi, 1))).ToList();
 
     private List<ChartDataPoint> GetRangeBodyFatData() =>
-        _rangeItems!.Items.Where(w => w.Weight.Fat > 0).Select(w => new ChartDataPoint(w.Date, Math.Round(w.Weight.Fat, 1))).ToList();
+        RangeItems!.Items.Where(w => w.Weight.Fat > 0).Select(w => new ChartDataPoint(w.Date, Math.Round(w.Weight.Fat, 1))).ToList();
 }
