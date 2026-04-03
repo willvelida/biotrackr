@@ -56,7 +56,7 @@
                         @foreach (var suggestion in _suggestions)
                         {
                             <RadzenButton Text="@suggestion" Variant="Variant.Outlined"
-                                          ButtonStyle="ButtonStyle.Light" Size="ButtonSize.Small"
+                                          ButtonStyle="ButtonStyle.Secondary" Size="ButtonSize.Small"
                                           Click="@(() => SendSuggestion(suggestion))"
                                           aria-label="@($"Send suggestion: {suggestion}")" />
                         }
