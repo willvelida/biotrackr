@@ -1,6 +1,11 @@
 ﻿@inherits LayoutComponentBase
+@implements IDisposable
 @inject IUserInfoService UserInfoService
+@inject NavigationManager NavigationManager
 
+<a href="#main-content" class="skip-link sr-only">Skip to content</a>
+<RadzenProgressBar Visible="@_isNavigating" Mode="ProgressBarMode.Indeterminate"
+                   Style="position: fixed; top: 0; left: 0; right: 0; z-index: 9999; height: 3px;" />
 <RadzenLayout style="position: relative;">
     <RadzenHeader>
         <RadzenStack Orientation="Orientation.Horizontal"
@@ -28,8 +33,6 @@
                         </RadzenStack>
                     </Template>
                     <ChildContent>
-                        <RadzenProfileMenuItem Text="Profile" Icon="account_circle"
-                                               Style="opacity: 0.5; pointer-events: none;" />
                         <RadzenProfileMenuItem Text="Sign Out" Icon="logout"
                                                Path=".auth/logout?post_logout_redirect_uri=/login" />
                     </ChildContent>
@@ -38,14 +41,16 @@
         </RadzenStack>
     </RadzenHeader>
 
-    <RadzenSidebar @bind-Expanded="@_sidebarExpanded" Responsive="false">
+    <RadzenSidebar @bind-Expanded="@_sidebarExpanded" Responsive="true">
         <NavMenu />
     </RadzenSidebar>
 
     <RadzenBody>
-        <div class="rz-p-4">
-            @Body
-        </div>
+        <main id="main-content" tabindex="-1">
+            <div class="rz-p-4">
+                @Body
+            </div>
+        </main>
     </RadzenBody>
 </RadzenLayout>
 
@@ -53,7 +58,9 @@
 
 @code {
     private bool _sidebarExpanded = true;
+    private bool _isNavigating;
     private UserInfo _userInfo = new();
+    private IDisposable? _locationChangingRegistration;
 
     [Inject] private IHttpContextAccessor HttpContextAccessor { get; set; } = default!;
 
@@ -63,5 +70,27 @@
         {
             _userInfo = UserInfoService.GetUserInfo(HttpContextAccessor.HttpContext);
         }
+
+        _locationChangingRegistration = NavigationManager.RegisterLocationChangingHandler(OnLocationChanging);
+        NavigationManager.LocationChanged += OnLocationChanged;
+    }
+
+    private ValueTask OnLocationChanging(Microsoft.AspNetCore.Components.Routing.LocationChangingContext context)
+    {
+        _isNavigating = true;
+        StateHasChanged();
+        return ValueTask.CompletedTask;
+    }
+
+    private void OnLocationChanged(object? sender, Microsoft.AspNetCore.Components.Routing.LocationChangedEventArgs e)
+    {
+        _isNavigating = false;
+        InvokeAsync(StateHasChanged);
+    }
+
+    public void Dispose()
+    {
+        _locationChangingRegistration?.Dispose();
+        NavigationManager.LocationChanged -= OnLocationChanged;
     }
 }

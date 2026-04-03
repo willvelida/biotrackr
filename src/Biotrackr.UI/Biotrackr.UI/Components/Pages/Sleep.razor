@@ -1,28 +1,28 @@
 @page "/sleep"
 @rendermode InteractiveServer
-@inject IBiotrackrApiService ApiService
+@inherits DataPageBase<SleepItem, SleepItem>
 
 <PageTitle>Biotrackr - Sleep</PageTitle>
 
 <RadzenText TextStyle="TextStyle.H4">Sleep</RadzenText>
 
-<DatePicker SelectedDate="@_selectedDate" StartDate="@_startDate" EndDate="@_endDate" Mode="@_mode"
+<DatePicker SelectedDate="@SelectedDate" StartDate="@StartDate" EndDate="@EndDate" Mode="@Mode"
             OnSingleDateSelected="LoadByDate" OnDateRangeSelected="LoadByRange" />
 
-<LoadingSpinner IsLoading="@_isLoading" Message="Loading sleep data..." />
-<ErrorDisplay Message="@_errorMessage" />
+<LoadingSpinner IsLoading="@IsLoading" Message="Loading sleep data..." />
+<ErrorDisplay Message="@ErrorMessage" />
 
-@if (!_isLoading && _singleItem is not null && _mode == "date")
+@if (!IsLoading && SingleItem is not null && Mode == "date")
 {
     <RadzenRow Gap="1rem" class="rz-mb-4">
         <RadzenColumn Size="12" SizeMD="3" SizeSM="6">
-            <SummaryCard Title="Time Asleep" Value="@FormatMinutes(_singleItem.Sleep.Summary.TotalMinutesAsleep)" />
+            <SummaryCard Title="Time Asleep" Value="@FormatMinutes(SingleItem.Sleep.Summary.TotalMinutesAsleep)" />
         </RadzenColumn>
         <RadzenColumn Size="12" SizeMD="3" SizeSM="6">
-            <SummaryCard Title="Time in Bed" Value="@FormatMinutes(_singleItem.Sleep.Summary.TotalTimeInBed)" />
+            <SummaryCard Title="Time in Bed" Value="@FormatMinutes(SingleItem.Sleep.Summary.TotalTimeInBed)" />
         </RadzenColumn>
         <RadzenColumn Size="12" SizeMD="3" SizeSM="6">
-            <SummaryCard Title="Sleep Records" Value="@_singleItem.Sleep.Summary.TotalSleepRecords.ToString()" />
+            <SummaryCard Title="Sleep Records" Value="@SingleItem.Sleep.Summary.TotalSleepRecords.ToString()" />
         </RadzenColumn>
         <RadzenColumn Size="12" SizeMD="3" SizeSM="6">
             <SummaryCard Title="Efficiency" Value="@GetEfficiency()" />
@@ -30,14 +30,17 @@
     </RadzenRow>
 
     <RadzenRow Gap="1rem" class="rz-mb-4" AlignItems="AlignItems.Center">
-        @if (_singleItem.Sleep.Summary.Stages is not null)
+        @if (SingleItem.Sleep.Summary.Stages is not null)
         {
             <RadzenColumn Size="12" SizeMD="6" SizeSM="12">
                 <RadzenText TextStyle="TextStyle.H6" class="rz-mb-2">Sleep Stages</RadzenText>
-                <RadzenChart Style="height: 300px;">
-                    <RadzenDonutSeries Data="@GetSleepStagesData()" CategoryProperty="Stage"
-                        ValueProperty="Minutes" Title="Sleep Stages" />
-                </RadzenChart>
+                <figure role="group" aria-label="Sleep stages chart">
+                    <RadzenChart class="bt-chart">
+                        <RadzenDonutSeries Data="@GetSleepStagesData()" CategoryProperty="Stage"
+                            ValueProperty="Minutes" Title="Sleep Stages" />
+                    </RadzenChart>
+                    <figcaption class="sr-only">Donut chart showing the proportion of time spent in each sleep stage.</figcaption>
+                </figure>
             </RadzenColumn>
         }
         <RadzenColumn Size="12" SizeMD="6" SizeSM="12">
@@ -49,36 +52,36 @@
         </RadzenColumn>
     </RadzenRow>
 
-    @if (_singleItem.Sleep.Summary.Stages is not null)
+    @if (SingleItem.Sleep.Summary.Stages is not null)
     {
         <RadzenText TextStyle="TextStyle.H6" class="rz-mb-2">Sleep Stages</RadzenText>
         <RadzenRow Gap="1rem" class="rz-mb-4">
             <RadzenColumn Size="12" SizeMD="3" SizeSM="6">
-                <RadzenStack AlignItems="AlignItems.Center">
-                    <div class="stage-bar stage-deep" style="height: @GetStageHeight(_singleItem.Sleep.Summary.Stages.Deep)px;"></div>
+                <RadzenStack AlignItems="AlignItems.Center" @attributes='new Dictionary<string, object> { { "role", "group" }, { "aria-label", $"Deep sleep: {FormatMinutes(SingleItem.Sleep.Summary.Stages.Deep)}" } }'>
+                    <div class="stage-bar stage-deep" style="height: @GetStageHeight(SingleItem.Sleep.Summary.Stages.Deep)px;" aria-hidden="true"></div>
                     <RadzenText TextStyle="TextStyle.Subtitle2">Deep</RadzenText>
-                    <RadzenText TextStyle="TextStyle.Body2">@FormatMinutes(_singleItem.Sleep.Summary.Stages.Deep)</RadzenText>
+                    <RadzenText TextStyle="TextStyle.Body2">@FormatMinutes(SingleItem.Sleep.Summary.Stages.Deep)</RadzenText>
                 </RadzenStack>
             </RadzenColumn>
             <RadzenColumn Size="12" SizeMD="3" SizeSM="6">
-                <RadzenStack AlignItems="AlignItems.Center">
-                    <div class="stage-bar stage-light" style="height: @GetStageHeight(_singleItem.Sleep.Summary.Stages.Light)px;"></div>
+                <RadzenStack AlignItems="AlignItems.Center" @attributes='new Dictionary<string, object> { { "role", "group" }, { "aria-label", $"Light sleep: {FormatMinutes(SingleItem.Sleep.Summary.Stages.Light)}" } }'>
+                    <div class="stage-bar stage-light" style="height: @GetStageHeight(SingleItem.Sleep.Summary.Stages.Light)px;" aria-hidden="true"></div>
                     <RadzenText TextStyle="TextStyle.Subtitle2">Light</RadzenText>
-                    <RadzenText TextStyle="TextStyle.Body2">@FormatMinutes(_singleItem.Sleep.Summary.Stages.Light)</RadzenText>
+                    <RadzenText TextStyle="TextStyle.Body2">@FormatMinutes(SingleItem.Sleep.Summary.Stages.Light)</RadzenText>
                 </RadzenStack>
             </RadzenColumn>
             <RadzenColumn Size="12" SizeMD="3" SizeSM="6">
-                <RadzenStack AlignItems="AlignItems.Center">
-                    <div class="stage-bar stage-rem" style="height: @GetStageHeight(_singleItem.Sleep.Summary.Stages.Rem)px;"></div>
+                <RadzenStack AlignItems="AlignItems.Center" @attributes='new Dictionary<string, object> { { "role", "group" }, { "aria-label", $"REM sleep: {FormatMinutes(SingleItem.Sleep.Summary.Stages.Rem)}" } }'>
+                    <div class="stage-bar stage-rem" style="height: @GetStageHeight(SingleItem.Sleep.Summary.Stages.Rem)px;" aria-hidden="true"></div>
                     <RadzenText TextStyle="TextStyle.Subtitle2">REM</RadzenText>
-                    <RadzenText TextStyle="TextStyle.Body2">@FormatMinutes(_singleItem.Sleep.Summary.Stages.Rem)</RadzenText>
+                    <RadzenText TextStyle="TextStyle.Body2">@FormatMinutes(SingleItem.Sleep.Summary.Stages.Rem)</RadzenText>
                 </RadzenStack>
             </RadzenColumn>
             <RadzenColumn Size="12" SizeMD="3" SizeSM="6">
-                <RadzenStack AlignItems="AlignItems.Center">
-                    <div class="stage-bar stage-wake" style="height: @GetStageHeight(_singleItem.Sleep.Summary.Stages.Wake)px;"></div>
+                <RadzenStack AlignItems="AlignItems.Center" @attributes='new Dictionary<string, object> { { "role", "group" }, { "aria-label", $"Awake: {FormatMinutes(SingleItem.Sleep.Summary.Stages.Wake)}" } }'>
+                    <div class="stage-bar stage-wake" style="height: @GetStageHeight(SingleItem.Sleep.Summary.Stages.Wake)px;" aria-hidden="true"></div>
                     <RadzenText TextStyle="TextStyle.Subtitle2">Awake</RadzenText>
-                    <RadzenText TextStyle="TextStyle.Body2">@FormatMinutes(_singleItem.Sleep.Summary.Stages.Wake)</RadzenText>
+                    <RadzenText TextStyle="TextStyle.Body2">@FormatMinutes(SingleItem.Sleep.Summary.Stages.Wake)</RadzenText>
                 </RadzenStack>
             </RadzenColumn>
         </RadzenRow>
@@ -87,20 +90,23 @@
     @if (_hypnogramData is not null && _hypnogramData.Any())
     {
         <RadzenText TextStyle="TextStyle.Subtitle1" class="rz-mb-2">Sleep Timeline</RadzenText>
-        <RadzenChart Style="height: 200px;" class="rz-mb-4">
-            <RadzenAreaSeries Data="@_hypnogramData" CategoryProperty="Time" ValueProperty="Level"
-                Smooth="false" StrokeWidth="1" Title="Sleep Stage" />
-            <RadzenCategoryAxis Padding="20" />
-            <RadzenValueAxis Min="0" Max="3">
-                <RadzenGridLines Visible="true" />
-            </RadzenValueAxis>
-        </RadzenChart>
+        <figure role="group" aria-label="Sleep timeline chart">
+            <RadzenChart class="bt-chart rz-mb-4">
+                <RadzenAreaSeries Data="@_hypnogramData" CategoryProperty="Time" ValueProperty="Level"
+                    Smooth="false" StrokeWidth="1" Title="Sleep Stage" />
+                <RadzenCategoryAxis Padding="20" />
+                <RadzenValueAxis Min="0" Max="3">
+                    <RadzenGridLines Visible="true" />
+                </RadzenValueAxis>
+            </RadzenChart>
+            <figcaption class="sr-only">Area chart showing sleep stage transitions throughout the night.</figcaption>
+        </figure>
     }
 
-    @if (_singleItem.Sleep.Sleep.Any())
+    @if (SingleItem.Sleep.Sleep.Any())
     {
         <RadzenText TextStyle="TextStyle.H6" class="rz-mb-2">Sleep Logs</RadzenText>
-        <RadzenDataGrid Data="@_singleItem.Sleep.Sleep" TItem="SleepRecord" Density="Density.Compact" AllowPaging="false" class="rz-mb-4">
+        <RadzenDataGrid Data="@SingleItem.Sleep.Sleep" TItem="SleepRecord" Density="Density.Compact" AllowPaging="false" Responsive="true" class="rz-mb-4">
             <Columns>
                 <RadzenDataGridColumn TItem="SleepRecord" Title="Start">
                     <Template Context="record">@record.StartTime.ToString("HH:mm")</Template>
@@ -130,54 +136,63 @@
     }
 }
 
-@if (!_isLoading && _rangeItems is not null && _mode == "range")
+@if (!IsLoading && RangeItems is not null && Mode == "range")
 {
     <RadzenTabs>
         <Tabs>
             <RadzenTabsItem Text="Charts">
-    @if (_rangeItems.Items.Any())
+    @if (RangeItems.Items.Any())
     {
         <RadzenText TextStyle="TextStyle.H6" class="rz-mb-2">Sleep Duration Over Time</RadzenText>
-        <RadzenChart Style="height: 300px;" class="rz-mb-4">
-            <RadzenLineSeries Data="@GetRangeDurationData()" CategoryProperty="Date" ValueProperty="Value"
-                Title="Hours Asleep" Smooth="true" />
-            <RadzenCategoryAxis Padding="20" />
-            <RadzenValueAxis>
-                <RadzenGridLines Visible="true" />
-            </RadzenValueAxis>
-        </RadzenChart>
+        <figure role="group" aria-label="Sleep duration over time chart">
+            <RadzenChart class="bt-chart rz-mb-4">
+                <RadzenLineSeries Data="@GetRangeDurationData()" CategoryProperty="Date" ValueProperty="Value"
+                    Title="Hours Asleep" Smooth="true" />
+                <RadzenCategoryAxis Padding="20" />
+                <RadzenValueAxis>
+                    <RadzenGridLines Visible="true" />
+                </RadzenValueAxis>
+            </RadzenChart>
+            <figcaption class="sr-only">Line chart showing daily sleep duration trend. See the Table tab for exact values.</figcaption>
+        </figure>
 
         <RadzenText TextStyle="TextStyle.H6" class="rz-mb-2">Sleep Efficiency Over Time</RadzenText>
-        <RadzenChart Style="height: 300px;" class="rz-mb-4">
-            <RadzenLineSeries Data="@GetRangeEfficiencyData()" CategoryProperty="Date" ValueProperty="Value"
-                Title="Efficiency %" Smooth="true" />
-            <RadzenCategoryAxis Padding="20" />
-            <RadzenValueAxis>
-                <RadzenGridLines Visible="true" />
-            </RadzenValueAxis>
-        </RadzenChart>
+        <figure role="group" aria-label="Sleep efficiency over time chart">
+            <RadzenChart class="bt-chart rz-mb-4">
+                <RadzenLineSeries Data="@GetRangeEfficiencyData()" CategoryProperty="Date" ValueProperty="Value"
+                    Title="Efficiency %" Smooth="true" />
+                <RadzenCategoryAxis Padding="20" />
+                <RadzenValueAxis>
+                    <RadzenGridLines Visible="true" />
+                </RadzenValueAxis>
+            </RadzenChart>
+            <figcaption class="sr-only">Line chart showing daily sleep efficiency percentage trend. See the Table tab for exact values.</figcaption>
+        </figure>
 
         <RadzenText TextStyle="TextStyle.H6" class="rz-mb-2">Sleep Stages Over Time</RadzenText>
-        <RadzenChart Style="height: 300px;" class="rz-mb-4">
-            <RadzenAreaSeries Data="@GetRangeDeepData()" CategoryProperty="Date" ValueProperty="Value"
-                Title="Deep" Smooth="true" />
-            <RadzenAreaSeries Data="@GetRangeLightData()" CategoryProperty="Date" ValueProperty="Value"
-                Title="Light" Smooth="true" />
-            <RadzenAreaSeries Data="@GetRangeRemData()" CategoryProperty="Date" ValueProperty="Value"
-                Title="REM" Smooth="true" />
-            <RadzenAreaSeries Data="@GetRangeWakeData()" CategoryProperty="Date" ValueProperty="Value"
-                Title="Awake" Smooth="true" />
-            <RadzenCategoryAxis Padding="20" />
-            <RadzenValueAxis>
-                <RadzenGridLines Visible="true" />
-            </RadzenValueAxis>
-        </RadzenChart>
+        <figure role="group" aria-label="Sleep stages over time chart">
+            <RadzenChart class="bt-chart rz-mb-4">
+                <RadzenAreaSeries Data="@GetRangeDeepData()" CategoryProperty="Date" ValueProperty="Value"
+                    Title="Deep" Smooth="true" />
+                <RadzenAreaSeries Data="@GetRangeLightData()" CategoryProperty="Date" ValueProperty="Value"
+                    Title="Light" Smooth="true" />
+                <RadzenAreaSeries Data="@GetRangeRemData()" CategoryProperty="Date" ValueProperty="Value"
+                    Title="REM" Smooth="true" />
+                <RadzenAreaSeries Data="@GetRangeWakeData()" CategoryProperty="Date" ValueProperty="Value"
+                    Title="Awake" Smooth="true" />
+                <RadzenCategoryAxis Padding="20" />
+                <RadzenValueAxis>
+                    <RadzenGridLines Visible="true" />
+                </RadzenValueAxis>
+            </RadzenChart>
+            <figcaption class="sr-only">Stacked area chart showing deep, light, REM, and awake minutes over time. See the Table tab for exact values.</figcaption>
+        </figure>
     }
             </RadzenTabsItem>
             <RadzenTabsItem Text="Table">
     <RadzenText TextStyle="TextStyle.H6" class="rz-mb-2">Sleep Records</RadzenText>
-    <RadzenDataGrid Data="@_rangeItems.Items" TItem="SleepItem" Density="Density.Compact"
-                    AllowPaging="true" PageSize="10" Count="@_rangeItems.TotalCount" LoadData="@OnLoadData" class="rz-mb-4">
+    <RadzenDataGrid Data="@RangeItems.Items" TItem="SleepItem" Density="Density.Compact"
+                    AllowPaging="true" PageSize="10" Count="@RangeItems.TotalCount" LoadData="@OnLoadData" Responsive="true" class="rz-mb-4">
         <Columns>
             <RadzenDataGridColumn TItem="SleepItem" Property="Date" Title="Date" />
             <RadzenDataGridColumn TItem="SleepItem" Title="Time Asleep">
@@ -208,103 +223,39 @@
     </RadzenTabs>
 }
 
-@if (!_isLoading && _singleItem is null && _mode == "date" && _errorMessage is null)
+@if (!IsLoading && SingleItem is null && Mode == "date" && ErrorMessage is null)
 {
-    <RadzenAlert AlertStyle="AlertStyle.Info" Variant="Variant.Flat" ShowIcon="true">No sleep data found for @_selectedDate.</RadzenAlert>
+    <RadzenAlert AlertStyle="AlertStyle.Info" Variant="Variant.Flat" ShowIcon="true">No sleep data found for @SelectedDate.</RadzenAlert>
 }
 
 @code {
-    private bool _isLoading = true;
-    private string? _errorMessage;
-    private string _mode = "date";
-    private string _selectedDate = DateOnly.FromDateTime(DateTime.Today.AddDays(-1)).ToString("yyyy-MM-dd");
-    private string _startDate = DateOnly.FromDateTime(DateTime.Today.AddDays(-8)).ToString("yyyy-MM-dd");
-    private string _endDate = DateOnly.FromDateTime(DateTime.Today.AddDays(-1)).ToString("yyyy-MM-dd");
-    private int _currentPage = 1;
-
-    private SleepItem? _singleItem;
-    private PaginatedResponse<SleepItem>? _rangeItems;
     private List<HypnogramPoint>? _hypnogramData;
 
     private record HypnogramPoint(string Time, int Level);
 
-    protected override async Task OnInitializedAsync()
-    {
-        await LoadByDate(_selectedDate);
-    }
+    protected override string DataName => "sleep";
 
-    private async Task LoadByDate(string date)
+    protected override Task<SleepItem?> FetchSingleAsync(string date)
+        => ApiService.GetSleepByDateAsync(date);
+
+    protected override Task<PaginatedResponse<SleepItem>> FetchRangeAsync(string start, string end, int page)
+        => ApiService.GetSleepByDateRangeAsync(start, end, page);
+
+    protected new async Task LoadByDate(string date)
     {
-        _mode = "date";
-        _selectedDate = date;
-        _isLoading = true;
-        _errorMessage = null;
-        _singleItem = null;
+        await base.LoadByDate(date);
         _hypnogramData = null;
 
-        try
+        var mainSleep = SingleItem?.Sleep?.Sleep?.FirstOrDefault(r => r.IsMainSleep);
+        if (mainSleep?.Levels?.Data is { Count: > 0 })
         {
-            _singleItem = await ApiService.GetSleepByDateAsync(date);
-
-            var mainSleep = _singleItem?.Sleep?.Sleep?.FirstOrDefault(r => r.IsMainSleep);
-            if (mainSleep?.Levels?.Data is { Count: > 0 })
-            {
-                _hypnogramData = mainSleep.Levels.Data
-                    .OrderBy(d => d.DateTime)
-                    .Select(d => new HypnogramPoint(
-                        d.DateTime.ToString("HH:mm"),
-                        d.Level switch { "wake" => 3, "rem" => 2, "light" => 1, "deep" => 0, _ => 0 }))
-                    .ToList();
-            }
+            _hypnogramData = mainSleep.Levels.Data
+                .OrderBy(d => d.DateTime)
+                .Select(d => new HypnogramPoint(
+                    d.DateTime.ToString("HH:mm"),
+                    d.Level switch { "wake" => 3, "rem" => 2, "light" => 1, "deep" => 0, _ => 0 }))
+                .ToList();
         }
-        catch (Exception)
-        {
-            _errorMessage = "Failed to load sleep data. Please try again.";
-        }
-        finally
-        {
-            _isLoading = false;
-        }
-    }
-
-    private async Task LoadByRange((string StartDate, string EndDate) range)
-    {
-        _mode = "range";
-        _startDate = range.StartDate;
-        _endDate = range.EndDate;
-        _currentPage = 1;
-        await LoadRangePage();
-    }
-
-    private async Task OnPageChanged(int page)
-    {
-        _currentPage = page;
-        await LoadRangePage();
-    }
-
-    private async Task LoadRangePage()
-    {
-        _isLoading = true;
-        _errorMessage = null;
-
-        try
-        {
-            _rangeItems = await ApiService.GetSleepByDateRangeAsync(_startDate, _endDate, _currentPage);
-        }
-        catch (Exception)
-        {
-            _errorMessage = "Failed to load sleep data. Please try again.";
-        }
-        finally
-        {
-            _isLoading = false;
-        }
-    }
-
-    private async Task OnLoadData(LoadDataArgs args)
-    {
-        _currentPage = (int)((args.Skip ?? 0) / 10) + 1;
-        await LoadRangePage();
     }
 
     private static string FormatMinutes(int minutes)
@@ -317,13 +268,13 @@
 
     private string GetEfficiency()
     {
-        var mainSleep = _singleItem?.Sleep.Sleep.FirstOrDefault(s => s.IsMainSleep);
+        var mainSleep = SingleItem?.Sleep.Sleep.FirstOrDefault(s => s.IsMainSleep);
         return mainSleep is not null ? $"{mainSleep.Efficiency}%" : "--";
     }
 
     private double GetEfficiencyValue()
     {
-        var mainSleep = _singleItem?.Sleep.Sleep.FirstOrDefault(s => s.IsMainSleep);
+        var mainSleep = SingleItem?.Sleep.Sleep.FirstOrDefault(s => s.IsMainSleep);
         return mainSleep?.Efficiency ?? 0;
     }
 
@@ -331,7 +282,7 @@
 
     private List<SleepStageDataPoint> GetSleepStagesData()
     {
-        var stages = _singleItem!.Sleep.Summary.Stages;
+        var stages = SingleItem!.Sleep.Summary.Stages;
         return
         [
             new("Deep", stages.Deep),
@@ -344,33 +295,33 @@
     private record ChartDataPoint(string Date, double Value);
 
     private List<ChartDataPoint> GetRangeDurationData() =>
-        _rangeItems!.Items.Select(s => new ChartDataPoint(s.Date, Math.Round(s.Sleep.Summary.TotalMinutesAsleep / 60.0, 1))).ToList();
+        RangeItems!.Items.Select(s => new ChartDataPoint(s.Date, Math.Round(s.Sleep.Summary.TotalMinutesAsleep / 60.0, 1))).ToList();
 
     private List<ChartDataPoint> GetRangeEfficiencyData() =>
-        _rangeItems!.Items
+        RangeItems!.Items
             .Where(s => s.Sleep.Sleep.Any(r => r.IsMainSleep))
             .Select(s => new ChartDataPoint(s.Date, s.Sleep.Sleep.First(r => r.IsMainSleep).Efficiency)).ToList();
 
     private List<ChartDataPoint> GetRangeDeepData() =>
-        _rangeItems!.Items.Select(s => new ChartDataPoint(s.Date, s.Sleep.Summary.Stages?.Deep ?? 0)).ToList();
+        RangeItems!.Items.Select(s => new ChartDataPoint(s.Date, s.Sleep.Summary.Stages?.Deep ?? 0)).ToList();
 
     private List<ChartDataPoint> GetRangeLightData() =>
-        _rangeItems!.Items.Select(s => new ChartDataPoint(s.Date, s.Sleep.Summary.Stages?.Light ?? 0)).ToList();
+        RangeItems!.Items.Select(s => new ChartDataPoint(s.Date, s.Sleep.Summary.Stages?.Light ?? 0)).ToList();
 
     private List<ChartDataPoint> GetRangeRemData() =>
-        _rangeItems!.Items.Select(s => new ChartDataPoint(s.Date, s.Sleep.Summary.Stages?.Rem ?? 0)).ToList();
+        RangeItems!.Items.Select(s => new ChartDataPoint(s.Date, s.Sleep.Summary.Stages?.Rem ?? 0)).ToList();
 
     private List<ChartDataPoint> GetRangeWakeData() =>
-        _rangeItems!.Items.Select(s => new ChartDataPoint(s.Date, s.Sleep.Summary.Stages?.Wake ?? 0)).ToList();
+        RangeItems!.Items.Select(s => new ChartDataPoint(s.Date, s.Sleep.Summary.Stages?.Wake ?? 0)).ToList();
 
     private int GetStageHeight(int minutes)
     {
-        if (_singleItem?.Sleep.Summary.Stages is null) return 20;
+        if (SingleItem?.Sleep.Summary.Stages is null) return 20;
         var max = Math.Max(1, new[] {
-            _singleItem.Sleep.Summary.Stages.Deep,
-            _singleItem.Sleep.Summary.Stages.Light,
-            _singleItem.Sleep.Summary.Stages.Rem,
-            _singleItem.Sleep.Summary.Stages.Wake
+            SingleItem.Sleep.Summary.Stages.Deep,
+            SingleItem.Sleep.Summary.Stages.Light,
+            SingleItem.Sleep.Summary.Stages.Rem,
+            SingleItem.Sleep.Summary.Stages.Wake
         }.Max());
         return (int)((double)minutes / max * 100) + 20;
     }

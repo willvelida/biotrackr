@@ -1,33 +1,33 @@
 <RadzenCard class="rz-mb-3">
     <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.End" Gap="1rem" Wrap="FlexWrap.Wrap">
-        <RadzenStack Gap="0.25rem">
-            <RadzenText TextStyle="TextStyle.Caption">View</RadzenText>
-            <RadzenSelectBar @bind-Value="Mode" TValue="string" Change="@(args => OnModeChanged(args))">
-                <Items>
-                    <RadzenSelectBarItem Text="Single Date" Value="@("date")" />
-                    <RadzenSelectBarItem Text="Date Range" Value="@("range")" />
-                </Items>
-            </RadzenSelectBar>
-        </RadzenStack>
+        <RadzenSelectBar @bind-Value="Mode" TValue="string" Change="@(args => OnModeChanged(args))">
+            <Items>
+                <RadzenSelectBarItem Text="Single Date" Value="@("date")" />
+                <RadzenSelectBarItem Text="Date Range" Value="@("range")" />
+            </Items>
+        </RadzenSelectBar>
 
         @if (Mode == "date")
         {
-            <RadzenStack Gap="0.25rem">
-                <RadzenText TextStyle="TextStyle.Caption">Date</RadzenText>
-                <RadzenDatePicker @bind-Value="_singleDate" DateFormat="yyyy-MM-dd"
-                                  Change="@(args => OnDateChanged(args))" />
-            </RadzenStack>
+            <RadzenFormField Text="Date">
+                <ChildContent>
+                    <RadzenDatePicker @bind-Value="_singleDate" DateFormat="yyyy-MM-dd"
+                                      Change="@(args => OnDateChanged(args))" Name="single-date" />
+                </ChildContent>
+            </RadzenFormField>
         }
         else
         {
-            <RadzenStack Gap="0.25rem">
-                <RadzenText TextStyle="TextStyle.Caption">Start</RadzenText>
-                <RadzenDatePicker @bind-Value="_startDateValue" DateFormat="yyyy-MM-dd" />
-            </RadzenStack>
-            <RadzenStack Gap="0.25rem">
-                <RadzenText TextStyle="TextStyle.Caption">End</RadzenText>
-                <RadzenDatePicker @bind-Value="_endDateValue" DateFormat="yyyy-MM-dd" />
-            </RadzenStack>
+            <RadzenFormField Text="Start">
+                <ChildContent>
+                    <RadzenDatePicker @bind-Value="_startDateValue" DateFormat="yyyy-MM-dd" Name="start-date" />
+                </ChildContent>
+            </RadzenFormField>
+            <RadzenFormField Text="End">
+                <ChildContent>
+                    <RadzenDatePicker @bind-Value="_endDateValue" DateFormat="yyyy-MM-dd" Name="end-date" />
+                </ChildContent>
+            </RadzenFormField>
             <RadzenButton Text="Apply" Click="ApplyRange" ButtonStyle="ButtonStyle.Primary" Size="ButtonSize.Small" />
         }
 

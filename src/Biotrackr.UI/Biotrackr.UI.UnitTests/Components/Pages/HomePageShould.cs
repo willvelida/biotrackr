@@ -79,12 +79,15 @@ namespace Biotrackr.UI.UnitTests.Components.Pages
 
             var cut = Render<Home>();
 
-            // Should show "--" placeholders for missing data
-            cut.Markup.Should().Contain("--");
+            // Should show per-section empty state alerts
+            cut.Markup.Should().Contain("No activity data available");
+            cut.Markup.Should().Contain("No sleep data available");
+            cut.Markup.Should().Contain("No weight data available");
+            cut.Markup.Should().Contain("No food data available");
         }
 
         [Fact]
-        public void RenderErrorMessage_WhenApiThrows()
+        public void RenderEmptyStates_WhenApiThrows()
         {
             _mockApiService.Setup(s => s.GetActivityByDateAsync(It.IsAny<string>()))
                 .ThrowsAsync(new HttpRequestException("API error"));
@@ -97,7 +100,11 @@ namespace Biotrackr.UI.UnitTests.Components.Pages
 
             var cut = Render<Home>();
 
-            cut.Markup.Should().Contain("Unable to load dashboard data");
+            // Per-section loading handles errors — shows error alert messages
+            cut.Markup.Should().Contain("Failed to load activity data. Please try again later.");
+            cut.Markup.Should().Contain("Failed to load sleep data. Please try again later.");
+            cut.Markup.Should().Contain("Failed to load weight data. Please try again later.");
+            cut.Markup.Should().Contain("Failed to load food data. Please try again later.");
         }
 
         [Fact]
@@ -157,7 +164,7 @@ namespace Biotrackr.UI.UnitTests.Components.Pages
         }
 
         [Fact]
-        public void RenderTrendCards_WithSparklines_WhenRangeDataAvailable()
+        public void RenderSummaryCards_WithSparklines_WhenRangeDataAvailable()
         {
             SetupEmptyApiResponses();
             _mockApiService.Setup(s => s.GetActivitiesByDateRangeAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<int>(), It.IsAny<int>()))
@@ -174,7 +181,7 @@ namespace Biotrackr.UI.UnitTests.Components.Pages
 
             var cut = Render<Home>();
 
-            // TrendCard renders sparklines via RadzenSparkline (which extends RadzenChart)
+            // SummaryCard renders sparklines via RadzenSparkline (which extends RadzenChart)
             cut.Markup.Should().Contain("rz-chart");
         }
 
