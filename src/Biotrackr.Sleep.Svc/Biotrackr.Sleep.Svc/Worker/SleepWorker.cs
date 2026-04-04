@@ -1,5 +1,7 @@
 ﻿using Biotrackr.Sleep.Svc.Services.Interfaces;
 
+// Rebuild to restore daily sync container image after backfill
+
 namespace Biotrackr.Sleep.Svc.Worker
 {
     public class SleepWorker : BackgroundService
