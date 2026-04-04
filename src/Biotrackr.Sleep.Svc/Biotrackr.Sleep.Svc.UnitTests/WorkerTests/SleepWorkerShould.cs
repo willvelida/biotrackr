@@ -145,5 +145,161 @@ namespace Biotrackr.Sleep.Svc.UnitTests.WorkerTests
                 x => x.StopApplication(),
                 Times.Once);
         }
+
+        [Fact]
+        public async Task ExecuteAsync_ShouldRunBackfill_WhenEnvVarsAreSet()
+        {
+            try
+            {
+                // Arrange
+                Environment.SetEnvironmentVariable("BackfillStartDate", "2024-01-01");
+                Environment.SetEnvironmentVariable("BackfillEndDate", "2024-01-10");
+
+                var sleepResponse = new SleepResponse
+                {
+                    Sleep = new List<Biotrackr.Sleep.Svc.Models.FitbitEntities.Sleep>
+                    {
+                        new Biotrackr.Sleep.Svc.Models.FitbitEntities.Sleep { DateOfSleep = "2024-01-01" },
+                        new Biotrackr.Sleep.Svc.Models.FitbitEntities.Sleep { DateOfSleep = "2024-01-02" },
+                        new Biotrackr.Sleep.Svc.Models.FitbitEntities.Sleep { DateOfSleep = "2024-01-03" }
+                    }
+                };
+
+                _mockFitbitService
+                    .Setup(x => x.GetSleepResponseByDateRange(It.IsAny<string>(), It.IsAny<string>()))
+                    .ReturnsAsync(sleepResponse);
+
+                _mockSleepService
+                    .Setup(x => x.MapAndSaveDocument(It.IsAny<string>(), It.IsAny<SleepResponse>()))
+                    .Returns(Task.CompletedTask);
+
+                var worker = new SleepWorker(
+                    _mockFitbitService.Object,
+                    _mockSleepService.Object,
+                    _mockLogger.Object,
+                    _mockAppLifetime.Object);
+
+                var cancellationTokenSource = new CancellationTokenSource();
+
+                // Act
+                await worker.StartAsync(cancellationTokenSource.Token);
+                await Task.Delay(200);
+
+                // Assert
+                _mockFitbitService.Verify(
+                    x => x.GetSleepResponseByDateRange(It.IsAny<string>(), It.IsAny<string>()),
+                    Times.Once);
+
+                _mockFitbitService.Verify(
+                    x => x.GetSleepResponse(It.IsAny<string>()),
+                    Times.Never);
+
+                _mockSleepService.Verify(
+                    x => x.MapAndSaveDocument(It.IsAny<string>(), It.IsAny<SleepResponse>()),
+                    Times.Exactly(3));
+            }
+            finally
+            {
+                Environment.SetEnvironmentVariable("BackfillStartDate", null);
+                Environment.SetEnvironmentVariable("BackfillEndDate", null);
+            }
+        }
+
+        [Fact]
+        public async Task ExecuteAsync_ShouldRunSingleDay_WhenNoEnvVars()
+        {
+            try
+            {
+                // Arrange
+                Environment.SetEnvironmentVariable("BackfillStartDate", null);
+                Environment.SetEnvironmentVariable("BackfillEndDate", null);
+
+                var expectedDate = DateTime.Now.AddDays(-1).ToString("yyyy-MM-dd");
+                var sleepResponse = _fixture.Create<SleepResponse>();
+
+                _mockFitbitService
+                    .Setup(x => x.GetSleepResponse(expectedDate))
+                    .ReturnsAsync(sleepResponse);
+
+                _mockSleepService
+                    .Setup(x => x.MapAndSaveDocument(expectedDate, sleepResponse))
+                    .Returns(Task.CompletedTask);
+
+                var worker = new SleepWorker(
+                    _mockFitbitService.Object,
+                    _mockSleepService.Object,
+                    _mockLogger.Object,
+                    _mockAppLifetime.Object);
+
+                var cancellationTokenSource = new CancellationTokenSource();
+
+                // Act
+                await worker.StartAsync(cancellationTokenSource.Token);
+                await Task.Delay(100);
+
+                // Assert
+                _mockFitbitService.Verify(
+                    x => x.GetSleepResponse(It.Is<string>(d => d == expectedDate)),
+                    Times.Once);
+
+                _mockFitbitService.Verify(
+                    x => x.GetSleepResponseByDateRange(It.IsAny<string>(), It.IsAny<string>()),
+                    Times.Never);
+            }
+            finally
+            {
+                Environment.SetEnvironmentVariable("BackfillStartDate", null);
+                Environment.SetEnvironmentVariable("BackfillEndDate", null);
+            }
+        }
+
+        [Fact]
+        public async Task ExecuteAsync_ShouldProcessMultipleChunks_WhenDateRangeExceeds100Days()
+        {
+            try
+            {
+                // Arrange — 150-day range requires 2 chunks
+                Environment.SetEnvironmentVariable("BackfillStartDate", "2024-01-01");
+                Environment.SetEnvironmentVariable("BackfillEndDate", "2024-05-30");
+
+                var sleepResponse = new SleepResponse
+                {
+                    Sleep = new List<Biotrackr.Sleep.Svc.Models.FitbitEntities.Sleep>
+                    {
+                        new Biotrackr.Sleep.Svc.Models.FitbitEntities.Sleep { DateOfSleep = "2024-01-15" }
+                    }
+                };
+
+                _mockFitbitService
+                    .Setup(x => x.GetSleepResponseByDateRange(It.IsAny<string>(), It.IsAny<string>()))
+                    .ReturnsAsync(sleepResponse);
+
+                _mockSleepService
+                    .Setup(x => x.MapAndSaveDocument(It.IsAny<string>(), It.IsAny<SleepResponse>()))
+                    .Returns(Task.CompletedTask);
+
+                var worker = new SleepWorker(
+                    _mockFitbitService.Object,
+                    _mockSleepService.Object,
+                    _mockLogger.Object,
+                    _mockAppLifetime.Object);
+
+                var cancellationTokenSource = new CancellationTokenSource();
+
+                // Act
+                await worker.StartAsync(cancellationTokenSource.Token);
+                await Task.Delay(1500); // Allow time for 500ms delay between chunks
+
+                // Assert — 150 days = 2 chunks (100 + 50)
+                _mockFitbitService.Verify(
+                    x => x.GetSleepResponseByDateRange(It.IsAny<string>(), It.IsAny<string>()),
+                    Times.Exactly(2));
+            }
+            finally
+            {
+                Environment.SetEnvironmentVariable("BackfillStartDate", null);
+                Environment.SetEnvironmentVariable("BackfillEndDate", null);
+            }
+        }
     }
 }

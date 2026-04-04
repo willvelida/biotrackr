@@ -5,5 +5,6 @@ namespace Biotrackr.Sleep.Svc.Services.Interfaces
     public interface IFitbitService
     {
         Task<SleepResponse> GetSleepResponse(string date);
+        Task<SleepResponse> GetSleepResponseByDateRange(string startDate, string endDate);
     }
 }

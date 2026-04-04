@@ -154,5 +154,54 @@ namespace Biotrackr.Sleep.Svc.UnitTests.ServiceTests
             await act.Should().ThrowAsync<Exception>();
             _mockLogger.VerifyLog(logger => logger.LogError($"Exception thrown in GetSleepResponse: {exceptionMessage}"));
         }
+
+        [Fact]
+        public async Task GetSleepResponseByDateRange_ShouldReturnSleepResponse_WhenSuccessful()
+        {
+            // Arrange
+            var startDate = "2023-10-01";
+            var endDate = "2023-10-31";
+            var accessToken = "testAccessToken";
+            var fixture = new Fixture();
+            var expectedResponse = fixture.Create<SleepResponse>();
+
+            _mockSecretClient.Setup(s => s.GetSecretAsync("AccessToken", null, It.IsAny<CancellationToken>()))
+                .ReturnsAsync(Response.FromValue(new KeyVaultSecret("AccessToken", accessToken), Mock.Of<Response>()));
+            _mockHttpMessageHandler.Protected()
+                .Setup<Task<HttpResponseMessage>>(
+                    "SendAsync",
+                    ItExpr.IsAny<HttpRequestMessage>(),
+                    ItExpr.IsAny<CancellationToken>())
+                .ReturnsAsync(new HttpResponseMessage
+                {
+                    StatusCode = HttpStatusCode.OK,
+                    Content = new StringContent(JsonSerializer.Serialize(expectedResponse))
+                });
+
+            // Act
+            var result = await _fitbitService.GetSleepResponseByDateRange(startDate, endDate);
+
+            // Assert
+            result.Should().BeEquivalentTo(expectedResponse);
+        }
+
+        [Fact]
+        public async Task GetSleepResponseByDateRange_ShouldLogErrorAndThrow_WhenExceptionOccurs()
+        {
+            // Arrange
+            var startDate = "2023-10-01";
+            var endDate = "2023-10-31";
+            var exceptionMessage = "Test exception";
+
+            _mockSecretClient.Setup(s => s.GetSecretAsync("AccessToken", null, It.IsAny<CancellationToken>()))
+                .ThrowsAsync(new Exception(exceptionMessage));
+
+            // Act
+            Func<Task> act = async () => await _fitbitService.GetSleepResponseByDateRange(startDate, endDate);
+
+            // Assert
+            await act.Should().ThrowAsync<Exception>();
+            _mockLogger.VerifyLog(logger => logger.LogError($"Exception thrown in GetSleepResponseByDateRange: {exceptionMessage}"));
+        }
     }
 }

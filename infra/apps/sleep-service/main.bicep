@@ -82,6 +82,14 @@ module sleepService '../../modules/host/container-app-jobs.bicep' = {
         name: 'cosmosdbendpoint'
         value: cosmosDbAccount.properties.documentEndpoint
       }
+      {
+        name: 'BackfillStartDate'
+        value: '2017-02-20'
+      }
+      {
+        name: 'BackfillEndDate'
+        value: '2024-12-14'
+      }
     ]
     imageName: imageName 
     uaiName: uai.name

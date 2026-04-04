@@ -44,5 +44,31 @@ namespace Biotrackr.Sleep.Svc.Services
                 throw;
             }
         }
+
+        public async Task<SleepResponse> GetSleepResponseByDateRange(string startDate, string endDate)
+        {
+            try
+            {
+                KeyVaultSecret fitbitAccessToken = await _secretClient.GetSecretAsync("AccessToken");
+                _httpClient.DefaultRequestHeaders.Clear();
+                Uri getSleepByDateRangeUri = new Uri($"https://api.fitbit.com/1.2/user/-/sleep/date/{startDate}/{endDate}.json");
+                var request = new HttpRequestMessage(HttpMethod.Get, getSleepByDateRangeUri);
+                request.Content = new StringContent("");
+                request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", fitbitAccessToken.Value);
+
+                var response = await _httpClient.SendAsync(request);
+                response.EnsureSuccessStatusCode();
+
+                var responseAsString = await response.Content.ReadAsStringAsync();
+                var sleepResponse = JsonSerializer.Deserialize<SleepResponse>(responseAsString);
+
+                return sleepResponse;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"Exception thrown in {nameof(GetSleepResponseByDateRange)}: {ex.Message}");
+                throw;
+            }
+        }
     }
 }
