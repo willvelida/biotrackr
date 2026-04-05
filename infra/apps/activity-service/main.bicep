@@ -83,7 +83,7 @@ module activityService '../../modules/host/container-app-jobs.bicep' = {
             }
             {
               name: 'Backfill__StartDate'
-              value: '2017-02-20'
+              value: '2024-10-20'
             }
             {
               name: 'Backfill__EndDate'
