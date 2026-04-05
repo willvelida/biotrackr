@@ -28,6 +28,9 @@ param imageName string
 @description('The Environment Variables for this Container App Job')
 param envVariables array
 
+@description('The maximum number of seconds a replica is allowed to run')
+param replicaTimeout int = 600
+
 resource containerAppEnv 'Microsoft.App/managedEnvironments@2024-03-01' existing = {
   name: containerAppEnvironmentName
 }
@@ -47,7 +50,7 @@ resource containerAppJob 'Microsoft.App/jobs@2024-03-01' = {
   properties: {
     environmentId: containerAppEnv.id
     configuration: {
-      replicaTimeout: 600
+      replicaTimeout: replicaTimeout
       triggerType: 'Schedule'
       scheduleTriggerConfig: {
         cronExpression: cronExpression

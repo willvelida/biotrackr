@@ -1,5 +1,7 @@
 ﻿using Biotrackr.Activity.Svc.Services.Interfaces;
 
+// Rebuild to restore daily sync container image after backfill
+
 namespace Biotrackr.Activity.Svc.Workers
 {
     public class ActivityWorker : BackgroundService
