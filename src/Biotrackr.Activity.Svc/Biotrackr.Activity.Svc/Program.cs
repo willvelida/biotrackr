@@ -50,6 +50,7 @@ IHost host = Host.CreateDefaultBuilder(args)
         services.AddOptions<Settings>().Configure<IConfiguration>((settings, configuration) =>
         {
             configuration.GetSection("Biotrackr").Bind(settings);
+            configuration.GetSection("Backfill").Bind(settings);
         });
 
         var cosmosDbEndpoint = context.Configuration["cosmosdbendpoint"];

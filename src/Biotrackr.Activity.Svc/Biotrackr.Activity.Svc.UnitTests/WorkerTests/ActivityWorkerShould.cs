@@ -12,6 +12,7 @@ namespace Biotrackr.Activity.Svc.UnitTests.WorkerTests
         private readonly Mock<IActivityService> _activityServiceMock;
         private readonly Mock<ILogger<ActivityWorker>> _loggerMock;
         private readonly Mock<IHostApplicationLifetime> _appLifetimeMock;
+        private readonly Mock<IOptions<Settings>> _settingsMock;
 
         private ActivityWorker _sut;
 
@@ -21,8 +22,14 @@ namespace Biotrackr.Activity.Svc.UnitTests.WorkerTests
             _activityServiceMock = new Mock<IActivityService>();
             _loggerMock = new Mock<ILogger<ActivityWorker>>();
             _appLifetimeMock = new Mock<IHostApplicationLifetime>();
+            _settingsMock = new Mock<IOptions<Settings>>();
+            _settingsMock.Setup(x => x.Value).Returns(new Settings
+            {
+                DatabaseName = "TestDb",
+                ContainerName = "TestContainer"
+            });
 
-            _sut = new ActivityWorker(_fitbitServiceMock.Object, _activityServiceMock.Object, _loggerMock.Object, _appLifetimeMock.Object);
+            _sut = new ActivityWorker(_fitbitServiceMock.Object, _activityServiceMock.Object, _loggerMock.Object, _appLifetimeMock.Object, _settingsMock.Object);
         }
 
         /// <summary>
@@ -428,6 +435,142 @@ namespace Biotrackr.Activity.Svc.UnitTests.WorkerTests
             // Assert
             _fitbitServiceMock.Verify(x => x.GetActivityResponse(It.IsAny<string>()), Times.Once);
             _activityServiceMock.Verify(x => x.MapAndSaveDocument(It.IsAny<string>(), It.IsAny<ActivityResponse>()), Times.Once);
+        }
+
+        #endregion
+
+        #region Backfill Mode Tests
+
+        [Fact]
+        public async Task ExecuteAsync_ShouldRunBackfill_WhenStartAndEndDateAreSet()
+        {
+            // Arrange
+            _settingsMock.Setup(x => x.Value).Returns(new Settings
+            {
+                DatabaseName = "TestDb",
+                ContainerName = "TestContainer",
+                StartDate = "2024-01-01",
+                EndDate = "2024-01-03"
+            });
+            _sut = new ActivityWorker(_fitbitServiceMock.Object, _activityServiceMock.Object, _loggerMock.Object, _appLifetimeMock.Object, _settingsMock.Object);
+
+            _fitbitServiceMock.Setup(x => x.GetActivityResponse(It.IsAny<string>()))
+                .ReturnsAsync(new ActivityResponse());
+            _activityServiceMock.Setup(x => x.MapAndSaveDocument(It.IsAny<string>(), It.IsAny<ActivityResponse>()))
+                .Returns(Task.CompletedTask);
+
+            // Act
+            var result = await InvokeExecuteAsync();
+
+            // Assert
+            result.Should().Be(0);
+            _fitbitServiceMock.Verify(x => x.GetActivityResponse(It.IsAny<string>()), Times.Exactly(3));
+            _activityServiceMock.Verify(x => x.MapAndSaveDocument(It.IsAny<string>(), It.IsAny<ActivityResponse>()), Times.Exactly(3));
+        }
+
+        [Fact]
+        public async Task ExecuteAsync_Backfill_ShouldContinueOnFailedDate()
+        {
+            // Arrange
+            _settingsMock.Setup(x => x.Value).Returns(new Settings
+            {
+                DatabaseName = "TestDb",
+                ContainerName = "TestContainer",
+                StartDate = "2024-01-01",
+                EndDate = "2024-01-03"
+            });
+            _sut = new ActivityWorker(_fitbitServiceMock.Object, _activityServiceMock.Object, _loggerMock.Object, _appLifetimeMock.Object, _settingsMock.Object);
+
+            _fitbitServiceMock.Setup(x => x.GetActivityResponse("2024-01-01"))
+                .ReturnsAsync(new ActivityResponse());
+            _fitbitServiceMock.Setup(x => x.GetActivityResponse("2024-01-02"))
+                .ThrowsAsync(new Exception("API failure"));
+            _fitbitServiceMock.Setup(x => x.GetActivityResponse("2024-01-03"))
+                .ReturnsAsync(new ActivityResponse());
+            _activityServiceMock.Setup(x => x.MapAndSaveDocument(It.IsAny<string>(), It.IsAny<ActivityResponse>()))
+                .Returns(Task.CompletedTask);
+
+            // Act
+            var result = await InvokeExecuteAsync();
+
+            // Assert
+            result.Should().Be(0);
+            _fitbitServiceMock.Verify(x => x.GetActivityResponse(It.IsAny<string>()), Times.Exactly(3));
+            _activityServiceMock.Verify(x => x.MapAndSaveDocument(It.IsAny<string>(), It.IsAny<ActivityResponse>()), Times.Exactly(2));
+        }
+
+        [Fact]
+        public async Task ExecuteAsync_Backfill_ShouldLogFailedDates()
+        {
+            // Arrange
+            _settingsMock.Setup(x => x.Value).Returns(new Settings
+            {
+                DatabaseName = "TestDb",
+                ContainerName = "TestContainer",
+                StartDate = "2024-01-01",
+                EndDate = "2024-01-02"
+            });
+            _sut = new ActivityWorker(_fitbitServiceMock.Object, _activityServiceMock.Object, _loggerMock.Object, _appLifetimeMock.Object, _settingsMock.Object);
+
+            _fitbitServiceMock.Setup(x => x.GetActivityResponse("2024-01-01"))
+                .ThrowsAsync(new Exception("API failure"));
+            _fitbitServiceMock.Setup(x => x.GetActivityResponse("2024-01-02"))
+                .ReturnsAsync(new ActivityResponse());
+            _activityServiceMock.Setup(x => x.MapAndSaveDocument(It.IsAny<string>(), It.IsAny<ActivityResponse>()))
+                .Returns(Task.CompletedTask);
+
+            // Act
+            await InvokeExecuteAsync();
+
+            // Assert
+            _loggerMock.VerifyLog(logger => logger.LogError(It.Is<string>(s => s.Contains("2024-01-01"))), Times.Once);
+            _loggerMock.VerifyLog(logger => logger.LogWarning(It.Is<string>(s => s.Contains("2024-01-01"))), Times.Once);
+        }
+
+        [Fact]
+        public async Task ExecuteAsync_ShouldUseSingleDayMode_WhenNoDatesSet()
+        {
+            // Arrange - default settings (null StartDate/EndDate) already set in constructor
+            var expectedDate = DateTime.Now.AddDays(-1).ToString("yyyy-MM-dd");
+            var activityResponse = new ActivityResponse();
+
+            _fitbitServiceMock.Setup(x => x.GetActivityResponse(expectedDate))
+                .ReturnsAsync(activityResponse);
+            _activityServiceMock.Setup(x => x.MapAndSaveDocument(expectedDate, activityResponse))
+                .Returns(Task.CompletedTask);
+
+            // Act
+            var result = await InvokeExecuteAsync();
+
+            // Assert
+            result.Should().Be(0);
+            _fitbitServiceMock.Verify(x => x.GetActivityResponse(expectedDate), Times.Once);
+            _activityServiceMock.Verify(x => x.MapAndSaveDocument(expectedDate, activityResponse), Times.Once);
+        }
+
+        [Fact]
+        public async Task ExecuteAsync_Backfill_ShouldAlwaysCallStopApplication()
+        {
+            // Arrange
+            _settingsMock.Setup(x => x.Value).Returns(new Settings
+            {
+                DatabaseName = "TestDb",
+                ContainerName = "TestContainer",
+                StartDate = "2024-01-01",
+                EndDate = "2024-01-03"
+            });
+            _sut = new ActivityWorker(_fitbitServiceMock.Object, _activityServiceMock.Object, _loggerMock.Object, _appLifetimeMock.Object, _settingsMock.Object);
+
+            _fitbitServiceMock.Setup(x => x.GetActivityResponse(It.IsAny<string>()))
+                .ReturnsAsync(new ActivityResponse());
+            _activityServiceMock.Setup(x => x.MapAndSaveDocument(It.IsAny<string>(), It.IsAny<ActivityResponse>()))
+                .Returns(Task.CompletedTask);
+
+            // Act
+            await InvokeExecuteAsync();
+
+            // Assert
+            _appLifetimeMock.Verify(x => x.StopApplication(), Times.Once);
         }
 
         #endregion
