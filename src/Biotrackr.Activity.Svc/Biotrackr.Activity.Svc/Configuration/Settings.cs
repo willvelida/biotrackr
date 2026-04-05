@@ -7,7 +7,5 @@ namespace Biotrackr.Activity.Svc.Configuration
     {
         public string? DatabaseName { get; set; }
         public string? ContainerName { get; set; }
-        public string? StartDate { get; set; }
-        public string? EndDate { get; set; }
     }
 }
