@@ -17,6 +17,7 @@ var resourceAttributes = new Dictionary<string, object>
 };
 var resourceBuilder = ResourceBuilder.CreateDefault().AddAttributes(resourceAttributes);
 
+// Approach B reverted — redeploy with Approach A progress indicator only
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Configuration.AddEnvironmentVariables();
