@@ -97,28 +97,28 @@
                         {
                             <div class="message-content markdown-body">@RenderMarkdown(_currentResponse)</div>
                         }
-                        <div class="typing-indicator">
-                            <span></span><span></span><span></span>
-                        </div>
-                    </div>
-                }
-
-                @if (_reportGenerating)
-                {
-                    <div class="message message-agent">
-                        <div class="report-progress" role="status" aria-label="Report generation in progress">
-                            <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.5rem">
-                                <RadzenProgressBarCircular Mode="ProgressBarMode.Indeterminate"
-                                                           Size="ProgressBarCircularSize.ExtraSmall"
-                                                           ProgressBarStyle="ProgressBarStyle.Info"
-                                                           ShowValue="false" />
-                                <RadzenText TextStyle="TextStyle.Body2" class="rz-color-info">
-                                    Generating report...
-                                </RadzenText>
-                                <RadzenBadge Text="@FormattingHelpers.FormatElapsedTime(_reportElapsedSeconds)"
-                                             BadgeStyle="BadgeStyle.Light" IsPill="true" />
-                            </RadzenStack>
-                        </div>
+                        @if (_reportGenerating)
+                        {
+                            <div class="report-progress" role="status" aria-label="Report generation in progress">
+                                <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.5rem">
+                                    <RadzenProgressBarCircular Mode="ProgressBarMode.Indeterminate"
+                                                               Size="ProgressBarCircularSize.ExtraSmall"
+                                                               ProgressBarStyle="ProgressBarStyle.Info"
+                                                               ShowValue="false" />
+                                    <RadzenText TextStyle="TextStyle.Body2" class="rz-color-info">
+                                        Generating report...
+                                    </RadzenText>
+                                    <RadzenBadge Text="@FormattingHelpers.FormatElapsedTime(_reportElapsedSeconds)"
+                                                 BadgeStyle="BadgeStyle.Light" IsPill="true" />
+                                </RadzenStack>
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="typing-indicator">
+                                <span></span><span></span><span></span>
+                            </div>
+                        }
                     </div>
                 }
             }
@@ -180,7 +180,6 @@
         var messageText = _inputMessage.Trim();
         _inputMessage = string.Empty;
         _errorMessage = null;
-        StopReportTimer();
 
         _messages.Add(new ChatMessage
         {
@@ -245,6 +244,7 @@
                         {
                             _currentSessionId = evt.ThreadId;
                         }
+                        StopReportTimer();
                         break;
 
                     case "RUN_ERROR":
