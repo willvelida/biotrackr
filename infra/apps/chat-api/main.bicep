@@ -261,6 +261,25 @@ resource chatApiDeleteConversation 'Microsoft.ApiManagement/service/apis/operati
   }
 }
 
+resource chatApiGetReportStatus 'Microsoft.ApiManagement/service/apis/operations@2024-06-01-preview' = {
+  name: 'chat-getreportstatus'
+  parent: chatApimApi
+  properties: {
+    displayName: 'GetReportStatus'
+    method: 'GET'
+    urlTemplate: '/reports/{jobId}/status'
+    description: 'Get the status of a report generation job (proxied to Reporting.Api)'
+    templateParameters: [
+      {
+        name: 'jobId'
+        description: 'The report job ID'
+        type: 'string'
+        required: true
+      }
+    ]
+  }
+}
+
 resource chatApiHealthCheck 'Microsoft.ApiManagement/service/apis/operations@2024-06-01-preview' = {
   name: 'chat-healthcheck'
   parent: chatApimApi
