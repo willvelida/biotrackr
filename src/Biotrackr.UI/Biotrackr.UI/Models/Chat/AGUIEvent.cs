@@ -25,5 +25,14 @@ namespace Biotrackr.UI.Models.Chat
 
         [JsonPropertyName("runId")]
         public string? RunId { get; set; }
+
+        [JsonPropertyName("toolCallId")]
+        public string? ToolCallId { get; set; }
+
+        [JsonPropertyName("toolCallName")]
+        public string? ToolCallName { get; set; }
+
+        [JsonPropertyName("content")]
+        public string? Content { get; set; }
     }
 }

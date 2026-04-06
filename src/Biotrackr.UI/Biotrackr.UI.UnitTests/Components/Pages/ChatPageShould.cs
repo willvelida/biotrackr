@@ -330,6 +330,17 @@ namespace Biotrackr.UI.UnitTests.Components.Pages
             cut.Markup.Should().Contain("14:30");
         }
 
+        [Fact]
+        public void NotRenderReportProgressIndicator_WhenNotStreaming()
+        {
+            SetupEmptyConversations();
+
+            var cut = Render<Chat>();
+
+            cut.Markup.Should().NotContain("report-progress");
+            cut.Markup.Should().NotContain("Generating report...");
+        }
+
         private void SetupEmptyConversations()
         {
             _mockChatService.Setup(s => s.GetConversationsAsync(It.IsAny<int>(), It.IsAny<int>()))
