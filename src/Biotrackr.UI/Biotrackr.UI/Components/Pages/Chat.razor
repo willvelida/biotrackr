@@ -4,6 +4,7 @@
 @inject IChatApiService ChatApiService
 @inject IJSRuntime JS
 @inject DialogService DialogService
+@using Biotrackr.UI.Helpers
 @using Biotrackr.UI.Telemetry
 @using Markdig
 @using ChatMessage = Biotrackr.UI.Models.Chat.ChatMessage
@@ -107,7 +108,7 @@
                                     <RadzenText TextStyle="TextStyle.Body2" class="rz-color-info">
                                         Generating report...
                                     </RadzenText>
-                                    <RadzenBadge Text="@FormatElapsedTime(_reportElapsedSeconds)"
+                                    <RadzenBadge Text="@FormattingHelpers.FormatElapsedTime(_reportElapsedSeconds)"
                                                  BadgeStyle="BadgeStyle.Light" IsPill="true" />
                                 </RadzenStack>
                             </div>
@@ -435,13 +436,6 @@
                 CloseDialogOnOverlayClick = true,
                 CanClose = () => Task.FromResult(!_isStreaming)
             });
-    }
-
-    private static string FormatElapsedTime(int totalSeconds)
-    {
-        var minutes = totalSeconds / 60;
-        var seconds = totalSeconds % 60;
-        return minutes > 0 ? $"{minutes}:{seconds:D2}" : $"{seconds}s";
     }
 
     private async Task ScrollToBottom()

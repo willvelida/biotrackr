@@ -18,4 +18,11 @@ public static class FormattingHelpers
         var ts = TimeSpan.FromMilliseconds(milliseconds);
         return ts.TotalHours >= 1 ? $"{(int)ts.TotalHours}h {ts.Minutes}m" : $"{ts.Minutes}m";
     }
+
+    public static string FormatElapsedTime(int totalSeconds)
+    {
+        var minutes = totalSeconds / 60;
+        var seconds = totalSeconds % 60;
+        return minutes > 0 ? $"{minutes}:{seconds:D2}" : $"{seconds}s";
+    }
 }
