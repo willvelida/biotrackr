@@ -221,11 +221,12 @@
                         break;
 
                     case "TOOL_CALL_START":
-                        if (evt.Delta is not null)
+                        var toolName = evt.ToolCallName ?? evt.Delta;
+                        if (toolName is not null)
                         {
-                            _currentToolCalls.Add(evt.Delta);
+                            _currentToolCalls.Add(toolName);
                         }
-                        if (evt.Delta is "RequestReport" && !_reportGenerating)
+                        if (toolName is "RequestReport" && !_reportGenerating)
                         {
                             _reportGenerating = true;
                             _reportElapsedSeconds = 0;
