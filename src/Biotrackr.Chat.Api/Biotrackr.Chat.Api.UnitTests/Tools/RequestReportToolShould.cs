@@ -38,21 +38,6 @@ namespace Biotrackr.Chat.Api.UnitTests.Tools
         }
 
         [Fact]
-        public async Task ReturnStructuredJsonOnSuccessfulRequest()
-        {
-            var responseBody = JsonSerializer.Serialize(new { jobId = "job-456", status = "generating", message = "Started" });
-            var handler = CreateMockHandler(HttpStatusCode.Accepted, responseBody);
-            var sut = CreateTool(handler);
-
-            var result = await sut.RequestReport("weekly_summary", "2026-03-01", "2026-03-07", "Generate a report", SampleSnapshot);
-
-            using var doc = JsonDocument.Parse(result);
-            doc.RootElement.GetProperty("jobId").GetString().Should().Be("job-456");
-            doc.RootElement.GetProperty("status").GetString().Should().Be("generating");
-            doc.RootElement.GetProperty("message").GetString().Should().Contain("Job ID: job-456");
-        }
-
-        [Fact]
         public async Task ReturnErrorMessageOnFailedRequest()
         {
             var handler = CreateMockHandler(HttpStatusCode.BadRequest, "{\"error\":\"Invalid report type\"}");

@@ -1,6 +1,5 @@
 using Biotrackr.Chat.Api.Models;
 using Biotrackr.Chat.Api.Services;
-using System.Net.Http.Json;
 using Microsoft.AspNetCore.Http.HttpResults;
 
 namespace Biotrackr.Chat.Api.Handlers
@@ -41,54 +40,5 @@ namespace Biotrackr.Chat.Api.Handlers
             await repository.DeleteConversationAsync(sessionId);
             return TypedResults.NoContent();
         }
-
-        public static async Task<Results<NotFound, StatusCodeHttpResult, Ok<ReportStatusProxyResponse>>> GetReportStatus(
-            IHttpClientFactory httpClientFactory,
-            string jobId,
-            ILoggerFactory loggerFactory)
-        {
-            try
-            {
-                var client = httpClientFactory.CreateClient("ReportingApi");
-                var response = await client.GetAsync($"/api/reports/{jobId}");
-
-                if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
-                {
-                    return TypedResults.NotFound();
-                }
-
-                response.EnsureSuccessStatusCode();
-
-                var content = await response.Content.ReadFromJsonAsync<ReportingApiResponse>();
-                return TypedResults.Ok(new ReportStatusProxyResponse
-                {
-                    JobId = content?.Metadata?.JobId ?? jobId,
-                    Status = content?.Metadata?.Status ?? "unknown"
-                });
-            }
-            catch (HttpRequestException ex)
-            {
-                var logger = loggerFactory.CreateLogger("ChatHandlers.GetReportStatus");
-                logger.LogWarning(ex, "Failed to get report status for job {JobId}", jobId);
-                return TypedResults.StatusCode(502);
-            }
-        }
-    }
-
-    public sealed class ReportStatusProxyResponse
-    {
-        public string JobId { get; set; } = string.Empty;
-        public string Status { get; set; } = string.Empty;
-    }
-
-    internal sealed class ReportingApiResponse
-    {
-        public ReportingApiMetadata? Metadata { get; set; }
-    }
-
-    internal sealed class ReportingApiMetadata
-    {
-        public string? JobId { get; set; }
-        public string? Status { get; set; }
     }
 }

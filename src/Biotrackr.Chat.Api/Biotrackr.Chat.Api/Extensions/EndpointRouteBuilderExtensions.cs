@@ -27,14 +27,6 @@ namespace Biotrackr.Chat.Api.Extensions
                 .WithOpenApi()
                 .WithSummary("Delete a conversation")
                 .WithDescription("Permanently deletes a conversation and all its messages.");
-
-            var reportEndpoints = endpointRouteBuilder.MapGroup("/reports");
-
-            reportEndpoints.MapGet("/{jobId}/status", ChatHandlers.GetReportStatus)
-                .WithName("GetReportStatus")
-                .WithOpenApi()
-                .WithSummary("Get report generation status")
-                .WithDescription("Proxies to Reporting.Api to get the current status of a report generation job.");
         }
 
         public static void RegisterHealthCheckEndpoints(this IEndpointRouteBuilder endpointRouteBuilder)

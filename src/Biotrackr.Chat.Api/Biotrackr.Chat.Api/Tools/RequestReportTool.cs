@@ -67,12 +67,7 @@ namespace Biotrackr.Chat.Api.Tools
             var result = await response.Content.ReadFromJsonAsync<GenerateResponse>();
             _logger.LogInformation("Report job {JobId} started for {ReportType}", result?.JobId, reportType);
 
-            return JsonSerializer.Serialize(new
-            {
-                jobId = result?.JobId,
-                status = "generating",
-                message = $"Report generation started. Job ID: {result?.JobId}. You can ask me to check on the status of this report."
-            });
+            return $"Report generation started. Job ID: {result?.JobId}. You can ask me to check on the status of this report.";
         }
 
         public AIFunction AsAIFunction()
