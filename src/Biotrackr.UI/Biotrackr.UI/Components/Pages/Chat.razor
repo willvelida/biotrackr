@@ -4,7 +4,6 @@
 @inject IChatApiService ChatApiService
 @inject IJSRuntime JS
 @inject DialogService DialogService
-@using System.Text.Json
 @using Biotrackr.UI.Helpers
 @using Biotrackr.UI.Models.Chat
 @using Biotrackr.UI.Telemetry
@@ -164,8 +163,6 @@
     private string _reportStatusText = "Generating report...";
     private int _pollFailureCount;
 
-    private sealed record RequestReportResult(string? JobId, string? Status, string? Message);
-
     private static readonly string[] _suggestions =
     [
         "How many steps did I take yesterday?",
@@ -276,19 +273,14 @@
                     case "TOOL_CALL_RESULT":
                         if (evt.Content is not null && _reportGenerating && _reportJobId is null)
                         {
-                            try
+                            var extractedJobId = ReportStatusHelpers.TryExtractJobId(evt.Content);
+                            if (extractedJobId is not null)
                             {
-                                var reportResult = JsonSerializer.Deserialize<RequestReportResult>(
-                                    evt.Content, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
-                                if (reportResult?.JobId is not null)
-                                {
-                                    _reportJobId = reportResult.JobId;
-                                    _ = ReportPollLoopAsync(_reportTimerCts!.Token);
-                                    try { await JS.InvokeVoidAsync("sessionStorage.setItem", "biotrackr_activeReportJobId", _reportJobId); }
-                                    catch { /* JS interop may fail during prerendering */ }
-                                }
+                                _reportJobId = extractedJobId;
+                                _ = ReportPollLoopAsync(_reportTimerCts!.Token);
+                                try { await JS.InvokeVoidAsync("sessionStorage.setItem", "biotrackr_activeReportJobId", _reportJobId); }
+                                catch { /* JS interop may fail during prerendering */ }
                             }
-                            catch (JsonException) { }
                         }
                         break;
 
@@ -453,9 +445,7 @@
             {
                 if (_disposed) return;
                 _reportElapsedSeconds++;
-                _reportStatusText = _reportElapsedSeconds >= 60
-                    ? "Still working on your report..."
-                    : "Generating report...";
+                _reportStatusText = ReportStatusHelpers.GetStatusText(_reportElapsedSeconds);
                 await InvokeAsync(StateHasChanged);
             }
         }
@@ -470,7 +460,7 @@
             while (await pollTimer.WaitForNextTickAsync(ct))
             {
                 if (_disposed || _reportJobId is null) return;
-                if (_reportElapsedSeconds > 600)
+                if (ReportStatusHelpers.IsTimedOut(_reportElapsedSeconds))
                 {
                     _reportStatusText = "Report generation timed out";
                     StopReportTimer();
@@ -485,15 +475,15 @@
 
                     if (status is null)
                     {
-                        _reportStatusText = "Report not found";
+                        _reportStatusText = ReportStatusHelpers.GetTerminalStatusText(null)!;
                         StopReportTimer();
                         await InvokeAsync(StateHasChanged);
                         return;
                     }
 
-                    if (status.Status is "generated" or "reviewed")
+                    if (ReportStatusHelpers.IsCompletedSuccessfully(status))
                     {
-                        _reportStatusText = "Report ready!";
+                        _reportStatusText = ReportStatusHelpers.GetTerminalStatusText(status)!;
                         await InvokeAsync(StateHasChanged);
                         await Task.Delay(3000, ct);
                         StopReportTimer();
@@ -506,7 +496,7 @@
                     }
                     else if (status.Status is "failed")
                     {
-                        _reportStatusText = "Report generation failed";
+                        _reportStatusText = ReportStatusHelpers.GetTerminalStatusText(status)!;
                         StopReportTimer();
                         await InvokeAsync(StateHasChanged);
                         return;
