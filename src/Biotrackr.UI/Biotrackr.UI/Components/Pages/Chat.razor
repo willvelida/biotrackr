@@ -138,6 +138,25 @@
                         }
                     </div>
                 }
+
+                @if (_reportGenerating && !_isStreaming && _messages.All(m => m.Role != "assistant"))
+                {
+                    <div class="message message-agent">
+                        <div class="report-progress" role="status" aria-label="@_reportStatusText">
+                            <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.5rem">
+                                <RadzenProgressBarCircular Mode="ProgressBarMode.Indeterminate"
+                                                           Size="ProgressBarCircularSize.ExtraSmall"
+                                                           ProgressBarStyle="ProgressBarStyle.Info"
+                                                           ShowValue="false" />
+                                <RadzenText TextStyle="TextStyle.Body2" class="rz-color-info">
+                                    @_reportStatusText
+                                </RadzenText>
+                                <RadzenBadge Text="@FormattingHelpers.FormatElapsedTime(_reportElapsedSeconds)"
+                                             BadgeStyle="BadgeStyle.Light" IsPill="true" />
+                            </RadzenStack>
+                        </div>
+                    </div>
+                }
             }
         </div>
 
