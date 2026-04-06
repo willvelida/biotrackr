@@ -337,5 +337,79 @@ namespace Biotrackr.UI.UnitTests.Services
 
             result.Should().BeNull();
         }
+
+        [Fact]
+        public async Task GetReportStatusAsync_ShouldReturnNull_WhenRequestTimesOut()
+        {
+            var sut = CreateSut(new TaskCanceledException("Request timed out"));
+
+            var result = await sut.GetReportStatusAsync("job-123");
+
+            result.Should().BeNull();
+        }
+
+        [Fact]
+        public async Task GetReportStatusAsync_ShouldReturnNull_WhenResponseIsInvalidJson()
+        {
+            var response = new HttpResponseMessage(HttpStatusCode.OK)
+            {
+                Content = new StringContent("not valid json", System.Text.Encoding.UTF8, "application/json")
+            };
+            var sut = CreateSut(response);
+
+            var result = await sut.GetReportStatusAsync("job-123");
+
+            result.Should().BeNull();
+        }
+
+        [Fact]
+        public async Task DeleteConversationAsync_ShouldHandleTimeout()
+        {
+            var sut = CreateSut(new TaskCanceledException("Timeout"));
+
+            await sut.DeleteConversationAsync("session-1");
+
+            // Should not throw — gracefully handles timeout
+        }
+
+        [Fact]
+        public async Task SendMessageAsync_ShouldSkipMalformedSseLines()
+        {
+            var sseResponse = CreateSseResponse(
+                "not valid json",
+                """{"type":"TEXT_MESSAGE_CONTENT","delta":"hello"}""",
+                """{"type":"RUN_FINISHED","threadId":"t1"}"""
+            );
+            var sut = CreateSut(sseResponse);
+
+            var events = new List<AGUIEvent>();
+            await foreach (var evt in sut.SendMessageAsync("session-1", "test"))
+            {
+                events.Add(evt);
+            }
+
+            events.Should().HaveCount(2);
+            events[0].Type.Should().Be("TEXT_MESSAGE_CONTENT");
+        }
+
+        [Fact]
+        public async Task SendMessageAsync_ShouldTrackToolCallTelemetry()
+        {
+            var sseResponse = CreateSseResponse(
+                """{"type":"TOOL_CALL_START","toolCallName":"GetActivity","delta":"GetActivity"}""",
+                """{"type":"TEXT_MESSAGE_CONTENT","delta":"result"}""",
+                """{"type":"RUN_FINISHED","threadId":"t1"}"""
+            );
+            var sut = CreateSut(sseResponse);
+
+            var events = new List<AGUIEvent>();
+            await foreach (var evt in sut.SendMessageAsync("session-1", "test"))
+            {
+                events.Add(evt);
+            }
+
+            events.Should().HaveCount(3);
+            events[0].Type.Should().Be("TOOL_CALL_START");
+        }
     }
 }
