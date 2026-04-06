@@ -4,7 +4,9 @@
 @inject IChatApiService ChatApiService
 @inject IJSRuntime JS
 @inject DialogService DialogService
+@using System.Text.Json
 @using Biotrackr.UI.Helpers
+@using Biotrackr.UI.Models.Chat
 @using Biotrackr.UI.Telemetry
 @using Markdig
 @using ChatMessage = Biotrackr.UI.Models.Chat.ChatMessage
@@ -97,28 +99,28 @@
                         {
                             <div class="message-content markdown-body">@RenderMarkdown(_currentResponse)</div>
                         }
-                        @if (_reportGenerating)
-                        {
-                            <div class="report-progress" role="status" aria-label="Report generation in progress">
-                                <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.5rem">
-                                    <RadzenProgressBarCircular Mode="ProgressBarMode.Indeterminate"
-                                                               Size="ProgressBarCircularSize.ExtraSmall"
-                                                               ProgressBarStyle="ProgressBarStyle.Info"
-                                                               ShowValue="false" />
-                                    <RadzenText TextStyle="TextStyle.Body2" class="rz-color-info">
-                                        Generating report...
-                                    </RadzenText>
-                                    <RadzenBadge Text="@FormattingHelpers.FormatElapsedTime(_reportElapsedSeconds)"
-                                                 BadgeStyle="BadgeStyle.Light" IsPill="true" />
-                                </RadzenStack>
-                            </div>
-                        }
-                        else
-                        {
-                            <div class="typing-indicator">
-                                <span></span><span></span><span></span>
-                            </div>
-                        }
+                        <div class="typing-indicator">
+                            <span></span><span></span><span></span>
+                        </div>
+                    </div>
+                }
+
+                @if (_reportGenerating)
+                {
+                    <div class="message message-agent">
+                        <div class="report-progress" role="status" aria-label="@_reportStatusText">
+                            <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.5rem">
+                                <RadzenProgressBarCircular Mode="ProgressBarMode.Indeterminate"
+                                                           Size="ProgressBarCircularSize.ExtraSmall"
+                                                           ProgressBarStyle="ProgressBarStyle.Info"
+                                                           ShowValue="false" />
+                                <RadzenText TextStyle="TextStyle.Body2" class="rz-color-info">
+                                    @_reportStatusText
+                                </RadzenText>
+                                <RadzenBadge Text="@FormattingHelpers.FormatElapsedTime(_reportElapsedSeconds)"
+                                             BadgeStyle="BadgeStyle.Light" IsPill="true" />
+                            </RadzenStack>
+                        </div>
                     </div>
                 }
             }
@@ -158,6 +160,11 @@
     private int _reportElapsedSeconds;
     private PeriodicTimer? _reportTimer;
     private CancellationTokenSource? _reportTimerCts;
+    private string? _reportJobId;
+    private string _reportStatusText = "Generating report...";
+    private int _pollFailureCount;
+
+    private sealed record RequestReportResult(string? JobId, string? Status, string? Message);
 
     private static readonly string[] _suggestions =
     [
@@ -170,6 +177,35 @@
     protected override async Task OnInitializedAsync()
     {
         await LoadConversationsList();
+        await ResumeActiveReportPolling();
+    }
+
+    private async Task ResumeActiveReportPolling()
+    {
+        try
+        {
+            var activeJobId = await JS.InvokeAsync<string?>("sessionStorage.getItem", "biotrackr_activeReportJobId");
+            if (!string.IsNullOrEmpty(activeJobId))
+            {
+                var status = await ChatApiService.GetReportStatusAsync(activeJobId);
+                if (status?.Status is "generating")
+                {
+                    _reportJobId = activeJobId;
+                    _reportGenerating = true;
+                    _reportElapsedSeconds = 0;
+                    _reportStatusText = "Generating report...";
+                    _pollFailureCount = 0;
+                    _reportTimerCts = new CancellationTokenSource();
+                    _ = ReportDisplayLoopAsync(_reportTimerCts.Token);
+                    _ = ReportPollLoopAsync(_reportTimerCts.Token);
+                }
+                else
+                {
+                    await JS.InvokeVoidAsync("sessionStorage.removeItem", "biotrackr_activeReportJobId");
+                }
+            }
+        }
+        catch { /* JS interop may fail during prerendering */ }
     }
 
     private async Task SendMessage()
@@ -230,13 +266,30 @@
                         {
                             _reportGenerating = true;
                             _reportElapsedSeconds = 0;
+                            _reportStatusText = "Generating report...";
+                            _pollFailureCount = 0;
                             _reportTimerCts = new CancellationTokenSource();
-                            _reportTimer = new PeriodicTimer(TimeSpan.FromSeconds(1));
-                            _ = ReportElapsedLoopAsync(_reportTimerCts.Token);
+                            _ = ReportDisplayLoopAsync(_reportTimerCts.Token);
                         }
                         break;
 
                     case "TOOL_CALL_RESULT":
+                        if (evt.Content is not null && _reportGenerating && _reportJobId is null)
+                        {
+                            try
+                            {
+                                var reportResult = JsonSerializer.Deserialize<RequestReportResult>(
+                                    evt.Content, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+                                if (reportResult?.JobId is not null)
+                                {
+                                    _reportJobId = reportResult.JobId;
+                                    _ = ReportPollLoopAsync(_reportTimerCts!.Token);
+                                    try { await JS.InvokeVoidAsync("sessionStorage.setItem", "biotrackr_activeReportJobId", _reportJobId); }
+                                    catch { /* JS interop may fail during prerendering */ }
+                                }
+                            }
+                            catch (JsonException) { }
+                        }
                         break;
 
                     case "RUN_FINISHED":
@@ -244,7 +297,6 @@
                         {
                             _currentSessionId = evt.ThreadId;
                         }
-                        StopReportTimer();
                         break;
 
                     case "RUN_ERROR":
@@ -273,7 +325,10 @@
             _renderCts?.Cancel();
             _renderTimer?.Dispose();
             _renderTimer = null;
-            StopReportTimer();
+            if (_reportJobId is null)
+            {
+                StopReportTimer();
+            }
             _isStreaming = false;
             _currentResponse = string.Empty;
             _currentToolCalls = [];
@@ -389,15 +444,85 @@
         catch (OperationCanceledException) { }
     }
 
-    private async Task ReportElapsedLoopAsync(CancellationToken ct)
+    private async Task ReportDisplayLoopAsync(CancellationToken ct)
     {
+        using var displayTimer = new PeriodicTimer(TimeSpan.FromSeconds(1));
         try
         {
-            while (await _reportTimer!.WaitForNextTickAsync(ct))
+            while (await displayTimer.WaitForNextTickAsync(ct))
             {
                 if (_disposed) return;
                 _reportElapsedSeconds++;
+                _reportStatusText = _reportElapsedSeconds >= 60
+                    ? "Still working on your report..."
+                    : "Generating report...";
                 await InvokeAsync(StateHasChanged);
+            }
+        }
+        catch (OperationCanceledException) { }
+    }
+
+    private async Task ReportPollLoopAsync(CancellationToken ct)
+    {
+        using var pollTimer = new PeriodicTimer(TimeSpan.FromSeconds(10));
+        try
+        {
+            while (await pollTimer.WaitForNextTickAsync(ct))
+            {
+                if (_disposed || _reportJobId is null) return;
+                if (_reportElapsedSeconds > 600)
+                {
+                    _reportStatusText = "Report generation timed out";
+                    StopReportTimer();
+                    await InvokeAsync(StateHasChanged);
+                    return;
+                }
+
+                try
+                {
+                    var status = await ChatApiService.GetReportStatusAsync(_reportJobId);
+                    _pollFailureCount = 0;
+
+                    if (status is null)
+                    {
+                        _reportStatusText = "Report not found";
+                        StopReportTimer();
+                        await InvokeAsync(StateHasChanged);
+                        return;
+                    }
+
+                    if (status.Status is "generated" or "reviewed")
+                    {
+                        _reportStatusText = "Report ready!";
+                        await InvokeAsync(StateHasChanged);
+                        await Task.Delay(3000, ct);
+                        StopReportTimer();
+                        await InvokeAsync(async () =>
+                        {
+                            _inputMessage = "Is my report ready?";
+                            await SendMessage();
+                        });
+                        return;
+                    }
+                    else if (status.Status is "failed")
+                    {
+                        _reportStatusText = "Report generation failed";
+                        StopReportTimer();
+                        await InvokeAsync(StateHasChanged);
+                        return;
+                    }
+                }
+                catch (Exception)
+                {
+                    _pollFailureCount++;
+                    if (_pollFailureCount >= 3)
+                    {
+                        _reportStatusText = "Unable to check report status";
+                        StopReportTimer();
+                        await InvokeAsync(StateHasChanged);
+                        return;
+                    }
+                }
             }
         }
         catch (OperationCanceledException) { }
@@ -406,11 +531,16 @@
     private void StopReportTimer()
     {
         _reportGenerating = false;
+        _reportJobId = null;
+        _reportStatusText = "Generating report...";
+        _pollFailureCount = 0;
         _reportTimerCts?.Cancel();
         _reportTimerCts?.Dispose();
         _reportTimerCts = null;
         _reportTimer?.Dispose();
         _reportTimer = null;
+        try { _ = JS.InvokeVoidAsync("sessionStorage.removeItem", "biotrackr_activeReportJobId"); }
+        catch { /* fire and forget */ }
     }
 
     private async Task OpenMobileSidebar()

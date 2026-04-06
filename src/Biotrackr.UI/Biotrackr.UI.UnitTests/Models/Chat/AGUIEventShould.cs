@@ -91,5 +91,30 @@ namespace Biotrackr.UI.UnitTests.Models.Chat
             evt.ThreadId.Should().Be("thread-123");
             evt.RunId.Should().Be("run-456");
         }
+
+        [Fact]
+        public void DeserializeToolCallResultWithStructuredJson()
+        {
+            var innerJson = """{"jobId":"abc-123","status":"generating","message":"Report generation started."}""";
+            var json = $$"""
+                {
+                    "type": "TOOL_CALL_RESULT",
+                    "toolCallId": "call_xyz",
+                    "content": {{JsonSerializer.Serialize(innerJson)}},
+                    "role": "tool"
+                }
+                """;
+
+            var evt = JsonSerializer.Deserialize<AGUIEvent>(json, JsonOptions);
+
+            evt.Should().NotBeNull();
+            evt!.Content.Should().NotBeNull();
+
+            // Parse the structured JSON from the content field
+            var reportResult = JsonSerializer.Deserialize<ReportStatusResponse>(evt.Content!, JsonOptions);
+            reportResult.Should().NotBeNull();
+            reportResult!.JobId.Should().Be("abc-123");
+            reportResult.Status.Should().Be("generating");
+        }
     }
 }

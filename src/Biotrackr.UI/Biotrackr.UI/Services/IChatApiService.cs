@@ -17,5 +17,7 @@ namespace Biotrackr.UI.Services
         Task<ChatConversationDocument?> GetConversationAsync(string sessionId);
 
         Task DeleteConversationAsync(string sessionId);
+
+        Task<ReportStatusResponse?> GetReportStatusAsync(string jobId);
     }
 }

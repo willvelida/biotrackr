@@ -304,5 +304,38 @@ namespace Biotrackr.UI.UnitTests.Services
 
             act.Should().Throw<ArgumentNullException>().WithParameterName("logger");
         }
+
+        [Fact]
+        public async Task GetReportStatusAsync_ShouldReturnStatus_WhenEndpointReturnsOk()
+        {
+            var response = CreateSuccessResponse(new ReportStatusResponse { JobId = "job-123", Status = "generating" });
+            var sut = CreateSut(response);
+
+            var result = await sut.GetReportStatusAsync("job-123");
+
+            result.Should().NotBeNull();
+            result!.JobId.Should().Be("job-123");
+            result.Status.Should().Be("generating");
+        }
+
+        [Fact]
+        public async Task GetReportStatusAsync_ShouldReturnNull_WhenEndpointReturns404()
+        {
+            var sut = CreateSut(CreateNotFoundResponse());
+
+            var result = await sut.GetReportStatusAsync("nonexistent");
+
+            result.Should().BeNull();
+        }
+
+        [Fact]
+        public async Task GetReportStatusAsync_ShouldReturnNull_WhenNetworkFails()
+        {
+            var sut = CreateSut(new HttpRequestException("Connection refused"));
+
+            var result = await sut.GetReportStatusAsync("job-123");
+
+            result.Should().BeNull();
+        }
     }
 }

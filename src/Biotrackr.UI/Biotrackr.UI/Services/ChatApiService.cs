@@ -177,6 +177,11 @@ namespace Biotrackr.UI.Services
             }
         }
 
+        public async Task<ReportStatusResponse?> GetReportStatusAsync(string jobId)
+        {
+            return await GetAsync<ReportStatusResponse>($"reports/{jobId}/status");
+        }
+
         private async Task<T?> GetAsync<T>(string endpoint) where T : class
         {
             try
