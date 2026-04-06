@@ -1,0 +1,150 @@
+@page "/analytics"
+@rendermode InteractiveServer
+@inject IBiotrackrApiService ApiService
+
+<PageTitle>Biotrackr - Analytics</PageTitle>
+
+<RadzenText TextStyle="TextStyle.H4">Analytics</RadzenText>
+<RadzenText TextStyle="TextStyle.Body2" class="rz-color-secondary rz-mb-4">Explore correlations between your health metrics over time.</RadzenText>
+
+<RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.End" Gap="1rem" Wrap="FlexWrap.Wrap" class="rz-mb-4">
+    <RadzenStack Gap="0.25rem">
+        <RadzenLabel Text="Start Date" Component="StartDatePicker" />
+        <RadzenDatePicker @bind-Value="_startDate" Name="StartDatePicker" DateFormat="yyyy-MM-dd"
+                          Max="@_endDate" aria-label="Start date" />
+    </RadzenStack>
+    <RadzenStack Gap="0.25rem">
+        <RadzenLabel Text="End Date" Component="EndDatePicker" />
+        <RadzenDatePicker @bind-Value="_endDate" Name="EndDatePicker" DateFormat="yyyy-MM-dd"
+                          Min="@_startDate" Max="@DateTime.Today" aria-label="End date" />
+    </RadzenStack>
+    <RadzenStack Gap="0.25rem">
+        <RadzenLabel Text="Correlation" Component="CorrelationDropdown" />
+        <RadzenDropDown @bind-Value="_selectedCorrelation" Data="@_correlationOptions"
+                        TextProperty="Text" ValueProperty="Value" Name="CorrelationDropdown"
+                        aria-label="Correlation pair" Style="min-width: 220px;" />
+    </RadzenStack>
+    <RadzenButton Text="Load Data" Icon="refresh" Click="@LoadDataAsync"
+                  Disabled="@_isLoading" aria-label="Load correlation data" />
+</RadzenStack>
+
+<LoadingSpinner IsLoading="@_isLoading" Message="Loading analytics data..." />
+<ErrorDisplay Message="@_errorMessage" />
+
+@if (!_isLoading && string.IsNullOrEmpty(_errorMessage) && _hasLoaded && _dataPoints.Count == 0)
+{
+    <RadzenAlert AlertStyle="AlertStyle.Info" Variant="Variant.Flat" ShowIcon="true">
+        No correlated data points found for the selected date range.
+    </RadzenAlert>
+}
+
+@if (!_isLoading && _dataPoints.Count > 0)
+{
+    <RadzenText TextStyle="TextStyle.H6" class="rz-mb-2">@GetChartTitle()</RadzenText>
+    <figure role="group" aria-label="@GetChartTitle()">
+        <RadzenChart class="bt-analytics-chart rz-mb-4">
+            <RadzenScatterSeries Data="@_dataPoints" CategoryProperty="X" ValueProperty="Y" />
+            <RadzenCategoryAxis />
+            <RadzenValueAxis />
+        </RadzenChart>
+        <figcaption class="sr-only">Scatter chart showing @GetChartTitle().</figcaption>
+    </figure>
+}
+
+@code {
+    private DateTime? _startDate = DateTime.Today.AddDays(-30);
+    private DateTime? _endDate = DateTime.Today;
+    private string _selectedCorrelation = "StepsVsSleep";
+    private bool _isLoading;
+    private bool _hasLoaded;
+    private string? _errorMessage;
+    private List<CorrelationDataPoint> _dataPoints = [];
+
+    private readonly List<CorrelationOption> _correlationOptions =
+    [
+        new() { Text = "Steps vs Sleep Duration", Value = "StepsVsSleep" },
+        new() { Text = "Calories vs Weight", Value = "CaloriesVsWeight" }
+    ];
+
+    private async Task LoadDataAsync()
+    {
+        _isLoading = true;
+        _errorMessage = null;
+        _dataPoints = [];
+        _hasLoaded = false;
+
+        try
+        {
+            var startDate = (_startDate ?? DateTime.Today.AddDays(-30)).ToString("yyyy-MM-dd");
+            var endDate = (_endDate ?? DateTime.Today).ToString("yyyy-MM-dd");
+
+            if (_selectedCorrelation == "StepsVsSleep")
+            {
+                var activityTask = ApiService.GetActivitiesByDateRangeAsync(startDate, endDate, pageSize: 100);
+                var sleepTask = ApiService.GetSleepByDateRangeAsync(startDate, endDate, pageSize: 100);
+                await Task.WhenAll(activityTask, sleepTask);
+
+                var activities = activityTask.Result;
+                var sleepRecords = sleepTask.Result;
+
+                var sleepByDate = sleepRecords.Items
+                    .GroupBy(s => s.Date)
+                    .ToDictionary(g => g.Key, g => g.First());
+                _dataPoints = activities.Items
+                    .Where(a => sleepByDate.ContainsKey(a.Date))
+                    .Select(a => new CorrelationDataPoint
+                    {
+                        X = a.Activity.Summary.Steps,
+                        Y = sleepByDate[a.Date].Sleep.Summary.TotalMinutesAsleep,
+                        Label = a.Date
+                    })
+                    .ToList();
+            }
+            else if (_selectedCorrelation == "CaloriesVsWeight")
+            {
+                var foodTask = ApiService.GetFoodLogsByDateRangeAsync(startDate, endDate, pageSize: 100);
+                var weightTask = ApiService.GetWeightByDateRangeAsync(startDate, endDate, pageSize: 100);
+                await Task.WhenAll(foodTask, weightTask);
+
+                var foodRecords = foodTask.Result;
+                var weightRecords = weightTask.Result;
+
+                var weightByDate = weightRecords.Items
+                    .GroupBy(w => w.Date)
+                    .ToDictionary(g => g.Key, g => g.First());
+                _dataPoints = foodRecords.Items
+                    .Where(f => weightByDate.ContainsKey(f.Date))
+                    .Select(f => new CorrelationDataPoint
+                    {
+                        X = f.Food.Summary.Calories,
+                        Y = weightByDate[f.Date].Weight.Weight,
+                        Label = f.Date
+                    })
+                    .ToList();
+            }
+
+            _hasLoaded = true;
+        }
+        catch (Exception)
+        {
+            _errorMessage = "Failed to load analytics data. Please try again later.";
+        }
+        finally
+        {
+            _isLoading = false;
+        }
+    }
+
+    private string GetChartTitle() => _selectedCorrelation switch
+    {
+        "StepsVsSleep" => "Steps vs Sleep Duration (minutes)",
+        "CaloriesVsWeight" => "Calories Consumed vs Weight",
+        _ => "Correlation"
+    };
+
+    private class CorrelationOption
+    {
+        public string Text { get; set; } = string.Empty;
+        public string Value { get; set; } = string.Empty;
+    }
+}

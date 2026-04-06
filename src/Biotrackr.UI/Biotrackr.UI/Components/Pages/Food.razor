@@ -64,27 +64,29 @@
     @if (SingleItem.Food?.Foods?.Any() == true)
     {
         <RadzenText TextStyle="TextStyle.H6" class="rz-mb-2">Food Log</RadzenText>
-        <RadzenDataGrid Data="@SingleItem.Food.Foods" TItem="FoodEntry" Density="Density.Compact" AllowPaging="false" Responsive="true" class="rz-mb-4">
+        <RadzenDataGrid Data="@SingleItem.Food.Foods" TItem="FoodEntry" Density="Density.Compact" AllowPaging="false"
+                        AllowFiltering="true" FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive"
+                        Responsive="true" class="rz-mb-4">
             <Columns>
-                <RadzenDataGridColumn TItem="FoodEntry" Title="Food">
+                <RadzenDataGridColumn TItem="FoodEntry" Title="Food" Property="LoggedFood.Name">
                     <Template Context="entry">@entry.LoggedFood?.Name</Template>
                 </RadzenDataGridColumn>
-                <RadzenDataGridColumn TItem="FoodEntry" Title="Brand">
+                <RadzenDataGridColumn TItem="FoodEntry" Title="Brand" Property="LoggedFood.Brand">
                     <Template Context="entry">@(string.IsNullOrEmpty(entry.LoggedFood?.Brand) ? "--" : entry.LoggedFood.Brand)</Template>
                 </RadzenDataGridColumn>
-                <RadzenDataGridColumn TItem="FoodEntry" Title="Calories">
+                <RadzenDataGridColumn TItem="FoodEntry" Title="Calories" Property="NutritionalValues.Calories">
                     <Template Context="entry">@(entry.NutritionalValues?.Calories.ToString("F0") ?? "--")</Template>
                 </RadzenDataGridColumn>
-                <RadzenDataGridColumn TItem="FoodEntry" Title="Protein">
+                <RadzenDataGridColumn TItem="FoodEntry" Title="Protein" Property="NutritionalValues.Protein">
                     <Template Context="entry">@(entry.NutritionalValues?.Protein.ToString("F1") ?? "--")g</Template>
                 </RadzenDataGridColumn>
-                <RadzenDataGridColumn TItem="FoodEntry" Title="Carbs">
+                <RadzenDataGridColumn TItem="FoodEntry" Title="Carbs" Property="NutritionalValues.Carbs">
                     <Template Context="entry">@(entry.NutritionalValues?.Carbs.ToString("F1") ?? "--")g</Template>
                 </RadzenDataGridColumn>
-                <RadzenDataGridColumn TItem="FoodEntry" Title="Fat">
+                <RadzenDataGridColumn TItem="FoodEntry" Title="Fat" Property="NutritionalValues.Fat">
                     <Template Context="entry">@(entry.NutritionalValues?.Fat.ToString("F1") ?? "--")g</Template>
                 </RadzenDataGridColumn>
-                <RadzenDataGridColumn TItem="FoodEntry" Title="Amount">
+                <RadzenDataGridColumn TItem="FoodEntry" Title="Amount" Filterable="false">
                     <Template Context="entry">@(entry.LoggedFood?.Amount) @(entry.LoggedFood?.Unit?.Name)</Template>
                 </RadzenDataGridColumn>
             </Columns>

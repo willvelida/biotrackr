@@ -21,14 +21,14 @@ else if (_activitySummary is not null)
 {
     <RadzenRow Gap="1rem" class="rz-mb-4">
         <RadzenColumn Size="12" SizeMD="3" SizeSM="6">
-            <SummaryCard Title="Steps" Value="@FormatNumber(_activitySummary?.Steps)" CardClass="card-activity" TrendData="@_stepsTrend" GaugeValue="@(_activitySummary?.Steps ?? 0)" GaugeMax="@(_activityGoals?.Steps ?? 0)">
+            <SummaryCard Title="Steps" Value="@FormatNumber(_activitySummary?.Steps)" CardClass="card-activity" TrendData="@_stepsTrend" GaugeValue="@(_activitySummary?.Steps ?? 0)" GaugeMax="@(_activityGoals?.Steps ?? 0)" GaugeZoneLow="@((_activityGoals?.Steps ?? 0) * 0.5)" GaugeZoneHigh="@((_activityGoals?.Steps ?? 0) * 0.8)">
                 <IconContent>
                     <RadzenIcon Icon="show_chart" Style="font-size: 28px; color: #0d6efd;" />
                 </IconContent>
             </SummaryCard>
         </RadzenColumn>
         <RadzenColumn Size="12" SizeMD="3" SizeSM="6">
-            <SummaryCard Title="Calories Burned" Value="@FormatNumber(_activitySummary?.CaloriesOut)" Subtitle="@GetCalorieGoalText()" CardClass="card-calories" TrendData="@_caloriesBurnedTrend" GaugeValue="@(_activitySummary?.CaloriesOut ?? 0)" GaugeMax="@(_activityGoals?.CaloriesOut ?? 0)">
+            <SummaryCard Title="Calories Burned" Value="@FormatNumber(_activitySummary?.CaloriesOut)" Subtitle="@GetCalorieGoalText()" CardClass="card-calories" TrendData="@_caloriesBurnedTrend" GaugeValue="@(_activitySummary?.CaloriesOut ?? 0)" GaugeMax="@(_activityGoals?.CaloriesOut ?? 0)" GaugeZoneLow="@((_activityGoals?.CaloriesOut ?? 0) * 0.5)" GaugeZoneHigh="@((_activityGoals?.CaloriesOut ?? 0) * 0.8)">
                 <IconContent>
                     <RadzenIcon Icon="local_fire_department" Style="font-size: 28px; color: #dc3545;" />
                 </IconContent>
@@ -141,7 +141,7 @@ else if (_foodSummary is not null)
 {
     <RadzenRow Gap="1rem" class="rz-mb-4">
         <RadzenColumn Size="12" SizeMD="3" SizeSM="6">
-            <SummaryCard Title="Calories Consumed" Value="@FormatCalories(_foodSummary?.Calories)" Subtitle="@GetFoodGoalText()" CardClass="card-food" TrendData="@_caloriesConsumedTrend" GaugeValue="@(_foodSummary?.Calories ?? 0)" GaugeMax="@(_foodGoals?.Calories ?? 0)">
+            <SummaryCard Title="Calories Consumed" Value="@FormatCalories(_foodSummary?.Calories)" Subtitle="@GetFoodGoalText()" CardClass="card-food" TrendData="@_caloriesConsumedTrend" GaugeValue="@(_foodSummary?.Calories ?? 0)" GaugeMax="@(_foodGoals?.Calories ?? 0)" GaugeZoneLow="@((_foodGoals?.Calories ?? 0) * 0.5)" GaugeZoneHigh="@((_foodGoals?.Calories ?? 0) * 0.8)">
                 <IconContent>
                     <RadzenIcon Icon="restaurant" Style="font-size: 28px; color: #198754;" />
                 </IconContent>
