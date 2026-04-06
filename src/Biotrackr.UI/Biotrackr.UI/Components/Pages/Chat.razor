@@ -96,9 +96,28 @@
                         {
                             <div class="message-content markdown-body">@RenderMarkdown(_currentResponse)</div>
                         }
-                        <div class="typing-indicator">
-                            <span></span><span></span><span></span>
-                        </div>
+                        @if (_reportGenerating)
+                        {
+                            <div class="report-progress" role="status" aria-label="Report generation in progress">
+                                <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.5rem">
+                                    <RadzenProgressBarCircular Mode="ProgressBarMode.Indeterminate"
+                                                               Size="ProgressBarCircularSize.ExtraSmall"
+                                                               ProgressBarStyle="ProgressBarStyle.Info"
+                                                               ShowValue="false" />
+                                    <RadzenText TextStyle="TextStyle.Body2" class="rz-color-info">
+                                        Generating report...
+                                    </RadzenText>
+                                    <RadzenBadge Text="@FormatElapsedTime(_reportElapsedSeconds)"
+                                                 BadgeStyle="BadgeStyle.Light" IsPill="true" />
+                                </RadzenStack>
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="typing-indicator">
+                                <span></span><span></span><span></span>
+                            </div>
+                        }
                     </div>
                 }
             }
@@ -134,6 +153,10 @@
     private bool _hasMoreConversations;
     private int _conversationPage = 1;
     private ElementReference _messagesContainer;
+    private bool _reportGenerating;
+    private int _reportElapsedSeconds;
+    private PeriodicTimer? _reportTimer;
+    private CancellationTokenSource? _reportTimerCts;
 
     private static readonly string[] _suggestions =
     [
@@ -201,6 +224,17 @@
                         {
                             _currentToolCalls.Add(evt.Delta);
                         }
+                        if (evt.Delta is "RequestReport" && !_reportGenerating)
+                        {
+                            _reportGenerating = true;
+                            _reportElapsedSeconds = 0;
+                            _reportTimerCts = new CancellationTokenSource();
+                            _reportTimer = new PeriodicTimer(TimeSpan.FromSeconds(1));
+                            _ = ReportElapsedLoopAsync(_reportTimerCts.Token);
+                        }
+                        break;
+
+                    case "TOOL_CALL_RESULT":
                         break;
 
                     case "RUN_FINISHED":
@@ -208,6 +242,11 @@
                         {
                             _currentSessionId = evt.ThreadId;
                         }
+                        StopReportTimer();
+                        break;
+
+                    case "RUN_ERROR":
+                        StopReportTimer();
                         break;
                 }
             }
@@ -232,6 +271,7 @@
             _renderCts?.Cancel();
             _renderTimer?.Dispose();
             _renderTimer = null;
+            StopReportTimer();
             _isStreaming = false;
             _currentResponse = string.Empty;
             _currentToolCalls = [];
@@ -347,6 +387,30 @@
         catch (OperationCanceledException) { }
     }
 
+    private async Task ReportElapsedLoopAsync(CancellationToken ct)
+    {
+        try
+        {
+            while (await _reportTimer!.WaitForNextTickAsync(ct))
+            {
+                if (_disposed) return;
+                _reportElapsedSeconds++;
+                await InvokeAsync(StateHasChanged);
+            }
+        }
+        catch (OperationCanceledException) { }
+    }
+
+    private void StopReportTimer()
+    {
+        _reportGenerating = false;
+        _reportTimerCts?.Cancel();
+        _reportTimerCts?.Dispose();
+        _reportTimerCts = null;
+        _reportTimer?.Dispose();
+        _reportTimer = null;
+    }
+
     private async Task OpenMobileSidebar()
     {
         await DialogService.OpenSideAsync<ChatSidebar>(
@@ -373,6 +437,13 @@
             });
     }
 
+    private static string FormatElapsedTime(int totalSeconds)
+    {
+        var minutes = totalSeconds / 60;
+        var seconds = totalSeconds % 60;
+        return minutes > 0 ? $"{minutes}:{seconds:D2}" : $"{seconds}s";
+    }
+
     private async Task ScrollToBottom()
     {
         try
@@ -392,5 +463,8 @@
         _renderCts?.Cancel();
         _renderCts?.Dispose();
         _renderTimer?.Dispose();
+        _reportTimerCts?.Cancel();
+        _reportTimerCts?.Dispose();
+        _reportTimer?.Dispose();
     }
 }

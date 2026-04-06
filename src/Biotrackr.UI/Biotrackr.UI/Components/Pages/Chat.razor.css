@@ -215,6 +215,17 @@
     }
 }
 
+.report-progress {
+    padding: 4px 0;
+    margin-top: 0.3rem;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .report-progress ::deep .rz-progressbar-circular {
+        animation: none;
+    }
+}
+
 .chat-input-area {
     padding: 0.75rem 1rem;
     border-top: 1px solid var(--rz-border-color);
