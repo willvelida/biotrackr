@@ -158,9 +158,11 @@ namespace Biotrackr.UI.UnitTests.Components.Shared
                 .Add(p => p.Title, "Steps")
                 .Add(p => p.Value, "8,000")
                 .Add(p => p.GaugeValue, 8000)
-                .Add(p => p.GaugeMax, 10000));
+                .Add(p => p.GaugeMax, 10000)
+                .Add(p => p.GaugeZoneLow, 5000)
+                .Add(p => p.GaugeZoneHigh, 8000));
 
-            cut.Markup.Should().Contain("rz-progressbar");
+            cut.Markup.Should().Contain("rz-linear-gauge");
         }
 
         [Fact]
@@ -172,7 +174,7 @@ namespace Biotrackr.UI.UnitTests.Components.Shared
                 .Add(p => p.GaugeValue, 8000)
                 .Add(p => p.GaugeMax, 0));
 
-            cut.Markup.Should().NotContain("rz-progressbar");
+            cut.Markup.Should().NotContain("rz-linear-gauge");
         }
     }
 }
