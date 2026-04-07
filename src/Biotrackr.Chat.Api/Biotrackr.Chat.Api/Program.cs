@@ -121,7 +121,8 @@ builder.Services.AddHttpClient("Anthropic")
     .AddHttpMessageHandler<AnthropicMetricsHandler>();
 
 builder.Services.AddSingleton<A2AReportTool>();
-builder.Services.AddSingleton<AIFunction>(sp => sp.GetRequiredService<A2AReportTool>().AsAIFunction());
+builder.Services.AddSingleton<AIFunction>(sp => sp.GetRequiredService<A2AReportTool>().AsGenerateReportFunction());
+builder.Services.AddSingleton<AIFunction>(sp => sp.GetRequiredService<A2AReportTool>().AsCheckReportStatusFunction());
 
 // OpenTelemetry
 var appInsightsConnectionString = builder.Configuration["applicationinsightsconnectionstring"];

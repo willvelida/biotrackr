@@ -3,18 +3,15 @@ using System.Diagnostics.CodeAnalysis;
 using System.Text.Json;
 using A2A;
 using Biotrackr.Chat.Api.Configuration;
-using Microsoft.Agents.AI;
 using Microsoft.Extensions.AI;
 using Microsoft.Extensions.Options;
-
-#pragma warning disable MEAI001 // ContinuationToken is experimental in preview MAF packages
 
 namespace Biotrackr.Chat.Api.Tools
 {
     /// <summary>
     /// A2A-based tool that sends report generation requests to Reporting.Api via the A2A protocol.
-    /// Replaces the separate RequestReportTool + GetReportStatusTool with a single tool that
-    /// handles the full lifecycle: submit → poll with exponential backoff → review → return.
+    /// Uses a fire-and-forget pattern: submits the job via A2A and returns a job ID immediately.
+    /// The user can then ask to check status via <see cref="CheckReportStatus"/>.
     /// </summary>
     [ExcludeFromCodeCoverage]
     public sealed class A2AReportTool
@@ -23,19 +20,6 @@ namespace Biotrackr.Chat.Api.Tools
         private readonly IHttpClientFactory _httpClientFactory;
         private readonly ReportReviewerService _reviewerService;
         private readonly ILogger<A2AReportTool> _logger;
-
-        /// <summary>Maximum total wait time before timeout (15 minutes).</summary>
-        private static readonly TimeSpan MaxTotalWait = TimeSpan.FromMinutes(15);
-
-        /// <summary>Exponential backoff delays: 5s → 10s → 20s → 40s → 60s cap.</summary>
-        private static readonly TimeSpan[] BackoffDelays =
-        [
-            TimeSpan.FromSeconds(5),
-            TimeSpan.FromSeconds(10),
-            TimeSpan.FromSeconds(20),
-            TimeSpan.FromSeconds(40),
-            TimeSpan.FromSeconds(60)
-        ];
 
         public A2AReportTool(
             IOptions<Settings> settings,
@@ -49,8 +33,8 @@ namespace Biotrackr.Chat.Api.Tools
             _logger = logger;
         }
 
-        [Description("Generate a health report via A2A protocol. Submits the request, waits for completion with status polling, " +
-            "and returns the reviewed report. Use this when the user requests a report, PDF, chart, visualization, diet program, or multi-day analysis. " +
+        [Description("Start generating a health report. Returns a job ID that can be used to check status later. " +
+            "Use this when the user requests a report, PDF, chart, visualization, diet program, or multi-day analysis. " +
             "Available report types: weekly_summary, monthly_summary, trend_analysis, diet_analysis, correlation_report.")]
         public async Task<string> GenerateReport(
             [Description("The type of report to generate")] string reportType,
@@ -88,62 +72,21 @@ namespace Biotrackr.Chat.Api.Tools
                     sourceDataSnapshot = snapshot.Value
                 });
 
-                // Send initial message
+                // Submit job via A2A — return immediately without polling
                 var response = await agent.RunAsync(requestPayload, session);
-                _logger.LogInformation("A2A initial response received. ContinuationToken present: {HasToken}",
-                    response.ContinuationToken is not null);
+                _logger.LogInformation("A2A report submitted. Response: {Text}", response.Text);
 
-                // Poll with exponential backoff while the task is still working
-                var totalWaited = TimeSpan.Zero;
-                var backoffIndex = 0;
+                // Extract job ID from the A2A response text
+                var responseText = response.Text ?? string.Empty;
+                var jobId = ExtractJobId(responseText);
 
-                while (response.ContinuationToken is { } token)
+                if (string.IsNullOrEmpty(jobId))
                 {
-                    var delay = BackoffDelays[Math.Min(backoffIndex, BackoffDelays.Length - 1)];
-
-                    if (totalWaited + delay > MaxTotalWait)
-                    {
-                        _logger.LogWarning("A2A report generation timed out after {Elapsed}", totalWaited);
-                        return "Your report is taking longer than expected. It's still being generated in the background. " +
-                               "Please ask me to check on it again in a few minutes.";
-                    }
-
-                    _logger.LogDebug("A2A polling: waiting {Delay}s (total waited: {TotalWaited}s, backoff index: {Index})",
-                        delay.TotalSeconds, totalWaited.TotalSeconds, backoffIndex);
-
-                    await Task.Delay(delay);
-                    totalWaited += delay;
-                    backoffIndex++;
-
-                    response = await agent.RunAsync(
-                        session,
-                        options: new AgentRunOptions { ContinuationToken = token });
+                    _logger.LogWarning("Could not extract job ID from A2A response: {Response}", responseText);
+                    return "Report generation started but I couldn't retrieve the job ID. Please try again.";
                 }
 
-                var responseText = response.Text;
-                _logger.LogInformation("A2A report completed. Response length: {Length} chars", responseText?.Length ?? 0);
-
-                if (string.IsNullOrWhiteSpace(responseText))
-                {
-                    return "The report was generated but no content was returned. Please try again.";
-                }
-
-                // Invoke the Reviewer Agent to validate the report before presenting
-                var reviewResult = await _reviewerService.ReviewReportAsync(
-                    responseText, snapshot.Value, reportType);
-
-                if (!reviewResult.Approved)
-                {
-                    _logger.LogWarning("Reviewer flagged concerns for A2A report: {Concerns}",
-                        string.Join("; ", reviewResult.Concerns));
-
-                    var concerns = string.Join("\n- ", reviewResult.Concerns);
-                    return $"Your report is ready but the reviewer flagged some concerns:\n- {concerns}\n\n" +
-                           $"{reviewResult.ValidatedSummary}\n\n" +
-                           "Would you like me to regenerate the report?";
-                }
-
-                return reviewResult.ValidatedSummary;
+                return $"Report generation started. Job ID: {jobId}. You can ask me to check on the status of this report.";
             }
             catch (HttpRequestException ex)
             {
@@ -157,20 +100,128 @@ namespace Biotrackr.Chat.Api.Tools
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Unexpected error during A2A report generation");
-                return "Sorry, an unexpected error occurred while generating your report. Please try again.";
+                _logger.LogError(ex, "Unexpected error during A2A report submission");
+                return "Sorry, an unexpected error occurred while submitting your report. Please try again.";
             }
         }
 
-        public AIFunction AsAIFunction()
+        [Description("Check the status of a report generation job. If the report is ready, it will be reviewed for accuracy before presenting download links.")]
+        public async Task<string> CheckReportStatus(
+            [Description("The job ID returned by GenerateReport")] string jobId)
+        {
+            _logger.LogInformation("CheckReportStatus called for job {JobId}", jobId);
+
+            try
+            {
+                var httpClient = _httpClientFactory.CreateClient("ReportingApi");
+                var response = await httpClient.GetAsync($"/api/reports/{jobId}");
+
+                if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
+                {
+                    return "I couldn't find that report. It may have expired or the ID may be incorrect. Would you like to generate a new one?";
+                }
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    var errorBody = await response.Content.ReadAsStringAsync();
+                    _logger.LogError("Reporting.Api returned {StatusCode}: {Error}", response.StatusCode, errorBody);
+                    return "Sorry, I'm unable to check your report status right now. Please try again in a few minutes.";
+                }
+
+                var result = await response.Content.ReadFromJsonAsync<ReportStatusResponse>();
+                if (result?.Metadata is null)
+                {
+                    return "Sorry, I'm unable to read your report details right now. Please try again in a few minutes.";
+                }
+
+                return result.Metadata.Status switch
+                {
+                    "generating" => "Your report is still being generated. Please check back in a moment.",
+                    "failed" => "Unfortunately, your report couldn't be completed. Would you like to try generating a new one?",
+                    "generated" or "reviewed" => await ReviewAndPresentAsync(result),
+                    _ => "Your report is in an unexpected state. Would you like to try generating a new one?"
+                };
+            }
+            catch (HttpRequestException ex)
+            {
+                _logger.LogError(ex, "Failed to check report status for job {JobId}", jobId);
+                return "Sorry, I'm unable to reach the report service right now. Please try again in a few minutes.";
+            }
+        }
+
+        private async Task<string> ReviewAndPresentAsync(ReportStatusResponse result)
+        {
+            var reviewResult = await _reviewerService.ReviewReportAsync(
+                result.Metadata.Summary ?? string.Empty,
+                result.Metadata.SourceDataSnapshot,
+                result.Metadata.ReportType);
+
+            var images = new List<string>();
+            var downloads = new List<string>();
+            foreach (var (artifact, url) in result.ArtifactUrls)
+            {
+                if (IsImageArtifact(artifact))
+                {
+                    images.Add($"![{Path.GetFileNameWithoutExtension(artifact)}]({url})");
+                }
+                else
+                {
+                    downloads.Add($"- [📥 Download {artifact}]({url})");
+                }
+            }
+
+            var imageSection = images.Count > 0
+                ? $"\n\n{string.Join("\n\n", images)}"
+                : "";
+
+            var downloadSection = downloads.Count > 0
+                ? $"\n\n{string.Join("\n", downloads)}"
+                : "";
+
+            if (!reviewResult.Approved)
+            {
+                _logger.LogWarning("Reviewer flagged concerns for job {JobId}: {Concerns}",
+                    result.Metadata.JobId, string.Join("; ", reviewResult.Concerns));
+
+                var concerns = string.Join("\n- ", reviewResult.Concerns);
+                return $"Your report is ready but the reviewer flagged some concerns:\n- {concerns}\n\n" +
+                       $"Summary: {reviewResult.ValidatedSummary}" +
+                       $"{imageSection}{downloadSection}\n\n" +
+                       "Would you like me to regenerate the report?";
+            }
+
+            return $"{reviewResult.ValidatedSummary}{imageSection}{downloadSection}";
+        }
+
+        public AIFunction AsGenerateReportFunction()
         {
             return AIFunctionFactory.Create(
                 (string reportType, string startDate, string endDate, string taskMessage, string sourceDataSnapshot) =>
                     GenerateReport(reportType, startDate, endDate, taskMessage, sourceDataSnapshot),
                 nameof(GenerateReport),
-                "Generate a health report via A2A protocol. Submits the request, waits for completion with status polling, " +
-                "and returns the reviewed report. Use this when the user requests a report, PDF, chart, visualization, diet program, or multi-day analysis. " +
+                "Start generating a health report. Returns a job ID that can be used to check status later. " +
+                "Use this when the user requests a report, PDF, chart, visualization, diet program, or multi-day analysis. " +
                 "Available report types: weekly_summary, monthly_summary, trend_analysis, diet_analysis, correlation_report.");
+        }
+
+        public AIFunction AsCheckReportStatusFunction()
+        {
+            return AIFunctionFactory.Create(
+                (string jobId) => CheckReportStatus(jobId),
+                nameof(CheckReportStatus),
+                "Check the status of a report generation job. If the report is ready, it will be reviewed for accuracy before presenting download links.");
+        }
+
+        private static string? ExtractJobId(string responseText)
+        {
+            // Response format: "Report generation started. Job ID: {jobId}"
+            const string marker = "Job ID: ";
+            var idx = responseText.IndexOf(marker, StringComparison.OrdinalIgnoreCase);
+            if (idx < 0) return null;
+
+            var start = idx + marker.Length;
+            var end = responseText.IndexOfAny(['.', ',', ' ', '\n'], start);
+            return end < 0 ? responseText[start..].Trim() : responseText[start..end].Trim();
         }
 
         private static JsonElement? DeserializeSnapshot(string sourceDataSnapshot)
@@ -187,6 +238,31 @@ namespace Biotrackr.Chat.Api.Tools
             {
                 return null;
             }
+        }
+
+        private static readonly string[] ImageExtensions = [".png", ".jpg", ".jpeg", ".svg", ".gif", ".webp"];
+
+        private static bool IsImageArtifact(string filename)
+        {
+            var ext = Path.GetExtension(filename);
+            return ImageExtensions.Any(e => e.Equals(ext, StringComparison.OrdinalIgnoreCase));
+        }
+
+        private sealed class ReportStatusResponse
+        {
+            public ReportMetadataDto Metadata { get; set; } = new();
+            public Dictionary<string, string> ArtifactUrls { get; set; } = [];
+        }
+
+        private sealed class ReportMetadataDto
+        {
+            public string JobId { get; set; } = string.Empty;
+            public string Status { get; set; } = string.Empty;
+            public string ReportType { get; set; } = string.Empty;
+            public string? Summary { get; set; }
+            public string? Error { get; set; }
+            public object? SourceDataSnapshot { get; set; }
+            public List<string> Artifacts { get; set; } = [];
         }
     }
 }
