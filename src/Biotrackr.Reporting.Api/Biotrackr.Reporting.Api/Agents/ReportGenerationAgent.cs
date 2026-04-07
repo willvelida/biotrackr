@@ -91,10 +91,11 @@ namespace Biotrackr.Reporting.Api.Agents
                 throw new InvalidOperationException("User message text is empty.");
             }
 
+            var jsonOptions = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
             GenerateReportRequest request;
             try
             {
-                request = JsonSerializer.Deserialize<GenerateReportRequest>(messageText)
+                request = JsonSerializer.Deserialize<GenerateReportRequest>(messageText, jsonOptions)
                     ?? throw new InvalidOperationException("Failed to deserialize report request.");
             }
             catch (JsonException ex)
