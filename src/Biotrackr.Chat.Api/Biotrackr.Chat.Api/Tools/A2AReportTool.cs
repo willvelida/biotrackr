@@ -1,4 +1,5 @@
 using System.ComponentModel;
+using System.Diagnostics.CodeAnalysis;
 using System.Text.Json;
 using A2A;
 using Biotrackr.Chat.Api.Configuration;
@@ -15,6 +16,7 @@ namespace Biotrackr.Chat.Api.Tools
     /// Replaces the separate RequestReportTool + GetReportStatusTool with a single tool that
     /// handles the full lifecycle: submit → poll with exponential backoff → review → return.
     /// </summary>
+    [ExcludeFromCodeCoverage]
     public sealed class A2AReportTool
     {
         private readonly Settings _settings;
