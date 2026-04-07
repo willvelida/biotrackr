@@ -109,9 +109,11 @@ builder.Services.AddHttpClient("ChatApi", (sp, client) =>
     // Default 30s TotalRequestTimeout cancels the request mid-stream.
     options.TotalRequestTimeout.Timeout = TimeSpan.FromMinutes(20);
     options.AttemptTimeout.Timeout = TimeSpan.FromMinutes(20);
-    // Disable retries — SSE streams are not idempotent and retrying
+    // CircuitBreaker SamplingDuration must be >= 2x AttemptTimeout.
+    options.CircuitBreaker.SamplingDuration = TimeSpan.FromMinutes(45);
+    // Minimize retries — SSE streams are not idempotent and retrying
     // mid-conversation would duplicate messages.
-    options.Retry.MaxRetryAttempts = 0;
+    options.Retry.MaxRetryAttempts = 1;
 });
 
 builder.Services.AddScoped<IChatApiService>(provider =>
