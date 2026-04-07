@@ -97,14 +97,31 @@ builder.Services.AddHttpClient("ReportingApi", client =>
 
 builder.Services.AddSingleton<ReportReviewerService>();
 
+// A2A client for Reporting.Api — uses same base URL, different path prefix (/a2a/report)
+builder.Services.AddHttpClient("A2AReportingClient", client =>
+{
+    var reportingApiUrl = builder.Configuration.GetValue<string>("Biotrackr:ReportingApiUrl");
+    if (!string.IsNullOrWhiteSpace(reportingApiUrl))
+    {
+        client.BaseAddress = new Uri(reportingApiUrl);
+    }
+}).AddHttpMessageHandler<AgentIdentityTokenHandler>()
+.AddStandardResilienceHandler(options =>
+{
+    options.TotalRequestTimeout.Timeout = TimeSpan.FromMinutes(3);
+    options.AttemptTimeout.Timeout = TimeSpan.FromSeconds(90);
+    options.CircuitBreaker.SamplingDuration = TimeSpan.FromMinutes(3);
+    options.Retry.MaxRetryAttempts = 3;
+    options.Retry.Delay = TimeSpan.FromSeconds(5);
+    options.Retry.BackoffType = Polly.DelayBackoffType.Exponential;
+});
+
 builder.Services.AddTransient<AnthropicMetricsHandler>();
 builder.Services.AddHttpClient("Anthropic")
     .AddHttpMessageHandler<AnthropicMetricsHandler>();
 
-builder.Services.AddSingleton<RequestReportTool>();
-builder.Services.AddSingleton<GetReportStatusTool>();
-builder.Services.AddSingleton<AIFunction>(sp => sp.GetRequiredService<RequestReportTool>().AsAIFunction());
-builder.Services.AddSingleton<AIFunction>(sp => sp.GetRequiredService<GetReportStatusTool>().AsAIFunction());
+builder.Services.AddSingleton<A2AReportTool>();
+builder.Services.AddSingleton<AIFunction>(sp => sp.GetRequiredService<A2AReportTool>().AsAIFunction());
 
 // OpenTelemetry
 var appInsightsConnectionString = builder.Configuration["applicationinsightsconnectionstring"];

@@ -234,7 +234,7 @@ resource reportingApiAgentCard 'Microsoft.ApiManagement/service/apis/operations@
   properties: {
     displayName: 'GetAgentCard'
     method: 'GET'
-    urlTemplate: '/a2a/report/v1/card'
+    urlTemplate: '/a2a/report/card'
     description: 'A2A Agent Card discovery endpoint'
   }
 }
@@ -246,7 +246,7 @@ resource reportingApiA2AMessage 'Microsoft.ApiManagement/service/apis/operations
   properties: {
     displayName: 'SendA2AMessage'
     method: 'POST'
-    urlTemplate: '/a2a/report/v1/message:stream'
+    urlTemplate: '/a2a/report/message:stream'
     description: 'Send an A2A message to the report generation agent'
   }
 }
