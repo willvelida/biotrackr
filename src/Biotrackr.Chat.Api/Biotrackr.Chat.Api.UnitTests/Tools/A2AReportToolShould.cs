@@ -111,24 +111,35 @@ namespace Biotrackr.Chat.Api.UnitTests.Tools
         }
 
         [Fact]
-        public void ExposeAsAIFunction()
+        public void ExposeGenerateReportAsAIFunction()
         {
             var sut = CreateTool(CreateMockHandler(HttpStatusCode.OK, "{}"));
 
-            var aiFunction = sut.AsAIFunction();
+            var aiFunction = sut.AsGenerateReportFunction();
 
             aiFunction.Should().NotBeNull();
             aiFunction.Name.Should().Be(nameof(A2AReportTool.GenerateReport));
         }
 
         [Fact]
-        public void ExposeAsAIFunctionWithDescription()
+        public void ExposeCheckReportStatusAsAIFunction()
         {
             var sut = CreateTool(CreateMockHandler(HttpStatusCode.OK, "{}"));
 
-            var aiFunction = sut.AsAIFunction();
+            var aiFunction = sut.AsCheckReportStatusFunction();
 
-            aiFunction.Description.Should().Contain("A2A protocol");
+            aiFunction.Should().NotBeNull();
+            aiFunction.Name.Should().Be(nameof(A2AReportTool.CheckReportStatus));
+        }
+
+        [Fact]
+        public void ExposeGenerateReportFunctionWithDescription()
+        {
+            var sut = CreateTool(CreateMockHandler(HttpStatusCode.OK, "{}"));
+
+            var aiFunction = sut.AsGenerateReportFunction();
+
+            aiFunction.Description.Should().Contain("report");
             aiFunction.Description.Should().Contain("weekly_summary");
         }
 
