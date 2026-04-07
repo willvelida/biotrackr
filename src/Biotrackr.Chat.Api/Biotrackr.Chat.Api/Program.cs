@@ -25,6 +25,7 @@ var resourceAttributes = new Dictionary<string, object>
 };
 var resourceBuilder = ResourceBuilder.CreateDefault().AddAttributes(resourceAttributes);
 
+// Approach B reverted — redeploy with original RequestReportTool plain text return
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Configuration.AddEnvironmentVariables();
