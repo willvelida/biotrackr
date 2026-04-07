@@ -71,7 +71,8 @@ namespace Biotrackr.Chat.Api.Tools
             try
             {
                 var httpClient = _httpClientFactory.CreateClient("A2AReportingClient");
-                var a2aClient = new A2AClient(new Uri(_settings.ReportingApiUrl), httpClient);
+                var a2aBaseUrl = _settings.ReportingApiUrl.TrimEnd('/') + "/a2a/report";
+                var a2aClient = new A2AClient(new Uri(a2aBaseUrl), httpClient);
                 var agent = a2aClient.AsAIAgent(
                     name: "ReportingAgent",
                     description: "Generates health reports via A2A protocol");
