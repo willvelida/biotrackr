@@ -89,7 +89,7 @@ namespace Biotrackr.Chat.Api.UnitTests.Tools
 
             var result = await sut.GenerateReport("weekly_summary", "2026-03-01", "2026-03-07", "Generate report", SampleSnapshot);
 
-            result.Should().Contain("timed out");
+            result.Should().Contain("unexpected error");
         }
 
         [Fact]
@@ -162,7 +162,7 @@ namespace Biotrackr.Chat.Api.UnitTests.Tools
                 x => x.Log(
                     LogLevel.Information,
                     It.IsAny<EventId>(),
-                    It.Is<It.IsAnyType>((v, t) => v.ToString()!.Contains("A2A GenerateReport called")),
+                    It.Is<It.IsAnyType>((v, t) => v.ToString()!.Contains("GenerateReport called")),
                     It.IsAny<Exception?>(),
                     It.IsAny<Func<It.IsAnyType, Exception?, string>>()),
                 Times.Once);
@@ -187,7 +187,7 @@ namespace Biotrackr.Chat.Api.UnitTests.Tools
                 x => x.Log(
                     LogLevel.Error,
                     It.IsAny<EventId>(),
-                    It.Is<It.IsAnyType>((v, t) => v.ToString()!.Contains("A2A connection failure")),
+                    It.Is<It.IsAnyType>((v, t) => v.ToString()!.Contains("Connection failure")),
                     It.IsAny<Exception?>(),
                     It.IsAny<Func<It.IsAnyType, Exception?, string>>()),
                 Times.Once);
@@ -200,7 +200,7 @@ namespace Biotrackr.Chat.Api.UnitTests.Tools
                 BaseAddress = new Uri("http://localhost:5000")
             };
 
-            _httpClientFactory.Setup(f => f.CreateClient("A2AReportingClient")).Returns(httpClient);
+            _httpClientFactory.Setup(f => f.CreateClient("ReportingApi")).Returns(httpClient);
 
             var settings = Options.Create(new Settings
             {
