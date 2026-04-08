@@ -1,5 +1,6 @@
 using Azure.Identity;
 using Azure.Monitor.OpenTelemetry.Exporter;
+using Biotrackr.Reporting.Api.Agents;
 using Biotrackr.Reporting.Api.Configuration;
 using Biotrackr.Reporting.Api.Endpoints;
 using Biotrackr.Reporting.Api.Services;
@@ -114,6 +115,18 @@ builder.Services.AddSingleton<IBlobStorageService, BlobStorageService>();
 builder.Services.AddSingleton<ICopilotService, CopilotService>();
 builder.Services.AddSingleton<IReportGenerationService, ReportGenerationService>();
 
+// Register A2A hosted agent wrapping ReportGenerationService
+var reportAgent = builder.Services.AddAIAgent(
+    "ReportAgent",
+    (sp, key) =>
+    {
+        var reportService = sp.GetRequiredService<IReportGenerationService>();
+        var blobService = sp.GetRequiredService<IBlobStorageService>();
+        var loggerFactory = sp.GetRequiredService<ILoggerFactory>();
+        return new ReportGenerationAgent(key, reportService, blobService, loggerFactory);
+    });
+reportAgent.WithInMemorySessionStore();
+
 var app = builder.Build();
 
 // Authentication & authorization middleware (ASI03)
@@ -128,6 +141,9 @@ app.MapGenerateEndpoints();
 
 // Report retrieval endpoints
 app.MapReportEndpoints();
+
+// A2A endpoint (alongside existing HTTP endpoints for backward compatibility)
+app.MapA2AEndpoints(reportAgent);
 
 app.Run();
 

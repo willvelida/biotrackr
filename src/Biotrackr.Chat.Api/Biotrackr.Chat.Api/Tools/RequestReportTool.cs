@@ -11,6 +11,7 @@ namespace Biotrackr.Chat.Api.Tools
     /// Claude calls this when the user requests a report, chart, or analysis.
     /// The tool gathers health data context, submits a job to Reporting.Api, and returns a job ID.
     /// </summary>
+    [Obsolete("Replaced by A2AReportTool. Will be removed when A2A packages exit preview.")]
     public sealed class RequestReportTool
     {
         private readonly Settings _settings;

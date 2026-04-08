@@ -10,6 +10,7 @@ namespace Biotrackr.Chat.Api.Tools
     /// Native function tool that checks report generation status and invokes the Reviewer Agent.
     /// When a report is ready, the Reviewer validates it against the source data before presenting.
     /// </summary>
+    [Obsolete("Replaced by A2AReportTool. Will be removed when A2A packages exit preview.")]
     public sealed class GetReportStatusTool
     {
         private readonly Settings _settings;

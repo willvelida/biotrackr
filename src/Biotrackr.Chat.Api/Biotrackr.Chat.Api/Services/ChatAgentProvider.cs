@@ -140,9 +140,9 @@ namespace Biotrackr.Chat.Api.Services
                 .Select(tool => CachingMcpToolWrapper.Wrap(tool, _memoryCache, cachingLogger))
                 .ToList();
 
-            // Add native report tools (RequestReport, GetReportStatus)
+            // Add native report tools (GenerateReport + CheckReportStatus)
             var reportTools = _serviceProvider.GetServices<AIFunction>()
-                .Where(f => f.Name is "RequestReport" or "GetReportStatus");
+                .Where(f => f.Name is "GenerateReport" or "CheckReportStatus");
             wrappedTools.AddRange(reportTools);
 
             var httpClient = _httpClientFactory.CreateClient("Anthropic");
