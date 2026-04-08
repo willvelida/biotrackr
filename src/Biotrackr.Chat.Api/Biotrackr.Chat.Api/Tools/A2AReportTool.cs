@@ -3,8 +3,11 @@ using System.Diagnostics.CodeAnalysis;
 using System.Text.Json;
 using A2A;
 using Biotrackr.Chat.Api.Configuration;
+using Microsoft.Agents.AI;
 using Microsoft.Extensions.AI;
 using Microsoft.Extensions.Options;
+
+#pragma warning disable MEAI001 // ResponseContinuationToken is in preview
 
 namespace Biotrackr.Chat.Api.Tools
 {
@@ -74,15 +77,16 @@ namespace Biotrackr.Chat.Api.Tools
 
                 // Submit job via A2A — return immediately without polling
                 var response = await agent.RunAsync(requestPayload, session);
-                _logger.LogInformation("A2A report submitted. Response: {Text}", response.Text);
+                _logger.LogInformation("A2A report submitted. Text: {Text}, HasContinuationToken: {HasToken}",
+                    response.Text, response.ContinuationToken is not null);
 
-                // Extract job ID from the A2A response text
-                var responseText = response.Text ?? string.Empty;
-                var jobId = ExtractJobId(responseText);
+                // Extract job ID — try response text first, fall back to ContinuationToken
+                var jobId = ExtractJobId(response.Text ?? string.Empty)
+                    ?? ExtractJobIdFromContinuationToken(response.ContinuationToken);
 
                 if (string.IsNullOrEmpty(jobId))
                 {
-                    _logger.LogWarning("Could not extract job ID from A2A response: {Response}", responseText);
+                    _logger.LogWarning("Could not extract job ID from A2A response. Text: {Text}", response.Text);
                     return "Report generation started but I couldn't retrieve the job ID. Please try again.";
                 }
 
@@ -222,6 +226,32 @@ namespace Biotrackr.Chat.Api.Tools
             var start = idx + marker.Length;
             var end = responseText.IndexOfAny(['.', ',', ' ', '\n'], start);
             return end < 0 ? responseText[start..].Trim() : responseText[start..end].Trim();
+        }
+
+        private static string? ExtractJobIdFromContinuationToken(ResponseContinuationToken? token)
+        {
+            if (token is null) return null;
+
+            try
+            {
+                var bytes = token.ToBytes();
+                using var doc = JsonDocument.Parse(bytes);
+                if (doc.RootElement.TryGetProperty("JobId", out var jobIdElement))
+                {
+                    return jobIdElement.GetString();
+                }
+                // Try camelCase variant
+                if (doc.RootElement.TryGetProperty("jobId", out var jobIdCamel))
+                {
+                    return jobIdCamel.GetString();
+                }
+            }
+            catch (JsonException)
+            {
+                // Token isn't valid JSON — can't extract
+            }
+
+            return null;
         }
 
         private static JsonElement? DeserializeSnapshot(string sourceDataSnapshot)
