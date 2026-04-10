@@ -15,7 +15,7 @@ on:
                 description: 'Test filter expression for E2E tests'
                 required: false
                 type: string
-                default: 'Category=E2E|FullyQualifiedName~WeightEndpointsTests'
+                default: 'Category=E2E|FullyQualifiedName~VitalsEndpointsTests'
         secrets:
             client-id:
                 required: true
@@ -96,7 +96,7 @@ jobs:
                 cosmosdbendpoint: https://localhost:8081
                 Biotrackr:CosmosDb:AccountKey: C2y6yDjf5/R+ob0N8A7Cgv30VRDJIWEHLM+4QDU5DE2nQ9nDuVTqobD4b8mGGyPMbIZnqyMsEcaGQy67XIw/Jw==
                 Biotrackr:DatabaseName: biotrackr-test
-                Biotrackr:ContainerName: weight-test
+                Biotrackr:ContainerName: vitals-test
                 azureappconfigendpoint: ""
                 managedidentityclientid: ${{ secrets.client-id }}
                 tenantid: ${{ secrets.tenant-id }}
