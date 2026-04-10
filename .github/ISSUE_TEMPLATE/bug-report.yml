@@ -16,8 +16,8 @@ body:
       label: Affected Component
       description: Which part of the system is affected?
       options:
-        - Weight API
-        - Weight Service
+        - Vitals API
+        - Vitals Service
         - Activity API
         - Activity Service
         - Sleep API

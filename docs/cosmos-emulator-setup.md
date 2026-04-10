@@ -73,7 +73,7 @@ docker-compose -f docker-compose.cosmos.yml down
 | **Endpoint** | `https://localhost:8081` |
 | **Primary Key** | `C2y6yDjf5/R+ob0N8A7Cgv30VRDJIWEHLM+4QDU5DE2nQ9nDuVTqobD4b8mGGyPMbIZnqyMsEcaGQy67XIw/Jw==` |
 | **Database Name** | `biotrackr-test` |
-| **Container Name** | `weight-data` |
+| **Container Name** | `vitals-data` |
 
 These values are configured in `appsettings.Test.json` in each integration test project.
 
