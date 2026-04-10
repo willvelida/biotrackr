@@ -67,7 +67,7 @@ namespace Biotrackr.Vitals.Svc.UnitTests.AdapterTests
         [Fact]
         public void DecodeVisceralFatCorrectly()
         {
-            var grp = CreateMeasureGroup(new Measure { Value = 10, Type = 123, Unit = 0 });
+            var grp = CreateMeasureGroup(new Measure { Value = 10, Type = 170, Unit = 0 });
             var result = WithingsWeightAdapter.FromMeasureGroup(grp, UserHeight);
             result.VisceralFatIndex.Should().Be(10);
         }
@@ -129,7 +129,7 @@ namespace Biotrackr.Vitals.Svc.UnitTests.AdapterTests
         [Fact]
         public void HandleZeroExponent()
         {
-            var grp = CreateMeasureGroup(new Measure { Value = 10, Type = 123, Unit = 0 });
+            var grp = CreateMeasureGroup(new Measure { Value = 10, Type = 170, Unit = 0 });
             var result = WithingsWeightAdapter.FromMeasureGroup(grp, UserHeight);
             result.VisceralFatIndex.Should().Be(10);
         }

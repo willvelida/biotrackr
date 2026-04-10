@@ -186,6 +186,42 @@ namespace Biotrackr.Vitals.Svc.UnitTests.ServiceTests
                 Times.Once);
         }
 
+        [Fact]
+        public async Task GetMeasurements_ShouldRequestVisceralFatMeasureType()
+        {
+            // Arrange
+            SetupSecretClient("test-access-token");
+            string? capturedBody = null;
+
+            _mockHttpMessageHandler.Protected()
+                .Setup<Task<HttpResponseMessage>>("SendAsync", ItExpr.IsAny<HttpRequestMessage>(), ItExpr.IsAny<CancellationToken>())
+                .ReturnsAsync((HttpRequestMessage req, CancellationToken _) =>
+                {
+                    capturedBody = req.Content!.ReadAsStringAsync().Result;
+                    var response = CreateSuccessfulResponse(1);
+                    return new HttpResponseMessage(HttpStatusCode.OK)
+                    {
+                        Content = new StringContent(JsonSerializer.Serialize(response))
+                    };
+                });
+
+            // Act
+            await _sut.GetMeasurements("2026-02-04", "2026-04-02");
+
+            // Assert
+            capturedBody.Should().NotBeNull();
+            capturedBody.Should().Contain("meastypes=");
+
+            // Extract the meastypes value from URL-encoded form body
+            var parsed = System.Web.HttpUtility.ParseQueryString(capturedBody!);
+            var meastypes = parsed["meastypes"]!;
+
+            // Type 170 = Visceral Fat (correct)
+            meastypes.Split(',').Should().Contain("170");
+            // Type 123 = VO2 Max (should NOT be requested as visceral fat)
+            meastypes.Split(',').Should().NotContain("123");
+        }
+
         private void SetupSecretClient(string accessToken)
         {
             _mockSecretClient.Setup(x => x.GetSecretAsync("WithingsAccessToken", null, It.IsAny<CancellationToken>()))

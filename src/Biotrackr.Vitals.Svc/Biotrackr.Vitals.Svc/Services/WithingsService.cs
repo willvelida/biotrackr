@@ -77,7 +77,7 @@ namespace Biotrackr.Vitals.Svc.Services
             var formContent = new FormUrlEncodedContent(new Dictionary<string, string>
             {
                 ["action"] = "getmeas",
-                ["meastypes"] = "1,5,6,8,9,10,11,76,77,88,123",
+                ["meastypes"] = "1,5,6,8,9,10,11,76,77,88,170",
                 ["category"] = "1",
                 ["startdate"] = startUnix.ToString(),
                 ["enddate"] = endUnix.ToString(),
