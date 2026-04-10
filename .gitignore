@@ -420,3 +420,6 @@ scripts/chat-system-prompt/reviewer-prompt.txt
 
 # researcher files
 .copilot-tracking/*
+
+# Auto-generated ARM templates from Bicep compilation
+infra/apps/*/main.json

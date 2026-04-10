@@ -92,7 +92,7 @@
       "roundness": null
     },
     {
-      "id": "arrow-withings-weight",
+      "id": "arrow-withings-vitals",
       "type": "arrow",
       "x": 380,
       "y": 160,
@@ -507,7 +507,7 @@
       "roundness": null
     },
     {
-      "id": "weight-svc",
+      "id": "vitals-svc",
       "type": "rectangle",
       "x": 710,
       "y": 250,
@@ -526,7 +526,7 @@
       "isDeleted": false,
       "groupIds": [],
       "boundElements": [
-        {"type": "text", "id": "weight-svc-label"}
+        {"type": "text", "id": "vitals-svc-label"}
       ],
       "updated": 1,
       "link": null,
@@ -534,13 +534,13 @@
       "roundness": {"type": 3}
     },
     {
-      "id": "weight-svc-label",
+      "id": "vitals-svc-label",
       "type": "text",
       "x": 735,
       "y": 263,
       "width": 130,
       "height": 44,
-      "text": "Weight Svc\n(Daily - Withings)",
+      "text": "Vitals Svc\n(Daily - Withings)",
       "fontSize": 16,
       "fontFamily": 1,
       "textAlign": "center",
@@ -561,8 +561,8 @@
       "updated": 1,
       "link": null,
       "locked": false,
-      "containerId": "weight-svc",
-      "originalText": "Weight Svc\n(Daily - Withings)",
+      "containerId": "vitals-svc",
+      "originalText": "Vitals Svc\n(Daily - Withings)",
       "roundness": null
     },
     {
@@ -724,7 +724,7 @@
       "endArrowhead": "arrow"
     },
     {
-      "id": "arrow-fitbit-weight",
+      "id": "arrow-fitbit-vitals",
       "type": "arrow",
       "x": 630,
       "y": 160,
@@ -915,7 +915,7 @@
       "y": 393,
       "width": 380,
       "height": 55,
-      "text": "Azure Cosmos DB (Serverless, NoSQL)\nActivity | Sleep | Weight | Food | Chat History",
+      "text": "Azure Cosmos DB (Serverless, NoSQL)\nActivity | Sleep | Vitals | Food | Chat History",
       "fontSize": 16,
       "fontFamily": 1,
       "textAlign": "center",
@@ -937,7 +937,7 @@
       "link": null,
       "locked": false,
       "containerId": "cosmos-box",
-      "originalText": "Azure Cosmos DB (Serverless, NoSQL)\nActivity | Sleep | Weight | Food | Chat History",
+      "originalText": "Azure Cosmos DB (Serverless, NoSQL)\nActivity | Sleep | Vitals | Food | Chat History",
       "roundness": null
     },
     {
@@ -1007,7 +1007,7 @@
       "endArrowhead": "arrow"
     },
     {
-      "id": "arrow-weight-cosmos",
+      "id": "arrow-vitals-cosmos",
       "type": "arrow",
       "x": 800,
       "y": 320,
@@ -1245,7 +1245,7 @@
       "roundness": null
     },
     {
-      "id": "weight-api",
+      "id": "vitals-api",
       "type": "rectangle",
       "x": 580,
       "y": 545,
@@ -1264,7 +1264,7 @@
       "isDeleted": false,
       "groupIds": [],
       "boundElements": [
-        {"type": "text", "id": "weight-api-label"}
+        {"type": "text", "id": "vitals-api-label"}
       ],
       "updated": 1,
       "link": null,
@@ -1272,13 +1272,13 @@
       "roundness": {"type": 3}
     },
     {
-      "id": "weight-api-label",
+      "id": "vitals-api-label",
       "type": "text",
       "x": 600,
       "y": 557,
       "width": 130,
       "height": 44,
-      "text": "Weight API\n/weight/*",
+      "text": "Vitals API\n/vitals/*",
       "fontSize": 16,
       "fontFamily": 1,
       "textAlign": "center",
@@ -1299,8 +1299,8 @@
       "updated": 1,
       "link": null,
       "locked": false,
-      "containerId": "weight-api",
-      "originalText": "Weight API\n/weight/*",
+      "containerId": "vitals-api",
+      "originalText": "Vitals API\n/vitals/*",
       "roundness": null
     },
     {
@@ -1429,7 +1429,7 @@
       "endArrowhead": "arrow"
     },
     {
-      "id": "arrow-cosmos-weight-api",
+      "id": "arrow-cosmos-vitals-api",
       "type": "arrow",
       "x": 700,
       "y": 455,

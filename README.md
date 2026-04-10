@@ -26,14 +26,14 @@ Scheduled Container App Jobs that fetch data from the Fitbit and Withings APIs:
 - **Auth Withings Service**: Manages OAuth token refresh with Withings API (every 2 hours), storing rotating tokens in Azure Key Vault
 - **Activity Service**: Daily fetch of physical activity and workout data from Fitbit
 - **Sleep Service**: Daily fetch of sleep tracking and stage analysis data from Fitbit
-- **Weight Service**: Daily fetch of weight and body composition data from Withings (muscle mass, bone mass, water mass, fat mass, fat-free mass, visceral fat index)
+- **Vitals Service**: Daily fetch of weight, blood pressure, and body composition data from Withings (muscle mass, bone mass, water mass, fat mass, fat-free mass, visceral fat index)
 - **Food Service**: Daily fetch of nutrition and food logging data from Fitbit
 
 ### Data Access (REST APIs)
 HTTP-based Container Apps serving data from Cosmos DB via Azure API Management:
 - **Activity API**: Activity data endpoints (`/activity/*`)
 - **Sleep API**: Sleep data endpoints (`/sleep/*`)
-- **Weight API**: Weight data endpoints (`/weight/*`)
+- **Vitals API**: Vitals data endpoints (`/vitals/*`)
 - **Food API**: Food data endpoints (`/food/*`)
 - **Reporting API**: Report generation and retrieval endpoints (`/reports/*`) with agent-to-agent auth, code validation (ASI05), and artifact review (ASI09)
 
@@ -41,7 +41,7 @@ HTTP-based Container Apps serving data from Cosmos DB via Azure API Management:
 - **Chat API**: AI-powered chat agent (Claude via Microsoft Agent Framework) with AGUI SSE streaming, tool policy enforcement, conversation persistence, and graceful degradation when MCP tools are unavailable
 - **MCP Server**: [Model Context Protocol](https://modelcontextprotocol.io/) server exposing 12 tools across all health domains via Streamable HTTP transport
 - **Reporting API**: Generates PDF reports and chart images from health data using a GitHub Copilot coding agent sidecar, with prompt-injection detection, generated-code validation, artifact size limits, and AI-driven report review
-- **UI**: Blazor Server dashboard with Radzen components for visualizing activity, sleep, weight, and food data
+- **UI**: Blazor Server dashboard with Radzen components for visualizing activity, sleep, vitals, and food data
 
 ### Supporting Infrastructure
 - **Azure API Management**: API gateway with JWT validation, subscription key auth, and rate limiting
@@ -59,7 +59,7 @@ HTTP-based Container Apps serving data from Cosmos DB via Azure API Management:
 
 - 🏃 **Activity Tracking**: Comprehensive workout and activity data collection
 - 😴 **Sleep Analysis**: Sleep patterns, stages, and quality metrics
-- ⚖️ **Weight Management**: Weight tracking with Withings Body Comp data (muscle mass, bone mass, water mass, fat mass, visceral fat) and Fitbit trend visualization
+- ⚕️ **Vitals Tracking**: Weight, blood pressure, and body composition tracking with Withings data (muscle mass, bone mass, water mass, fat mass, visceral fat)
 - 🍎 **Food Logging**: Nutrition tracking and food diary management
 - 🔐 **Secure Authentication**: OAuth integration with Fitbit and Withings
 - 📊 **Data Insights**: Analysis and reporting on health metrics
@@ -114,8 +114,8 @@ HTTP-based Container Apps serving data from Cosmos DB via Azure API Management:
 | **Activity API** | [![Deploy Activity Api](https://github.com/willvelida/biotrackr/actions/workflows/deploy-activity-api.yml/badge.svg)](https://github.com/willvelida/biotrackr/actions/workflows/deploy-activity-api.yml) | ![Code Coverage](https://img.shields.io/badge/Code%20Coverage-79.3%25-yellow?style=flat) | ![Integration Tests](https://img.shields.io/badge/Tests-30%20Passing-brightgreen?style=flat) |
 | **Sleep API** | [![Deploy Sleep Api](https://github.com/willvelida/biotrackr/actions/workflows/deploy-sleep-api.yml/badge.svg)](https://github.com/willvelida/biotrackr/actions/workflows/deploy-sleep-api.yml) | ![Code Coverage](https://img.shields.io/badge/Code%20Coverage-87%25-brightgreen?style=flat) | ![Integration Tests](https://img.shields.io/badge/Tests-19%20Passing-brightgreen?style=flat) |
 | **Sleep Service** | [![Deploy Sleep Service](https://github.com/willvelida/biotrackr/actions/workflows/deploy-sleep-service.yml/badge.svg)](https://github.com/willvelida/biotrackr/actions/workflows/deploy-sleep-service.yml) | ![Code Coverage](https://img.shields.io/badge/Code%20Coverage-100%25-brightgreen?style=flat) | ![Integration Tests](https://img.shields.io/badge/Tests-16%20Passing-brightgreen?style=flat) |
-| **Weight API** | [![Deploy Weight Api](https://github.com/willvelida/biotrackr/actions/workflows/deploy-weight-api.yml/badge.svg)](https://github.com/willvelida/biotrackr/actions/workflows/deploy-weight-api.yml) | ![Code Coverage](https://img.shields.io/badge/Code%20Coverage-75%25-yellow?style=flat) | ![Integration Tests](https://img.shields.io/badge/Tests-8%2F9%20Passing-success?style=flat) |
-| **Weight Service** | [![Deploy Weight Service](https://github.com/willvelida/biotrackr/actions/workflows/deploy-weight-service.yml/badge.svg)](https://github.com/willvelida/biotrackr/actions/workflows/deploy-weight-service.yml) | ![Code Coverage](https://img.shields.io/badge/Code%20Coverage-100%25-brightgreen?style=flat) | ![Integration Tests](https://img.shields.io/badge/Tests-4%20Passing-brightgreen?style=flat) |
+| **Vitals API** | [![Deploy Vitals Api](https://github.com/willvelida/biotrackr/actions/workflows/deploy-vitals-api.yml/badge.svg)](https://github.com/willvelida/biotrackr/actions/workflows/deploy-vitals-api.yml) | ![Code Coverage](https://img.shields.io/badge/Code%20Coverage-75%25-yellow?style=flat) | ![Integration Tests](https://img.shields.io/badge/Tests-8%2F9%20Passing-success?style=flat) |
+| **Vitals Service** | [![Deploy Vitals Service](https://github.com/willvelida/biotrackr/actions/workflows/deploy-vitals-service.yml/badge.svg)](https://github.com/willvelida/biotrackr/actions/workflows/deploy-vitals-service.yml) | ![Code Coverage](https://img.shields.io/badge/Code%20Coverage-100%25-brightgreen?style=flat) | ![Integration Tests](https://img.shields.io/badge/Tests-50%20Passing-brightgreen?style=flat) |
 | **Food API** | [![Deploy Food Api](https://github.com/willvelida/biotrackr/actions/workflows/deploy-food-api.yml/badge.svg)](https://github.com/willvelida/biotrackr/actions/workflows/deploy-food-api.yml) | ![Code Coverage](https://img.shields.io/badge/Code%20Coverage-70%25-yellow?style=flat) | ![Integration Tests](https://img.shields.io/badge/Tests-26%20Passing-brightgreen?style=flat) |
 | **Food Service** | [![Deploy Food Service](https://github.com/willvelida/biotrackr/actions/workflows/deploy-food-service.yml/badge.svg)](https://github.com/willvelida/biotrackr/actions/workflows/deploy-food-service.yml) | ![Code Coverage](https://img.shields.io/badge/Code%20Coverage-100%25-brightgreen?style=flat) | ![Integration Tests](https://img.shields.io/badge/Tests-14%20Passing-brightgreen?style=flat) |
 | **Chat API** | [![Deploy Chat Api](https://github.com/willvelida/biotrackr/actions/workflows/deploy-chat-api.yml/badge.svg)](https://github.com/willvelida/biotrackr/actions/workflows/deploy-chat-api.yml) | ![Code Coverage](https://img.shields.io/badge/Code%20Coverage-86%25-brightgreen?style=flat) | ![Integration Tests](https://img.shields.io/badge/Tests-2%20Passing-brightgreen?style=flat) |

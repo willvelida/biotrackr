@@ -16,7 +16,7 @@ body:
       label: Feature Area
       description: Which area does this feature relate to?
       options:
-        - Weight Tracking
+        - Vitals Tracking
         - Activity Tracking
         - Sleep Tracking
         - Food Tracking
