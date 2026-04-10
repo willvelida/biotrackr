@@ -180,7 +180,7 @@ else
     private FoodSummary? _foodSummary;
     private FoodGoals? _foodGoals;
     private SleepSummary? _sleepSummary;
-    private WeightData? _latestWeight;
+    private VitalsData? _latestWeight;
 
     // Trend data (7-day sparklines)
     private List<TrendDataPoint>? _stepsTrend;
@@ -248,7 +248,7 @@ else
     {
         try
         {
-            var weightTask = ApiService.GetWeightByDateAsync(today);
+            var weightTask = ApiService.GetVitalsByDateAsync(today);
             var trendTask = LoadWeightTrendsAsync(sevenDaysAgo, today);
             await Task.WhenAll(weightTask, trendTask);
             var weight = await weightTask;
@@ -323,12 +323,12 @@ else
     {
         try
         {
-            var result = await ApiService.GetWeightByDateRangeAsync(from, to, 1, 100);
+            var result = await ApiService.GetVitalsByDateRangeAsync(from, to, 1, 100);
             if (result?.Items is { Count: > 0 })
             {
                 var ordered = result.Items.OrderBy(w => w.Date).ToList();
-                _weightTrend = ordered.Where(w => w.Weight.Weight > 0).Select(w => new TrendDataPoint { Date = w.Date, Value = w.Weight.Weight }).ToList();
-                _bmiTrend = ordered.Where(w => w.Weight.Bmi > 0).Select(w => new TrendDataPoint { Date = w.Date, Value = w.Weight.Bmi }).ToList();
+                _weightTrend = ordered.Where(w => w.Weight.Weight > 0).Select(w => new TrendDataPoint { Date = w.Date, Value = w.Weight.Weight!.Value }).ToList();
+                _bmiTrend = ordered.Where(w => w.Weight.Bmi > 0).Select(w => new TrendDataPoint { Date = w.Date, Value = w.Weight.Bmi!.Value }).ToList();
             }
         }
         catch { /* silent degradation */ }
@@ -369,13 +369,13 @@ else
 
     private string FormatWeight()
     {
-        if (_latestWeight is null || _latestWeight.Weight == 0) return "--";
+        if (_latestWeight is null || _latestWeight.Weight is null or 0) return "--";
         return $"{_latestWeight.Weight:F1} kg";
     }
 
     private string FormatBmi()
     {
-        if (_latestWeight is null || _latestWeight.Bmi == 0) return "--";
+        if (_latestWeight is null || _latestWeight.Bmi is null or 0) return "--";
         return $"{_latestWeight.Bmi:F1}";
     }
 

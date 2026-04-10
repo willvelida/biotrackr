@@ -103,7 +103,7 @@
             else if (_selectedCorrelation == "CaloriesVsWeight")
             {
                 var foodTask = ApiService.GetFoodLogsByDateRangeAsync(startDate, endDate, pageSize: 100);
-                var weightTask = ApiService.GetWeightByDateRangeAsync(startDate, endDate, pageSize: 100);
+                var weightTask = ApiService.GetVitalsByDateRangeAsync(startDate, endDate, pageSize: 100);
                 await Task.WhenAll(foodTask, weightTask);
 
                 var foodRecords = foodTask.Result;
@@ -117,7 +117,7 @@
                     .Select(f => new CorrelationDataPoint
                     {
                         X = f.Food.Summary.Calories,
-                        Y = weightByDate[f.Date].Weight.Weight,
+                        Y = weightByDate[f.Date].Weight.Weight ?? 0,
                         Label = f.Date
                     })
                     .ToList();

@@ -4,7 +4,7 @@ using Biotrackr.UI.Models;
 using Biotrackr.UI.Models.Activity;
 using Biotrackr.UI.Models.Food;
 using Biotrackr.UI.Models.Sleep;
-using Biotrackr.UI.Models.Weight;
+using Biotrackr.UI.Models.Vitals;
 using Microsoft.Extensions.Logging;
 
 namespace Biotrackr.UI.Services
@@ -79,22 +79,22 @@ namespace Biotrackr.UI.Services
             return await GetAsync<PaginatedResponse<SleepItem>>(endpoint) ?? new PaginatedResponse<SleepItem>();
         }
 
-        // Weight endpoints
-        public async Task<PaginatedResponse<WeightItem>> GetWeightRecordsAsync(int pageNumber = 1, int pageSize = 20)
+        // Vitals endpoints
+        public async Task<PaginatedResponse<VitalsItem>> GetVitalsRecordsAsync(int pageNumber = 1, int pageSize = 20)
         {
-            var endpoint = BuildPaginatedEndpoint("/weight", pageNumber, pageSize);
-            return await GetAsync<PaginatedResponse<WeightItem>>(endpoint) ?? new PaginatedResponse<WeightItem>();
+            var endpoint = BuildPaginatedEndpoint("/vitals", pageNumber, pageSize);
+            return await GetAsync<PaginatedResponse<VitalsItem>>(endpoint) ?? new PaginatedResponse<VitalsItem>();
         }
 
-        public async Task<WeightItem?> GetWeightByDateAsync(string date)
+        public async Task<VitalsItem?> GetVitalsByDateAsync(string date)
         {
-            return await GetAsync<WeightItem>($"/weight/{date}");
+            return await GetAsync<VitalsItem>($"/vitals/{date}");
         }
 
-        public async Task<PaginatedResponse<WeightItem>> GetWeightByDateRangeAsync(string startDate, string endDate, int pageNumber = 1, int pageSize = 20)
+        public async Task<PaginatedResponse<VitalsItem>> GetVitalsByDateRangeAsync(string startDate, string endDate, int pageNumber = 1, int pageSize = 20)
         {
-            var endpoint = BuildPaginatedEndpoint($"/weight/range/{startDate}/{endDate}", pageNumber, pageSize);
-            return await GetAsync<PaginatedResponse<WeightItem>>(endpoint) ?? new PaginatedResponse<WeightItem>();
+            var endpoint = BuildPaginatedEndpoint($"/vitals/range/{startDate}/{endDate}", pageNumber, pageSize);
+            return await GetAsync<PaginatedResponse<VitalsItem>>(endpoint) ?? new PaginatedResponse<VitalsItem>();
         }
 
         private async Task<T?> GetAsync<T>(string endpoint) where T : class
