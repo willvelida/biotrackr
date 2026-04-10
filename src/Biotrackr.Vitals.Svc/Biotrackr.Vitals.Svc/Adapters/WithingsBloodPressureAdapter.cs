@@ -5,17 +5,19 @@ namespace Biotrackr.Vitals.Svc.Adapters
 {
     public static class WithingsBloodPressureAdapter
     {
-        public static BloodPressureReading FromMeasureGroup(MeasureGroup grp)
+        public static BloodPressureReading FromMeasureGroup(MeasureGroup grp, TimeZoneInfo userTimezone)
         {
             var measures = grp.Measures.ToDictionary(m => m.Type, m => m);
+            var utc = DateTimeOffset.FromUnixTimeSeconds(grp.Date);
+            var local = TimeZoneInfo.ConvertTime(utc, userTimezone);
 
             return new BloodPressureReading
             {
                 Systolic = GetIntValue(measures, 10),
                 Diastolic = GetIntValue(measures, 9),
                 HeartRate = GetIntValue(measures, 11),
-                Timestamp = DateTimeOffset.FromUnixTimeSeconds(grp.Date).ToString("o"),
-                Time = DateTimeOffset.FromUnixTimeSeconds(grp.Date).ToString("HH:mm:ss"),
+                Timestamp = local.ToString("o"),
+                Time = local.ToString("HH:mm:ss"),
                 Source = "Withings",
                 LogId = grp.GrpId,
                 DeviceId = string.IsNullOrEmpty(grp.DeviceId) ? null : grp.DeviceId

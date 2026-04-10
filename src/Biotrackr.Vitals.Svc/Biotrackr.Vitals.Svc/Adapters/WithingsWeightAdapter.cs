@@ -5,9 +5,11 @@ namespace Biotrackr.Vitals.Svc.Adapters
 {
     public static class WithingsWeightAdapter
     {
-        public static WeightMeasurement FromMeasureGroup(MeasureGroup grp, double userHeight)
+        public static WeightMeasurement FromMeasureGroup(MeasureGroup grp, double userHeight, TimeZoneInfo userTimezone)
         {
             var measures = grp.Measures.ToDictionary(m => m.Type, m => m);
+            var utc = DateTimeOffset.FromUnixTimeSeconds(grp.Date);
+            var local = TimeZoneInfo.ConvertTime(utc, userTimezone);
 
             double weightKg = GetValue(measures, 1);
             double bmi = userHeight > 0 ? Math.Round(weightKg / (userHeight * userHeight), 1) : 0;
@@ -17,8 +19,8 @@ namespace Biotrackr.Vitals.Svc.Adapters
                 WeightKg = weightKg,
                 Bmi = bmi,
                 Fat = GetValue(measures, 6),
-                Date = DateTimeOffset.FromUnixTimeSeconds(grp.Date).ToString("yyyy-MM-dd"),
-                Time = DateTimeOffset.FromUnixTimeSeconds(grp.Date).ToString("HH:mm:ss"),
+                Date = local.ToString("yyyy-MM-dd"),
+                Time = local.ToString("HH:mm:ss"),
                 Source = "Withings",
                 LogId = grp.GrpId,
                 FatMassKg = GetNullableValue(measures, 8),

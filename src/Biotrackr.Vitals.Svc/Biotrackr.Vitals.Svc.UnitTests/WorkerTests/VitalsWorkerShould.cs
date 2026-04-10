@@ -292,8 +292,8 @@ namespace Biotrackr.Vitals.Svc.UnitTests.WorkerTests
                 {
                     GrpId = 100001,
                     Attrib = 0,
-                    Date = baseDate.AddHours(7).ToUnixTimeSeconds(),
-                    Created = baseDate.AddHours(7).AddSeconds(50).ToUnixTimeSeconds(),
+                    Date = baseDate.AddHours(2).ToUnixTimeSeconds(),
+                    Created = baseDate.AddHours(2).AddSeconds(50).ToUnixTimeSeconds(),
                     Category = 1,
                     DeviceId = "test-device",
                     Measures = [new Measure { Value = 80000, Type = 1, Unit = -3 }]
@@ -302,8 +302,8 @@ namespace Biotrackr.Vitals.Svc.UnitTests.WorkerTests
                 {
                     GrpId = 100002,
                     Attrib = 0,
-                    Date = baseDate.AddHours(19).ToUnixTimeSeconds(),
-                    Created = baseDate.AddHours(19).AddSeconds(50).ToUnixTimeSeconds(),
+                    Date = baseDate.AddHours(4).ToUnixTimeSeconds(),
+                    Created = baseDate.AddHours(4).AddSeconds(50).ToUnixTimeSeconds(),
                     Category = 1,
                     DeviceId = "test-device",
                     Measures = [new Measure { Value = 81000, Type = 1, Unit = -3 }]
@@ -313,7 +313,7 @@ namespace Biotrackr.Vitals.Svc.UnitTests.WorkerTests
             var measureResponse = new WithingsMeasureResponse
             {
                 Status = 0,
-                Body = new WithingsMeasureBody { MeasureGroups = groups, More = 0, Offset = 0 }
+                Body = new WithingsMeasureBody { MeasureGroups = groups, More = 0, Offset = 0, Timezone = "Australia/Melbourne" }
             };
 
             VitalsDocument? capturedDoc = null;
@@ -369,6 +369,246 @@ namespace Biotrackr.Vitals.Svc.UnitTests.WorkerTests
             capturedStartDate.Should().Be(expectedStart);
         }
 
+        [Fact]
+        public async Task ExecuteAsync_Should_GroupByLocalDate_WhenTimezoneProvided()
+        {
+            // UTC 08:00 Apr 1 → AEST 18:00 Apr 1 (same day)
+            // UTC 14:00 Apr 1 → AEST 00:00 Apr 2 (next day)
+            var groups = new List<MeasureGroup>
+            {
+                new MeasureGroup
+                {
+                    GrpId = 400001,
+                    Attrib = 0,
+                    Date = new DateTimeOffset(2024, 4, 1, 8, 0, 0, TimeSpan.Zero).ToUnixTimeSeconds(),
+                    Created = new DateTimeOffset(2024, 4, 1, 8, 0, 50, TimeSpan.Zero).ToUnixTimeSeconds(),
+                    Category = 1,
+                    DeviceId = "test-device",
+                    Measures = [new Measure { Value = 80000, Type = 1, Unit = -3 }]
+                },
+                new MeasureGroup
+                {
+                    GrpId = 400002,
+                    Attrib = 0,
+                    Date = new DateTimeOffset(2024, 4, 1, 14, 0, 0, TimeSpan.Zero).ToUnixTimeSeconds(),
+                    Created = new DateTimeOffset(2024, 4, 1, 14, 0, 50, TimeSpan.Zero).ToUnixTimeSeconds(),
+                    Category = 1,
+                    DeviceId = "test-device",
+                    Measures = [new Measure { Value = 81000, Type = 1, Unit = -3 }]
+                }
+            };
+
+            var measureResponse = new WithingsMeasureResponse
+            {
+                Status = 0,
+                Body = new WithingsMeasureBody { MeasureGroups = groups, More = 0, Offset = 0, Timezone = "Australia/Melbourne" }
+            };
+
+            var capturedDocs = new List<VitalsDocument>();
+
+            _withingsServiceMock
+                .Setup(w => w.GetMeasurements(It.IsAny<string>(), It.IsAny<string>()))
+                .ReturnsAsync(measureResponse);
+
+            _vitalsServiceMock
+                .Setup(w => w.UpsertVitalsDocument(It.IsAny<VitalsDocument>()))
+                .Callback<VitalsDocument>(doc => capturedDocs.Add(doc))
+                .Returns(Task.CompletedTask);
+
+            var worker = new VitalsWorker(
+                _withingsServiceMock.Object,
+                _vitalsServiceMock.Object,
+                _loggerMock.Object,
+                _appLifetimeMock.Object,
+                _settings);
+
+            await worker.StartAsync(CancellationToken.None);
+            await Task.Delay(200);
+
+            capturedDocs.Should().HaveCount(2);
+            capturedDocs.Select(d => d.Date).Should().Contain("2024-04-01");
+            capturedDocs.Select(d => d.Date).Should().Contain("2024-04-02");
+        }
+
+        [Fact]
+        public async Task ExecuteAsync_Should_FallbackToUtc_WhenTimezoneIsEmpty()
+        {
+            // UTC 14:00 Apr 1 — with UTC grouping stays on Apr 1
+            var groups = new List<MeasureGroup>
+            {
+                new MeasureGroup
+                {
+                    GrpId = 500001,
+                    Attrib = 0,
+                    Date = new DateTimeOffset(2024, 4, 1, 14, 0, 0, TimeSpan.Zero).ToUnixTimeSeconds(),
+                    Created = new DateTimeOffset(2024, 4, 1, 14, 0, 50, TimeSpan.Zero).ToUnixTimeSeconds(),
+                    Category = 1,
+                    DeviceId = "test-device",
+                    Measures = [new Measure { Value = 80000, Type = 1, Unit = -3 }]
+                }
+            };
+
+            var measureResponse = new WithingsMeasureResponse
+            {
+                Status = 0,
+                Body = new WithingsMeasureBody { MeasureGroups = groups, More = 0, Offset = 0, Timezone = "" }
+            };
+
+            VitalsDocument? capturedDoc = null;
+
+            _withingsServiceMock
+                .Setup(w => w.GetMeasurements(It.IsAny<string>(), It.IsAny<string>()))
+                .ReturnsAsync(measureResponse);
+
+            _vitalsServiceMock
+                .Setup(w => w.UpsertVitalsDocument(It.IsAny<VitalsDocument>()))
+                .Callback<VitalsDocument>(doc => capturedDoc = doc)
+                .Returns(Task.CompletedTask);
+
+            var worker = new VitalsWorker(
+                _withingsServiceMock.Object,
+                _vitalsServiceMock.Object,
+                _loggerMock.Object,
+                _appLifetimeMock.Object,
+                _settings);
+
+            await worker.StartAsync(CancellationToken.None);
+            await Task.Delay(200);
+
+            capturedDoc.Should().NotBeNull();
+            capturedDoc!.Date.Should().Be("2024-04-01");
+        }
+
+        [Fact]
+        public async Task ExecuteAsync_Should_FallbackToUtc_WhenTimezoneIsInvalid()
+        {
+            // UTC 14:00 Apr 1 — with UTC fallback stays on Apr 1
+            var groups = new List<MeasureGroup>
+            {
+                new MeasureGroup
+                {
+                    GrpId = 600001,
+                    Attrib = 0,
+                    Date = new DateTimeOffset(2024, 4, 1, 14, 0, 0, TimeSpan.Zero).ToUnixTimeSeconds(),
+                    Created = new DateTimeOffset(2024, 4, 1, 14, 0, 50, TimeSpan.Zero).ToUnixTimeSeconds(),
+                    Category = 1,
+                    DeviceId = "test-device",
+                    Measures = [new Measure { Value = 80000, Type = 1, Unit = -3 }]
+                }
+            };
+
+            var measureResponse = new WithingsMeasureResponse
+            {
+                Status = 0,
+                Body = new WithingsMeasureBody { MeasureGroups = groups, More = 0, Offset = 0, Timezone = "Invalid/Zone" }
+            };
+
+            VitalsDocument? capturedDoc = null;
+
+            _withingsServiceMock
+                .Setup(w => w.GetMeasurements(It.IsAny<string>(), It.IsAny<string>()))
+                .ReturnsAsync(measureResponse);
+
+            _vitalsServiceMock
+                .Setup(w => w.UpsertVitalsDocument(It.IsAny<VitalsDocument>()))
+                .Callback<VitalsDocument>(doc => capturedDoc = doc)
+                .Returns(Task.CompletedTask);
+
+            var worker = new VitalsWorker(
+                _withingsServiceMock.Object,
+                _vitalsServiceMock.Object,
+                _loggerMock.Object,
+                _appLifetimeMock.Object,
+                _settings);
+
+            await worker.StartAsync(CancellationToken.None);
+            await Task.Delay(200);
+
+            capturedDoc.Should().NotBeNull();
+            capturedDoc!.Date.Should().Be("2024-04-01");
+            _loggerMock.Verify(
+                x => x.Log(
+                    LogLevel.Warning,
+                    It.IsAny<EventId>(),
+                    It.Is<It.IsAnyType>((v, t) => v.ToString()!.Contains("Unknown timezone")),
+                    It.IsAny<Exception>(),
+                    It.IsAny<Func<It.IsAnyType, Exception?, string>>()),
+                Times.Once);
+        }
+
+        [Fact]
+        public async Task ExecuteAsync_Should_PassTimezoneToAdapters()
+        {
+            // Use July (AEST, UTC+10 — no daylight saving): UTC 02:00 Jul 1 → AEST 12:00 Jul 1
+            var groups = new List<MeasureGroup>
+            {
+                new MeasureGroup
+                {
+                    GrpId = 700001,
+                    Attrib = 0,
+                    Date = new DateTimeOffset(2024, 7, 1, 2, 0, 0, TimeSpan.Zero).ToUnixTimeSeconds(),
+                    Created = new DateTimeOffset(2024, 7, 1, 2, 0, 50, TimeSpan.Zero).ToUnixTimeSeconds(),
+                    Category = 1,
+                    DeviceId = "test-device",
+                    Measures =
+                    [
+                        new Measure { Value = 80000, Type = 1, Unit = -3 },
+                        new Measure { Value = 2050, Type = 6, Unit = -2 }
+                    ]
+                },
+                new MeasureGroup
+                {
+                    GrpId = 700002,
+                    Attrib = 0,
+                    Date = new DateTimeOffset(2024, 7, 1, 2, 30, 0, TimeSpan.Zero).ToUnixTimeSeconds(),
+                    Created = new DateTimeOffset(2024, 7, 1, 2, 30, 50, TimeSpan.Zero).ToUnixTimeSeconds(),
+                    Category = 1,
+                    DeviceId = "bp-device",
+                    Measures =
+                    [
+                        new Measure { Value = 120, Type = 10, Unit = 0 },
+                        new Measure { Value = 80, Type = 9, Unit = 0 },
+                        new Measure { Value = 72, Type = 11, Unit = 0 }
+                    ]
+                }
+            };
+
+            var measureResponse = new WithingsMeasureResponse
+            {
+                Status = 0,
+                Body = new WithingsMeasureBody { MeasureGroups = groups, More = 0, Offset = 0, Timezone = "Australia/Melbourne" }
+            };
+
+            VitalsDocument? capturedDoc = null;
+
+            _withingsServiceMock
+                .Setup(w => w.GetMeasurements(It.IsAny<string>(), It.IsAny<string>()))
+                .ReturnsAsync(measureResponse);
+
+            _vitalsServiceMock
+                .Setup(w => w.UpsertVitalsDocument(It.IsAny<VitalsDocument>()))
+                .Callback<VitalsDocument>(doc => capturedDoc = doc)
+                .Returns(Task.CompletedTask);
+
+            var worker = new VitalsWorker(
+                _withingsServiceMock.Object,
+                _vitalsServiceMock.Object,
+                _loggerMock.Object,
+                _appLifetimeMock.Object,
+                _settings);
+
+            await worker.StartAsync(CancellationToken.None);
+            await Task.Delay(200);
+
+            capturedDoc.Should().NotBeNull();
+            // Weight time should reflect AEST (UTC+10), so 02:00 UTC → 12:00 AEST
+            capturedDoc!.Weight.Should().NotBeNull();
+            capturedDoc.Weight!.Time.Should().Be("12:00:00");
+            // BP time should also reflect AEST, so 02:30 UTC → 12:30 AEST
+            capturedDoc.BloodPressureReadings.Should().NotBeNull();
+            capturedDoc.BloodPressureReadings![0].Time.Should().Be("12:30:00");
+        }
+
         private static WithingsMeasureResponse CreateWeightMeasureResponse(int groupCount)
         {
             var groups = Enumerable.Range(0, groupCount).Select(i => new MeasureGroup
@@ -399,7 +639,8 @@ namespace Biotrackr.Vitals.Svc.UnitTests.WorkerTests
                 {
                     MeasureGroups = groups,
                     More = 0,
-                    Offset = 0
+                    Offset = 0,
+                    Timezone = "Australia/Melbourne"
                 }
             };
         }
@@ -429,7 +670,8 @@ namespace Biotrackr.Vitals.Svc.UnitTests.WorkerTests
                 {
                     MeasureGroups = groups,
                     More = 0,
-                    Offset = 0
+                    Offset = 0,
+                    Timezone = "Australia/Melbourne"
                 }
             };
         }
@@ -476,7 +718,8 @@ namespace Biotrackr.Vitals.Svc.UnitTests.WorkerTests
                 {
                     MeasureGroups = groups,
                     More = 0,
-                    Offset = 0
+                    Offset = 0,
+                    Timezone = "Australia/Melbourne"
                 }
             };
         }
