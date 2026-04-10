@@ -26,7 +26,7 @@ namespace Biotrackr.Vitals.Svc.Adapters
                 MuscleMassKg = GetNullableValue(measures, 76),
                 BoneMassKg = GetNullableValue(measures, 88),
                 WaterMassKg = GetNullableValue(measures, 77),
-                VisceralFatIndex = GetNullableIntValue(measures, 123)
+                VisceralFatIndex = GetNullableIntValue(measures, 170)
             };
         }
 
