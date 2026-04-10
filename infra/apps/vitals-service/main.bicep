@@ -95,3 +95,11 @@ resource userHeightSetting 'Microsoft.AppConfiguration/configurationStores/keyVa
     value: '1.88'
   }
 }
+
+resource lookbackDaysSetting 'Microsoft.AppConfiguration/configurationStores/keyValues@2025-02-01-preview' = {
+  name: 'Biotrackr:LookbackDays'
+  parent: appConfig
+  properties: {
+    value: '2'
+  }
+}
