@@ -47,11 +47,11 @@ namespace Biotrackr.UI.UnitTests.Components.Layout
         }
 
         [Fact]
-        public void RenderWeightLink()
+        public void RenderVitalsLink()
         {
             var cut = Render<NavMenu>();
 
-            cut.Markup.Should().Contain("Weight");
+            cut.Markup.Should().Contain("Vitals");
         }
 
         [Fact]

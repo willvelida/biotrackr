@@ -6,7 +6,7 @@ using Biotrackr.UI.Models;
 using Biotrackr.UI.Models.Activity;
 using Biotrackr.UI.Models.Food;
 using Biotrackr.UI.Models.Sleep;
-using Biotrackr.UI.Models.Weight;
+using Biotrackr.UI.Models.Vitals;
 using Biotrackr.UI.Services;
 using Biotrackr.UI.UnitTests.Helpers;
 using FluentAssertions;
@@ -148,16 +148,16 @@ namespace Biotrackr.UI.UnitTests.Components.Pages
                         }
                     ]
                 });
-            _mockApiService.Setup(s => s.GetWeightByDateRangeAsync(
+            _mockApiService.Setup(s => s.GetVitalsByDateRangeAsync(
                     It.IsAny<string>(), It.IsAny<string>(), It.IsAny<int>(), It.IsAny<int>()))
-                .ReturnsAsync(new PaginatedResponse<WeightItem>
+                .ReturnsAsync(new PaginatedResponse<VitalsItem>
                 {
                     Items =
                     [
-                        new WeightItem
+                        new VitalsItem
                         {
                             Date = "2026-03-15",
-                            Weight = new WeightData { Weight = 80.5 }
+                            Weight = new VitalsData { Weight = 80.5 }
                         }
                     ]
                 });
@@ -239,9 +239,9 @@ namespace Biotrackr.UI.UnitTests.Components.Pages
             _mockApiService.Setup(s => s.GetFoodLogsByDateRangeAsync(
                     It.IsAny<string>(), It.IsAny<string>(), It.IsAny<int>(), It.IsAny<int>()))
                 .ReturnsAsync(new PaginatedResponse<FoodItem> { Items = [] });
-            _mockApiService.Setup(s => s.GetWeightByDateRangeAsync(
+            _mockApiService.Setup(s => s.GetVitalsByDateRangeAsync(
                     It.IsAny<string>(), It.IsAny<string>(), It.IsAny<int>(), It.IsAny<int>()))
-                .ReturnsAsync(new PaginatedResponse<WeightItem> { Items = [] });
+                .ReturnsAsync(new PaginatedResponse<VitalsItem> { Items = [] });
         }
     }
 }

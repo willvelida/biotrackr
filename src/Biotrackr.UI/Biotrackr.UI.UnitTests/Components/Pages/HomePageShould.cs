@@ -6,7 +6,7 @@ using Biotrackr.UI.Models;
 using Biotrackr.UI.Models.Activity;
 using Biotrackr.UI.Models.Food;
 using Biotrackr.UI.Models.Sleep;
-using Biotrackr.UI.Models.Weight;
+using Biotrackr.UI.Models.Vitals;
 using Biotrackr.UI.Services;
 using Biotrackr.UI.UnitTests.Helpers;
 using FluentAssertions;
@@ -53,8 +53,8 @@ namespace Biotrackr.UI.UnitTests.Components.Pages
                 .ReturnsAsync(new FoodItem { Food = new FoodData { Summary = new FoodSummary { Calories = 2100 }, Goals = new FoodGoals { Calories = 2500 } } });
             _mockApiService.Setup(s => s.GetSleepByDateAsync(It.IsAny<string>()))
                 .ReturnsAsync(new SleepItem { Sleep = new SleepData { Summary = new SleepSummary { TotalMinutesAsleep = 420 } } });
-            _mockApiService.Setup(s => s.GetWeightByDateAsync(It.IsAny<string>()))
-                .ReturnsAsync(new WeightItem { Weight = new WeightData { Weight = 80.5, Bmi = 24.5 } });
+            _mockApiService.Setup(s => s.GetVitalsByDateAsync(It.IsAny<string>()))
+                .ReturnsAsync(new VitalsItem { Weight = new VitalsData { Weight = 80.5, Bmi = 24.5 } });
 
             var cut = Render<Home>();
 
@@ -74,8 +74,8 @@ namespace Biotrackr.UI.UnitTests.Components.Pages
                 .ReturnsAsync((FoodItem?)null);
             _mockApiService.Setup(s => s.GetSleepByDateAsync(It.IsAny<string>()))
                 .ReturnsAsync((SleepItem?)null);
-            _mockApiService.Setup(s => s.GetWeightByDateAsync(It.IsAny<string>()))
-                .ReturnsAsync((WeightItem?)null);
+            _mockApiService.Setup(s => s.GetVitalsByDateAsync(It.IsAny<string>()))
+                .ReturnsAsync((VitalsItem?)null);
 
             var cut = Render<Home>();
 
@@ -95,7 +95,7 @@ namespace Biotrackr.UI.UnitTests.Components.Pages
                 .ThrowsAsync(new HttpRequestException("API error"));
             _mockApiService.Setup(s => s.GetSleepByDateAsync(It.IsAny<string>()))
                 .ThrowsAsync(new HttpRequestException("API error"));
-            _mockApiService.Setup(s => s.GetWeightByDateAsync(It.IsAny<string>()))
+            _mockApiService.Setup(s => s.GetVitalsByDateAsync(It.IsAny<string>()))
                 .ThrowsAsync(new HttpRequestException("API error"));
 
             var cut = Render<Home>();
@@ -123,8 +123,8 @@ namespace Biotrackr.UI.UnitTests.Components.Pages
                 .ReturnsAsync(new FoodItem { Food = new FoodData { Summary = new FoodSummary(), Goals = new FoodGoals() } });
             _mockApiService.Setup(s => s.GetSleepByDateAsync(It.IsAny<string>()))
                 .ReturnsAsync(new SleepItem());
-            _mockApiService.Setup(s => s.GetWeightByDateAsync(It.IsAny<string>()))
-                .ReturnsAsync(new WeightItem());
+            _mockApiService.Setup(s => s.GetVitalsByDateAsync(It.IsAny<string>()))
+                .ReturnsAsync(new VitalsItem());
 
             var cut = Render<Home>();
 
@@ -140,8 +140,8 @@ namespace Biotrackr.UI.UnitTests.Components.Pages
                 .ReturnsAsync(new FoodItem());
             _mockApiService.Setup(s => s.GetSleepByDateAsync(It.IsAny<string>()))
                 .ReturnsAsync(new SleepItem());
-            _mockApiService.Setup(s => s.GetWeightByDateAsync(It.IsAny<string>()))
-                .ReturnsAsync(new WeightItem { Weight = new WeightData { Weight = 75, Bmi = 23.1 } });
+            _mockApiService.Setup(s => s.GetVitalsByDateAsync(It.IsAny<string>()))
+                .ReturnsAsync(new VitalsItem { Weight = new VitalsData { Weight = 75, Bmi = 23.1 } });
 
             var cut = Render<Home>();
 
@@ -202,8 +202,8 @@ namespace Biotrackr.UI.UnitTests.Components.Pages
                 .ReturnsAsync(new FoodItem());
             _mockApiService.Setup(s => s.GetSleepByDateAsync(It.IsAny<string>()))
                 .ReturnsAsync(new SleepItem());
-            _mockApiService.Setup(s => s.GetWeightByDateAsync(It.IsAny<string>()))
-                .ReturnsAsync(new WeightItem());
+            _mockApiService.Setup(s => s.GetVitalsByDateAsync(It.IsAny<string>()))
+                .ReturnsAsync(new VitalsItem());
 
             // Range API throws — trend data should silently degrade
             _mockApiService.Setup(s => s.GetActivitiesByDateRangeAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<int>(), It.IsAny<int>()))
@@ -227,7 +227,7 @@ namespace Biotrackr.UI.UnitTests.Components.Pages
 
             _mockApiService.Verify(s => s.GetActivitiesByDateRangeAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<int>(), It.IsAny<int>()), Times.Once);
             _mockApiService.Verify(s => s.GetSleepByDateRangeAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<int>(), It.IsAny<int>()), Times.Once);
-            _mockApiService.Verify(s => s.GetWeightByDateRangeAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<int>(), It.IsAny<int>()), Times.Once);
+            _mockApiService.Verify(s => s.GetVitalsByDateRangeAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<int>(), It.IsAny<int>()), Times.Once);
             _mockApiService.Verify(s => s.GetFoodLogsByDateRangeAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<int>(), It.IsAny<int>()), Times.Once);
         }
 
@@ -239,8 +239,8 @@ namespace Biotrackr.UI.UnitTests.Components.Pages
                 .ReturnsAsync(new FoodItem());
             _mockApiService.Setup(s => s.GetSleepByDateAsync(It.IsAny<string>()))
                 .ReturnsAsync(new SleepItem());
-            _mockApiService.Setup(s => s.GetWeightByDateAsync(It.IsAny<string>()))
-                .ReturnsAsync(new WeightItem());
+            _mockApiService.Setup(s => s.GetVitalsByDateAsync(It.IsAny<string>()))
+                .ReturnsAsync(new VitalsItem());
         }
 
         private void SetupEmptyRangeResponses(bool skipActivity = false, bool skipSleep = false, bool skipWeight = false, bool skipFood = false)
@@ -252,8 +252,8 @@ namespace Biotrackr.UI.UnitTests.Components.Pages
                 _mockApiService.Setup(s => s.GetSleepByDateRangeAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<int>(), It.IsAny<int>()))
                     .ReturnsAsync(new PaginatedResponse<SleepItem> { Items = [], TotalCount = 0 });
             if (!skipWeight)
-                _mockApiService.Setup(s => s.GetWeightByDateRangeAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<int>(), It.IsAny<int>()))
-                    .ReturnsAsync(new PaginatedResponse<WeightItem> { Items = [], TotalCount = 0 });
+                _mockApiService.Setup(s => s.GetVitalsByDateRangeAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<int>(), It.IsAny<int>()))
+                    .ReturnsAsync(new PaginatedResponse<VitalsItem> { Items = [], TotalCount = 0 });
             if (!skipFood)
                 _mockApiService.Setup(s => s.GetFoodLogsByDateRangeAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<int>(), It.IsAny<int>()))
                     .ReturnsAsync(new PaginatedResponse<FoodItem> { Items = [], TotalCount = 0 });

@@ -9,8 +9,9 @@
      - TrendData (IEnumerable<TrendDataPoint>?): Data for the sparkline chart
      - GaugeValue (double): Current value for the linear gauge
      - GaugeMax (double): Maximum value for the linear gauge (0 hides it)
-     - GaugeZoneLow (double): Upper bound of the low (red) zone
-     - GaugeZoneHigh (double): Upper bound of the mid (amber) zone
+     - GaugeZoneLow (double): Upper bound of the low zone
+     - GaugeZoneHigh (double): Upper bound of the mid zone
+     - GaugeInverted (bool): When true, swaps zone colors (low=green, high=red)
 *@
 <RadzenCard class="@($"rz-h-100 summary-card {CardClass}")">
     <RadzenStack Orientation="Orientation.Vertical"
@@ -35,13 +36,17 @@
         }
         @if (GaugeMax > 0)
         {
+            var lowColor = GaugeInverted ? "var(--rz-success)" : "var(--rz-danger)";
+            var midColor = "var(--rz-warning)";
+            var highColor = GaugeInverted ? "var(--rz-danger)" : "var(--rz-success)";
+
             <RadzenLinearGauge Style="width: 100%; height: 40px;" class="rz-mt-1">
                 <RadzenLinearGaugeScale Min="0" Max="@GaugeMax" TickPosition="GaugeTickPosition.None"
                                         MinorStep="0" Step="@GaugeMax">
                     <RadzenLinearGaugeScalePointer Value="@GaugeValue" />
-                    <RadzenLinearGaugeScaleRange From="0" To="@GaugeZoneLow" Fill="var(--rz-danger)" />
-                    <RadzenLinearGaugeScaleRange From="@GaugeZoneLow" To="@GaugeZoneHigh" Fill="var(--rz-warning)" />
-                    <RadzenLinearGaugeScaleRange From="@GaugeZoneHigh" To="@GaugeMax" Fill="var(--rz-success)" />
+                    <RadzenLinearGaugeScaleRange From="0" To="@GaugeZoneLow" Fill="@lowColor" />
+                    <RadzenLinearGaugeScaleRange From="@GaugeZoneLow" To="@GaugeZoneHigh" Fill="@midColor" />
+                    <RadzenLinearGaugeScaleRange From="@GaugeZoneHigh" To="@GaugeMax" Fill="@highColor" />
                 </RadzenLinearGaugeScale>
             </RadzenLinearGauge>
         }
@@ -59,4 +64,5 @@
     [Parameter] public double GaugeMax { get; set; }
     [Parameter] public double GaugeZoneLow { get; set; }
     [Parameter] public double GaugeZoneHigh { get; set; }
+    [Parameter] public bool GaugeInverted { get; set; }
 }

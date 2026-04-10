@@ -1,14 +1,17 @@
 using System.Text.Json.Serialization;
 
-namespace Biotrackr.UI.Models.Weight
+namespace Biotrackr.UI.Models.Vitals
 {
-    public class WeightItem
+    public class VitalsItem
     {
         [JsonPropertyName("id")]
         public string Id { get; set; } = string.Empty;
 
         [JsonPropertyName("weight")]
-        public WeightData Weight { get; set; } = new();
+        public VitalsData Weight { get; set; } = new();
+
+        [JsonPropertyName("bloodPressureReadings")]
+        public List<BloodPressureReadingData>? BloodPressureReadings { get; set; }
 
         [JsonPropertyName("date")]
         public string Date { get; set; } = string.Empty;

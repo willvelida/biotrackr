@@ -1,0 +1,345 @@
+@page "/vitals"
+@rendermode InteractiveServer
+@inherits DataPageBase<VitalsItem, VitalsItem>
+
+<PageTitle>Biotrackr - Vitals</PageTitle>
+
+<RadzenText TextStyle="TextStyle.H4">Vitals</RadzenText>
+
+<DatePicker SelectedDate="@SelectedDate" StartDate="@StartDate" EndDate="@EndDate" Mode="@Mode"
+            OnSingleDateSelected="LoadByDate" OnDateRangeSelected="LoadByRange" />
+
+<LoadingSpinner IsLoading="@IsLoading" Message="Loading vitals data..." />
+<ErrorDisplay Message="@ErrorMessage" />
+
+@if (!IsLoading && SingleItem is not null && Mode == "date")
+{
+    @if (SingleItem.Weight.Weight > 0)
+    {
+        <RadzenRow Gap="1rem" class="rz-mb-4">
+            <RadzenColumn Size="12" SizeMD="3" SizeSM="6">
+                <SummaryCard Title="Weight" Value="@($"{SingleItem.Weight.Weight:F1} kg")" />
+            </RadzenColumn>
+            <RadzenColumn Size="12" SizeMD="3" SizeSM="6">
+                <SummaryCard Title="BMI" Value="@($"{SingleItem.Weight.Bmi:F1}")" Subtitle="@GetBmiCategory(SingleItem.Weight.Bmi ?? 0)" />
+            </RadzenColumn>
+            <RadzenColumn Size="12" SizeMD="3" SizeSM="6">
+                <SummaryCard Title="Recorded" Value="@SingleItem.Weight.Time" Subtitle="@(SingleItem.Provider ?? SingleItem.Weight.Source)" />
+            </RadzenColumn>
+        </RadzenRow>
+
+        @if (SingleItem.Weight.MuscleMassKg is not null || SingleItem.Weight.FatMassKg is not null)
+        {
+            <RadzenText TextStyle="TextStyle.H6" class="rz-mb-2">Body Composition</RadzenText>
+            <RadzenRow Gap="1rem" class="rz-mb-4">
+                @if (SingleItem.Weight.FatMassKg is not null)
+                {
+                    <RadzenColumn Size="12" SizeMD="2" SizeSM="4">
+                        <SummaryCard Title="Fat Mass" Value="@($"{SingleItem.Weight.FatMassKg:F1} kg")" />
+                    </RadzenColumn>
+                }
+                @if (SingleItem.Weight.FatFreeMassKg is not null)
+                {
+                    <RadzenColumn Size="12" SizeMD="2" SizeSM="4">
+                        <SummaryCard Title="Fat-Free Mass" Value="@($"{SingleItem.Weight.FatFreeMassKg:F1} kg")" />
+                    </RadzenColumn>
+                }
+                @if (SingleItem.Weight.MuscleMassKg is not null)
+                {
+                    <RadzenColumn Size="12" SizeMD="2" SizeSM="4">
+                        <SummaryCard Title="Muscle Mass" Value="@($"{SingleItem.Weight.MuscleMassKg:F1} kg")" />
+                    </RadzenColumn>
+                }
+                @if (SingleItem.Weight.BoneMassKg is not null)
+                {
+                    <RadzenColumn Size="12" SizeMD="2" SizeSM="4">
+                        <SummaryCard Title="Bone Mass" Value="@($"{SingleItem.Weight.BoneMassKg:F1} kg")" />
+                    </RadzenColumn>
+                }
+                @if (SingleItem.Weight.WaterMassKg is not null)
+                {
+                    <RadzenColumn Size="12" SizeMD="2" SizeSM="4">
+                        <SummaryCard Title="Water Mass" Value="@($"{SingleItem.Weight.WaterMassKg:F1} kg")" />
+                    </RadzenColumn>
+                }
+                @if (SingleItem.Weight.VisceralFatIndex is not null)
+                {
+                    <RadzenColumn Size="12" SizeMD="2" SizeSM="4">
+                        <SummaryCard Title="Visceral Fat" Value="@($"{SingleItem.Weight.VisceralFatIndex}")" />
+                    </RadzenColumn>
+                }
+            </RadzenRow>
+
+            @if (GetBodyCompositionData().Any())
+            {
+                <RadzenText TextStyle="TextStyle.H6" class="rz-mb-2">Body Composition</RadzenText>
+                <figure role="group" aria-label="Body composition chart">
+                    <RadzenChart class="bt-chart rz-mb-4">
+                        <RadzenDonutSeries Data="@GetBodyCompositionData()" CategoryProperty="Component"
+                            ValueProperty="Mass" Title="Body Composition (kg)" />
+                    </RadzenChart>
+                    <figcaption class="sr-only">Donut chart showing body composition breakdown by mass in kilograms.</figcaption>
+                </figure>
+            }
+        }
+    }
+
+    @if (SingleItem?.BloodPressureReadings?.Any() == true)
+    {
+        <RadzenText TextStyle="TextStyle.H6" class="rz-mb-2 rz-mt-4">Blood Pressure</RadzenText>
+
+        <RadzenStack Orientation="Orientation.Horizontal" Gap="1rem" Wrap="FlexWrap.Wrap" class="rz-mb-4">
+            @{
+                var latestBp = SingleItem.BloodPressureReadings.OrderByDescending(r => r.Timestamp).First();
+            }
+            <SummaryCard Title="Blood Pressure"
+                Value="@($"{latestBp.Systolic}/{latestBp.Diastolic} mmHg")"
+                Subtitle="@GetBpCategory(latestBp.Systolic, latestBp.Diastolic)"
+                GaugeValue="@latestBp.Systolic" GaugeMax="200"
+                GaugeZoneLow="120" GaugeZoneHigh="140"
+                GaugeInverted="true" />
+            <SummaryCard Title="Heart Rate" Value="@($"{latestBp.HeartRate} bpm")" />
+            <SummaryCard Title="Readings" Value="@($"{SingleItem.BloodPressureReadings.Count}")"
+                Subtitle="@($"Latest at {latestBp.Time}")" />
+        </RadzenStack>
+
+        @if (SingleItem.BloodPressureReadings.Count > 1)
+        {
+            <RadzenDataGrid Data="@SingleItem.BloodPressureReadings" TItem="BloodPressureReadingData"
+                AllowPaging="false" AllowSorting="false" Density="Density.Compact" Responsive="true" class="rz-mb-4">
+                <Columns>
+                    <RadzenDataGridColumn TItem="BloodPressureReadingData" Property="Time" Title="Time" />
+                    <RadzenDataGridColumn TItem="BloodPressureReadingData" Property="Systolic" Title="Systolic (mmHg)" />
+                    <RadzenDataGridColumn TItem="BloodPressureReadingData" Property="Diastolic" Title="Diastolic (mmHg)" />
+                    <RadzenDataGridColumn TItem="BloodPressureReadingData" Property="HeartRate" Title="Heart Rate (bpm)" />
+                    <RadzenDataGridColumn TItem="BloodPressureReadingData" Title="Status">
+                        <Template Context="reading">@GetBpCategory(reading.Systolic, reading.Diastolic)</Template>
+                    </RadzenDataGridColumn>
+                </Columns>
+            </RadzenDataGrid>
+        }
+    }
+
+    @if (SingleItem?.Weight.Weight is null or 0 && SingleItem?.BloodPressureReadings?.Any() != true)
+    {
+        <RadzenAlert AlertStyle="AlertStyle.Info" Variant="Variant.Flat" ShowIcon="true">No vitals entries for @SelectedDate.</RadzenAlert>
+    }
+}
+
+@if (!IsLoading && RangeItems is not null && Mode == "range")
+{
+    <RadzenTabs>
+        <Tabs>
+            <RadzenTabsItem Text="Charts">
+    @if (RangeItems.Items.Any())
+    {
+        <RadzenText TextStyle="TextStyle.H6" class="rz-mb-2">Weight Over Time</RadzenText>
+        <figure role="group" aria-label="Weight over time chart">
+            <RadzenChart class="bt-chart rz-mb-4">
+                <RadzenLineSeries Data="@GetRangeWeightData()" CategoryProperty="Date" ValueProperty="Value"
+                    Title="Weight (kg)" Smooth="true" />
+                <RadzenCategoryAxis Padding="20" />
+                <RadzenValueAxis>
+                    <RadzenGridLines Visible="true" />
+                </RadzenValueAxis>
+            </RadzenChart>
+            <figcaption class="sr-only">Line chart showing daily weight trend. See the Table tab for exact values.</figcaption>
+        </figure>
+
+        <RadzenText TextStyle="TextStyle.H6" class="rz-mb-2">BMI Over Time</RadzenText>
+        <figure role="group" aria-label="BMI over time chart">
+            <RadzenChart class="bt-chart rz-mb-4">
+                <RadzenLineSeries Data="@GetRangeBmiData()" CategoryProperty="Date" ValueProperty="Value"
+                    Title="BMI" Smooth="true" />
+                <RadzenCategoryAxis Padding="20" />
+                <RadzenValueAxis>
+                    <RadzenGridLines Visible="true" />
+                </RadzenValueAxis>
+            </RadzenChart>
+            <figcaption class="sr-only">Line chart showing daily BMI trend. See the Table tab for exact values.</figcaption>
+        </figure>
+
+        @if (GetRangeBodyFatData().Any())
+        {
+            <RadzenText TextStyle="TextStyle.H6" class="rz-mb-2">Body Fat % Over Time</RadzenText>
+            <figure role="group" aria-label="Body fat percentage over time chart">
+                <RadzenChart class="bt-chart rz-mb-4">
+                    <RadzenLineSeries Data="@GetRangeBodyFatData()" CategoryProperty="Date" ValueProperty="Value"
+                        Title="Body Fat %" Smooth="true" />
+                    <RadzenCategoryAxis Padding="20" />
+                    <RadzenValueAxis>
+                        <RadzenGridLines Visible="true" />
+                    </RadzenValueAxis>
+                </RadzenChart>
+                <figcaption class="sr-only">Line chart showing daily body fat percentage trend. See the Table tab for exact values.</figcaption>
+            </figure>
+        }
+
+        @if (GetRangeSystolicData().Any())
+        {
+            <RadzenText TextStyle="TextStyle.H6" class="rz-mb-2">Blood Pressure Over Time</RadzenText>
+            <figure role="group" aria-label="Blood pressure over time chart">
+                <RadzenChart class="bt-chart rz-mb-4">
+                    <RadzenLineSeries Data="@GetRangeSystolicData()" CategoryProperty="Date" ValueProperty="Value"
+                        Title="Systolic (mmHg)" Smooth="true" />
+                    <RadzenLineSeries Data="@GetRangeDiastolicData()" CategoryProperty="Date" ValueProperty="Value"
+                        Title="Diastolic (mmHg)" Smooth="true" />
+                    <RadzenCategoryAxis Padding="20" />
+                    <RadzenValueAxis><RadzenGridLines Visible="true" /></RadzenValueAxis>
+                </RadzenChart>
+                <figcaption class="sr-only">Line chart showing daily average blood pressure trend.</figcaption>
+            </figure>
+        }
+
+        @if (GetRangeHeartRateData().Any())
+        {
+            <RadzenText TextStyle="TextStyle.H6" class="rz-mb-2">Heart Rate Over Time</RadzenText>
+            <figure role="group" aria-label="Heart rate over time chart">
+                <RadzenChart class="bt-chart rz-mb-4">
+                    <RadzenLineSeries Data="@GetRangeHeartRateData()" CategoryProperty="Date" ValueProperty="Value"
+                        Title="Heart Rate (bpm)" Smooth="true" />
+                    <RadzenCategoryAxis Padding="20" />
+                    <RadzenValueAxis><RadzenGridLines Visible="true" /></RadzenValueAxis>
+                </RadzenChart>
+                <figcaption class="sr-only">Line chart showing daily average heart rate from BP readings.</figcaption>
+            </figure>
+        }
+    }
+            </RadzenTabsItem>
+            <RadzenTabsItem Text="Table">
+    <RadzenText TextStyle="TextStyle.H6" class="rz-mb-2">Weight Records</RadzenText>
+    <RadzenDataGrid Data="@RangeItems.Items" TItem="VitalsItem" Density="Density.Compact"
+                    AllowPaging="true" PageSize="10" Count="@RangeItems.TotalCount" LoadData="@OnLoadData" Responsive="true" class="rz-mb-4">
+        <Columns>
+            <RadzenDataGridColumn TItem="VitalsItem" Property="Date" Title="Date" />
+            <RadzenDataGridColumn TItem="VitalsItem" Title="Weight (kg)">
+                <Template Context="item">@(item.Weight.Weight?.ToString("F1") ?? "--")</Template>
+            </RadzenDataGridColumn>
+            <RadzenDataGridColumn TItem="VitalsItem" Title="BMI">
+                <Template Context="item">@(item.Weight.Bmi?.ToString("F1") ?? "--")</Template>
+            </RadzenDataGridColumn>
+            <RadzenDataGridColumn TItem="VitalsItem" Title="Muscle (kg)">
+                <Template Context="item">@(item.Weight.MuscleMassKg?.ToString("F1") ?? "--")</Template>
+            </RadzenDataGridColumn>
+            <RadzenDataGridColumn TItem="VitalsItem" Title="Fat Mass (kg)">
+                <Template Context="item">@(item.Weight.FatMassKg?.ToString("F1") ?? "--")</Template>
+            </RadzenDataGridColumn>
+            <RadzenDataGridColumn TItem="VitalsItem" Title="Bone (kg)">
+                <Template Context="item">@(item.Weight.BoneMassKg?.ToString("F1") ?? "--")</Template>
+            </RadzenDataGridColumn>
+            <RadzenDataGridColumn TItem="VitalsItem" Title="Water (kg)">
+                <Template Context="item">@(item.Weight.WaterMassKg?.ToString("F1") ?? "--")</Template>
+            </RadzenDataGridColumn>
+            <RadzenDataGridColumn TItem="VitalsItem" Title="Time">
+                <Template Context="item">@item.Weight.Time</Template>
+            </RadzenDataGridColumn>
+            <RadzenDataGridColumn TItem="VitalsItem" Title="Provider">
+                <Template Context="item">@(item.Provider ?? item.Weight.Source)</Template>
+            </RadzenDataGridColumn>
+        </Columns>
+    </RadzenDataGrid>
+
+    @if (GetAllBpReadings().Any())
+    {
+        <RadzenText TextStyle="TextStyle.H6" class="rz-mb-2 rz-mt-4">Blood Pressure Readings</RadzenText>
+        <RadzenDataGrid Data="@GetAllBpReadings()" TItem="BpReadingWithDate"
+            AllowPaging="true" PageSize="10" AllowSorting="true" Density="Density.Compact" Responsive="true">
+            <Columns>
+                <RadzenDataGridColumn TItem="BpReadingWithDate" Property="Date" Title="Date" />
+                <RadzenDataGridColumn TItem="BpReadingWithDate" Property="Time" Title="Time" />
+                <RadzenDataGridColumn TItem="BpReadingWithDate" Property="Systolic" Title="Systolic" />
+                <RadzenDataGridColumn TItem="BpReadingWithDate" Property="Diastolic" Title="Diastolic" />
+                <RadzenDataGridColumn TItem="BpReadingWithDate" Property="HeartRate" Title="HR" />
+                <RadzenDataGridColumn TItem="BpReadingWithDate" Title="Status">
+                    <Template Context="r">@GetBpCategory(r.Systolic, r.Diastolic)</Template>
+                </RadzenDataGridColumn>
+            </Columns>
+        </RadzenDataGrid>
+    }
+            </RadzenTabsItem>
+        </Tabs>
+    </RadzenTabs>
+}
+
+@if (!IsLoading && SingleItem is null && Mode == "date" && ErrorMessage is null)
+{
+    <RadzenAlert AlertStyle="AlertStyle.Info" Variant="Variant.Flat" ShowIcon="true">No vitals data found for @SelectedDate.</RadzenAlert>
+}
+
+@code {
+    protected override string DataName => "vitals";
+
+    protected override Task<VitalsItem?> FetchSingleAsync(string date)
+        => ApiService.GetVitalsByDateAsync(date);
+
+    protected override Task<PaginatedResponse<VitalsItem>> FetchRangeAsync(string start, string end, int page)
+        => ApiService.GetVitalsByDateRangeAsync(start, end, page);
+
+    private static string GetBmiCategory(double bmi)
+    {
+        if (bmi < 18.5) return "Underweight";
+        if (bmi < 25.0) return "Normal";
+        if (bmi < 30.0) return "Overweight";
+        return "Obese";
+    }
+
+    private record BodyCompositionItem(string Component, double Mass);
+
+    private List<BodyCompositionItem> GetBodyCompositionData()
+    {
+        var w = SingleItem!.Weight;
+        var items = new List<BodyCompositionItem>();
+        if (w.FatMassKg is not null) items.Add(new("Fat", w.FatMassKg.Value));
+        if (w.MuscleMassKg is not null) items.Add(new("Muscle", w.MuscleMassKg.Value));
+        if (w.BoneMassKg is not null) items.Add(new("Bone", w.BoneMassKg.Value));
+        if (w.WaterMassKg is not null) items.Add(new("Water", w.WaterMassKg.Value));
+        return items;
+    }
+
+    private record ChartDataPoint(string Date, double Value);
+
+    private List<ChartDataPoint> GetRangeWeightData() =>
+        RangeItems!.Items.Where(w => w.Weight.Weight > 0).Select(w => new ChartDataPoint(w.Date, w.Weight.Weight!.Value)).ToList();
+
+    private List<ChartDataPoint> GetRangeBmiData() =>
+        RangeItems!.Items.Where(w => w.Weight.Bmi > 0).Select(w => new ChartDataPoint(w.Date, Math.Round(w.Weight.Bmi!.Value, 1))).ToList();
+
+    private List<ChartDataPoint> GetRangeBodyFatData() =>
+        RangeItems!.Items.Where(w => w.Weight.Fat > 0).Select(w => new ChartDataPoint(w.Date, Math.Round(w.Weight.Fat!.Value, 1))).ToList();
+
+    private static string GetBpCategory(int systolic, int diastolic)
+    {
+        if (systolic > 180 || diastolic > 120) return "Crisis";
+        if (systolic >= 140 || diastolic >= 90) return "Stage 2";
+        if (systolic >= 130 || diastolic >= 80) return "Stage 1";
+        if (systolic >= 120) return "Elevated";
+        return "Normal";
+    }
+
+    private List<ChartDataPoint> GetRangeSystolicData() =>
+        RangeItems!.Items
+            .Where(v => v.BloodPressureReadings?.Any() == true)
+            .Select(v => new ChartDataPoint(v.Date, Math.Round(v.BloodPressureReadings!.Average(r => r.Systolic), 0)))
+            .ToList();
+
+    private List<ChartDataPoint> GetRangeDiastolicData() =>
+        RangeItems!.Items
+            .Where(v => v.BloodPressureReadings?.Any() == true)
+            .Select(v => new ChartDataPoint(v.Date, Math.Round(v.BloodPressureReadings!.Average(r => r.Diastolic), 0)))
+            .ToList();
+
+    private List<ChartDataPoint> GetRangeHeartRateData() =>
+        RangeItems!.Items
+            .Where(v => v.BloodPressureReadings?.Any() == true)
+            .Select(v => new ChartDataPoint(v.Date, Math.Round(v.BloodPressureReadings!.Average(r => r.HeartRate), 0)))
+            .ToList();
+
+    private record BpReadingWithDate(string Date, string Time, int Systolic, int Diastolic, int HeartRate);
+
+    private List<BpReadingWithDate> GetAllBpReadings() =>
+        RangeItems!.Items
+            .Where(v => v.BloodPressureReadings?.Any() == true)
+            .SelectMany(v => v.BloodPressureReadings!.Select(r => new BpReadingWithDate(v.Date, r.Time, r.Systolic, r.Diastolic, r.HeartRate)))
+            .OrderByDescending(r => r.Date).ThenByDescending(r => r.Time)
+            .ToList();
+}

@@ -2,7 +2,7 @@ using Biotrackr.UI.Models;
 using Biotrackr.UI.Models.Activity;
 using Biotrackr.UI.Models.Food;
 using Biotrackr.UI.Models.Sleep;
-using Biotrackr.UI.Models.Weight;
+using Biotrackr.UI.Models.Vitals;
 
 namespace Biotrackr.UI.Services
 {
@@ -20,8 +20,8 @@ namespace Biotrackr.UI.Services
         Task<SleepItem?> GetSleepByDateAsync(string date);
         Task<PaginatedResponse<SleepItem>> GetSleepByDateRangeAsync(string startDate, string endDate, int pageNumber = 1, int pageSize = 20);
 
-        Task<PaginatedResponse<WeightItem>> GetWeightRecordsAsync(int pageNumber = 1, int pageSize = 20);
-        Task<WeightItem?> GetWeightByDateAsync(string date);
-        Task<PaginatedResponse<WeightItem>> GetWeightByDateRangeAsync(string startDate, string endDate, int pageNumber = 1, int pageSize = 20);
+        Task<PaginatedResponse<VitalsItem>> GetVitalsRecordsAsync(int pageNumber = 1, int pageSize = 20);
+        Task<VitalsItem?> GetVitalsByDateAsync(string date);
+        Task<PaginatedResponse<VitalsItem>> GetVitalsByDateRangeAsync(string startDate, string endDate, int pageNumber = 1, int pageSize = 20);
     }
 }

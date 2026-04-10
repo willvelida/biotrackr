@@ -4,7 +4,7 @@ using Biotrackr.UI.Models;
 using Biotrackr.UI.Models.Activity;
 using Biotrackr.UI.Models.Food;
 using Biotrackr.UI.Models.Sleep;
-using Biotrackr.UI.Models.Weight;
+using Biotrackr.UI.Models.Vitals;
 using Biotrackr.UI.Services;
 using Biotrackr.UI.UnitTests.Helpers;
 using FluentAssertions;
@@ -215,59 +215,59 @@ namespace Biotrackr.UI.UnitTests.Services
             result.Items.Should().HaveCount(1);
         }
 
-        // Weight Tests
+        // Vitals Tests
         [Fact]
-        public async Task GetWeightRecordsAsync_ShouldReturnPaginatedResponse_WhenApiReturnsData()
+        public async Task GetVitalsRecordsAsync_ShouldReturnPaginatedResponse_WhenApiReturnsData()
         {
-            var expected = new PaginatedResponse<WeightItem>
+            var expected = new PaginatedResponse<VitalsItem>
             {
-                Items = [new WeightItem { Date = "2025-01-15" }],
+                Items = [new VitalsItem { Date = "2025-01-15" }],
                 TotalCount = 1,
                 PageNumber = 1,
                 PageSize = 20
             };
             var sut = CreateSut(CreateSuccessResponse(expected));
 
-            var result = await sut.GetWeightRecordsAsync();
+            var result = await sut.GetVitalsRecordsAsync();
 
             result.Items.Should().HaveCount(1);
         }
 
         [Fact]
-        public async Task GetWeightByDateAsync_ShouldReturnItem_WhenDateExists()
+        public async Task GetVitalsByDateAsync_ShouldReturnItem_WhenDateExists()
         {
-            var expected = new WeightItem { Date = "2025-01-15" };
+            var expected = new VitalsItem { Date = "2025-01-15" };
             var sut = CreateSut(CreateSuccessResponse(expected));
 
-            var result = await sut.GetWeightByDateAsync("2025-01-15");
+            var result = await sut.GetVitalsByDateAsync("2025-01-15");
 
             result.Should().NotBeNull();
             result!.Date.Should().Be("2025-01-15");
         }
 
         [Fact]
-        public async Task GetWeightByDateAsync_ShouldReturnNull_WhenNotFound()
+        public async Task GetVitalsByDateAsync_ShouldReturnNull_WhenNotFound()
         {
             var sut = CreateSut(CreateNotFoundResponse());
 
-            var result = await sut.GetWeightByDateAsync("2025-01-15");
+            var result = await sut.GetVitalsByDateAsync("2025-01-15");
 
             result.Should().BeNull();
         }
 
         [Fact]
-        public async Task GetWeightByDateRangeAsync_ShouldReturnPaginatedResponse_WhenApiReturnsData()
+        public async Task GetVitalsByDateRangeAsync_ShouldReturnPaginatedResponse_WhenApiReturnsData()
         {
-            var expected = new PaginatedResponse<WeightItem>
+            var expected = new PaginatedResponse<VitalsItem>
             {
-                Items = [new WeightItem { Date = "2025-01-15" }],
+                Items = [new VitalsItem { Date = "2025-01-15" }],
                 TotalCount = 1,
                 PageNumber = 1,
                 PageSize = 20
             };
             var sut = CreateSut(CreateSuccessResponse(expected));
 
-            var result = await sut.GetWeightByDateRangeAsync("2025-01-15", "2025-01-16");
+            var result = await sut.GetVitalsByDateRangeAsync("2025-01-15", "2025-01-16");
 
             result.Items.Should().HaveCount(1);
         }
