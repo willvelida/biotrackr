@@ -29,7 +29,7 @@ namespace Biotrackr.Vitals.Svc.Workers
             {
                 _logger.LogInformation($"{nameof(VitalsWorker)} executed at: {DateTime.Now}");
 
-                var startDate = DateTime.Now.AddDays(-2).ToString("yyyy-MM-dd");
+                var startDate = DateTime.Now.AddDays(-_settings.LookbackDays).ToString("yyyy-MM-dd");
                 var endDate = DateTime.Now.ToString("yyyy-MM-dd");
 
                 var measureResponse = await _withingsService.GetMeasurements(startDate, endDate);
