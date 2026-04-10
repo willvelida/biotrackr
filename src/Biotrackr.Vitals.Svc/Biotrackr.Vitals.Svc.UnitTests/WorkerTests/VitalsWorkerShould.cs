@@ -342,6 +342,33 @@ namespace Biotrackr.Vitals.Svc.UnitTests.WorkerTests
             capturedDoc.Weight!.WeightKg.Should().BeApproximately(81.0, 0.001);
         }
 
+        [Fact]
+        public async Task ExecuteAsync_Should_UseConfiguredLookbackDays()
+        {
+            var customSettings = Options.Create(new Settings { DatabaseName = "TestDb", ContainerName = "TestContainer", UserHeight = 1.88, LookbackDays = 30 });
+            var measureResponse = CreateWeightMeasureResponse(0);
+            string? capturedStartDate = null;
+
+            _withingsServiceMock
+                .Setup(w => w.GetMeasurements(It.IsAny<string>(), It.IsAny<string>()))
+                .Callback<string, string>((start, end) => capturedStartDate = start)
+                .ReturnsAsync(measureResponse);
+
+            var worker = new VitalsWorker(
+                _withingsServiceMock.Object,
+                _vitalsServiceMock.Object,
+                _loggerMock.Object,
+                _appLifetimeMock.Object,
+                customSettings);
+
+            await worker.StartAsync(CancellationToken.None);
+            await Task.Delay(200);
+
+            capturedStartDate.Should().NotBeNull();
+            var expectedStart = DateTime.Now.AddDays(-30).ToString("yyyy-MM-dd");
+            capturedStartDate.Should().Be(expectedStart);
+        }
+
         private static WithingsMeasureResponse CreateWeightMeasureResponse(int groupCount)
         {
             var groups = Enumerable.Range(0, groupCount).Select(i => new MeasureGroup
@@ -361,7 +388,7 @@ namespace Biotrackr.Vitals.Svc.UnitTests.WorkerTests
                     new Measure { Value = 45200, Type = 76, Unit = -3 },
                     new Measure { Value = 3100, Type = 88, Unit = -3 },
                     new Measure { Value = 48900, Type = 77, Unit = -3 },
-                    new Measure { Value = 10, Type = 123, Unit = 0 }
+                    new Measure { Value = 10, Type = 170, Unit = 0 }
                 ]
             }).ToList();
 
