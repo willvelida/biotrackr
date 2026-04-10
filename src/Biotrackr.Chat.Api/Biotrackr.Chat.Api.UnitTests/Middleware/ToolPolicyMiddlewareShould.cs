@@ -31,7 +31,7 @@ namespace Biotrackr.Chat.Api.UnitTests.Middleware
                 [
                     "GetActivityByDate", "GetActivityByDateRange", "GetActivityRecords",
                     "GetSleepByDate", "GetSleepByDateRange", "GetSleepRecords",
-                    "GetWeightByDate", "GetWeightByDateRange", "GetWeightRecords",
+                    "GetVitalsByDate", "GetVitalsByDateRange", "GetVitalsRecords",
                     "GetFoodByDate", "GetFoodByDateRange", "GetFoodRecords"
                 ]
             };
