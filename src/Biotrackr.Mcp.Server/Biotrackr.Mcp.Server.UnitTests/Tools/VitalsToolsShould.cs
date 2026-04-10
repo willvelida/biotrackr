@@ -1,7 +1,7 @@
 using System.Net;
 using System.Text.Json;
 using Biotrackr.Mcp.Server.Models;
-using Biotrackr.Mcp.Server.Models.Weight;
+using Biotrackr.Mcp.Server.Models.Vitals;
 using Biotrackr.Mcp.Server.Tools;
 using FluentAssertions;
 using Microsoft.Extensions.Logging;
@@ -9,27 +9,27 @@ using Moq;
 
 namespace Biotrackr.Mcp.Server.UnitTests.Tools
 {
-    public class WeightToolsShould
+    public class VitalsToolsShould
     {
-        private readonly Mock<ILogger<WeightTools>> _loggerMock;
+        private readonly Mock<ILogger<VitalsTools>> _loggerMock;
 
-        public WeightToolsShould()
+        public VitalsToolsShould()
         {
-            _loggerMock = new Mock<ILogger<WeightTools>>();
+            _loggerMock = new Mock<ILogger<VitalsTools>>();
         }
 
-        private WeightTools CreateSut(HttpResponseMessage response)
+        private VitalsTools CreateSut(HttpResponseMessage response)
         {
             var handler = new MockHttpMessageHandler(response);
             var httpClient = new HttpClient(handler) { BaseAddress = new Uri("https://test.api.com") };
-            return new WeightTools(httpClient, _loggerMock.Object);
+            return new VitalsTools(httpClient, _loggerMock.Object);
         }
 
-        private WeightTools CreateSut(Exception exception)
+        private VitalsTools CreateSut(Exception exception)
         {
             var handler = new MockHttpMessageHandler(exception);
             var httpClient = new HttpClient(handler) { BaseAddress = new Uri("https://test.api.com") };
-            return new WeightTools(httpClient, _loggerMock.Object);
+            return new VitalsTools(httpClient, _loggerMock.Object);
         }
 
         private static HttpResponseMessage CreateSuccessResponse<T>(T data)
@@ -41,17 +41,17 @@ namespace Biotrackr.Mcp.Server.UnitTests.Tools
             };
         }
 
-        #region GetWeightByDate Tests
+        #region GetVitalsByDate Tests
 
         [Fact]
-        public async Task GetWeightByDate_ShouldReturnData_WhenDateIsValid()
+        public async Task GetVitalsByDate_ShouldReturnData_WhenDateIsValid()
         {
             // Arrange
-            var weightItem = new WeightItem { Date = "2025-01-15" };
-            var sut = CreateSut(CreateSuccessResponse(weightItem));
+            var vitalsItem = new VitalsItem { Date = "2025-01-15" };
+            var sut = CreateSut(CreateSuccessResponse(vitalsItem));
 
             // Act
-            var result = await sut.GetWeightByDate("2025-01-15");
+            var result = await sut.GetVitalsByDate("2025-01-15");
 
             // Assert
             var parsed = JsonSerializer.Deserialize<JsonElement>(result);
@@ -63,13 +63,13 @@ namespace Biotrackr.Mcp.Server.UnitTests.Tools
         [InlineData("01-15-2025")]
         [InlineData("2025/01/15")]
         [InlineData("")]
-        public async Task GetWeightByDate_ShouldReturnError_WhenDateIsInvalid(string date)
+        public async Task GetVitalsByDate_ShouldReturnError_WhenDateIsInvalid(string date)
         {
             // Arrange
             var sut = CreateSut(new HttpResponseMessage(HttpStatusCode.OK));
 
             // Act
-            var result = await sut.GetWeightByDate(date);
+            var result = await sut.GetVitalsByDate(date);
 
             // Assert
             var error = JsonSerializer.Deserialize<JsonElement>(result);
@@ -77,13 +77,13 @@ namespace Biotrackr.Mcp.Server.UnitTests.Tools
         }
 
         [Fact]
-        public async Task GetWeightByDate_ShouldReturnError_WhenApiReturns404()
+        public async Task GetVitalsByDate_ShouldReturnError_WhenApiReturns404()
         {
             // Arrange
             var sut = CreateSut(new HttpResponseMessage(HttpStatusCode.NotFound));
 
             // Act
-            var result = await sut.GetWeightByDate("2025-01-15");
+            var result = await sut.GetVitalsByDate("2025-01-15");
 
             // Assert
             var error = JsonSerializer.Deserialize<JsonElement>(result);
@@ -91,13 +91,13 @@ namespace Biotrackr.Mcp.Server.UnitTests.Tools
         }
 
         [Fact]
-        public async Task GetWeightByDate_ShouldReturnError_WhenNetworkFails()
+        public async Task GetVitalsByDate_ShouldReturnError_WhenNetworkFails()
         {
             // Arrange
             var sut = CreateSut(new HttpRequestException("Connection refused"));
 
             // Act
-            var result = await sut.GetWeightByDate("2025-01-15");
+            var result = await sut.GetVitalsByDate("2025-01-15");
 
             // Assert
             var error = JsonSerializer.Deserialize<JsonElement>(result);
@@ -106,15 +106,15 @@ namespace Biotrackr.Mcp.Server.UnitTests.Tools
 
         #endregion
 
-        #region GetWeightByDateRange Tests
+        #region GetVitalsByDateRange Tests
 
         [Fact]
-        public async Task GetWeightByDateRange_ShouldReturnData_WhenDatesAreValid()
+        public async Task GetVitalsByDateRange_ShouldReturnData_WhenDatesAreValid()
         {
             // Arrange
-            var paginatedResponse = new PaginatedResponse<WeightItem>
+            var paginatedResponse = new PaginatedResponse<VitalsItem>
             {
-                Items = [new WeightItem { Date = "2025-01-15" }],
+                Items = [new VitalsItem { Date = "2025-01-15" }],
                 TotalCount = 1,
                 PageNumber = 1,
                 PageSize = 20
@@ -122,7 +122,7 @@ namespace Biotrackr.Mcp.Server.UnitTests.Tools
             var sut = CreateSut(CreateSuccessResponse(paginatedResponse));
 
             // Act
-            var result = await sut.GetWeightByDateRange("2025-01-01", "2025-01-31");
+            var result = await sut.GetVitalsByDateRange("2025-01-01", "2025-01-31");
 
             // Assert
             var parsed = JsonSerializer.Deserialize<JsonElement>(result);
@@ -130,13 +130,13 @@ namespace Biotrackr.Mcp.Server.UnitTests.Tools
         }
 
         [Fact]
-        public async Task GetWeightByDateRange_ShouldReturnError_WhenStartDateIsInvalid()
+        public async Task GetVitalsByDateRange_ShouldReturnError_WhenStartDateIsInvalid()
         {
             // Arrange
             var sut = CreateSut(new HttpResponseMessage(HttpStatusCode.OK));
 
             // Act
-            var result = await sut.GetWeightByDateRange("invalid", "2025-01-31");
+            var result = await sut.GetVitalsByDateRange("invalid", "2025-01-31");
 
             // Assert
             var error = JsonSerializer.Deserialize<JsonElement>(result);
@@ -144,13 +144,13 @@ namespace Biotrackr.Mcp.Server.UnitTests.Tools
         }
 
         [Fact]
-        public async Task GetWeightByDateRange_ShouldReturnError_WhenEndDateIsInvalid()
+        public async Task GetVitalsByDateRange_ShouldReturnError_WhenEndDateIsInvalid()
         {
             // Arrange
             var sut = CreateSut(new HttpResponseMessage(HttpStatusCode.OK));
 
             // Act
-            var result = await sut.GetWeightByDateRange("2025-01-01", "invalid");
+            var result = await sut.GetVitalsByDateRange("2025-01-01", "invalid");
 
             // Assert
             var error = JsonSerializer.Deserialize<JsonElement>(result);
@@ -158,13 +158,13 @@ namespace Biotrackr.Mcp.Server.UnitTests.Tools
         }
 
         [Fact]
-        public async Task GetWeightByDateRange_ShouldReturnError_WhenStartDateIsAfterEndDate()
+        public async Task GetVitalsByDateRange_ShouldReturnError_WhenStartDateIsAfterEndDate()
         {
             // Arrange
             var sut = CreateSut(new HttpResponseMessage(HttpStatusCode.OK));
 
             // Act
-            var result = await sut.GetWeightByDateRange("2025-02-01", "2025-01-01");
+            var result = await sut.GetVitalsByDateRange("2025-02-01", "2025-01-01");
 
             // Assert
             var error = JsonSerializer.Deserialize<JsonElement>(result);
@@ -172,10 +172,10 @@ namespace Biotrackr.Mcp.Server.UnitTests.Tools
         }
 
         [Fact]
-        public async Task GetWeightByDateRange_ShouldAcceptCustomPagination()
+        public async Task GetVitalsByDateRange_ShouldAcceptCustomPagination()
         {
             // Arrange
-            var paginatedResponse = new PaginatedResponse<WeightItem>
+            var paginatedResponse = new PaginatedResponse<VitalsItem>
             {
                 Items = [],
                 TotalCount = 0,
@@ -185,7 +185,7 @@ namespace Biotrackr.Mcp.Server.UnitTests.Tools
             var sut = CreateSut(CreateSuccessResponse(paginatedResponse));
 
             // Act
-            var result = await sut.GetWeightByDateRange("2025-01-01", "2025-01-31", 3, 50);
+            var result = await sut.GetVitalsByDateRange("2025-01-01", "2025-01-31", 3, 50);
 
             // Assert
             var parsed = JsonSerializer.Deserialize<JsonElement>(result);
@@ -194,13 +194,13 @@ namespace Biotrackr.Mcp.Server.UnitTests.Tools
         }
 
         [Fact]
-        public async Task GetWeightByDateRange_ShouldReturnError_WhenApiReturns500()
+        public async Task GetVitalsByDateRange_ShouldReturnError_WhenApiReturns500()
         {
             // Arrange
             var sut = CreateSut(new HttpResponseMessage(HttpStatusCode.InternalServerError));
 
             // Act
-            var result = await sut.GetWeightByDateRange("2025-01-01", "2025-01-31");
+            var result = await sut.GetVitalsByDateRange("2025-01-01", "2025-01-31");
 
             // Assert
             var error = JsonSerializer.Deserialize<JsonElement>(result);
@@ -209,15 +209,15 @@ namespace Biotrackr.Mcp.Server.UnitTests.Tools
 
         #endregion
 
-        #region GetWeightRecords Tests
+        #region GetVitalsRecords Tests
 
         [Fact]
-        public async Task GetWeightRecords_ShouldReturnData_WithDefaultPagination()
+        public async Task GetVitalsRecords_ShouldReturnData_WithDefaultPagination()
         {
             // Arrange
-            var paginatedResponse = new PaginatedResponse<WeightItem>
+            var paginatedResponse = new PaginatedResponse<VitalsItem>
             {
-                Items = [new WeightItem { Date = "2025-01-15" }],
+                Items = [new VitalsItem { Date = "2025-01-15" }],
                 TotalCount = 1,
                 PageNumber = 1,
                 PageSize = 20
@@ -225,7 +225,7 @@ namespace Biotrackr.Mcp.Server.UnitTests.Tools
             var sut = CreateSut(CreateSuccessResponse(paginatedResponse));
 
             // Act
-            var result = await sut.GetWeightRecords();
+            var result = await sut.GetVitalsRecords();
 
             // Assert
             var parsed = JsonSerializer.Deserialize<JsonElement>(result);
@@ -234,10 +234,10 @@ namespace Biotrackr.Mcp.Server.UnitTests.Tools
         }
 
         [Fact]
-        public async Task GetWeightRecords_ShouldReturnData_WithCustomPagination()
+        public async Task GetVitalsRecords_ShouldReturnData_WithCustomPagination()
         {
             // Arrange
-            var paginatedResponse = new PaginatedResponse<WeightItem>
+            var paginatedResponse = new PaginatedResponse<VitalsItem>
             {
                 Items = [],
                 TotalCount = 100,
@@ -247,7 +247,7 @@ namespace Biotrackr.Mcp.Server.UnitTests.Tools
             var sut = CreateSut(CreateSuccessResponse(paginatedResponse));
 
             // Act
-            var result = await sut.GetWeightRecords(5, 10);
+            var result = await sut.GetVitalsRecords(5, 10);
 
             // Assert
             var parsed = JsonSerializer.Deserialize<JsonElement>(result);
@@ -256,13 +256,13 @@ namespace Biotrackr.Mcp.Server.UnitTests.Tools
         }
 
         [Fact]
-        public async Task GetWeightRecords_ShouldReturnError_WhenApiReturnsUnauthorized()
+        public async Task GetVitalsRecords_ShouldReturnError_WhenApiReturnsUnauthorized()
         {
             // Arrange
             var sut = CreateSut(new HttpResponseMessage(HttpStatusCode.Unauthorized));
 
             // Act
-            var result = await sut.GetWeightRecords();
+            var result = await sut.GetVitalsRecords();
 
             // Assert
             var error = JsonSerializer.Deserialize<JsonElement>(result);

@@ -1,17 +1,17 @@
 using System.Text.Json.Serialization;
 
-namespace Biotrackr.Mcp.Server.Models.Weight
+namespace Biotrackr.Mcp.Server.Models.Vitals
 {
-    public class WeightData
+    public class VitalsData
     {
         [JsonPropertyName("bmi")]
-        public double Bmi { get; set; }
+        public double? Bmi { get; set; }
 
         [JsonPropertyName("date")]
         public string Date { get; set; } = string.Empty;
 
         [JsonPropertyName("fat")]
-        public double Fat { get; set; }
+        public double? Fat { get; set; }
 
         [JsonIgnore]
         [JsonPropertyName("logId")]
@@ -25,7 +25,7 @@ namespace Biotrackr.Mcp.Server.Models.Weight
         public string Time { get; set; } = string.Empty;
 
         [JsonPropertyName("weight")]
-        public double Weight { get; set; }
+        public double? Weight { get; set; }
 
         [JsonPropertyName("fatMassKg")]
         public double? FatMassKg { get; set; }
