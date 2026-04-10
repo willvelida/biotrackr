@@ -34,8 +34,26 @@ namespace Biotrackr.Vitals.Svc.Workers
 
                 var measureResponse = await _withingsService.GetMeasurements(startDate, endDate);
 
+                var timezoneId = measureResponse.Body?.Timezone;
+                TimeZoneInfo userTimezone;
+                try
+                {
+                    userTimezone = !string.IsNullOrEmpty(timezoneId)
+                        ? TimeZoneInfo.FindSystemTimeZoneById(timezoneId)
+                        : TimeZoneInfo.Utc;
+                }
+                catch (TimeZoneNotFoundException)
+                {
+                    _logger.LogWarning($"Unknown timezone '{timezoneId}' from Withings API. Falling back to UTC.");
+                    userTimezone = TimeZoneInfo.Utc;
+                }
+
                 var dateGroups = measureResponse.Body!.MeasureGroups
-                    .GroupBy(mg => DateTimeOffset.FromUnixTimeSeconds(mg.Date).ToString("yyyy-MM-dd"));
+                    .GroupBy(mg =>
+                    {
+                        var utc = DateTimeOffset.FromUnixTimeSeconds(mg.Date);
+                        return TimeZoneInfo.ConvertTime(utc, userTimezone).ToString("yyyy-MM-dd");
+                    });
 
                 foreach (var dateGroup in dateGroups)
                 {
@@ -48,13 +66,13 @@ namespace Biotrackr.Vitals.Svc.Workers
                     if (weightGroups.Count > 0)
                     {
                         var mostRecentWeightGroup = weightGroups.OrderByDescending(mg => mg.Date).First();
-                        weight = WithingsWeightAdapter.FromMeasureGroup(mostRecentWeightGroup, _settings.UserHeight);
+                        weight = WithingsWeightAdapter.FromMeasureGroup(mostRecentWeightGroup, _settings.UserHeight, userTimezone);
                     }
 
                     List<BloodPressureReading>? bpReadings = null;
                     if (bpGroups.Count > 0)
                     {
-                        bpReadings = bpGroups.Select(WithingsBloodPressureAdapter.FromMeasureGroup).ToList();
+                        bpReadings = bpGroups.Select(g => WithingsBloodPressureAdapter.FromMeasureGroup(g, userTimezone)).ToList();
                     }
 
                     var vitalsDocument = new VitalsDocument

@@ -33,6 +33,7 @@ namespace Biotrackr.Vitals.Svc.Services
                 var allMeasureGroups = new List<MeasureGroup>();
                 int offset = 0;
                 bool hasMore = true;
+                string timezone = string.Empty;
 
                 while (hasMore)
                 {
@@ -41,6 +42,11 @@ namespace Biotrackr.Vitals.Svc.Services
                     if (response.Body?.MeasureGroups != null)
                     {
                         allMeasureGroups.AddRange(response.Body.MeasureGroups);
+                    }
+
+                    if (string.IsNullOrEmpty(timezone) && !string.IsNullOrEmpty(response.Body?.Timezone))
+                    {
+                        timezone = response.Body.Timezone;
                     }
 
                     hasMore = response.Body?.More == 1;
@@ -54,6 +60,7 @@ namespace Biotrackr.Vitals.Svc.Services
                     Status = 0,
                     Body = new WithingsMeasureBody
                     {
+                        Timezone = timezone,
                         MeasureGroups = allMeasureGroups,
                         More = 0,
                         Offset = 0

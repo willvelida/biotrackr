@@ -12,7 +12,7 @@ namespace Biotrackr.Vitals.Svc.UnitTests.AdapterTests
         public void DecodeWeightCorrectly()
         {
             var grp = CreateMeasureGroup(new Measure { Value = 80250, Type = 1, Unit = -3 });
-            var result = WithingsWeightAdapter.FromMeasureGroup(grp, UserHeight);
+            var result = WithingsWeightAdapter.FromMeasureGroup(grp, UserHeight, TimeZoneInfo.Utc);
             result.WeightKg.Should().BeApproximately(80.25, 0.001);
         }
 
@@ -20,7 +20,7 @@ namespace Biotrackr.Vitals.Svc.UnitTests.AdapterTests
         public void DecodeFatPercentCorrectly()
         {
             var grp = CreateMeasureGroup(new Measure { Value = 2050, Type = 6, Unit = -2 });
-            var result = WithingsWeightAdapter.FromMeasureGroup(grp, UserHeight);
+            var result = WithingsWeightAdapter.FromMeasureGroup(grp, UserHeight, TimeZoneInfo.Utc);
             result.Fat.Should().BeApproximately(20.50, 0.01);
         }
 
@@ -28,7 +28,7 @@ namespace Biotrackr.Vitals.Svc.UnitTests.AdapterTests
         public void DecodeFatMassCorrectly()
         {
             var grp = CreateMeasureGroup(new Measure { Value = 15230, Type = 8, Unit = -3 });
-            var result = WithingsWeightAdapter.FromMeasureGroup(grp, UserHeight);
+            var result = WithingsWeightAdapter.FromMeasureGroup(grp, UserHeight, TimeZoneInfo.Utc);
             result.FatMassKg.Should().BeApproximately(15.23, 0.001);
         }
 
@@ -36,7 +36,7 @@ namespace Biotrackr.Vitals.Svc.UnitTests.AdapterTests
         public void DecodeFatFreeMassCorrectly()
         {
             var grp = CreateMeasureGroup(new Measure { Value = 65020, Type = 5, Unit = -3 });
-            var result = WithingsWeightAdapter.FromMeasureGroup(grp, UserHeight);
+            var result = WithingsWeightAdapter.FromMeasureGroup(grp, UserHeight, TimeZoneInfo.Utc);
             result.FatFreeMassKg.Should().BeApproximately(65.02, 0.001);
         }
 
@@ -44,7 +44,7 @@ namespace Biotrackr.Vitals.Svc.UnitTests.AdapterTests
         public void DecodeMuscleMassCorrectly()
         {
             var grp = CreateMeasureGroup(new Measure { Value = 45200, Type = 76, Unit = -3 });
-            var result = WithingsWeightAdapter.FromMeasureGroup(grp, UserHeight);
+            var result = WithingsWeightAdapter.FromMeasureGroup(grp, UserHeight, TimeZoneInfo.Utc);
             result.MuscleMassKg.Should().BeApproximately(45.2, 0.001);
         }
 
@@ -52,7 +52,7 @@ namespace Biotrackr.Vitals.Svc.UnitTests.AdapterTests
         public void DecodeBoneMassCorrectly()
         {
             var grp = CreateMeasureGroup(new Measure { Value = 3100, Type = 88, Unit = -3 });
-            var result = WithingsWeightAdapter.FromMeasureGroup(grp, UserHeight);
+            var result = WithingsWeightAdapter.FromMeasureGroup(grp, UserHeight, TimeZoneInfo.Utc);
             result.BoneMassKg.Should().BeApproximately(3.1, 0.001);
         }
 
@@ -60,7 +60,7 @@ namespace Biotrackr.Vitals.Svc.UnitTests.AdapterTests
         public void DecodeWaterMassCorrectly()
         {
             var grp = CreateMeasureGroup(new Measure { Value = 48900, Type = 77, Unit = -3 });
-            var result = WithingsWeightAdapter.FromMeasureGroup(grp, UserHeight);
+            var result = WithingsWeightAdapter.FromMeasureGroup(grp, UserHeight, TimeZoneInfo.Utc);
             result.WaterMassKg.Should().BeApproximately(48.9, 0.001);
         }
 
@@ -68,7 +68,7 @@ namespace Biotrackr.Vitals.Svc.UnitTests.AdapterTests
         public void DecodeVisceralFatCorrectly()
         {
             var grp = CreateMeasureGroup(new Measure { Value = 10, Type = 170, Unit = 0 });
-            var result = WithingsWeightAdapter.FromMeasureGroup(grp, UserHeight);
+            var result = WithingsWeightAdapter.FromMeasureGroup(grp, UserHeight, TimeZoneInfo.Utc);
             result.VisceralFatIndex.Should().Be(10);
         }
 
@@ -78,7 +78,7 @@ namespace Biotrackr.Vitals.Svc.UnitTests.AdapterTests
             var grp = CreateMeasureGroup(new Measure { Value = 80250, Type = 1, Unit = -3 });
             grp.Date = new DateTimeOffset(2024, 4, 1, 7, 30, 0, TimeSpan.Zero).ToUnixTimeSeconds();
 
-            var result = WithingsWeightAdapter.FromMeasureGroup(grp, UserHeight);
+            var result = WithingsWeightAdapter.FromMeasureGroup(grp, UserHeight, TimeZoneInfo.Utc);
             result.Date.Should().Be("2024-04-01");
         }
 
@@ -88,7 +88,7 @@ namespace Biotrackr.Vitals.Svc.UnitTests.AdapterTests
             var grp = CreateMeasureGroup(new Measure { Value = 80250, Type = 1, Unit = -3 });
             grp.Date = new DateTimeOffset(2024, 4, 1, 7, 30, 0, TimeSpan.Zero).ToUnixTimeSeconds();
 
-            var result = WithingsWeightAdapter.FromMeasureGroup(grp, UserHeight);
+            var result = WithingsWeightAdapter.FromMeasureGroup(grp, UserHeight, TimeZoneInfo.Utc);
             result.Time.Should().Be("07:30:00");
         }
 
@@ -96,7 +96,7 @@ namespace Biotrackr.Vitals.Svc.UnitTests.AdapterTests
         public void SetSourceToWithings()
         {
             var grp = CreateMeasureGroup(new Measure { Value = 80250, Type = 1, Unit = -3 });
-            var result = WithingsWeightAdapter.FromMeasureGroup(grp, UserHeight);
+            var result = WithingsWeightAdapter.FromMeasureGroup(grp, UserHeight, TimeZoneInfo.Utc);
             result.Source.Should().Be("Withings");
         }
 
@@ -106,7 +106,7 @@ namespace Biotrackr.Vitals.Svc.UnitTests.AdapterTests
             var grp = CreateMeasureGroup(new Measure { Value = 80250, Type = 1, Unit = -3 });
             grp.GrpId = 123456789;
 
-            var result = WithingsWeightAdapter.FromMeasureGroup(grp, UserHeight);
+            var result = WithingsWeightAdapter.FromMeasureGroup(grp, UserHeight, TimeZoneInfo.Utc);
             result.LogId.Should().Be(123456789L);
         }
 
@@ -116,7 +116,7 @@ namespace Biotrackr.Vitals.Svc.UnitTests.AdapterTests
             // Only weight (type=1) present — body comp fields should be null
             var grp = CreateMeasureGroup(new Measure { Value = 80250, Type = 1, Unit = -3 });
 
-            var result = WithingsWeightAdapter.FromMeasureGroup(grp, UserHeight);
+            var result = WithingsWeightAdapter.FromMeasureGroup(grp, UserHeight, TimeZoneInfo.Utc);
             result.WeightKg.Should().BeApproximately(80.25, 0.001);
             result.FatMassKg.Should().BeNull();
             result.FatFreeMassKg.Should().BeNull();
@@ -130,7 +130,7 @@ namespace Biotrackr.Vitals.Svc.UnitTests.AdapterTests
         public void HandleZeroExponent()
         {
             var grp = CreateMeasureGroup(new Measure { Value = 10, Type = 170, Unit = 0 });
-            var result = WithingsWeightAdapter.FromMeasureGroup(grp, UserHeight);
+            var result = WithingsWeightAdapter.FromMeasureGroup(grp, UserHeight, TimeZoneInfo.Utc);
             result.VisceralFatIndex.Should().Be(10);
         }
 
@@ -138,7 +138,7 @@ namespace Biotrackr.Vitals.Svc.UnitTests.AdapterTests
         public void HandlePositiveExponent()
         {
             var grp = CreateMeasureGroup(new Measure { Value = 8, Type = 1, Unit = 1 });
-            var result = WithingsWeightAdapter.FromMeasureGroup(grp, UserHeight);
+            var result = WithingsWeightAdapter.FromMeasureGroup(grp, UserHeight, TimeZoneInfo.Utc);
             result.WeightKg.Should().BeApproximately(80.0, 0.001);
         }
 
@@ -146,7 +146,7 @@ namespace Biotrackr.Vitals.Svc.UnitTests.AdapterTests
         public void HandleLargeNegativeExponent()
         {
             var grp = CreateMeasureGroup(new Measure { Value = 802500, Type = 1, Unit = -4 });
-            var result = WithingsWeightAdapter.FromMeasureGroup(grp, UserHeight);
+            var result = WithingsWeightAdapter.FromMeasureGroup(grp, UserHeight, TimeZoneInfo.Utc);
             result.WeightKg.Should().BeApproximately(80.25, 0.001);
         }
 
@@ -160,7 +160,7 @@ namespace Biotrackr.Vitals.Svc.UnitTests.AdapterTests
                 Measures = []
             };
 
-            var result = WithingsWeightAdapter.FromMeasureGroup(grp, UserHeight);
+            var result = WithingsWeightAdapter.FromMeasureGroup(grp, UserHeight, TimeZoneInfo.Utc);
             result.WeightKg.Should().Be(0);
             result.Fat.Should().Be(0);
             result.FatMassKg.Should().BeNull();
@@ -170,7 +170,7 @@ namespace Biotrackr.Vitals.Svc.UnitTests.AdapterTests
         public void CalculateBmiFromHeightAndWeight()
         {
             var grp = CreateMeasureGroup(new Measure { Value = 80250, Type = 1, Unit = -3 });
-            var result = WithingsWeightAdapter.FromMeasureGroup(grp, UserHeight);
+            var result = WithingsWeightAdapter.FromMeasureGroup(grp, UserHeight, TimeZoneInfo.Utc);
 
             // BMI = 80.25 / (1.88 * 1.88) = 80.25 / 3.5344 = 22.7
             result.Bmi.Should().BeApproximately(22.7, 0.1);
@@ -180,8 +180,50 @@ namespace Biotrackr.Vitals.Svc.UnitTests.AdapterTests
         public void SetBmiToZeroWhenHeightIsZero()
         {
             var grp = CreateMeasureGroup(new Measure { Value = 80250, Type = 1, Unit = -3 });
-            var result = WithingsWeightAdapter.FromMeasureGroup(grp, 0);
+            var result = WithingsWeightAdapter.FromMeasureGroup(grp, 0, TimeZoneInfo.Utc);
             result.Bmi.Should().Be(0);
+        }
+
+        [Fact]
+        public void ConvertDateAndTimeToLocalTimezone_AEST()
+        {
+            // UTC 20:01:08 on 2026-04-09 → AEST (+10) = 06:01:08 on 2026-04-10
+            var grp = CreateMeasureGroup(new Measure { Value = 80250, Type = 1, Unit = -3 });
+            grp.Date = new DateTimeOffset(2026, 4, 9, 20, 1, 8, TimeSpan.Zero).ToUnixTimeSeconds();
+
+            var melbourne = TimeZoneInfo.FindSystemTimeZoneById("Australia/Melbourne");
+            var result = WithingsWeightAdapter.FromMeasureGroup(grp, UserHeight, melbourne);
+
+            result.Date.Should().Be("2026-04-10");
+            result.Time.Should().Be("06:01:08");
+        }
+
+        [Fact]
+        public void ConvertDateAndTimeToLocalTimezone_AEDT()
+        {
+            // UTC 20:01:08 on 2025-12-09 → AEDT (+11) = 07:01:08 on 2025-12-10
+            var grp = CreateMeasureGroup(new Measure { Value = 80250, Type = 1, Unit = -3 });
+            grp.Date = new DateTimeOffset(2025, 12, 9, 20, 1, 8, TimeSpan.Zero).ToUnixTimeSeconds();
+
+            var melbourne = TimeZoneInfo.FindSystemTimeZoneById("Australia/Melbourne");
+            var result = WithingsWeightAdapter.FromMeasureGroup(grp, UserHeight, melbourne);
+
+            result.Date.Should().Be("2025-12-10");
+            result.Time.Should().Be("07:01:08");
+        }
+
+        [Fact]
+        public void DateDoesNotChange_WhenLocalTimeIsSameDay()
+        {
+            // UTC 02:00:00 on 2026-04-10 → AEST (+10) = 12:00:00 on 2026-04-10
+            var grp = CreateMeasureGroup(new Measure { Value = 80250, Type = 1, Unit = -3 });
+            grp.Date = new DateTimeOffset(2026, 4, 10, 2, 0, 0, TimeSpan.Zero).ToUnixTimeSeconds();
+
+            var melbourne = TimeZoneInfo.FindSystemTimeZoneById("Australia/Melbourne");
+            var result = WithingsWeightAdapter.FromMeasureGroup(grp, UserHeight, melbourne);
+
+            result.Date.Should().Be("2026-04-10");
+            result.Time.Should().Be("12:00:00");
         }
 
         private static MeasureGroup CreateMeasureGroup(params Measure[] measures)

@@ -57,6 +57,7 @@ namespace Biotrackr.Vitals.Svc.UnitTests.ServiceTests
                 Status = 0,
                 Body = new WithingsMeasureBody
                 {
+                    Timezone = "Australia/Melbourne",
                     MeasureGroups = [new MeasureGroup { GrpId = 1, Date = 1711929600, Measures = [new Measure { Value = 80250, Type = 1, Unit = -3 }] }],
                     More = 1,
                     Offset = 50
@@ -68,6 +69,7 @@ namespace Biotrackr.Vitals.Svc.UnitTests.ServiceTests
                 Status = 0,
                 Body = new WithingsMeasureBody
                 {
+                    Timezone = "Australia/Melbourne",
                     MeasureGroups = [new MeasureGroup { GrpId = 2, Date = 1711929700, Measures = [new Measure { Value = 81000, Type = 1, Unit = -3 }] }],
                     More = 0,
                     Offset = 0
@@ -222,6 +224,72 @@ namespace Biotrackr.Vitals.Svc.UnitTests.ServiceTests
             meastypes.Split(',').Should().NotContain("123");
         }
 
+        [Fact]
+        public async Task GetMeasurements_ShouldPreserveTimezoneFromResponse()
+        {
+            // Arrange
+            SetupSecretClient("test-access-token");
+            var expectedResponse = CreateSuccessfulResponse(1);
+            SetupHttpResponse(expectedResponse);
+
+            // Act
+            var result = await _sut.GetMeasurements("2026-02-04", "2026-04-02");
+
+            // Assert
+            result.Body!.Timezone.Should().Be("Australia/Melbourne");
+        }
+
+        [Fact]
+        public async Task GetMeasurements_ShouldPreserveTimezoneFromFirstPage_WhenPaginated()
+        {
+            // Arrange
+            SetupSecretClient("test-access-token");
+
+            var page1 = new WithingsMeasureResponse
+            {
+                Status = 0,
+                Body = new WithingsMeasureBody
+                {
+                    Timezone = "Australia/Melbourne",
+                    MeasureGroups = [new MeasureGroup { GrpId = 1, Date = 1711929600, Measures = [new Measure { Value = 80250, Type = 1, Unit = -3 }] }],
+                    More = 1,
+                    Offset = 50
+                }
+            };
+
+            var page2 = new WithingsMeasureResponse
+            {
+                Status = 0,
+                Body = new WithingsMeasureBody
+                {
+                    Timezone = "Europe/Paris",
+                    MeasureGroups = [new MeasureGroup { GrpId = 2, Date = 1711929700, Measures = [new Measure { Value = 81000, Type = 1, Unit = -3 }] }],
+                    More = 0,
+                    Offset = 0
+                }
+            };
+
+            var callCount = 0;
+            _mockHttpMessageHandler.Protected()
+                .Setup<Task<HttpResponseMessage>>("SendAsync", ItExpr.IsAny<HttpRequestMessage>(), ItExpr.IsAny<CancellationToken>())
+                .ReturnsAsync(() =>
+                {
+                    callCount++;
+                    var response = callCount == 1 ? page1 : page2;
+                    return new HttpResponseMessage(HttpStatusCode.OK)
+                    {
+                        Content = new StringContent(JsonSerializer.Serialize(response))
+                    };
+                });
+
+            // Act
+            var result = await _sut.GetMeasurements("2026-02-04", "2026-04-02");
+
+            // Assert
+            result.Body!.Timezone.Should().Be("Australia/Melbourne");
+            result.Body.MeasureGroups.Should().HaveCount(2);
+        }
+
         private void SetupSecretClient(string accessToken)
         {
             _mockSecretClient.Setup(x => x.GetSecretAsync("WithingsAccessToken", null, It.IsAny<CancellationToken>()))
@@ -252,6 +320,7 @@ namespace Biotrackr.Vitals.Svc.UnitTests.ServiceTests
                 Status = 0,
                 Body = new WithingsMeasureBody
                 {
+                    Timezone = "Australia/Melbourne",
                     MeasureGroups = groups,
                     More = 0,
                     Offset = 0

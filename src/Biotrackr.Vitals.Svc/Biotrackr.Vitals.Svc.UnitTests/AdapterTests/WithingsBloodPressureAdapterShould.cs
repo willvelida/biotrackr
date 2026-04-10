@@ -14,7 +14,7 @@ namespace Biotrackr.Vitals.Svc.UnitTests.AdapterTests
                 diastolicValue: 80, diastolicUnit: 0,
                 heartRateValue: 72, heartRateUnit: 0);
 
-            var result = WithingsBloodPressureAdapter.FromMeasureGroup(grp);
+            var result = WithingsBloodPressureAdapter.FromMeasureGroup(grp, TimeZoneInfo.Utc);
 
             result.Systolic.Should().Be(120);
             result.Diastolic.Should().Be(80);
@@ -33,7 +33,7 @@ namespace Biotrackr.Vitals.Svc.UnitTests.AdapterTests
                 Measures = [new Measure { Value = 120, Type = 10, Unit = 0 }]
             };
 
-            var result = WithingsBloodPressureAdapter.FromMeasureGroup(grp);
+            var result = WithingsBloodPressureAdapter.FromMeasureGroup(grp, TimeZoneInfo.Utc);
 
             result.Systolic.Should().Be(120);
             result.Diastolic.Should().Be(0);
@@ -49,7 +49,7 @@ namespace Biotrackr.Vitals.Svc.UnitTests.AdapterTests
                 diastolicValue: 8000, diastolicUnit: -2,
                 heartRateValue: 7200, heartRateUnit: -2);
 
-            var result = WithingsBloodPressureAdapter.FromMeasureGroup(grp);
+            var result = WithingsBloodPressureAdapter.FromMeasureGroup(grp, TimeZoneInfo.Utc);
 
             result.Systolic.Should().Be(120);
             result.Diastolic.Should().Be(80);
@@ -65,7 +65,7 @@ namespace Biotrackr.Vitals.Svc.UnitTests.AdapterTests
                 heartRateValue: 72, heartRateUnit: 0);
             grp.Date = new DateTimeOffset(2024, 4, 1, 8, 30, 0, TimeSpan.Zero).ToUnixTimeSeconds();
 
-            var result = WithingsBloodPressureAdapter.FromMeasureGroup(grp);
+            var result = WithingsBloodPressureAdapter.FromMeasureGroup(grp, TimeZoneInfo.Utc);
 
             result.Timestamp.Should().Contain("2024-04-01");
             result.Time.Should().Be("08:30:00");
@@ -79,7 +79,7 @@ namespace Biotrackr.Vitals.Svc.UnitTests.AdapterTests
                 diastolicValue: 80, diastolicUnit: 0,
                 heartRateValue: 72, heartRateUnit: 0);
 
-            var result = WithingsBloodPressureAdapter.FromMeasureGroup(grp);
+            var result = WithingsBloodPressureAdapter.FromMeasureGroup(grp, TimeZoneInfo.Utc);
 
             result.Source.Should().Be("Withings");
         }
@@ -93,7 +93,7 @@ namespace Biotrackr.Vitals.Svc.UnitTests.AdapterTests
                 heartRateValue: 72, heartRateUnit: 0);
             grp.GrpId = 987654321;
 
-            var result = WithingsBloodPressureAdapter.FromMeasureGroup(grp);
+            var result = WithingsBloodPressureAdapter.FromMeasureGroup(grp, TimeZoneInfo.Utc);
 
             result.LogId.Should().Be(987654321L);
         }
@@ -107,7 +107,7 @@ namespace Biotrackr.Vitals.Svc.UnitTests.AdapterTests
                 heartRateValue: 72, heartRateUnit: 0);
             grp.DeviceId = "bpm-connect-123";
 
-            var result = WithingsBloodPressureAdapter.FromMeasureGroup(grp);
+            var result = WithingsBloodPressureAdapter.FromMeasureGroup(grp, TimeZoneInfo.Utc);
 
             result.DeviceId.Should().Be("bpm-connect-123");
         }
@@ -121,9 +121,60 @@ namespace Biotrackr.Vitals.Svc.UnitTests.AdapterTests
                 heartRateValue: 72, heartRateUnit: 0);
             grp.DeviceId = "";
 
-            var result = WithingsBloodPressureAdapter.FromMeasureGroup(grp);
+            var result = WithingsBloodPressureAdapter.FromMeasureGroup(grp, TimeZoneInfo.Utc);
 
             result.DeviceId.Should().BeNull();
+        }
+
+        [Fact]
+        public void ConvertTimestampToLocalTimezone_AEST()
+        {
+            // UTC 2026-04-09 20:07:59 → AEST (UTC+10) = 2026-04-10 06:07:59
+            // April is after DST ends in Australia, so AEST (+10:00) applies
+            var grp = CreateBpMeasureGroup(
+                systolicValue: 120, systolicUnit: 0,
+                diastolicValue: 80, diastolicUnit: 0,
+                heartRateValue: 72, heartRateUnit: 0);
+            grp.Date = new DateTimeOffset(2026, 4, 9, 20, 7, 59, TimeSpan.Zero).ToUnixTimeSeconds();
+
+            var tz = TimeZoneInfo.FindSystemTimeZoneById("AUS Eastern Standard Time");
+            var result = WithingsBloodPressureAdapter.FromMeasureGroup(grp, tz);
+
+            result.Time.Should().Be("06:07:59");
+            result.Timestamp.Should().Contain("+10:00");
+        }
+
+        [Fact]
+        public void ConvertTimestampToLocalTimezone_AEDT()
+        {
+            // UTC 2026-12-09 20:07:59 → AEDT (UTC+11) = 2026-12-10 07:07:59
+            // December is during daylight saving in Australia, so AEDT (+11:00) applies
+            var grp = CreateBpMeasureGroup(
+                systolicValue: 120, systolicUnit: 0,
+                diastolicValue: 80, diastolicUnit: 0,
+                heartRateValue: 72, heartRateUnit: 0);
+            grp.Date = new DateTimeOffset(2026, 12, 9, 20, 7, 59, TimeSpan.Zero).ToUnixTimeSeconds();
+
+            var tz = TimeZoneInfo.FindSystemTimeZoneById("AUS Eastern Standard Time");
+            var result = WithingsBloodPressureAdapter.FromMeasureGroup(grp, tz);
+
+            result.Time.Should().Be("07:07:59");
+            result.Timestamp.Should().Contain("+11:00");
+        }
+
+        [Fact]
+        public void HandleUtcFallback_WhenUtcTimezoneProvided()
+        {
+            var grp = CreateBpMeasureGroup(
+                systolicValue: 120, systolicUnit: 0,
+                diastolicValue: 80, diastolicUnit: 0,
+                heartRateValue: 72, heartRateUnit: 0);
+            grp.Date = new DateTimeOffset(2026, 4, 9, 20, 7, 59, TimeSpan.Zero).ToUnixTimeSeconds();
+
+            var result = WithingsBloodPressureAdapter.FromMeasureGroup(grp, TimeZoneInfo.Utc);
+
+            result.Time.Should().Be("20:07:59");
+            result.Timestamp.Should().Contain("+00:00");
         }
 
         private static MeasureGroup CreateBpMeasureGroup(
