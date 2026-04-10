@@ -12,7 +12,7 @@ namespace Biotrackr.Chat.Api.UnitTests.Tools
         [Theory]
         [InlineData("get_activity_by_date", "2026-03-20", "get_activity_by_date:2026-03-20")]
         [InlineData("get_sleep_by_date", "2025-01-01", "get_sleep_by_date:2025-01-01")]
-        [InlineData("get_weight_by_date", "2026-12-31", "get_weight_by_date:2026-12-31")]
+        [InlineData("get_vitals_by_date", "2026-12-31", "get_vitals_by_date:2026-12-31")]
         [InlineData("get_food_by_date", "2026-06-15", "get_food_by_date:2026-06-15")]
         public void DeriveCacheKeyForByDateTools(string toolName, string date, string expectedKey)
         {
@@ -96,7 +96,7 @@ namespace Biotrackr.Chat.Api.UnitTests.Tools
         [Theory]
         [InlineData("get_activity_by_date_range")]
         [InlineData("get_sleep_by_date_range")]
-        [InlineData("get_weight_by_date_range")]
+        [InlineData("get_vitals_by_date_range")]
         [InlineData("get_food_by_date_range")]
         public void DetermineTtlForDateRangeToolReturnsThirtyMinutes(string toolName)
         {
@@ -114,7 +114,7 @@ namespace Biotrackr.Chat.Api.UnitTests.Tools
         [Theory]
         [InlineData("get_activity_records")]
         [InlineData("get_sleep_records")]
-        [InlineData("get_weight_records")]
+        [InlineData("get_vitals_records")]
         [InlineData("get_food_records")]
         public void DetermineTtlForRecordsToolReturnsFifteenMinutes(string toolName)
         {
