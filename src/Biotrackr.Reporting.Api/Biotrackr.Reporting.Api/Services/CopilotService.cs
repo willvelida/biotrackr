@@ -16,7 +16,17 @@ namespace Biotrackr.Reporting.Api.Services
         IOptions<Settings> settings,
         ILogger<CopilotService> logger) : ICopilotService
     {
-        private static readonly string[] AllowedTools = ["shell", "read", "write"];
+        // Copilot CLI tool names allowed for report generation (ASI02)
+        // Note: These are actual tool names (bash, create, etc.), not permission kinds (shell, read, write).
+        // The OnPermissionRequest handler uses kinds; OnPreToolUse hooks use tool names.
+        private static readonly string[] AllowedTools =
+        [
+            "bash", "shell",           // Command execution
+            "create", "edit", "write", // File creation/modification
+            "read", "view",            // File reading
+            "glob", "grep",            // File search/discovery
+            "task",                    // Sub-task delegation
+        ];
 
         // Dangerous patterns in generated Python code (ASI05)
         internal static readonly string[] DangerousCodePatterns =
@@ -123,7 +133,7 @@ namespace Biotrackr.Reporting.Api.Services
             }
 
             // Restrict file operations to /tmp/reports paths only (ASI05 defense-in-depth)
-            if (input.ToolName is "read" or "write" && input.ToolArgs is not null)
+            if (input.ToolName is "read" or "write" or "create" or "edit" or "view" && input.ToolArgs is not null)
             {
                 var argsJson = SafeSerialize(input.ToolArgs);
                 if (!argsJson.Contains("/tmp/reports", StringComparison.OrdinalIgnoreCase))
