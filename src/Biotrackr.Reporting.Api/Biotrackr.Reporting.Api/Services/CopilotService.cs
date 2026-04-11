@@ -87,6 +87,59 @@ namespace Biotrackr.Reporting.Api.Services
                 };
             }
 
+            // Sub-agent specialization — each agent has a focused role and prompt
+            config.CustomAgents =
+            [
+                new CustomAgentConfig
+                {
+                    Name = "data-analyst",
+                    DisplayName = "Health Data Analyst",
+                    Description = "Analyzes health and fitness data using pandas. Computes daily metrics, " +
+                        "weekly averages, goal achievement, trend analysis, and identifies standout days.",
+                    Prompt = "You are a health data analyst specializing in fitness tracking data. " +
+                        "Use pandas to analyze the provided health data JSON. Calculate daily metrics, " +
+                        "weekly averages, goal achievement (steps\u226510000, distance\u22658km, activeMinutes\u226530, " +
+                        "caloriesOut\u22652500), identify standout days, and detect trends. " +
+                        "Write analysis scripts to /tmp/reports/ and execute them. " +
+                        "Active minutes = fairlyActiveMinutes + veryActiveMinutes. " +
+                        "Duration values are milliseconds \u2014 convert to minutes by dividing by 60000.",
+                },
+                new CustomAgentConfig
+                {
+                    Name = "chart-generator",
+                    DisplayName = "Chart Generator",
+                    Description = "Creates professional data visualizations using matplotlib and seaborn. " +
+                        "Generates PNG chart files for steps, calories, active minutes, distance, floors, " +
+                        "heart rate, goal achievement, and weekly overview.",
+                    Prompt = "You are a data visualization specialist. Use matplotlib and seaborn to create " +
+                        "clear, professional charts from health data. Always use matplotlib.use('Agg') before " +
+                        "importing pyplot. Use seaborn 'whitegrid' style with 'muted' palette. " +
+                        "Save all charts as PNG at dpi=150 with bbox_inches='tight' to /tmp/reports/. " +
+                        "Include goal lines (red dashed), value annotations on bars, and clear axis labels.",
+                },
+                new CustomAgentConfig
+                {
+                    Name = "pdf-builder",
+                    DisplayName = "PDF Report Builder",
+                    Description = "Assembles multi-page professional PDF health reports using reportlab " +
+                        "PLATYPUS. Combines analysis text, data tables, and chart images into a cohesive document.",
+                    Prompt = "You are a PDF report builder. Use reportlab SimpleDocTemplate with A4 page size " +
+                        "and 2cm margins. Create professional tables with header styling, embed chart PNG " +
+                        "images, add page breaks between sections. Include this disclaimer on every page: " +
+                        "'This report is generated from personal health data and is not medical advice. " +
+                        "Consult a healthcare provider for medical guidance.' " +
+                        "Save the final PDF to /tmp/reports/report.pdf.",
+                },
+            ];
+
+            // Skill directories reference the CLI sidecar's filesystem (not the .NET host's)
+            config.SkillDirectories =
+            [
+                "/app/skills/chart-best-practices",
+                "/app/skills/health-data-analysis",
+                "/app/skills/pdf-report-layout",
+            ];
+
             return config;
         }
 
