@@ -402,11 +402,6 @@ FodyWeavers.xsd
 docs/plans/*
 docs/blog-post-ideas/*
 
-.github/agents/*
-.github/skills/*
-.github/instructions/*
-.github/prompts/*
-
 docs/reports/*
 
 # Chat system prompt — sensitive configuration, stored in Key Vault
