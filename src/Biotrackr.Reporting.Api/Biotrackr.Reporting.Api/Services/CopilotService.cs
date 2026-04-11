@@ -54,6 +54,9 @@ namespace Biotrackr.Reporting.Api.Services
         {
             var config = new SessionConfig
             {
+                // OnPermissionRequest is required by the SDK even when using Hooks.
+                // Approve all here — actual access control is enforced by OnPreToolUse hook.
+                OnPermissionRequest = PermissionHandler.ApproveAll,
                 Hooks = new SessionHooks
                 {
                     OnPreToolUse = OnPreToolUse,
