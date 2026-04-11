@@ -18,31 +18,37 @@ namespace Biotrackr.Reporting.Api.UnitTests.Services
         }
 
         [Fact]
-        public void CreateSessionConfigWithPermissionHandler()
+        public void CreateSessionConfigWithHooks()
         {
             var sut = CreateService();
 
             var config = sut.CreateSessionConfig();
 
             config.Should().NotBeNull();
-            config.OnPermissionRequest.Should().NotBeNull();
+            config.Hooks.Should().NotBeNull();
+            config.Hooks!.OnPreToolUse.Should().NotBeNull();
+            config.Hooks.OnPostToolUse.Should().NotBeNull();
+            config.Hooks.OnErrorOccurred.Should().NotBeNull();
+            config.Hooks.OnSessionStart.Should().NotBeNull();
+            config.Hooks.OnSessionEnd.Should().NotBeNull();
         }
 
         [Theory]
         [InlineData("shell")]
         [InlineData("read")]
         [InlineData("write")]
-        public async Task ApproveAllowedPermissionKinds(string kind)
+        public async Task ApproveAllowedTools(string toolName)
         {
             var sut = CreateService();
             var config = sut.CreateSessionConfig();
 
-            var request = new PermissionRequest { Kind = kind };
-            var invocation = new PermissionInvocation();
+            var input = new PreToolUseHookInput { ToolName = toolName };
+            var invocation = new HookInvocation { SessionId = "test-session" };
 
-            var result = await config.OnPermissionRequest!(request, invocation);
+            var result = await config.Hooks!.OnPreToolUse!(input, invocation);
 
-            result.Kind.Should().Be(PermissionRequestResultKind.Approved);
+            result.Should().NotBeNull();
+            result!.PermissionDecision.Should().Be("allow");
         }
 
         [Theory]
@@ -52,17 +58,18 @@ namespace Biotrackr.Reporting.Api.UnitTests.Services
         [InlineData("custom_tool")]
         [InlineData("")]
         [InlineData("admin")]
-        public async Task DenyDisallowedPermissionKinds(string kind)
+        public async Task DenyDisallowedTools(string toolName)
         {
             var sut = CreateService();
             var config = sut.CreateSessionConfig();
 
-            var request = new PermissionRequest { Kind = kind };
-            var invocation = new PermissionInvocation();
+            var input = new PreToolUseHookInput { ToolName = toolName };
+            var invocation = new HookInvocation { SessionId = "test-session" };
 
-            var result = await config.OnPermissionRequest!(request, invocation);
+            var result = await config.Hooks!.OnPreToolUse!(input, invocation);
 
-            result.Kind.Should().Be(PermissionRequestResultKind.DeniedByRules);
+            result.Should().NotBeNull();
+            result!.PermissionDecision.Should().Be("deny");
         }
 
         [Fact]

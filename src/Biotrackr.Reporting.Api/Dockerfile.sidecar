@@ -9,8 +9,9 @@ RUN apt-get update && \
     apt-get install -y --no-install-recommends ca-certificates curl && \
     rm -rf /var/lib/apt/lists/*
 
-# Install Copilot CLI via the official install script
-RUN curl -fsSL https://gh.io/copilot-install | bash
+# Install Copilot CLI via the official install script (pinned for ASI04 supply chain safety)
+ARG COPILOT_CLI_VERSION=1.0.24
+RUN VERSION=${COPILOT_CLI_VERSION} curl -fsSL https://gh.io/copilot-install | bash
 
 # Install Python data science and reporting packages
 RUN pip install --no-cache-dir \
