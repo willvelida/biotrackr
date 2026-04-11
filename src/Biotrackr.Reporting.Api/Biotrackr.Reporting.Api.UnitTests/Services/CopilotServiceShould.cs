@@ -18,31 +18,37 @@ namespace Biotrackr.Reporting.Api.UnitTests.Services
         }
 
         [Fact]
-        public void CreateSessionConfigWithPermissionHandler()
+        public void CreateSessionConfigWithHooks()
         {
             var sut = CreateService();
 
             var config = sut.CreateSessionConfig();
 
             config.Should().NotBeNull();
-            config.OnPermissionRequest.Should().NotBeNull();
+            config.Hooks.Should().NotBeNull();
+            config.Hooks!.OnPreToolUse.Should().NotBeNull();
+            config.Hooks.OnPostToolUse.Should().NotBeNull();
+            config.Hooks.OnErrorOccurred.Should().NotBeNull();
+            config.Hooks.OnSessionStart.Should().NotBeNull();
+            config.Hooks.OnSessionEnd.Should().NotBeNull();
         }
 
         [Theory]
         [InlineData("shell")]
         [InlineData("read")]
         [InlineData("write")]
-        public async Task ApproveAllowedPermissionKinds(string kind)
+        public async Task ApproveAllowedTools(string toolName)
         {
             var sut = CreateService();
             var config = sut.CreateSessionConfig();
 
-            var request = new PermissionRequest { Kind = kind };
-            var invocation = new PermissionInvocation();
+            var input = new PreToolUseHookInput { ToolName = toolName };
+            var invocation = new HookInvocation { SessionId = "test-session" };
 
-            var result = await config.OnPermissionRequest!(request, invocation);
+            var result = await config.Hooks!.OnPreToolUse!(input, invocation);
 
-            result.Kind.Should().Be(PermissionRequestResultKind.Approved);
+            result.Should().NotBeNull();
+            result!.PermissionDecision.Should().Be("allow");
         }
 
         [Theory]
@@ -52,17 +58,18 @@ namespace Biotrackr.Reporting.Api.UnitTests.Services
         [InlineData("custom_tool")]
         [InlineData("")]
         [InlineData("admin")]
-        public async Task DenyDisallowedPermissionKinds(string kind)
+        public async Task DenyDisallowedTools(string toolName)
         {
             var sut = CreateService();
             var config = sut.CreateSessionConfig();
 
-            var request = new PermissionRequest { Kind = kind };
-            var invocation = new PermissionInvocation();
+            var input = new PreToolUseHookInput { ToolName = toolName };
+            var invocation = new HookInvocation { SessionId = "test-session" };
 
-            var result = await config.OnPermissionRequest!(request, invocation);
+            var result = await config.Hooks!.OnPreToolUse!(input, invocation);
 
-            result.Kind.Should().Be(PermissionRequestResultKind.DeniedByRules);
+            result.Should().NotBeNull();
+            result!.PermissionDecision.Should().Be("deny");
         }
 
         [Fact]
@@ -107,14 +114,180 @@ namespace Biotrackr.Reporting.Api.UnitTests.Services
             client1.Should().BeSameAs(client2);
         }
 
-        private CopilotService CreateService(string copilotCliUrl = "http://localhost:4321")
+        [Fact]
+        public async Task AllowReadToolWithTmpReportsPath()
+        {
+            var sut = CreateService();
+            var config = sut.CreateSessionConfig();
+
+            var input = new PreToolUseHookInput
+            {
+                ToolName = "read",
+                ToolArgs = new Dictionary<string, object> { ["path"] = "/tmp/reports/output.pdf" }
+            };
+            var invocation = new HookInvocation { SessionId = "test-session" };
+
+            var result = await config.Hooks!.OnPreToolUse!(input, invocation);
+
+            result.Should().NotBeNull();
+            result!.PermissionDecision.Should().Be("allow");
+        }
+
+        [Fact]
+        public async Task DenyWriteToolOutsideTmpReports()
+        {
+            var sut = CreateService();
+            var config = sut.CreateSessionConfig();
+
+            var input = new PreToolUseHookInput
+            {
+                ToolName = "write",
+                ToolArgs = new Dictionary<string, object> { ["path"] = "/etc/passwd" }
+            };
+            var invocation = new HookInvocation { SessionId = "test-session" };
+
+            var result = await config.Hooks!.OnPreToolUse!(input, invocation);
+
+            result.Should().NotBeNull();
+            result!.PermissionDecision.Should().Be("deny");
+        }
+
+        [Fact]
+        public async Task DetectDangerousPatternInPostToolUse()
+        {
+            var sut = CreateService();
+            var config = sut.CreateSessionConfig();
+
+            var input = new PostToolUseHookInput
+            {
+                ToolName = "shell",
+                ToolResult = "import subprocess; subprocess.run(['ls'])"
+            };
+            var invocation = new HookInvocation { SessionId = "test-session" };
+
+            var result = await config.Hooks!.OnPostToolUse!(input, invocation);
+
+            result.Should().NotBeNull();
+            result!.AdditionalContext.Should().Contain("SECURITY");
+            result.AdditionalContext.Should().Contain("subprocess");
+        }
+
+        [Fact]
+        public async Task AllowSafeCodeInPostToolUse()
+        {
+            var sut = CreateService();
+            var config = sut.CreateSessionConfig();
+
+            var input = new PostToolUseHookInput
+            {
+                ToolName = "shell",
+                ToolResult = "import pandas as pd\ndf = pd.read_csv('/tmp/reports/data.csv')"
+            };
+            var invocation = new HookInvocation { SessionId = "test-session" };
+
+            var result = await config.Hooks!.OnPostToolUse!(input, invocation);
+
+            result.Should().BeNull();
+        }
+
+        [Fact]
+        public async Task ReturnNullForNonShellToolInPostToolUse()
+        {
+            var sut = CreateService();
+            var config = sut.CreateSessionConfig();
+
+            var input = new PostToolUseHookInput
+            {
+                ToolName = "read",
+                ToolResult = "file contents with subprocess pattern"
+            };
+            var invocation = new HookInvocation { SessionId = "test-session" };
+
+            var result = await config.Hooks!.OnPostToolUse!(input, invocation);
+
+            result.Should().BeNull();
+        }
+
+        [Fact]
+        public async Task ReturnRetryOnErrorOccurred()
+        {
+            var sut = CreateService();
+            var config = sut.CreateSessionConfig();
+
+            var input = new ErrorOccurredHookInput
+            {
+                ErrorContext = "tool_execution",
+                Error = "Connection timeout"
+            };
+            var invocation = new HookInvocation { SessionId = "test-session" };
+
+            var result = await config.Hooks!.OnErrorOccurred!(input, invocation);
+
+            result.Should().NotBeNull();
+            result!.ErrorHandling.Should().Be("retry");
+        }
+
+        [Fact]
+        public async Task ReturnNullOnSessionStart()
+        {
+            var sut = CreateService();
+            var config = sut.CreateSessionConfig();
+
+            var input = new SessionStartHookInput { Source = "new" };
+            var invocation = new HookInvocation { SessionId = "test-session" };
+
+            var result = await config.Hooks!.OnSessionStart!(input, invocation);
+
+            result.Should().BeNull();
+        }
+
+        [Fact]
+        public async Task ReturnNullOnSessionEnd()
+        {
+            var sut = CreateService();
+            var config = sut.CreateSessionConfig();
+
+            var input = new SessionEndHookInput { Reason = "completed" };
+            var invocation = new HookInvocation { SessionId = "test-session" };
+
+            var result = await config.Hooks!.OnSessionEnd!(input, invocation);
+
+            result.Should().BeNull();
+        }
+
+        [Fact]
+        public void IncludeSystemPromptWhenConfigured()
+        {
+            var sut = CreateService(systemPrompt: "You are a report generator.");
+
+            var config = sut.CreateSessionConfig();
+
+            config.SystemMessage.Should().NotBeNull();
+            config.SystemMessage!.Mode.Should().Be(SystemMessageMode.Append);
+            config.SystemMessage.Content.Should().Be("You are a report generator.");
+        }
+
+        [Fact]
+        public void ExcludeSystemPromptWhenNotConfigured()
+        {
+            var sut = CreateService();
+
+            var config = sut.CreateSessionConfig();
+
+            config.SystemMessage.Should().BeNull();
+        }
+
+        private CopilotService CreateService(
+            string copilotCliUrl = "http://localhost:4321",
+            string? systemPrompt = null)
         {
             var settings = Options.Create(new Settings
             {
                 CopilotCliUrl = copilotCliUrl,
                 ReportGenerationEnabled = true,
                 MaxConcurrentJobs = 3,
-                ReportGenerationTimeoutMinutes = 10
+                ReportGenerationTimeoutMinutes = 10,
+                ReportGeneratorSystemPrompt = systemPrompt ?? string.Empty
             });
 
             return new CopilotService(settings, _logger.Object);

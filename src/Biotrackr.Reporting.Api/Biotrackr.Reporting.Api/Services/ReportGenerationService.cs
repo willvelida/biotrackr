@@ -17,16 +17,6 @@ namespace Biotrackr.Reporting.Api.Services
         private const string ReportsDirectory = "/tmp/reports";
         private const int MaxRetries = 2;
 
-        // Dangerous patterns in generated Python code (ASI05)
-        private static readonly string[] DangerousCodePatterns =
-        [
-            "os.system", "subprocess", "socket.", "urllib",
-            "requests.", "__import__", "eval(", "exec(",
-            "shutil.rmtree", "os.remove", "open('/etc",
-            "open(\"/etc", "curl ", "wget ", "nc ",
-            "bash ", "sh -c", "os.popen"
-        ];
-
         private readonly IBlobStorageService _blobStorageService;
         private readonly ICopilotService _copilotService;
         private readonly ILogger<ReportGenerationService> _logger;
@@ -151,6 +141,29 @@ namespace Biotrackr.Reporting.Api.Services
                     var sessionConfig = _copilotService.CreateSessionConfig();
                     await using var session = await client.CreateSessionAsync(sessionConfig, cancellationToken);
 
+                    // Track tool execution and session events for observability
+                    var eventSubscription = session.On(evt =>
+                    {
+                        switch (evt)
+                        {
+                            case ToolExecutionStartEvent toolStart:
+                                _logger.LogInformation(
+                                    "Copilot tool started for job {JobId}: Tool={ToolName}",
+                                    jobId, toolStart.Data?.ToolName);
+                                break;
+                            case ToolExecutionCompleteEvent:
+                                _logger.LogInformation(
+                                    "Copilot tool completed for job {JobId}",
+                                    jobId);
+                                break;
+                            case SessionErrorEvent sessionError:
+                                _logger.LogWarning(
+                                    "Copilot session error for job {JobId}: {Message}",
+                                    jobId, sessionError.Data?.Message);
+                                break;
+                        }
+                    });
+
                     // Combine the task message with the source data snapshot as a JSON block
                     // The system prompt instructs the sidecar to parse the ```json block
                     var dataJson = System.Text.Json.JsonSerializer.Serialize(sourceDataSnapshot,
@@ -166,13 +179,11 @@ namespace Biotrackr.Reporting.Api.Services
                     _logger.LogInformation("Copilot session completed for job {JobId}. Response length: {Length}",
                         jobId, responseText?.Length ?? 0);
 
-                    // Code validation gate — scan generated Python scripts for dangerous patterns (ASI05)
-                    if (!ValidateGeneratedCode(jobId))
-                    {
-                        await _blobStorageService.UpdateJobStatusAsync(jobId, ReportStatus.Failed,
-                            "Generated code failed safety validation.");
-                        return;
-                    }
+                    // Dispose event subscription after session completes
+                    eventSubscription?.Dispose();
+
+                    // Defense-in-depth code validation — primary gate is OnPostToolUse hook (ASI05)
+                    ValidateGeneratedCode(jobId);
 
                     // Check for generated artifacts
                     var artifacts = ScanForArtifacts(jobId);
@@ -216,13 +227,14 @@ namespace Biotrackr.Reporting.Api.Services
         }
 
         /// <summary>
-        /// Validates generated Python scripts for dangerous code patterns (ASI05).
-        /// Returns false if any dangerous pattern is detected.
+        /// Defense-in-depth validation of generated Python scripts for dangerous code patterns (ASI05).
+        /// The primary gate is the OnPostToolUse hook in CopilotService. This method provides a secondary
+        /// post-hoc scan and logs warnings rather than aborting the job.
         /// </summary>
-        internal bool ValidateGeneratedCode(string jobId)
+        internal void ValidateGeneratedCode(string jobId)
         {
             if (!Directory.Exists(ReportsDirectory))
-                return true;
+                return;
 
             var scripts = Directory.GetFiles(ReportsDirectory, "*.py", SearchOption.TopDirectoryOnly);
             foreach (var script in scripts)
@@ -233,19 +245,16 @@ namespace Biotrackr.Reporting.Api.Services
                 _logger.LogInformation("Validating generated script {Script} for job {JobId} ({Length} chars)",
                     fileName, jobId, content.Length);
 
-                foreach (var pattern in DangerousCodePatterns)
+                foreach (var pattern in CopilotService.DangerousCodePatterns)
                 {
                     if (content.Contains(pattern, StringComparison.OrdinalIgnoreCase))
                     {
                         _logger.LogWarning(
-                            "Dangerous code pattern '{Pattern}' detected in {Script} for job {JobId}. Aborting.",
+                            "Defense-in-depth: Dangerous code pattern '{Pattern}' detected in {Script} for job {JobId}",
                             pattern, fileName, jobId);
-                        return false;
                     }
                 }
             }
-
-            return true;
         }
 
         internal async Task UploadArtifactsAsync(

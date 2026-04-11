@@ -65,9 +65,9 @@ namespace Biotrackr.Reporting.Api.UnitTests.Services
         }
 
         [Fact]
-        public void ReturnTrueWhenNoScriptsExist()
+        public void NotThrowWhenNoScriptsExist()
         {
-            // When /tmp/reports doesn't exist, ValidateGeneratedCode returns true (no scripts to validate)
+            // When /tmp/reports doesn't exist, ValidateGeneratedCode completes without error
             var settings = Options.Create(new Settings
             {
                 ReportGenerationEnabled = true,
@@ -83,7 +83,8 @@ namespace Biotrackr.Reporting.Api.UnitTests.Services
                 settings,
                 new Mock<ILogger<ReportGenerationService>>().Object);
 
-            sut.ValidateGeneratedCode("test-job").Should().BeTrue();
+            var act = () => sut.ValidateGeneratedCode("test-job");
+            act.Should().NotThrow();
         }
     }
 }
