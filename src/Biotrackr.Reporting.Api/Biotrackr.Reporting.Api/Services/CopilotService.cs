@@ -219,9 +219,9 @@ namespace Biotrackr.Reporting.Api.Services
         private Task<PostToolUseHookOutput?> OnPostToolUse(
             PostToolUseHookInput input, HookInvocation invocation)
         {
-            // Only scan shell tool results for dangerous patterns
+            // Only scan command execution tool results for dangerous patterns
             var toolResult = SafeSerialize(input.ToolResult);
-            if (input.ToolName != "shell" || string.IsNullOrEmpty(toolResult))
+            if (input.ToolName is not ("shell" or "bash") || string.IsNullOrEmpty(toolResult))
             {
                 return Task.FromResult<PostToolUseHookOutput?>(null);
             }
