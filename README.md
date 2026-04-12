@@ -35,12 +35,12 @@ HTTP-based Container Apps serving data from Cosmos DB via Azure API Management:
 - **Sleep API**: Sleep data endpoints (`/sleep/*`)
 - **Vitals API**: Vitals data endpoints (`/vitals/*`)
 - **Food API**: Food data endpoints (`/food/*`)
-- **Reporting API**: Report generation and retrieval endpoints (`/reports/*`) with agent-to-agent auth, code validation (ASI05), and artifact review (ASI09)
+- **Reporting API**: Report generation and retrieval endpoints (`/reports/*`) with Copilot SDK lifecycle hooks (ASI02/ASI05), sub-agent specialization (data-analyst, chart-generator, pdf-builder), custom SKILL.md domain knowledge, agent-to-agent auth, and artifact review (ASI09)
 
 ### Consumer Layer
 - **Chat API**: AI-powered chat agent (Claude via Microsoft Agent Framework) with AGUI SSE streaming, tool policy enforcement, conversation persistence, and graceful degradation when MCP tools are unavailable
 - **MCP Server**: [Model Context Protocol](https://modelcontextprotocol.io/) server exposing 12 tools across all health domains via Streamable HTTP transport
-- **Reporting API**: Generates PDF reports and chart images from health data using a GitHub Copilot coding agent sidecar, with prompt-injection detection, generated-code validation, artifact size limits, and AI-driven report review
+- **Reporting API**: Generates PDF reports and chart images from health data using a GitHub Copilot coding agent sidecar with sub-agent orchestration (data-analyst → chart-generator → pdf-builder), custom skills for domain knowledge, lifecycle hooks for security and observability, and AI-driven report review
 - **UI**: Blazor Server dashboard with Radzen components for visualizing activity, sleep, vitals, and food data
 
 ### Supporting Infrastructure
@@ -50,7 +50,7 @@ HTTP-based Container Apps serving data from Cosmos DB via Azure API Management:
 - **Azure App Configuration**: Centralized configuration for all services
 - **Azure Container Registry**: Docker image storage
 - **Azure Blob Storage**: Report artifact storage (PDFs, charts) with SAS URL generation
-- **GitHub Copilot**: Coding agent sidecar for Reporting API that generates and executes Python report scripts
+- **GitHub Copilot**: Coding agent sidecar for Reporting API with sub-agent orchestration (data-analyst, chart-generator, pdf-builder), custom SKILL.md domain knowledge files, SDK lifecycle hooks, and OpenTelemetry instrumentation
 - **Managed Identity (UAI)**: Passwordless authentication across all Azure resources
 - **Observability**: Application Insights, Log Analytics, OpenTelemetry (traces/metrics), Azure Monitor Alerts, Azure AI Foundry (evaluation)
 - **Azure AI Foundry**: GenAIOps evaluation and monitoring — safety evaluators, groundedness checking, and evaluation pipeline via Foundry project in East US 2
@@ -63,7 +63,7 @@ HTTP-based Container Apps serving data from Cosmos DB via Azure API Management:
 - 🍎 **Food Logging**: Nutrition tracking and food diary management
 - 🔐 **Secure Authentication**: OAuth integration with Fitbit and Withings
 - 📊 **Data Insights**: Analysis and reporting on health metrics
-- 📝 **Report Generation**: Automated PDF reports and data visualizations via a Copilot coding agent with code validation and AI review
+- 📝 **Report Generation**: Automated PDF reports and data visualizations via a Copilot coding agent with sub-agent specialization, custom skills, lifecycle hooks, and AI review
 - 💬 **AI Chat Agent**: Natural language chat interface powered by Claude for querying and analysing health data
 - 🤖 **MCP Integration**: AI-ready via Model Context Protocol server with 12 tools across all health domains
 - �️ **Tool Policy Enforcement**: Per-session tool call limits, tool whitelisting, and rate limiting for AI agent safety
@@ -120,7 +120,7 @@ HTTP-based Container Apps serving data from Cosmos DB via Azure API Management:
 | **Food Service** | [![Deploy Food Service](https://github.com/willvelida/biotrackr/actions/workflows/deploy-food-service.yml/badge.svg)](https://github.com/willvelida/biotrackr/actions/workflows/deploy-food-service.yml) | ![Code Coverage](https://img.shields.io/badge/Code%20Coverage-100%25-brightgreen?style=flat) | ![Integration Tests](https://img.shields.io/badge/Tests-14%20Passing-brightgreen?style=flat) |
 | **Chat API** | [![Deploy Chat Api](https://github.com/willvelida/biotrackr/actions/workflows/deploy-chat-api.yml/badge.svg)](https://github.com/willvelida/biotrackr/actions/workflows/deploy-chat-api.yml) | ![Code Coverage](https://img.shields.io/badge/Code%20Coverage-86%25-brightgreen?style=flat) | ![Integration Tests](https://img.shields.io/badge/Tests-2%20Passing-brightgreen?style=flat) |
 | **MCP Server** | [![Deploy MCP Server](https://github.com/willvelida/biotrackr/actions/workflows/deploy-mcp-server.yml/badge.svg)](https://github.com/willvelida/biotrackr/actions/workflows/deploy-mcp-server.yml) | ![Code Coverage](https://img.shields.io/badge/Code%20Coverage-76%25-yellow?style=flat) | ![Integration Tests](https://img.shields.io/badge/Tests-13%20Passing-brightgreen?style=flat) |
-| **Reporting API** | [![Deploy Reporting Api](https://github.com/willvelida/biotrackr/actions/workflows/deploy-reporting-api.yml/badge.svg)](https://github.com/willvelida/biotrackr/actions/workflows/deploy-reporting-api.yml) | ![Code Coverage](https://img.shields.io/badge/Code%20Coverage-TBD-lightgrey?style=flat) | ![Integration Tests](https://img.shields.io/badge/Tests-TBD-lightgrey?style=flat) |
+| **Reporting API** | [![Deploy Reporting Api](https://github.com/willvelida/biotrackr/actions/workflows/deploy-reporting-api.yml/badge.svg)](https://github.com/willvelida/biotrackr/actions/workflows/deploy-reporting-api.yml) | ![Code Coverage](https://img.shields.io/badge/Code%20Coverage-74%25-yellow?style=flat) | ![Integration Tests](https://img.shields.io/badge/Tests-182%20Passing-brightgreen?style=flat) |
 | **AI Evaluation** | [![Evaluate AI Agents](https://github.com/willvelida/biotrackr/actions/workflows/evaluation.yml/badge.svg)](https://github.com/willvelida/biotrackr/actions/workflows/evaluation.yml) | N/A | N/A |
 | **UI** | [![Deploy UI](https://github.com/willvelida/biotrackr/actions/workflows/deploy-ui.yml/badge.svg)](https://github.com/willvelida/biotrackr/actions/workflows/deploy-ui.yml) | ![Code Coverage](https://img.shields.io/badge/Tests-177%20Passing-brightgreen?style=flat) | N/A |
 
