@@ -278,7 +278,7 @@ namespace Biotrackr.Reporting.Api.UnitTests.Services
         }
 
         [Fact]
-        public void CreateSessionConfigWithThreeCustomAgents()
+        public void CreateSessionConfig_ShouldIncludeThreeCustomAgents_WhenCalled()
         {
             // Arrange
             var sut = CreateService();
@@ -300,7 +300,7 @@ namespace Biotrackr.Reporting.Api.UnitTests.Services
         }
 
         [Fact]
-        public void CreateSessionConfigWithSkillDirectories()
+        public void CreateSessionConfig_ShouldIncludeSkillDirectories_WhenCalled()
         {
             // Arrange
             var sut = CreateService();

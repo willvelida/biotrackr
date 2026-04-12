@@ -103,6 +103,8 @@ namespace Biotrackr.Reporting.Api.Services
                         "Write analysis scripts to /tmp/reports/ and execute them. " +
                         "Active minutes = fairlyActiveMinutes + veryActiveMinutes. " +
                         "Duration values are milliseconds \u2014 convert to minutes by dividing by 60000.",
+                    Tools = null, // All tools — OnPreToolUse hook provides access control
+                    Infer = true, // Allow runtime auto-delegation based on intent matching
                 },
                 new CustomAgentConfig
                 {
@@ -116,6 +118,8 @@ namespace Biotrackr.Reporting.Api.Services
                         "importing pyplot. Use seaborn 'whitegrid' style with 'muted' palette. " +
                         "Save all charts as PNG at dpi=150 with bbox_inches='tight' to /tmp/reports/. " +
                         "Include goal lines (red dashed), value annotations on bars, and clear axis labels.",
+                    Tools = null,
+                    Infer = true,
                 },
                 new CustomAgentConfig
                 {
@@ -129,6 +133,8 @@ namespace Biotrackr.Reporting.Api.Services
                         "'This report is generated from personal health data and is not medical advice. " +
                         "Consult a healthcare provider for medical guidance.' " +
                         "Save the final PDF to /tmp/reports/report.pdf.",
+                    Tools = null,
+                    Infer = true,
                 },
             ];
 

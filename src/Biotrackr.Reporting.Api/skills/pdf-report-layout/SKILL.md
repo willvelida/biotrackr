@@ -88,7 +88,20 @@ Include this disclaimer on **every page** of the report:
 
 > This report is generated from personal health data and is not medical advice. Consult a healthcare provider for medical guidance.
 
-Use the Disclaimer paragraph style (7.5pt, grey, centered). Place it at the bottom of each page's content, before the `PageBreak()`.
+**Preferred approach:** Use `onPage` callbacks on the document template to render the disclaimer as a fixed footer on every page, ensuring it appears even when flowable content overflows:
+
+```python
+def add_disclaimer_footer(canvas, doc):
+    canvas.saveState()
+    canvas.setFont("Helvetica", 7)
+    canvas.setFillColor(colors.grey)
+    canvas.drawCentredString(A4[0] / 2, 1.2 * cm, DISCLAIMER)
+    canvas.restoreState()
+
+doc.build(story, onFirstPage=add_disclaimer_footer, onLaterPages=add_disclaimer_footer)
+```
+
+**Alternative approach:** Add a Disclaimer paragraph (7.5pt, grey, centered) at the bottom of each page's content before `PageBreak()`. This works for manually paginated reports but is unreliable when content overflows to unexpected pages.
 
 ## Building the Document
 

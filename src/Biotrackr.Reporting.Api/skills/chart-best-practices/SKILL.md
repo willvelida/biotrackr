@@ -49,7 +49,7 @@ description: Best practices for creating professional health data visualizations
 
 * Use short day labels for x-axis (e.g., "Sun Apr 5", "Mon Apr 6").
 * Rotate x-tick labels: `rotation=20, ha="right"` for single charts, `rotation=30` for subplots.
-* Format large numbers with comma separators: `plt.FuncFormatter(lambda v, _: f"{v:,.0f}")`.
+* Format large numbers with comma separators by applying a formatter to the axis: `ax.yaxis.set_major_formatter(matplotlib.ticker.FuncFormatter(lambda v, _: f"{v:,.0f}"))`.
 * Always include axis labels (`set_ylabel`) and a bold title (`fontsize=14, fontweight="bold"`).
 
 ## Subplot Layouts
