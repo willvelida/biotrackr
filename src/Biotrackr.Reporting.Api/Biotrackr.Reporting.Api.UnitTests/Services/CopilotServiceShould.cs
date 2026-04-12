@@ -277,6 +277,43 @@ namespace Biotrackr.Reporting.Api.UnitTests.Services
             config.SystemMessage.Should().BeNull();
         }
 
+        [Fact]
+        public void CreateSessionConfig_ShouldIncludeThreeCustomAgents_WhenCalled()
+        {
+            // Arrange
+            var sut = CreateService();
+
+            // Act
+            var config = sut.CreateSessionConfig();
+
+            // Assert
+            config.CustomAgents.Should().NotBeNull();
+            config.CustomAgents.Should().HaveCount(3);
+            config.CustomAgents!.Select(a => a.Name).Should().BeEquivalentTo(
+                ["data-analyst", "chart-generator", "pdf-builder"]);
+            config.CustomAgents.Should().AllSatisfy(a =>
+            {
+                a.Prompt.Should().NotBeNullOrWhiteSpace();
+                a.Description.Should().NotBeNullOrWhiteSpace();
+                a.DisplayName.Should().NotBeNullOrWhiteSpace();
+            });
+        }
+
+        [Fact]
+        public void CreateSessionConfig_ShouldIncludeSkillDirectories_WhenCalled()
+        {
+            // Arrange
+            var sut = CreateService();
+
+            // Act
+            var config = sut.CreateSessionConfig();
+
+            // Assert
+            config.SkillDirectories.Should().NotBeNull();
+            config.SkillDirectories.Should().HaveCount(3);
+            config.SkillDirectories.Should().AllSatisfy(d => d.Should().StartWith("/app/skills/"));
+        }
+
         private CopilotService CreateService(
             string copilotCliUrl = "http://localhost:4321",
             string? systemPrompt = null)

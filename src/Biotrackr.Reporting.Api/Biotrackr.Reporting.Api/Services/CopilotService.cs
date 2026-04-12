@@ -25,7 +25,10 @@ namespace Biotrackr.Reporting.Api.Services
             "create", "edit", "write", // File creation/modification
             "read", "view",            // File reading
             "glob", "grep",            // File search/discovery
-            "task",                    // Sub-task delegation
+            "task",                    // Sub-task/sub-agent delegation
+            "read_agent",              // Read sub-agent results
+            "skill",                   // Load SKILL.md content into session
+            "report_intent",           // CLI internal intent tracking
         ];
 
         // Dangerous patterns in generated Python code (ASI05)
@@ -64,6 +67,8 @@ namespace Biotrackr.Reporting.Api.Services
         {
             var config = new SessionConfig
             {
+                Model = "claude-opus-4.6",
+                ReasoningEffort = "high",
                 // OnPermissionRequest is required by the SDK even when using Hooks.
                 // Approve all here — actual access control is enforced by OnPreToolUse hook.
                 OnPermissionRequest = PermissionHandler.ApproveAll,
@@ -86,6 +91,85 @@ namespace Biotrackr.Reporting.Api.Services
                     Content = systemPrompt,
                 };
             }
+
+            // Sub-agent specialization — each agent has a focused role and prompt
+            config.CustomAgents =
+            [
+                new CustomAgentConfig
+                {
+                    Name = "data-analyst",
+                    DisplayName = "Health Data Analyst",
+                    Description = "Analyzes health and fitness data using pandas. Computes daily metrics, " +
+                        "weekly averages, goal achievement, trend analysis, and identifies standout days.",
+                    Prompt = "You are a health data analyst specializing in fitness tracking data. " +
+                        "Use pandas to analyze the provided health data JSON. Calculate daily metrics, " +
+                        "weekly averages, goal achievement (steps\u226510000, distance\u22658km, activeMinutes\u226530, " +
+                        "caloriesOut\u22652500), identify standout days, and detect trends. " +
+                        "Write analysis scripts to /tmp/reports/ and execute them. " +
+                        "Active minutes = fairlyActiveMinutes + veryActiveMinutes. " +
+                        "Duration values are milliseconds \u2014 convert to minutes by dividing by 60000. " +
+                        "IMPORTANT: Save ALL computed results to /tmp/reports/analysis.json (JSON format " +
+                        "only \u2014 do NOT use pickle or any other format). The JSON must include: " +
+                        "daily_metrics (array), weekly_summary (dict), trends (dict), standout_days (dict), " +
+                        "observations (list of strings), and recommendations (list of 4-6 objects with " +
+                        "category, icon, and text fields). Other agents will read this file. " +
+                        "Each recommendation must reference specific numbers and dates from the analysis. " +
+                        "Use positive framing \u2014 lead with strengths, suggest improvements gently. " +
+                        "Never diagnose conditions or prescribe treatments.",
+                    Tools = null, // All tools — OnPreToolUse hook provides access control
+                    Infer = true, // Allow runtime auto-delegation based on intent matching
+                },
+                new CustomAgentConfig
+                {
+                    Name = "chart-generator",
+                    DisplayName = "Chart Generator",
+                    Description = "Creates professional data visualizations using matplotlib and seaborn. " +
+                        "Generates PNG chart files for steps, calories, active minutes, distance, floors, " +
+                        "heart rate, goal achievement, and weekly overview.",
+                    Prompt = "You are a data visualization specialist. Use matplotlib and seaborn to create " +
+                        "clear, professional charts from health data. Always use matplotlib.use('Agg') before " +
+                        "importing pyplot. Use seaborn 'whitegrid' style with 'muted' palette. " +
+                        "IMPORTANT: Read pre-computed metrics from /tmp/reports/analysis.json instead of " +
+                        "re-parsing raw data. Load the JSON file and use the daily_metrics array and " +
+                        "weekly_summary dict for chart values. This avoids redundant data processing. " +
+                        "Save all charts as PNG at dpi=150 with bbox_inches='tight' to /tmp/reports/. " +
+                        "Include goal lines (red dashed), value annotations on bars, and clear axis labels.",
+                    Tools = null,
+                    Infer = true,
+                },
+                new CustomAgentConfig
+                {
+                    Name = "pdf-builder",
+                    DisplayName = "PDF Report Builder",
+                    Description = "Assembles multi-page professional PDF health reports using reportlab " +
+                        "PLATYPUS. Combines analysis text, data tables, and chart images into a cohesive document.",
+                    Prompt = "You are a PDF report builder. Use reportlab SimpleDocTemplate with A4 page size " +
+                        "and 2cm margins. Follow the report-template skill for the standardized page structure. " +
+                        "IMPORTANT: Read pre-computed metrics, observations, and recommendations from " +
+                        "/tmp/reports/analysis.json instead of re-parsing raw data. Load the JSON file and " +
+                        "use daily_metrics, weekly_summary, observations, and recommendations arrays directly. " +
+                        "Create professional tables with header styling, embed chart PNG " +
+                        "images from /tmp/reports/, add page breaks between sections. " +
+                        "Include a 'Personalized Recommendations' page with the recommendations from " +
+                        "analysis.json, followed by a prominent AI disclaimer warning box " +
+                        "(light yellow background, orange border) stating these are AI-generated suggestions " +
+                        "and not medical advice. " +
+                        "Use the onPage callback for the page footer disclaimer: " +
+                        "'This report is generated from personal health data and is not medical advice. " +
+                        "Consult a healthcare provider for medical guidance.' " +
+                        "Save the final PDF to /tmp/reports/report.pdf.",
+                    Tools = null,
+                    Infer = true,
+                },
+            ];
+
+            // Skill directories reference the CLI sidecar's filesystem (not the .NET host's)
+            config.SkillDirectories =
+            [
+                "/app/skills/chart-best-practices",
+                "/app/skills/health-data-analysis",
+                "/app/skills/report-template",
+            ];
 
             return config;
         }
@@ -155,9 +239,9 @@ namespace Biotrackr.Reporting.Api.Services
         private Task<PostToolUseHookOutput?> OnPostToolUse(
             PostToolUseHookInput input, HookInvocation invocation)
         {
-            // Only scan shell tool results for dangerous patterns
+            // Only scan command execution tool results for dangerous patterns
             var toolResult = SafeSerialize(input.ToolResult);
-            if (input.ToolName != "shell" || string.IsNullOrEmpty(toolResult))
+            if (input.ToolName is not ("shell" or "bash") || string.IsNullOrEmpty(toolResult))
             {
                 return Task.FromResult<PostToolUseHookOutput?>(null);
             }

@@ -26,6 +26,9 @@ RUN pip install --no-cache-dir \
 # Create shared reports directory
 RUN mkdir -p /tmp/reports
 
+# Copy Copilot SDK skill definitions for sub-agent specialization
+COPY skills/ /app/skills/
+
 # Run as non-root user
 RUN useradd --create-home --shell /bin/bash copilot
 USER copilot
