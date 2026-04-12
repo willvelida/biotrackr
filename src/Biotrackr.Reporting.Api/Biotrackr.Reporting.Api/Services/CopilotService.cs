@@ -108,7 +108,8 @@ namespace Biotrackr.Reporting.Api.Services
                         "Write analysis scripts to /tmp/reports/ and execute them. " +
                         "Active minutes = fairlyActiveMinutes + veryActiveMinutes. " +
                         "Duration values are milliseconds \u2014 convert to minutes by dividing by 60000. " +
-                        "IMPORTANT: Save ALL computed results to /tmp/reports/analysis.json including: " +
+                        "IMPORTANT: Save ALL computed results to /tmp/reports/analysis.json (JSON format " +
+                        "only \u2014 do NOT use pickle or any other format). The JSON must include: " +
                         "daily_metrics (array), weekly_summary (dict), trends (dict), standout_days (dict), " +
                         "observations (list of strings), and recommendations (list of 4-6 objects with " +
                         "category, icon, and text fields). Other agents will read this file. " +
@@ -167,7 +168,6 @@ namespace Biotrackr.Reporting.Api.Services
             [
                 "/app/skills/chart-best-practices",
                 "/app/skills/health-data-analysis",
-                "/app/skills/pdf-report-layout",
                 "/app/skills/report-template",
             ];
 

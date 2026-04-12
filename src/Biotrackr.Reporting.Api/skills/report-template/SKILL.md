@@ -1,11 +1,48 @@
 ---
 name: report-template
-description: Standardized page-by-page report structure and recommendations section template for all Biotrackr health reports
+description: Standardized report structure, recommendations, and reportlab PLATYPUS patterns for all Biotrackr health reports
 ---
 
 # Report Template
 
-All Biotrackr health reports must follow this standardized structure. Each report type (activity, sleep, food, vitals) adapts the template to its domain while maintaining consistent formatting, page flow, and required sections.
+All Biotrackr health reports must follow this standardized structure and use these reportlab patterns. Each report type (activity, sleep, food, vitals) adapts the template to its domain while maintaining consistent formatting, page flow, and required sections.
+
+## Reportlab Framework Setup
+
+```python
+from reportlab.lib.pagesizes import A4
+from reportlab.lib import colors
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+from reportlab.lib.units import cm
+from reportlab.platypus import (
+    SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle,
+    Image as RLImage, PageBreak, HRFlowable
+)
+from reportlab.lib.enums import TA_CENTER, TA_LEFT, TA_RIGHT
+```
+
+* Page size: A4 with 2cm margins all sides
+* Output path: `/tmp/reports/report.pdf`
+* Use `SimpleDocTemplate` with a `story` list of flowables
+
+### Paragraph Styles
+
+* **Title**: 24pt, bold, centered, color #1a3a5c
+* **Heading1**: 14pt bold, section headers
+* **Heading2**: 11pt bold, subsection headers
+* **Body**: 9pt normal, leading=13, content text
+* **Disclaimer**: 7.5pt grey, centered
+* **Small**: 8pt for compact content
+
+### Chart Embedding
+
+```python
+story.append(RLImage("chart_path.png", width=16*cm, height=8*cm))
+```
+
+* Width: 16cm for full-width charts, height: 7.5-9cm
+* Add `Spacer(1, 0.3*cm)` between charts and other content
+* Verify chart file exists with `os.path.exists()` before embedding
 
 ## Required Report Sections (in order)
 
