@@ -9,7 +9,8 @@ namespace Biotrackr.Chat.Api.IntegrationTests.Contract;
 /// These tests do NOT require a running Cosmos DB emulator — they only verify
 /// that the application builds, DI resolves, and routes are mapped.
 /// </summary>
-public class ApiSmokeTests : IClassFixture<ChatApiWebApplicationFactory>
+[Collection(nameof(ContractTestCollection))]
+public class ApiSmokeTests
 {
     private readonly HttpClient _client;
 

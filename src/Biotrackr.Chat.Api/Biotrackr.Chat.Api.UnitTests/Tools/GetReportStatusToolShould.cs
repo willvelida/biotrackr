@@ -14,24 +14,21 @@ namespace Biotrackr.Chat.Api.UnitTests.Tools
     {
         private readonly Mock<ILogger<GetReportStatusTool>> _logger;
         private readonly Mock<IHttpClientFactory> _httpClientFactory;
-        private readonly ReportReviewerService _reviewerService;
+        private readonly Mock<IReportReviewerService> _reviewerServiceMock;
 
         public GetReportStatusToolShould()
         {
             _logger = new Mock<ILogger<GetReportStatusTool>>();
             _httpClientFactory = new Mock<IHttpClientFactory>();
 
-            // Use real instance with empty system prompt so review is skipped
-            var reviewerSettings = Options.Create(new Settings
-            {
-                AnthropicApiKey = "test-key",
-                ChatAgentModel = "claude-sonnet-4-20250514",
-                ReviewerSystemPrompt = ""
-            });
-            var reviewerLogger = new Mock<ILogger<ReportReviewerService>>();
-            var reviewerHttpClientFactory = new Mock<IHttpClientFactory>();
-            reviewerHttpClientFactory.Setup(f => f.CreateClient("Anthropic")).Returns(new HttpClient());
-            _reviewerService = new ReportReviewerService(reviewerSettings, reviewerLogger.Object, reviewerHttpClientFactory.Object);
+            _reviewerServiceMock = new Mock<IReportReviewerService>();
+            _reviewerServiceMock.Setup(r => r.ReviewReportAsync(It.IsAny<string>(), It.IsAny<object?>(), It.IsAny<string>()))
+                .ReturnsAsync(new ReviewResult
+                {
+                    Approved = true,
+                    ReviewCompleted = true,
+                    ValidatedSummary = "Validated summary"
+                });
         }
 
         [Fact]
@@ -112,7 +109,7 @@ namespace Biotrackr.Chat.Api.UnitTests.Tools
                 ChatAgentModel = "claude-sonnet-4-20250514"
             });
 
-            return new GetReportStatusTool(settings, _httpClientFactory.Object, _reviewerService, _logger.Object);
+            return new GetReportStatusTool(settings, _httpClientFactory.Object, _reviewerServiceMock.Object, _logger.Object);
         }
 
         private static string CreateStatusResponse(string status, string? summary = null, string? error = null)

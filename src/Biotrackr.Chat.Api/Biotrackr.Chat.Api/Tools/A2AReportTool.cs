@@ -20,13 +20,13 @@ namespace Biotrackr.Chat.Api.Tools
     {
         private readonly Settings _settings;
         private readonly IHttpClientFactory _httpClientFactory;
-        private readonly ReportReviewerService _reviewerService;
+        private readonly IReportReviewerService _reviewerService;
         private readonly ILogger<A2AReportTool> _logger;
 
         public A2AReportTool(
             IOptions<Settings> settings,
             IHttpClientFactory httpClientFactory,
-            ReportReviewerService reviewerService,
+            IReportReviewerService reviewerService,
             ILogger<A2AReportTool> logger)
         {
             _settings = settings.Value;
@@ -165,6 +165,18 @@ namespace Biotrackr.Chat.Api.Tools
             var downloadSection = downloads.Count > 0
                 ? $"\n\n{string.Join("\n", downloads)}"
                 : "";
+
+            if (!reviewResult.ReviewCompleted)
+            {
+                _logger.LogWarning("Review not completed for job {JobId}: {Reason}",
+                    result.Metadata.JobId, reviewResult.ReviewSkipReason);
+
+                var reviewStatus = reviewResult.Concerns.Count > 0
+                    ? $"\n\n**Review Status:** The independent review did not complete.\n- {string.Join("\n- ", reviewResult.Concerns)}"
+                    : "\n\n**Review Status:** The independent review did not complete.";
+
+                return $"{reviewResult.ValidatedSummary}{reviewStatus}{imageSection}{downloadSection}";
+            }
 
             if (!reviewResult.Approved)
             {

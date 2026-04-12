@@ -16,24 +16,21 @@ namespace Biotrackr.Chat.Api.UnitTests.Tools
 
         private readonly Mock<ILogger<A2AReportTool>> _logger;
         private readonly Mock<IHttpClientFactory> _httpClientFactory;
-        private readonly ReportReviewerService _reviewerService;
+        private readonly Mock<IReportReviewerService> _reviewerServiceMock;
 
         public A2AReportToolShould()
         {
             _logger = new Mock<ILogger<A2AReportTool>>();
             _httpClientFactory = new Mock<IHttpClientFactory>();
 
-            // Use real instance with empty system prompt so review is skipped (returns approved immediately)
-            var reviewerSettings = Options.Create(new Settings
-            {
-                AnthropicApiKey = "test-key",
-                ChatAgentModel = "claude-sonnet-4-20250514",
-                ReviewerSystemPrompt = ""
-            });
-            var reviewerLogger = new Mock<ILogger<ReportReviewerService>>();
-            var reviewerHttpClientFactory = new Mock<IHttpClientFactory>();
-            reviewerHttpClientFactory.Setup(f => f.CreateClient("Anthropic")).Returns(new HttpClient());
-            _reviewerService = new ReportReviewerService(reviewerSettings, reviewerLogger.Object, reviewerHttpClientFactory.Object);
+            _reviewerServiceMock = new Mock<IReportReviewerService>();
+            _reviewerServiceMock.Setup(r => r.ReviewReportAsync(It.IsAny<string>(), It.IsAny<object?>(), It.IsAny<string>()))
+                .ReturnsAsync(new ReviewResult
+                {
+                    Approved = true,
+                    ReviewCompleted = true,
+                    ValidatedSummary = "Validated summary"
+                });
         }
 
         [Fact]
@@ -212,7 +209,7 @@ namespace Biotrackr.Chat.Api.UnitTests.Tools
             return new A2AReportTool(
                 settings,
                 _httpClientFactory.Object,
-                _reviewerService,
+                _reviewerServiceMock.Object,
                 _logger.Object);
         }
 

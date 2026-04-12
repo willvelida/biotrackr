@@ -1,8 +1,10 @@
+using System.Security.Cryptography;
 using System.Text.Json;
 using Anthropic;
 using Anthropic.Models.Messages;
 using Biotrackr.Chat.Api.Configuration;
 using Biotrackr.Chat.Api.Telemetry;
+using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Options;
 
 namespace Biotrackr.Chat.Api.Tools
@@ -12,20 +14,23 @@ namespace Biotrackr.Chat.Api.Tools
     /// Uses Claude (Anthropic) with a validation-focused system prompt.
     /// Stateless — created per review, no tools needed.
     /// </summary>
-    public sealed class ReportReviewerService
+    public sealed class ReportReviewerService : IReportReviewerService
     {
         private readonly Settings _settings;
         private readonly ILogger<ReportReviewerService> _logger;
         private readonly IHttpClientFactory _httpClientFactory;
+        private readonly IMemoryCache _cache;
 
         public ReportReviewerService(
             IOptions<Settings> settings,
             ILogger<ReportReviewerService> logger,
-            IHttpClientFactory httpClientFactory)
+            IHttpClientFactory httpClientFactory,
+            IMemoryCache cache)
         {
             _settings = settings.Value;
             _logger = logger;
             _httpClientFactory = httpClientFactory;
+            _cache = cache;
         }
 
         public async Task<ReviewResult> ReviewReportAsync(
@@ -33,13 +38,23 @@ namespace Biotrackr.Chat.Api.Tools
         {
             if (string.IsNullOrWhiteSpace(_settings.ReviewerSystemPrompt))
             {
-                _logger.LogWarning("Reviewer system prompt not configured. Skipping review.");
+                _logger.LogWarning("Reviewer system prompt not configured. Report will be presented with review-skip disclosure.");
                 return new ReviewResult
                 {
                     Approved = true,
-                    ValidatedSummary = reportSummary,
-                    Concerns = []
+                    ReviewCompleted = false,
+                    ReviewSkipReason = "Reviewer system prompt not configured",
+                    ValidatedSummary = reportSummary + "\n\n⚠️ Note: This report has not been independently reviewed because the review system is not configured. Please verify the data manually.",
+                    Concerns = ["Review was skipped: reviewer system prompt is not configured. Report data has not been independently validated."]
                 };
+            }
+
+            var cacheKey = DeriveCacheKey(reportSummary, sourceDataSnapshot, reportType);
+
+            if (_cache.TryGetValue(cacheKey, out ReviewResult? cachedResult))
+            {
+                _logger.LogDebug("Review cache hit for {ReportType}", reportType);
+                return cachedResult!;
             }
 
             System.Diagnostics.Activity? activity = null;
@@ -102,17 +117,19 @@ namespace Biotrackr.Chat.Api.Tools
                     reportType, responseText.Length, result.Usage?.CacheReadInputTokens ?? 0);
 
                 // Parse the reviewer's JSON response
-                return ParseReviewResult(responseText, reportSummary);
+                return ParseReviewResult(responseText, reportSummary, cacheKey);
             }
             catch (Exception ex)
             {
                 AnthropicTelemetry.RecordError(activity, ex);
-                _logger.LogError(ex, "Reviewer agent failed. Passing report through with warning.");
+                _logger.LogError(ex, "Reviewer agent failed for {ReportType}. Report will be presented with review-failure disclosure.", reportType);
                 return new ReviewResult
                 {
                     Approved = true,
-                    ValidatedSummary = reportSummary + "\n\n⚠️ Note: This report could not be independently reviewed. Please verify the data manually.",
-                    Concerns = []
+                    ReviewCompleted = false,
+                    ReviewSkipReason = $"Reviewer agent failed: {ex.Message}",
+                    ValidatedSummary = reportSummary + "\n\n⚠️ Note: This report could not be independently reviewed due to a service error. Please verify the data manually.",
+                    Concerns = ["Review could not be completed: the reviewer service encountered an error. Report data has not been independently validated."]
                 };
             }
             finally
@@ -121,7 +138,7 @@ namespace Biotrackr.Chat.Api.Tools
             }
         }
 
-        private static ReviewResult ParseReviewResult(string responseText, string fallbackSummary)
+        private ReviewResult ParseReviewResult(string responseText, string fallbackSummary, string cacheKey)
         {
             try
             {
@@ -138,26 +155,44 @@ namespace Biotrackr.Chat.Api.Tools
                     });
 
                     if (result is not null)
+                    {
+                        result.ReviewCompleted = true;
+                        _cache.Set(cacheKey, result, TimeSpan.FromMinutes(30));
                         return result;
+                    }
                 }
             }
             catch
             {
-                // Fall through to default
+                // Fall through to fail-closed default
             }
 
             return new ReviewResult
             {
                 Approved = true,
-                ValidatedSummary = fallbackSummary,
-                Concerns = []
+                ReviewCompleted = false,
+                ReviewSkipReason = "Failed to parse reviewer response",
+                ValidatedSummary = fallbackSummary + "\n\n⚠️ Note: The independent review could not be completed because the reviewer's response was unreadable. Please verify the data manually.",
+                Concerns = ["Review response was unreadable: the reviewer produced a response that could not be interpreted. Report data has not been independently validated."]
             };
+        }
+
+        private static string DeriveCacheKey(
+            string reportSummary, object? sourceDataSnapshot, string reportType)
+        {
+            var content = $"{reportType}:{reportSummary}:{JsonSerializer.Serialize(sourceDataSnapshot)}";
+            var hash = Convert.ToHexString(
+                SHA256.HashData(
+                    System.Text.Encoding.UTF8.GetBytes(content)));
+            return $"reviewer:{reportType}:{hash}";
         }
     }
 
     public sealed class ReviewResult
     {
         public bool Approved { get; set; } = true;
+        public bool ReviewCompleted { get; set; }
+        public string? ReviewSkipReason { get; set; }
         public List<string> Concerns { get; set; } = [];
         public string ValidatedSummary { get; set; } = string.Empty;
     }
