@@ -108,7 +108,10 @@ namespace Biotrackr.Reporting.Api.Services
                         "Write analysis scripts to /tmp/reports/ and execute them. " +
                         "Active minutes = fairlyActiveMinutes + veryActiveMinutes. " +
                         "Duration values are milliseconds \u2014 convert to minutes by dividing by 60000. " +
-                        "IMPORTANT: Generate 4-6 personalized recommendations based on the data. " +
+                        "IMPORTANT: Save ALL computed results to /tmp/reports/analysis.json including: " +
+                        "daily_metrics (array), weekly_summary (dict), trends (dict), standout_days (dict), " +
+                        "observations (list of strings), and recommendations (list of 4-6 objects with " +
+                        "category, icon, and text fields). Other agents will read this file. " +
                         "Each recommendation must reference specific numbers and dates from the analysis. " +
                         "Use positive framing \u2014 lead with strengths, suggest improvements gently. " +
                         "Never diagnose conditions or prescribe treatments.",
@@ -125,6 +128,9 @@ namespace Biotrackr.Reporting.Api.Services
                     Prompt = "You are a data visualization specialist. Use matplotlib and seaborn to create " +
                         "clear, professional charts from health data. Always use matplotlib.use('Agg') before " +
                         "importing pyplot. Use seaborn 'whitegrid' style with 'muted' palette. " +
+                        "IMPORTANT: Read pre-computed metrics from /tmp/reports/analysis.json instead of " +
+                        "re-parsing raw data. Load the JSON file and use the daily_metrics array and " +
+                        "weekly_summary dict for chart values. This avoids redundant data processing. " +
                         "Save all charts as PNG at dpi=150 with bbox_inches='tight' to /tmp/reports/. " +
                         "Include goal lines (red dashed), value annotations on bars, and clear axis labels.",
                     Tools = null,
@@ -138,10 +144,13 @@ namespace Biotrackr.Reporting.Api.Services
                         "PLATYPUS. Combines analysis text, data tables, and chart images into a cohesive document.",
                     Prompt = "You are a PDF report builder. Use reportlab SimpleDocTemplate with A4 page size " +
                         "and 2cm margins. Follow the report-template skill for the standardized page structure. " +
+                        "IMPORTANT: Read pre-computed metrics, observations, and recommendations from " +
+                        "/tmp/reports/analysis.json instead of re-parsing raw data. Load the JSON file and " +
+                        "use daily_metrics, weekly_summary, observations, and recommendations arrays directly. " +
                         "Create professional tables with header styling, embed chart PNG " +
-                        "images, add page breaks between sections. " +
-                        "IMPORTANT: Include a 'Personalized Recommendations' page with 4-6 data-driven " +
-                        "recommendations from the analysis, followed by a prominent AI disclaimer warning box " +
+                        "images from /tmp/reports/, add page breaks between sections. " +
+                        "Include a 'Personalized Recommendations' page with the recommendations from " +
+                        "analysis.json, followed by a prominent AI disclaimer warning box " +
                         "(light yellow background, orange border) stating these are AI-generated suggestions " +
                         "and not medical advice. " +
                         "Use the onPage callback for the page footer disclaimer: " +
