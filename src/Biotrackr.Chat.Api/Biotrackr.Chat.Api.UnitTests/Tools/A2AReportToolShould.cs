@@ -16,24 +16,21 @@ namespace Biotrackr.Chat.Api.UnitTests.Tools
 
         private readonly Mock<ILogger<A2AReportTool>> _logger;
         private readonly Mock<IHttpClientFactory> _httpClientFactory;
-        private readonly ReportReviewerService _reviewerService;
+        private readonly Mock<IReportReviewerService> _reviewerServiceMock;
 
         public A2AReportToolShould()
         {
             _logger = new Mock<ILogger<A2AReportTool>>();
             _httpClientFactory = new Mock<IHttpClientFactory>();
 
-            // Use real instance with empty system prompt so review is skipped (returns approved immediately)
-            var reviewerSettings = Options.Create(new Settings
-            {
-                AnthropicApiKey = "test-key",
-                ChatAgentModel = "claude-sonnet-4-20250514",
-                ReviewerSystemPrompt = ""
-            });
-            var reviewerLogger = new Mock<ILogger<ReportReviewerService>>();
-            var reviewerHttpClientFactory = new Mock<IHttpClientFactory>();
-            reviewerHttpClientFactory.Setup(f => f.CreateClient("Anthropic")).Returns(new HttpClient());
-            _reviewerService = new ReportReviewerService(reviewerSettings, reviewerLogger.Object, reviewerHttpClientFactory.Object);
+            _reviewerServiceMock = new Mock<IReportReviewerService>();
+            _reviewerServiceMock.Setup(r => r.ReviewReportAsync(It.IsAny<string>(), It.IsAny<object?>(), It.IsAny<string>()))
+                .ReturnsAsync(new ReviewResult
+                {
+                    Approved = true,
+                    ReviewCompleted = true,
+                    ValidatedSummary = "Validated summary"
+                });
         }
 
         [Fact]
@@ -193,6 +190,59 @@ namespace Biotrackr.Chat.Api.UnitTests.Tools
                 Times.Once);
         }
 
+        [Fact]
+        public async Task PresentReviewStatusWhenReviewNotCompleted()
+        {
+            // Arrange
+            _reviewerServiceMock.Setup(r => r.ReviewReportAsync(It.IsAny<string>(), It.IsAny<object?>(), It.IsAny<string>()))
+                .ReturnsAsync(new ReviewResult
+                {
+                    Approved = true,
+                    ReviewCompleted = false,
+                    ReviewSkipReason = "Reviewer agent failed due to a service error",
+                    ValidatedSummary = "Test summary\n\n⚠️ Note: review failed",
+                    Concerns = ["Review could not be completed: the reviewer service encountered an error."]
+                });
+            var statusBody = CreateStatusResponseWithArtifacts("generated", "Test summary");
+            var handler = CreateMockHandler(HttpStatusCode.OK, statusBody);
+            var sut = CreateTool(handler);
+
+            // Act
+            var result = await sut.CheckReportStatus("job-123");
+
+            // Assert
+            result.Should().Contain("Review Status");
+            result.Should().Contain("independent review did not complete");
+            result.Should().Contain("reviewer service encountered an error");
+            result.Should().NotContain("regenerate");
+        }
+
+        [Fact]
+        public async Task IncludeArtifactsWhenReviewNotCompleted()
+        {
+            // Arrange
+            _reviewerServiceMock.Setup(r => r.ReviewReportAsync(It.IsAny<string>(), It.IsAny<object?>(), It.IsAny<string>()))
+                .ReturnsAsync(new ReviewResult
+                {
+                    Approved = true,
+                    ReviewCompleted = false,
+                    ReviewSkipReason = "Reviewer system prompt not configured",
+                    ValidatedSummary = "Test summary",
+                    Concerns = ["Review was skipped."]
+                });
+            var statusBody = CreateStatusResponseWithArtifacts("generated", "Test summary",
+                artifacts: new Dictionary<string, string> { { "report.pdf", "https://example.com/report.pdf" } });
+            var handler = CreateMockHandler(HttpStatusCode.OK, statusBody);
+            var sut = CreateTool(handler);
+
+            // Act
+            var result = await sut.CheckReportStatus("job-123");
+
+            // Assert
+            result.Should().Contain("report.pdf");
+            result.Should().Contain("Review Status");
+        }
+
         private A2AReportTool CreateTool(Mock<HttpMessageHandler> handler)
         {
             var httpClient = new HttpClient(handler.Object)
@@ -212,7 +262,7 @@ namespace Biotrackr.Chat.Api.UnitTests.Tools
             return new A2AReportTool(
                 settings,
                 _httpClientFactory.Object,
-                _reviewerService,
+                _reviewerServiceMock.Object,
                 _logger.Object);
         }
 
@@ -230,6 +280,28 @@ namespace Biotrackr.Chat.Api.UnitTests.Tools
                     Content = new StringContent(responseBody, System.Text.Encoding.UTF8, "application/json")
                 });
             return handler;
+        }
+
+        private static string CreateStatusResponseWithArtifacts(
+            string status, string summary,
+            Dictionary<string, string>? artifacts = null)
+        {
+            var metadata = new
+            {
+                jobId = "job-123",
+                status,
+                reportType = "weekly_summary",
+                summary,
+                error = (string?)null,
+                sourceDataSnapshot = new { },
+                artifacts = (artifacts?.Keys.ToList()) ?? new List<string>()
+            };
+
+            return JsonSerializer.Serialize(new
+            {
+                metadata,
+                artifactUrls = artifacts ?? new Dictionary<string, string>()
+            });
         }
     }
 }

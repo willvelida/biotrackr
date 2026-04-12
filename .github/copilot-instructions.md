@@ -162,6 +162,19 @@ dotnet test --no-build --filter "FullyQualifiedName~E2E"
 
 70% minimum threshold enforced in CI. Coverage settings are defined in `coverage.runsettings` per service.
 
+**Pre-push verification — run before every push to catch coverage regressions locally:**
+
+```bash
+cd src/Biotrackr.{Domain}.{Type}
+dotnet test --no-build --collect:"XPlat Code Coverage" --settings ../coverage.runsettings --results-directory ./TestResults
+
+# Generate human-readable coverage report (install once: dotnet tool install -g dotnet-reportgenerator-globaltool)
+reportgenerator -reports:"./TestResults/**/coverage.cobertura.xml" -targetdir:"./CoverageReport" -reporttypes:TextSummary
+Get-Content ./CoverageReport/Summary.txt
+```
+
+If line coverage falls below 70%, add tests for uncovered paths before pushing. CI will reject PRs below this threshold.
+
 ### Docker Build (per service)
 
 ```bash
@@ -283,6 +296,7 @@ E2E tests use `[Collection(nameof(IntegrationTestCollection))]` and run against 
 - `coverage.runsettings` per service (identical content, excludes OpenAPI source-generated code)
 - `[ExcludeFromCodeCoverage]` attribute for generated code
 - Coverage summary posted as sticky PR comment via `irongut/CodeCoverageSummary`
+- **Always verify coverage locally before pushing** — run `dotnet test` with `--collect:"XPlat Code Coverage"` and check the report meets the 70% threshold
 
 ## Commit Standards
 

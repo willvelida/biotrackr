@@ -96,7 +96,7 @@ builder.Services.AddHttpClient("ReportingApi", client =>
     options.Retry.BackoffType = Polly.DelayBackoffType.Linear;
 });
 
-builder.Services.AddSingleton<ReportReviewerService>();
+builder.Services.AddSingleton<IReportReviewerService, ReportReviewerService>();
 
 // A2A client for Reporting.Api — uses same base URL, different path prefix (/a2a/report)
 builder.Services.AddHttpClient("A2AReportingClient", client =>
