@@ -93,6 +93,33 @@ namespace Biotrackr.Chat.Api.UnitTests.Tools
             aiFunction.Name.Should().Be("GetReportStatus");
         }
 
+        [Fact]
+        public async Task PresentReviewStatusWhenReviewNotCompleted()
+        {
+            // Arrange
+            _reviewerServiceMock.Setup(r => r.ReviewReportAsync(It.IsAny<string>(), It.IsAny<object?>(), It.IsAny<string>()))
+                .ReturnsAsync(new ReviewResult
+                {
+                    Approved = true,
+                    ReviewCompleted = false,
+                    ReviewSkipReason = "Reviewer agent failed due to a service error",
+                    ValidatedSummary = "Test summary\n\n⚠️ Note: review failed",
+                    Concerns = ["Review could not be completed: the reviewer service encountered an error."]
+                });
+            var body = CreateStatusResponse("generated");
+            var handler = CreateMockHandler(HttpStatusCode.OK, body);
+            var sut = CreateTool(handler);
+
+            // Act
+            var result = await sut.GetReportStatus("job-123");
+
+            // Assert
+            result.Should().Contain("Review Status");
+            result.Should().Contain("independent review did not complete");
+            result.Should().Contain("reviewer service encountered an error");
+            result.Should().NotContain("regenerate");
+        }
+
         private GetReportStatusTool CreateTool(Mock<HttpMessageHandler> handler)
         {
             var httpClient = new HttpClient(handler.Object)

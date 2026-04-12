@@ -25,7 +25,7 @@ public class ProgramStartupTests
     }
 
     [Fact]
-    public void Application_ShouldLoadConfiguration()
+    public void Application_ShouldResolveDependencyInjectionContainer()
     {
         // Arrange & Act
         var services = _factory.Services;
@@ -48,7 +48,7 @@ public class ProgramStartupTests
     }
 
     [Fact]
-    public async Task Application_ShouldNotLoadAzureAppConfigurationInTests()
+    public async Task Application_ShouldReturnHealthyLivenessCheck()
     {
         // Arrange
         var client = _factory.CreateClient();

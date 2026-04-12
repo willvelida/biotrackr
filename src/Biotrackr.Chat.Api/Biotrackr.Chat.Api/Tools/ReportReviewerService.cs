@@ -27,6 +27,10 @@ namespace Biotrackr.Chat.Api.Tools
             IHttpClientFactory httpClientFactory,
             IMemoryCache cache)
         {
+            ArgumentNullException.ThrowIfNull(settings);
+            ArgumentNullException.ThrowIfNull(logger);
+            ArgumentNullException.ThrowIfNull(httpClientFactory);
+            ArgumentNullException.ThrowIfNull(cache);
             _settings = settings.Value;
             _logger = logger;
             _httpClientFactory = httpClientFactory;
@@ -127,7 +131,7 @@ namespace Biotrackr.Chat.Api.Tools
                 {
                     Approved = true,
                     ReviewCompleted = false,
-                    ReviewSkipReason = $"Reviewer agent failed: {ex.Message}",
+                    ReviewSkipReason = "Reviewer agent failed due to a service error",
                     ValidatedSummary = reportSummary + "\n\n⚠️ Note: This report could not be independently reviewed due to a service error. Please verify the data manually.",
                     Concerns = ["Review could not be completed: the reviewer service encountered an error. Report data has not been independently validated."]
                 };
