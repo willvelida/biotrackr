@@ -25,7 +25,10 @@ namespace Biotrackr.Reporting.Api.Services
             "create", "edit", "write", // File creation/modification
             "read", "view",            // File reading
             "glob", "grep",            // File search/discovery
-            "task",                    // Sub-task delegation
+            "task",                    // Sub-task/sub-agent delegation
+            "read_agent",              // Read sub-agent results
+            "skill",                   // Load SKILL.md content into session
+            "report_intent",           // CLI internal intent tracking
         ];
 
         // Dangerous patterns in generated Python code (ASI05)
