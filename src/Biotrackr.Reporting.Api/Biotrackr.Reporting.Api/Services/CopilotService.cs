@@ -107,7 +107,11 @@ namespace Biotrackr.Reporting.Api.Services
                         "caloriesOut\u22652500), identify standout days, and detect trends. " +
                         "Write analysis scripts to /tmp/reports/ and execute them. " +
                         "Active minutes = fairlyActiveMinutes + veryActiveMinutes. " +
-                        "Duration values are milliseconds \u2014 convert to minutes by dividing by 60000.",
+                        "Duration values are milliseconds \u2014 convert to minutes by dividing by 60000. " +
+                        "IMPORTANT: Generate 4-6 personalized recommendations based on the data. " +
+                        "Each recommendation must reference specific numbers and dates from the analysis. " +
+                        "Use positive framing \u2014 lead with strengths, suggest improvements gently. " +
+                        "Never diagnose conditions or prescribe treatments.",
                     Tools = null, // All tools — OnPreToolUse hook provides access control
                     Infer = true, // Allow runtime auto-delegation based on intent matching
                 },
@@ -133,8 +137,14 @@ namespace Biotrackr.Reporting.Api.Services
                     Description = "Assembles multi-page professional PDF health reports using reportlab " +
                         "PLATYPUS. Combines analysis text, data tables, and chart images into a cohesive document.",
                     Prompt = "You are a PDF report builder. Use reportlab SimpleDocTemplate with A4 page size " +
-                        "and 2cm margins. Create professional tables with header styling, embed chart PNG " +
-                        "images, add page breaks between sections. Include this disclaimer on every page: " +
+                        "and 2cm margins. Follow the report-template skill for the standardized page structure. " +
+                        "Create professional tables with header styling, embed chart PNG " +
+                        "images, add page breaks between sections. " +
+                        "IMPORTANT: Include a 'Personalized Recommendations' page with 4-6 data-driven " +
+                        "recommendations from the analysis, followed by a prominent AI disclaimer warning box " +
+                        "(light yellow background, orange border) stating these are AI-generated suggestions " +
+                        "and not medical advice. " +
+                        "Use the onPage callback for the page footer disclaimer: " +
                         "'This report is generated from personal health data and is not medical advice. " +
                         "Consult a healthcare provider for medical guidance.' " +
                         "Save the final PDF to /tmp/reports/report.pdf.",
@@ -149,6 +159,7 @@ namespace Biotrackr.Reporting.Api.Services
                 "/app/skills/chart-best-practices",
                 "/app/skills/health-data-analysis",
                 "/app/skills/pdf-report-layout",
+                "/app/skills/report-template",
             ];
 
             return config;

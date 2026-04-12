@@ -310,7 +310,7 @@ namespace Biotrackr.Reporting.Api.UnitTests.Services
 
             // Assert
             config.SkillDirectories.Should().NotBeNull();
-            config.SkillDirectories.Should().HaveCount(3);
+            config.SkillDirectories.Should().HaveCount(4);
             config.SkillDirectories.Should().AllSatisfy(d => d.Should().StartWith("/app/skills/"));
         }
 
