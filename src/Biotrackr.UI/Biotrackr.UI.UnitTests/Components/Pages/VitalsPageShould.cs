@@ -426,5 +426,55 @@ namespace Biotrackr.UI.UnitTests.Components.Pages
             // Verify the component renders without errors when BP range data is available.
             cut.Markup.Should().NotBeEmpty();
         }
+
+        [Fact]
+        public void RenderBpOnly_WithoutNullReferenceException_WhenWeightIsNull()
+        {
+            // Arrange
+            var bpOnlyItem = CreateBpItem(systolic: 130, diastolic: 85, heartRate: 70);
+
+            _mockApiService.Setup(s => s.GetVitalsByDateAsync(It.IsAny<string>()))
+                .ReturnsAsync(bpOnlyItem);
+
+            // Act
+            var cut = Render<Vitals>();
+
+            // Assert
+            cut.Markup.Should().Contain("Blood Pressure");
+            cut.Markup.Should().Contain("130/85 mmHg");
+            cut.Markup.Should().NotContain("Body Composition");
+        }
+
+        [Fact]
+        public void RenderRangeMode_WithoutNullReferenceException_WhenMixedWeightAndBpOnlyItems()
+        {
+            // Arrange
+            var weightItem = CreateWeightItem(weight: 80.5, bmi: 24.5);
+            weightItem.Date = "2026-03-01";
+
+            var bpOnlyItem = CreateBpItem(systolic: 120, diastolic: 80, heartRate: 72);
+            bpOnlyItem.Date = "2026-03-02";
+
+            var rangeResponse = new PaginatedResponse<VitalsItem>
+            {
+                Items = [weightItem, bpOnlyItem],
+                PageNumber = 1,
+                TotalPages = 1,
+                TotalCount = 2,
+                HasPreviousPage = false,
+                HasNextPage = false
+            };
+
+            _mockApiService.Setup(s => s.GetVitalsByDateAsync(It.IsAny<string>()))
+                .ReturnsAsync((VitalsItem?)null);
+            _mockApiService.Setup(s => s.GetVitalsByDateRangeAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<int>(), It.IsAny<int>()))
+                .ReturnsAsync(rangeResponse);
+
+            // Act
+            var cut = Render<Vitals>();
+
+            // Assert
+            cut.Markup.Should().NotBeEmpty();
+        }
     }
 }

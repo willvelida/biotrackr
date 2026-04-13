@@ -8,7 +8,7 @@ namespace Biotrackr.UI.Models.Vitals
         public string Id { get; set; } = string.Empty;
 
         [JsonPropertyName("weight")]
-        public VitalsData Weight { get; set; } = new();
+        public VitalsData? Weight { get; set; }
 
         [JsonPropertyName("bloodPressureReadings")]
         public List<BloodPressureReadingData>? BloodPressureReadings { get; set; }
