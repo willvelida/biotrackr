@@ -14,7 +14,7 @@
 
 @if (!IsLoading && SingleItem is not null && Mode == "date")
 {
-    @if (SingleItem.Weight.Weight > 0)
+    @if (SingleItem.Weight?.Weight > 0)
     {
         <RadzenRow Gap="1rem" class="rz-mb-4">
             <RadzenColumn Size="12" SizeMD="3" SizeSM="6">
@@ -120,7 +120,7 @@
         }
     }
 
-    @if (SingleItem?.Weight.Weight is null or 0 && SingleItem?.BloodPressureReadings?.Any() != true)
+    @if (SingleItem?.Weight?.Weight is null or 0 && SingleItem?.BloodPressureReadings?.Any() != true)
     {
         <RadzenAlert AlertStyle="AlertStyle.Info" Variant="Variant.Flat" ShowIcon="true">No vitals entries for @SelectedDate.</RadzenAlert>
     }
@@ -213,28 +213,28 @@
         <Columns>
             <RadzenDataGridColumn TItem="VitalsItem" Property="Date" Title="Date" />
             <RadzenDataGridColumn TItem="VitalsItem" Title="Weight (kg)">
-                <Template Context="item">@(item.Weight.Weight?.ToString("F1") ?? "--")</Template>
+                <Template Context="item">@(item.Weight?.Weight?.ToString("F1") ?? "--")</Template>
             </RadzenDataGridColumn>
             <RadzenDataGridColumn TItem="VitalsItem" Title="BMI">
-                <Template Context="item">@(item.Weight.Bmi?.ToString("F1") ?? "--")</Template>
+                <Template Context="item">@(item.Weight?.Bmi?.ToString("F1") ?? "--")</Template>
             </RadzenDataGridColumn>
             <RadzenDataGridColumn TItem="VitalsItem" Title="Muscle (kg)">
-                <Template Context="item">@(item.Weight.MuscleMassKg?.ToString("F1") ?? "--")</Template>
+                <Template Context="item">@(item.Weight?.MuscleMassKg?.ToString("F1") ?? "--")</Template>
             </RadzenDataGridColumn>
             <RadzenDataGridColumn TItem="VitalsItem" Title="Fat Mass (kg)">
-                <Template Context="item">@(item.Weight.FatMassKg?.ToString("F1") ?? "--")</Template>
+                <Template Context="item">@(item.Weight?.FatMassKg?.ToString("F1") ?? "--")</Template>
             </RadzenDataGridColumn>
             <RadzenDataGridColumn TItem="VitalsItem" Title="Bone (kg)">
-                <Template Context="item">@(item.Weight.BoneMassKg?.ToString("F1") ?? "--")</Template>
+                <Template Context="item">@(item.Weight?.BoneMassKg?.ToString("F1") ?? "--")</Template>
             </RadzenDataGridColumn>
             <RadzenDataGridColumn TItem="VitalsItem" Title="Water (kg)">
-                <Template Context="item">@(item.Weight.WaterMassKg?.ToString("F1") ?? "--")</Template>
+                <Template Context="item">@(item.Weight?.WaterMassKg?.ToString("F1") ?? "--")</Template>
             </RadzenDataGridColumn>
             <RadzenDataGridColumn TItem="VitalsItem" Title="Time">
-                <Template Context="item">@item.Weight.Time</Template>
+                <Template Context="item">@(item.Weight?.Time ?? "--")</Template>
             </RadzenDataGridColumn>
             <RadzenDataGridColumn TItem="VitalsItem" Title="Provider">
-                <Template Context="item">@(item.Provider ?? item.Weight.Source)</Template>
+                <Template Context="item">@(item.Provider ?? item.Weight?.Source ?? "--")</Template>
             </RadzenDataGridColumn>
         </Columns>
     </RadzenDataGrid>
@@ -287,7 +287,8 @@
 
     private List<BodyCompositionItem> GetBodyCompositionData()
     {
-        var w = SingleItem!.Weight;
+        var w = SingleItem?.Weight;
+        if (w is null) return [];
         var items = new List<BodyCompositionItem>();
         if (w.FatMassKg is not null) items.Add(new("Fat", w.FatMassKg.Value));
         if (w.MuscleMassKg is not null) items.Add(new("Muscle", w.MuscleMassKg.Value));
@@ -299,13 +300,13 @@
     private record ChartDataPoint(string Date, double Value);
 
     private List<ChartDataPoint> GetRangeWeightData() =>
-        RangeItems!.Items.Where(w => w.Weight.Weight > 0).Select(w => new ChartDataPoint(w.Date, w.Weight.Weight!.Value)).ToList();
+        RangeItems!.Items.Where(w => w.Weight?.Weight > 0).Select(w => new ChartDataPoint(w.Date, w.Weight!.Weight!.Value)).ToList();
 
     private List<ChartDataPoint> GetRangeBmiData() =>
-        RangeItems!.Items.Where(w => w.Weight.Bmi > 0).Select(w => new ChartDataPoint(w.Date, Math.Round(w.Weight.Bmi!.Value, 1))).ToList();
+        RangeItems!.Items.Where(w => w.Weight?.Bmi > 0).Select(w => new ChartDataPoint(w.Date, Math.Round(w.Weight!.Bmi!.Value, 1))).ToList();
 
     private List<ChartDataPoint> GetRangeBodyFatData() =>
-        RangeItems!.Items.Where(w => w.Weight.Fat > 0).Select(w => new ChartDataPoint(w.Date, Math.Round(w.Weight.Fat!.Value, 1))).ToList();
+        RangeItems!.Items.Where(w => w.Weight?.Fat > 0).Select(w => new ChartDataPoint(w.Date, Math.Round(w.Weight!.Fat!.Value, 1))).ToList();
 
     private static string GetBpCategory(int systolic, int diastolic)
     {

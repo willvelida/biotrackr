@@ -14,10 +14,10 @@ namespace Biotrackr.Vitals.Api.Models
         public int HeartRate { get; set; }
 
         [JsonPropertyName("timestamp")]
-        public string Timestamp { get; set; }
+        public string Timestamp { get; set; } = string.Empty;
 
         [JsonPropertyName("time")]
-        public string Time { get; set; }
+        public string Time { get; set; } = string.Empty;
 
         [JsonPropertyName("source")]
         public string Source { get; set; } = "Withings";
