@@ -100,6 +100,6 @@ resource lookbackDaysSetting 'Microsoft.AppConfiguration/configurationStores/key
   name: 'Biotrackr:LookbackDays'
   parent: appConfig
   properties: {
-    value: '2'
+    value: '1'
   }
 }
