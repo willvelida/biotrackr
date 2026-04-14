@@ -60,9 +60,13 @@ IHost host = Host.CreateDefaultBuilder(args)
 
         // Register Microsoft Identity token acquisition infrastructure
         // Required for MicrosoftIdentityTokenCredential used by AgentTokenProvider
+        // Matches Chat.Api pattern: AddMicrosoftIdentityWebApi → EnableTokenAcquisition → TokenCaches → AgentIdentities
         services.AddAuthentication()
-            .AddMicrosoftIdentityWebApi(context.Configuration.GetSection("AzureAd"));
+            .AddMicrosoftIdentityWebApi(context.Configuration.GetSection("AzureAd"))
+            .EnableTokenAcquisitionToCallDownstreamApi()
+            .AddInMemoryTokenCaches();
         services.AddMicrosoftIdentityAzureTokenCredential();
+        services.AddAgentIdentities();
         services.AddSingleton<IAgentTokenProvider, AgentTokenProvider>();
         services.AddTransient<AgentIdentityTokenHandler>();
 
