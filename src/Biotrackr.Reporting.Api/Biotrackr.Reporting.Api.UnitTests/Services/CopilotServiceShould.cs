@@ -256,6 +256,177 @@ namespace Biotrackr.Reporting.Api.UnitTests.Services
         }
 
         [Fact]
+        public async Task AllowReadAgentWithinPollLimit()
+        {
+            // Arrange
+            var sut = CreateService();
+            var config = sut.CreateSessionConfig();
+            var invocation = new HookInvocation { SessionId = "test-session" };
+
+            // Simulate session start to reset counters
+            await config.Hooks!.OnSessionStart!(new SessionStartHookInput { Source = "new" }, invocation);
+
+            // Act — poll read_agent up to the limit (5 times)
+            PreToolUseHookOutput? lastResult = null;
+            for (var i = 0; i < CopilotService.MaxReadAgentPollsPerAgent; i++)
+            {
+                var input = new PreToolUseHookInput
+                {
+                    ToolName = "read_agent",
+                    ToolArgs = new Dictionary<string, object> { ["agent_id"] = "pdf-build", ["timeout"] = 60 }
+                };
+                lastResult = await config.Hooks.OnPreToolUse!(input, invocation);
+            }
+
+            // Assert — all calls within the limit should be allowed
+            lastResult.Should().NotBeNull();
+            lastResult!.PermissionDecision.Should().Be("allow");
+        }
+
+        [Fact]
+        public async Task DenyReadAgentAfterExceedingPollLimit()
+        {
+            // Arrange
+            var sut = CreateService();
+            var config = sut.CreateSessionConfig();
+            var invocation = new HookInvocation { SessionId = "test-session" };
+
+            await config.Hooks!.OnSessionStart!(new SessionStartHookInput { Source = "new" }, invocation);
+
+            // Exhaust the poll limit
+            for (var i = 0; i < CopilotService.MaxReadAgentPollsPerAgent; i++)
+            {
+                var input = new PreToolUseHookInput
+                {
+                    ToolName = "read_agent",
+                    ToolArgs = new Dictionary<string, object> { ["agent_id"] = "pdf-build", ["timeout"] = 60 }
+                };
+                await config.Hooks.OnPreToolUse!(input, invocation);
+            }
+
+            // Act — one more poll beyond the limit
+            var overLimitInput = new PreToolUseHookInput
+            {
+                ToolName = "read_agent",
+                ToolArgs = new Dictionary<string, object> { ["agent_id"] = "pdf-build", ["timeout"] = 60 }
+            };
+            var result = await config.Hooks.OnPreToolUse!(overLimitInput, invocation);
+
+            // Assert
+            result.Should().NotBeNull();
+            result!.PermissionDecision.Should().Be("deny");
+        }
+
+        [Fact]
+        public async Task ResetReadAgentPollCountOnSessionStart()
+        {
+            // Arrange
+            var sut = CreateService();
+            var config = sut.CreateSessionConfig();
+            var invocation = new HookInvocation { SessionId = "test-session" };
+
+            await config.Hooks!.OnSessionStart!(new SessionStartHookInput { Source = "new" }, invocation);
+
+            // Exhaust the poll limit
+            for (var i = 0; i < CopilotService.MaxReadAgentPollsPerAgent; i++)
+            {
+                var input = new PreToolUseHookInput
+                {
+                    ToolName = "read_agent",
+                    ToolArgs = new Dictionary<string, object> { ["agent_id"] = "pdf-build", ["timeout"] = 60 }
+                };
+                await config.Hooks.OnPreToolUse!(input, invocation);
+            }
+
+            // Act — start a new session to reset counters
+            await config.Hooks.OnSessionStart!(new SessionStartHookInput { Source = "new" }, invocation);
+
+            var postResetInput = new PreToolUseHookInput
+            {
+                ToolName = "read_agent",
+                ToolArgs = new Dictionary<string, object> { ["agent_id"] = "pdf-build", ["timeout"] = 60 }
+            };
+            var result = await config.Hooks.OnPreToolUse!(postResetInput, invocation);
+
+            // Assert — first call after reset should be allowed
+            result.Should().NotBeNull();
+            result!.PermissionDecision.Should().Be("allow");
+        }
+
+        [Fact]
+        public async Task TrackReadAgentPollsPerAgentIndependently()
+        {
+            // Arrange
+            var sut = CreateService();
+            var config = sut.CreateSessionConfig();
+            var invocation = new HookInvocation { SessionId = "test-session" };
+
+            await config.Hooks!.OnSessionStart!(new SessionStartHookInput { Source = "new" }, invocation);
+
+            // Exhaust the poll limit for one agent
+            for (var i = 0; i < CopilotService.MaxReadAgentPollsPerAgent; i++)
+            {
+                var input = new PreToolUseHookInput
+                {
+                    ToolName = "read_agent",
+                    ToolArgs = new Dictionary<string, object> { ["agent_id"] = "pdf-build", ["timeout"] = 60 }
+                };
+                await config.Hooks.OnPreToolUse!(input, invocation);
+            }
+
+            // Act — poll a different agent
+            var differentAgentInput = new PreToolUseHookInput
+            {
+                ToolName = "read_agent",
+                ToolArgs = new Dictionary<string, object> { ["agent_id"] = "data-analyst", ["timeout"] = 60 }
+            };
+            var result = await config.Hooks.OnPreToolUse!(differentAgentInput, invocation);
+
+            // Assert — different agent should still be allowed
+            result.Should().NotBeNull();
+            result!.PermissionDecision.Should().Be("allow");
+        }
+
+        [Fact]
+        public void ExtractJsonField_ShouldReturnValue_WhenFieldExists()
+        {
+            // Arrange
+            var json = "{\"agent_id\":\"pdf-build\",\"timeout\":60}";
+
+            // Act
+            var result = CopilotService.ExtractJsonField(json, "agent_id");
+
+            // Assert
+            result.Should().Be("pdf-build");
+        }
+
+        [Fact]
+        public void ExtractJsonField_ShouldReturnNull_WhenFieldDoesNotExist()
+        {
+            // Arrange
+            var json = "{\"timeout\":60}";
+
+            // Act
+            var result = CopilotService.ExtractJsonField(json, "agent_id");
+
+            // Assert
+            result.Should().BeNull();
+        }
+
+        [Fact]
+        public void ExtractJsonField_ShouldReturnNull_WhenJsonIsInvalid()
+        {
+            // Arrange
+            var json = "not valid json";
+
+            // Act
+            var result = CopilotService.ExtractJsonField(json, "agent_id");
+
+            // Assert
+            result.Should().BeNull();
+        }
+
+        [Fact]
         public void IncludeSystemPromptWhenConfigured()
         {
             var sut = CreateService(systemPrompt: "You are a report generator.");

@@ -1,3 +1,4 @@
+using System.Collections.Concurrent;
 using System.Text.Json;
 using Biotrackr.Reporting.Api.Configuration;
 using GitHub.Copilot.SDK;
@@ -41,6 +42,12 @@ namespace Biotrackr.Reporting.Api.Services
             "bash ", "sh -c", "os.popen"
         ];
 
+        // Maximum read_agent polls per agent before denying to break infinite loops (ASI08)
+        // Each poll waits ~60s; 8 polls ≈ 8 min per sub-agent — enough for legitimate runs,
+        // short enough to break stuck loops well before the 19-min session timeout.
+        internal const int MaxReadAgentPollsPerAgent = 8;
+
+        private readonly ConcurrentDictionary<string, int> _readAgentPollCounts = new();
         private CopilotClient? _client;
 
         public CopilotClient Client
@@ -229,6 +236,21 @@ namespace Biotrackr.Reporting.Api.Services
                 }
             }
 
+            // Track and limit read_agent polling to prevent infinite sub-agent loops (ASI08)
+            if (input.ToolName == "read_agent")
+            {
+                var agentId = ExtractJsonField(argsDetail, "agent_id") ?? "unknown";
+                var count = _readAgentPollCounts.AddOrUpdate(agentId, 1, (_, c) => c + 1);
+
+                if (count > MaxReadAgentPollsPerAgent)
+                {
+                    logger.LogWarning(
+                        "Denied read_agent for agent '{AgentId}': poll count {Count} exceeded limit {Max} (ASI08)",
+                        agentId, count, MaxReadAgentPollsPerAgent);
+                    return Task.FromResult<PreToolUseHookOutput?>(new PreToolUseHookOutput { PermissionDecision = "deny" });
+                }
+            }
+
             return Task.FromResult<PreToolUseHookOutput?>(new PreToolUseHookOutput { PermissionDecision = "allow" });
         }
 
@@ -288,6 +310,7 @@ namespace Biotrackr.Reporting.Api.Services
         private Task<SessionStartHookOutput?> OnSessionStart(
             SessionStartHookInput input, HookInvocation invocation)
         {
+            _readAgentPollCounts.Clear();
             logger.LogInformation("Copilot session started: Source={Source}", input.Source);
             return Task.FromResult<SessionStartHookOutput?>(null);
         }
@@ -300,6 +323,23 @@ namespace Biotrackr.Reporting.Api.Services
         {
             logger.LogInformation("Copilot session ended");
             return Task.FromResult<SessionEndHookOutput?>(null);
+        }
+
+        internal static string? ExtractJsonField(string json, string fieldName)
+        {
+            try
+            {
+                using var doc = JsonDocument.Parse(json);
+                if (doc.RootElement.TryGetProperty(fieldName, out var value))
+                {
+                    return value.GetString();
+                }
+            }
+            catch
+            {
+                // ToolArgs may not be valid JSON
+            }
+            return null;
         }
 
         private static string SafeSerialize(object? obj)
