@@ -29,7 +29,7 @@ public class AgentTokenProvider : IAgentTokenProvider
             return null;
         }
 
-        _credential.Options.WithAgentIdentity(_settings.AgentIdentityId);
+        _credential.Options.WithAgentIdentity(_settings.ReportingSvcAgentIdentityId);
         _credential.Options.RequestAppToken = true;
 
         var tokenRequestContext = new TokenRequestContext([_settings.ReportingApiScope]);

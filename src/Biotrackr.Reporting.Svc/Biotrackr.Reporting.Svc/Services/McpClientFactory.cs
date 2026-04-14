@@ -27,7 +27,7 @@ public class McpClientFactory : IMcpClientFactory
             TransportMode = HttpTransportMode.AutoDetect,
             AdditionalHeaders = new Dictionary<string, string>
             {
-                ["Ocp-Apim-Subscription-Key"] = _settings.ApiSubscriptionKey,
+                ["Ocp-Apim-Subscription-Key"] = _settings.ReportingSvcApiSubscriptionKey,
                 ["X-Api-Key"] = _settings.McpServerApiKey
             }
         };

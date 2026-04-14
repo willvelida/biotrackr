@@ -27,7 +27,7 @@ public class AgentTokenProviderShould
         var settings = new Settings
         {
             ReportingApiScope = scope,
-            AgentIdentityId = "test-identity"
+            ReportingSvcAgentIdentityId = "test-identity"
         };
         var options = Options.Create(settings);
         var tokenAcquirerFactory = new Mock<ITokenAcquirerFactory>();

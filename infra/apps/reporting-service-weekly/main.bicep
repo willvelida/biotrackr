@@ -31,6 +31,15 @@ param appConfigName string
 @description('The name of the API Management instance')
 param apimName string
 
+@description('The Reporting.Svc agent identity ID for inter-service auth')
+param reportingSvcAgentIdentityId string
+
+@description('The ACS Communication Service name')
+param communicationServiceName string
+
+@description('The ACS Email Service name')
+param emailServiceName string
+
 resource uai 'Microsoft.ManagedIdentity/userAssignedIdentities@2023-01-31' existing = {
   name: uaiName
 }
@@ -96,5 +105,63 @@ resource reportingSvcApimSubscription 'Microsoft.ApiManagement/service/subscript
     displayName: 'Reporting Svc Internal Subscription'
     scope: '${apim.id}/apis'
     state: 'active'
+  }
+}
+
+resource communicationService 'Microsoft.Communication/communicationServices@2023-04-01' existing = {
+  name: communicationServiceName
+}
+
+resource emailService 'Microsoft.Communication/emailServices@2023-04-01' existing = {
+  name: emailServiceName
+}
+
+resource emailDomain 'Microsoft.Communication/emailServices/domains@2023-04-01' existing = {
+  name: 'AzureManagedDomain'
+  parent: emailService
+}
+
+// App Configuration: Reporting.Svc APIM subscription key
+resource reportingSvcApiSubscriptionKeySetting 'Microsoft.AppConfiguration/configurationStores/keyValues@2025-02-01-preview' = {
+  name: 'Biotrackr:ReportingSvcApiSubscriptionKey'
+  parent: appConfig
+  properties: {
+    value: reportingSvcApimSubscription.listSecrets().primaryKey
+  }
+}
+
+// App Configuration: Reporting.Svc agent identity ID
+resource reportingSvcAgentIdentityIdSetting 'Microsoft.AppConfiguration/configurationStores/keyValues@2025-02-01-preview' = {
+  name: 'Biotrackr:ReportingSvcAgentIdentityId'
+  parent: appConfig
+  properties: {
+    value: reportingSvcAgentIdentityId
+  }
+}
+
+// App Configuration: ACS endpoint for email sending
+resource acsEndpointSetting 'Microsoft.AppConfiguration/configurationStores/keyValues@2025-02-01-preview' = {
+  name: 'Biotrackr:AcsEndpoint'
+  parent: appConfig
+  properties: {
+    value: 'https://${communicationService.properties.hostName}'
+  }
+}
+
+// App Configuration: ACS email sender address (Azure-managed domain)
+resource emailSenderAddressSetting 'Microsoft.AppConfiguration/configurationStores/keyValues@2025-02-01-preview' = {
+  name: 'Biotrackr:EmailSenderAddress'
+  parent: appConfig
+  properties: {
+    value: 'DoNotReply@${emailDomain.properties.fromSenderDomain}'
+  }
+}
+
+// App Configuration: Email recipient address
+resource emailRecipientAddressSetting 'Microsoft.AppConfiguration/configurationStores/keyValues@2025-02-01-preview' = {
+  name: 'Biotrackr:EmailRecipientAddress'
+  parent: appConfig
+  properties: {
+    value: 'willvelida@hotmail.co.uk'
   }
 }
