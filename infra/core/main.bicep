@@ -149,3 +149,14 @@ module foundry '../modules/ai/foundry.bicep' = {
     evaluationStorageAccountName: 'st${replace(baseName, '-', '')}eval${environment}'
   }
 }
+
+module acsEmail '../modules/communication/acs-email.bicep' = {
+  name: 'acs-email'
+  params: {
+    baseName: baseName
+    environment: environment
+    tags: tags
+    uaiName: uai.outputs.uaiName
+    logAnalyticsName: logAnalytics.outputs.logAnalyticsName
+  }
+}
