@@ -23,7 +23,6 @@ var resourceBuilder = ResourceBuilder.CreateDefault().AddAttributes(resourceAttr
 IHost host = Host.CreateDefaultBuilder(args)
     .ConfigureAppConfiguration(config =>
     {
-        config.AddEnvironmentVariables();
         var credential = new ManagedIdentityCredential(Environment.GetEnvironmentVariable("managedidentityclientid"));
         config.AddAzureAppConfiguration(options =>
         {
@@ -36,6 +35,9 @@ IHost host = Host.CreateDefaultBuilder(args)
                 kv.SetCredential(credential);
             });
         });
+        // Load env vars AFTER App Config so container env vars (AzureAd__ClientId,
+        // AzureAd__TenantId) override shared App Config keys set by Chat.Api
+        config.AddEnvironmentVariables();
     })
     .ConfigureServices((context, services) =>
     {
