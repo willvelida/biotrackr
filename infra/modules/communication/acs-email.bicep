@@ -41,7 +41,7 @@ resource emailService 'Microsoft.Communication/emailServices@2023-04-01' = {
   location: 'global'
   tags: tags
   properties: {
-    dataLocation: 'Australia'
+    dataLocation: 'United States'
   }
 }
 
@@ -60,7 +60,7 @@ resource communicationService 'Microsoft.Communication/communicationServices@202
   location: 'global'
   tags: tags
   properties: {
-    dataLocation: 'Australia'
+    dataLocation: 'United States'
     linkedDomains: [
       domain.id
     ]
