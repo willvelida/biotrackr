@@ -58,6 +58,10 @@ IHost host = Host.CreateDefaultBuilder(args)
         services.AddSingleton(new EmailClient(new Uri(acsEndpoint!), new DefaultAzureCredential(defaultCredentialOptions)));
         services.AddSingleton<IEmailClientWrapper, EmailClientWrapper>();
 
+        // Register Microsoft Identity token acquisition infrastructure
+        // Required for MicrosoftIdentityTokenCredential used by AgentTokenProvider
+        services.AddAuthentication()
+            .AddMicrosoftIdentityWebApi(context.Configuration.GetSection("AzureAd"));
         services.AddMicrosoftIdentityAzureTokenCredential();
         services.AddSingleton<IAgentTokenProvider, AgentTokenProvider>();
         services.AddTransient<AgentIdentityTokenHandler>();

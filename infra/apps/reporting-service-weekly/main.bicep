@@ -40,6 +40,12 @@ param communicationServiceName string
 @description('The ACS Email Service name')
 param emailServiceName string
 
+@description('Azure AD tenant ID for agent identity authentication')
+param tenantId string
+
+@description('The application (client) ID of the Reporting agent identity blueprint')
+param agentBlueprintClientId string
+
 resource uai 'Microsoft.ManagedIdentity/userAssignedIdentities@2023-01-31' existing = {
   name: uaiName
 }
@@ -91,6 +97,14 @@ module reportingServiceWeekly '../../modules/host/container-app-jobs.bicep' = {
       {
         name: 'summarycadence'
         value: 'weekly'
+      }
+      {
+        name: 'AzureAd__ClientId'
+        value: !empty(agentBlueprintClientId) ? agentBlueprintClientId : ''
+      }
+      {
+        name: 'AzureAd__TenantId'
+        value: tenantId
       }
     ]
     imageName: imageName
