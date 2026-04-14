@@ -1,0 +1,5 @@
+<Solution>
+  <Project Path="Biotrackr.Reporting.Svc/Biotrackr.Reporting.Svc.csproj" />
+  <Project Path="Biotrackr.Reporting.Svc.UnitTests/Biotrackr.Reporting.Svc.UnitTests.csproj" />
+  <Project Path="Biotrackr.Reporting.Svc.IntegrationTests/Biotrackr.Reporting.Svc.IntegrationTests.csproj" />
+</Solution>
