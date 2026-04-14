@@ -51,7 +51,7 @@ resource domain 'Microsoft.Communication/emailServices/domains@2023-04-01' = {
   location: 'global'
   tags: tags
   properties: {
-    domainManagement: 'AzureManagedDomain'
+    domainManagement: 'AzureManaged'
   }
 }
 
