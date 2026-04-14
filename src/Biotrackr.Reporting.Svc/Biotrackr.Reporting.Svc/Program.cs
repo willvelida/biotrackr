@@ -78,7 +78,12 @@ IHost host = Host.CreateDefaultBuilder(args)
             client.BaseAddress = new Uri(reportingApiUrl!);
         })
         .AddHttpMessageHandler<AgentIdentityTokenHandler>()
-        .AddStandardResilienceHandler();
+        .AddStandardResilienceHandler(options =>
+        {
+            // Reporting.Api has cold starts that exceed the default 10s attempt timeout.
+            // Increase to 60s to accommodate container scale-up latency.
+            options.AttemptTimeout.Timeout = TimeSpan.FromSeconds(60);
+        });
 
         services.AddHttpClient("ArtifactDownload");
 

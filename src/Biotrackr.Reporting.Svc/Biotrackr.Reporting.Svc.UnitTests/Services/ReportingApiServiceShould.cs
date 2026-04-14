@@ -138,6 +138,43 @@ public class ReportingApiServiceShould
     }
 
     [Fact]
+    public async Task GenerateReportAsync_ShouldContinuePolling_WhenStatusReturns404()
+    {
+        // Arrange
+        var jobResult = new ReportJobResult { JobId = "job-404", Status = "accepted" };
+        var completedResponse = new ReportStatusResponse
+        {
+            Metadata = new ReportMetadata { JobId = "job-404", Status = "generated", Summary = "After 404" },
+            ArtifactUrls = new Dictionary<string, string> { ["report.pdf"] = "https://storage.example.com/report.pdf" }
+        };
+
+        var handler = CreateMockHandler(
+            new HttpResponseMessage(HttpStatusCode.OK)
+            {
+                Content = new StringContent(JsonSerializer.Serialize(jobResult), System.Text.Encoding.UTF8, "application/json")
+            },
+            new HttpResponseMessage(HttpStatusCode.NotFound),
+            new HttpResponseMessage(HttpStatusCode.OK)
+            {
+                Content = new StringContent(JsonSerializer.Serialize(completedResponse), System.Text.Encoding.UTF8, "application/json")
+            });
+
+        var httpClient = new HttpClient(handler.Object) { BaseAddress = new Uri("https://reporting.example.com") };
+        _httpClientFactoryMock.Setup(x => x.CreateClient("ReportingApi")).Returns(httpClient);
+
+        var sut = CreateService();
+        var snapshot = _fixture.Create<HealthDataSnapshot>();
+
+        // Act
+        var result = await sut.GenerateReportAsync("weekly_summary", "2025-01-01", "2025-01-07", "Generate weekly", snapshot, CancellationToken.None);
+
+        // Assert
+        result.JobId.Should().Be("job-404");
+        result.Status.Should().Be("generated");
+        result.Summary.Should().Be("After 404");
+    }
+
+    [Fact]
     public async Task GenerateReportAsync_ShouldThrow_WhenReportGenerationFails()
     {
         // Arrange

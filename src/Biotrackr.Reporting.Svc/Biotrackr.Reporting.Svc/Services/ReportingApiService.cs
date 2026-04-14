@@ -75,6 +75,14 @@ public class ReportingApiService : IReportingApiService
             _logger.LogInformation("Polling report status for job {JobId}", jobId);
 
             var response = await client.GetAsync($"/api/reports/{jobId}", cancellationToken);
+
+            // 404 means metadata hasn't been written to blob storage yet — continue polling
+            if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
+            {
+                _logger.LogInformation("Report job {JobId} not found yet, continuing to poll", jobId);
+                continue;
+            }
+
             response.EnsureSuccessStatusCode();
 
             var statusResponse = await response.Content.ReadFromJsonAsync<ReportStatusResponse>(cancellationToken)
