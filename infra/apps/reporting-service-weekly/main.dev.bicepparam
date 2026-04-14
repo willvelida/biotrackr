@@ -1,6 +1,6 @@
 using 'main.bicep'
 
-param name = 'biotrackr-reporting-svc-weekly-dev'
+param name = 'biotrackr-rpt-svc-weekly-dev'
 param imageName = ''
 param location = 'australiaeast'
 param tags = {
