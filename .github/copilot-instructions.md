@@ -473,6 +473,7 @@ Order matters — these execute in sequence:
 ### MCP Server
 
 - **12 tools:** 4 domains × 3 methods (ByDate, ByDateRange, Records)
+- **Tool naming:** The MCP SDK auto-converts C# PascalCase method names to snake_case. Use `get_activity_by_date_range`, not `GetActivityByDateRange`, when calling tools via `McpClient.CallToolAsync()`.
 - **Transport:** HTTP Stateless
 - **Rate limiting:** 100 req/min per IP, 10 queue
 - **Authentication:** API key validation (redacted in traces)
