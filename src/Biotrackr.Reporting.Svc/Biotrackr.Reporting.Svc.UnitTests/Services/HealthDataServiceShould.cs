@@ -146,6 +146,44 @@ public class HealthDataServiceShould
     }
 
     [Fact]
+    public async Task FetchHealthDataAsync_ShouldLogErrorAndReturnEmpty_WhenToolReturnsErrorResponse()
+    {
+        // Arrange
+        var errorResponse = JsonSerializer.Serialize(new { error = "API call failed with status code Unauthorized" });
+        var validResponse = BuildPageResponse([new { date = "2024-01-01", steps = 5000 }]);
+
+        _mcpToolCallerMock.Setup(x => x.CallToolAsync("get_activity_by_date_range", It.IsAny<Dictionary<string, object?>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(validResponse);
+        _mcpToolCallerMock.Setup(x => x.CallToolAsync("get_food_by_date_range", It.IsAny<Dictionary<string, object?>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(errorResponse);
+        _mcpToolCallerMock.Setup(x => x.CallToolAsync("get_sleep_by_date_range", It.IsAny<Dictionary<string, object?>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(errorResponse);
+        _mcpToolCallerMock.Setup(x => x.CallToolAsync("get_vitals_by_date_range", It.IsAny<Dictionary<string, object?>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(errorResponse);
+
+        var service = CreateService();
+
+        // Act
+        var result = await service.FetchHealthDataAsync("2024-01-01", "2024-01-07", CancellationToken.None);
+
+        // Assert
+        result.Should().NotBeNull();
+        result.Activity.Should().Contain("steps");
+        result.Food.Should().Contain("\"totalCount\":0");
+        result.Sleep.Should().Contain("\"totalCount\":0");
+        result.Vitals.Should().Contain("\"totalCount\":0");
+
+        _loggerMock.Verify(
+            x => x.Log(
+                LogLevel.Error,
+                It.IsAny<EventId>(),
+                It.Is<It.IsAnyType>((v, t) => v.ToString()!.Contains("get_food_by_date_range") && v.ToString()!.Contains("error")),
+                null,
+                It.IsAny<Func<It.IsAnyType, Exception?, string>>()),
+            Times.Once);
+    }
+
+    [Fact]
     public async Task FetchHealthDataAsync_ShouldThrow_WhenFactoryFails()
     {
         // Arrange

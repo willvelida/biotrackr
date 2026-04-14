@@ -63,11 +63,19 @@ public class HealthDataService : IHealthDataService
 
             if (string.IsNullOrEmpty(responseText))
             {
+                _logger.LogWarning("MCP tool {ToolName} returned null/empty response on page {Page}", toolName, pageNumber);
                 break;
             }
 
             using var doc = JsonDocument.Parse(responseText);
             var root = doc.RootElement;
+
+            // Detect error responses from the MCP Server (e.g., upstream API returned 401/404/500)
+            if (root.TryGetProperty("error", out var error))
+            {
+                _logger.LogError("MCP tool {ToolName} returned error on page {Page}: {Error}", toolName, pageNumber, error.GetString());
+                break;
+            }
 
             if (root.TryGetProperty("items", out var items) && items.ValueKind == JsonValueKind.Array)
             {
