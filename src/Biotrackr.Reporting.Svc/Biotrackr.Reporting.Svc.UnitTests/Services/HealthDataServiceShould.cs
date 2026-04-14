@@ -42,13 +42,13 @@ public class HealthDataServiceShould
         var sleepResponse = BuildPageResponse([new { date = "2024-01-01", duration = 480 }]);
         var vitalsResponse = BuildPageResponse([new { date = "2024-01-01", weight = 75.5 }]);
 
-        _mcpToolCallerMock.Setup(x => x.CallToolAsync("GetActivityByDateRange", It.IsAny<Dictionary<string, object?>>(), It.IsAny<CancellationToken>()))
+        _mcpToolCallerMock.Setup(x => x.CallToolAsync("get_activity_by_date_range", It.IsAny<Dictionary<string, object?>>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(activityResponse);
-        _mcpToolCallerMock.Setup(x => x.CallToolAsync("GetFoodByDateRange", It.IsAny<Dictionary<string, object?>>(), It.IsAny<CancellationToken>()))
+        _mcpToolCallerMock.Setup(x => x.CallToolAsync("get_food_by_date_range", It.IsAny<Dictionary<string, object?>>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(foodResponse);
-        _mcpToolCallerMock.Setup(x => x.CallToolAsync("GetSleepByDateRange", It.IsAny<Dictionary<string, object?>>(), It.IsAny<CancellationToken>()))
+        _mcpToolCallerMock.Setup(x => x.CallToolAsync("get_sleep_by_date_range", It.IsAny<Dictionary<string, object?>>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(sleepResponse);
-        _mcpToolCallerMock.Setup(x => x.CallToolAsync("GetVitalsByDateRange", It.IsAny<Dictionary<string, object?>>(), It.IsAny<CancellationToken>()))
+        _mcpToolCallerMock.Setup(x => x.CallToolAsync("get_vitals_by_date_range", It.IsAny<Dictionary<string, object?>>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(vitalsResponse);
 
         var service = CreateService();
@@ -73,7 +73,7 @@ public class HealthDataServiceShould
 
         var callCount = 0;
         _mcpToolCallerMock
-            .Setup(x => x.CallToolAsync("GetActivityByDateRange", It.IsAny<Dictionary<string, object?>>(), It.IsAny<CancellationToken>()))
+            .Setup(x => x.CallToolAsync("get_activity_by_date_range", It.IsAny<Dictionary<string, object?>>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(() =>
             {
                 callCount++;
@@ -82,11 +82,11 @@ public class HealthDataServiceShould
 
         // Single-page responses for other domains
         var singlePageResponse = BuildPageResponse([new { value = 1 }]);
-        _mcpToolCallerMock.Setup(x => x.CallToolAsync("GetFoodByDateRange", It.IsAny<Dictionary<string, object?>>(), It.IsAny<CancellationToken>()))
+        _mcpToolCallerMock.Setup(x => x.CallToolAsync("get_food_by_date_range", It.IsAny<Dictionary<string, object?>>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(singlePageResponse);
-        _mcpToolCallerMock.Setup(x => x.CallToolAsync("GetSleepByDateRange", It.IsAny<Dictionary<string, object?>>(), It.IsAny<CancellationToken>()))
+        _mcpToolCallerMock.Setup(x => x.CallToolAsync("get_sleep_by_date_range", It.IsAny<Dictionary<string, object?>>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(singlePageResponse);
-        _mcpToolCallerMock.Setup(x => x.CallToolAsync("GetVitalsByDateRange", It.IsAny<Dictionary<string, object?>>(), It.IsAny<CancellationToken>()))
+        _mcpToolCallerMock.Setup(x => x.CallToolAsync("get_vitals_by_date_range", It.IsAny<Dictionary<string, object?>>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(singlePageResponse);
 
         var service = CreateService();
@@ -139,10 +139,10 @@ public class HealthDataServiceShould
         await service.FetchHealthDataAsync("2024-01-01", "2024-01-07", CancellationToken.None);
 
         // Assert
-        _mcpToolCallerMock.Verify(x => x.CallToolAsync("GetActivityByDateRange", It.IsAny<Dictionary<string, object?>>(), It.IsAny<CancellationToken>()), Times.Once);
-        _mcpToolCallerMock.Verify(x => x.CallToolAsync("GetFoodByDateRange", It.IsAny<Dictionary<string, object?>>(), It.IsAny<CancellationToken>()), Times.Once);
-        _mcpToolCallerMock.Verify(x => x.CallToolAsync("GetSleepByDateRange", It.IsAny<Dictionary<string, object?>>(), It.IsAny<CancellationToken>()), Times.Once);
-        _mcpToolCallerMock.Verify(x => x.CallToolAsync("GetVitalsByDateRange", It.IsAny<Dictionary<string, object?>>(), It.IsAny<CancellationToken>()), Times.Once);
+        _mcpToolCallerMock.Verify(x => x.CallToolAsync("get_activity_by_date_range", It.IsAny<Dictionary<string, object?>>(), It.IsAny<CancellationToken>()), Times.Once);
+        _mcpToolCallerMock.Verify(x => x.CallToolAsync("get_food_by_date_range", It.IsAny<Dictionary<string, object?>>(), It.IsAny<CancellationToken>()), Times.Once);
+        _mcpToolCallerMock.Verify(x => x.CallToolAsync("get_sleep_by_date_range", It.IsAny<Dictionary<string, object?>>(), It.IsAny<CancellationToken>()), Times.Once);
+        _mcpToolCallerMock.Verify(x => x.CallToolAsync("get_vitals_by_date_range", It.IsAny<Dictionary<string, object?>>(), It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]

@@ -23,10 +23,10 @@ public class HealthDataService : IHealthDataService
 
         await using var mcpToolCaller = await _mcpClientFactory.CreateClientAsync(cancellationToken);
 
-        var activity = await FetchDomainDataAsync(mcpToolCaller, "GetActivityByDateRange", startDate, endDate, cancellationToken);
-        var food = await FetchDomainDataAsync(mcpToolCaller, "GetFoodByDateRange", startDate, endDate, cancellationToken);
-        var sleep = await FetchDomainDataAsync(mcpToolCaller, "GetSleepByDateRange", startDate, endDate, cancellationToken);
-        var vitals = await FetchDomainDataAsync(mcpToolCaller, "GetVitalsByDateRange", startDate, endDate, cancellationToken);
+        var activity = await FetchDomainDataAsync(mcpToolCaller, "get_activity_by_date_range", startDate, endDate, cancellationToken);
+        var food = await FetchDomainDataAsync(mcpToolCaller, "get_food_by_date_range", startDate, endDate, cancellationToken);
+        var sleep = await FetchDomainDataAsync(mcpToolCaller, "get_sleep_by_date_range", startDate, endDate, cancellationToken);
+        var vitals = await FetchDomainDataAsync(mcpToolCaller, "get_vitals_by_date_range", startDate, endDate, cancellationToken);
 
         _logger.LogInformation("Health data fetched successfully for all 4 domains");
 
