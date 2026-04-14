@@ -63,15 +63,22 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         };
     });
 
-// Authorization policy: restrict to Chat.Api's agent identity (ASI07 — mutual A2A auth)
+// Authorization policy: restrict to authorized agent identities (ASI07 — mutual A2A auth)
+var authorizedCallerIds = new List<string>();
 var chatApiAgentIdentityId = builder.Configuration.GetValue<string>("Biotrackr:ChatApiAgentIdentityId") ?? string.Empty;
+if (!string.IsNullOrWhiteSpace(chatApiAgentIdentityId))
+    authorizedCallerIds.Add(chatApiAgentIdentityId);
+var reportingSvcAgentIdentityId = builder.Configuration.GetValue<string>("Biotrackr:ReportingSvcAgentIdentityId") ?? string.Empty;
+if (!string.IsNullOrWhiteSpace(reportingSvcAgentIdentityId))
+    authorizedCallerIds.Add(reportingSvcAgentIdentityId);
+
 builder.Services.AddAuthorizationBuilder()
     .AddPolicy("ChatApiAgent", policy =>
     {
         policy.RequireAuthenticatedUser();
-        if (!string.IsNullOrWhiteSpace(chatApiAgentIdentityId))
+        if (authorizedCallerIds.Count > 0)
         {
-            policy.RequireClaim("azp", chatApiAgentIdentityId);
+            policy.RequireClaim("azp", [.. authorizedCallerIds]);
         }
     });
 
