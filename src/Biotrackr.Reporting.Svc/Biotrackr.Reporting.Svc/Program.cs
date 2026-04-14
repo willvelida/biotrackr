@@ -81,8 +81,12 @@ IHost host = Host.CreateDefaultBuilder(args)
         .AddStandardResilienceHandler(options =>
         {
             // Reporting.Api has cold starts that exceed the default 10s attempt timeout.
-            // Increase to 60s to accommodate container scale-up latency.
+            // All related timeouts must be scaled consistently:
+            //   AttemptTimeout < TotalRequestTimeout, and
+            //   CircuitBreaker.SamplingDuration >= 2 × AttemptTimeout
             options.AttemptTimeout.Timeout = TimeSpan.FromSeconds(60);
+            options.TotalRequestTimeout.Timeout = TimeSpan.FromSeconds(180);
+            options.CircuitBreaker.SamplingDuration = TimeSpan.FromSeconds(120);
         });
 
         services.AddHttpClient("ArtifactDownload");
