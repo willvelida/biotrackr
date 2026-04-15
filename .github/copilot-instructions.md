@@ -556,6 +556,7 @@ Do not modify decision records — they are append-only historical documents.
 ### NEVER
 
 - Commit secrets, credentials, API keys, or connection strings to the repository
+- Push code without running unit tests first — always `dotnet test` the affected service before pushing, especially when adding or modifying tests
 - Push directly to `main` — all changes go through pull requests
 - Force push (`--force`) to any shared branch
 - Auto-merge pull requests — wait for CI/CD pipeline completion and user approval
