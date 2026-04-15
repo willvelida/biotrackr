@@ -218,8 +218,12 @@ namespace Biotrackr.Reporting.Api.Services
 
                 logger.LogInformation("Warming up Copilot CLI sidecar...");
 
-                await using var client = Client;
-                await client.StartAsync(cts.Token);
+                // Use a separate disposable client so we don't dispose the shared _client singleton
+                await using var warmUpClient = new CopilotClient(new CopilotClientOptions
+                {
+                    CliUrl = settings.Value.CopilotCliUrl,
+                });
+                await warmUpClient.StartAsync(cts.Token);
 
                 var warmUpConfig = new SessionConfig
                 {
@@ -227,7 +231,7 @@ namespace Biotrackr.Reporting.Api.Services
                     OnPermissionRequest = PermissionHandler.ApproveAll,
                 };
 
-                await using var session = await client.CreateSessionAsync(warmUpConfig, cts.Token);
+                await using var session = await warmUpClient.CreateSessionAsync(warmUpConfig, cts.Token);
                 await session.SendAndWaitAsync(
                     new MessageOptions { Prompt = "Run: echo 'warm-up complete'" },
                     timeout: TimeSpan.FromSeconds(60),
