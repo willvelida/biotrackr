@@ -9,18 +9,19 @@ Biotrackr is a personal health and fitness tracking platform that integrates wit
 
 ### Architecture
 
-The system comprises 13 independently-deployable services:
+The system comprises 14 independently-deployable services:
 
 | Service | Type | Purpose |
 |---------|------|---------|
 | `Biotrackr.Activity.Api` | Domain API | Activity data queries |
 | `Biotrackr.Activity.Svc` | Domain Service | Fitbit activity data ingestion |
-| `Biotrackr.Auth.Svc` | Domain Service | Fitbit OAuth token management |
+| `Biotrackr.Auth.Svc` | Domain Service | Fitbit and Withings OAuth token management |
 | `Biotrackr.Chat.Api` | AI Component | Conversational AI agent (Claude via MAF) |
 | `Biotrackr.Food.Api` | Domain API | Nutrition data queries |
 | `Biotrackr.Food.Svc` | Domain Service | Fitbit food data ingestion |
 | `Biotrackr.Mcp.Server` | AI Component | Model Context Protocol tool server |
-| `Biotrackr.Reporting.Api` | AI Component | AI-generated health reports |
+| `Biotrackr.Reporting.Api` | AI Component | AI-generated health reports with A2A protocol |
+| `Biotrackr.Reporting.Svc` | Domain Service | Scheduled health summary generation and email delivery |
 | `Biotrackr.Sleep.Api` | Domain API | Sleep data queries |
 | `Biotrackr.Sleep.Svc` | Domain Service | Fitbit sleep data ingestion |
 | `Biotrackr.UI` | Frontend | Blazor Server dashboard |
@@ -50,17 +51,17 @@ Each service has its own solution file (`.sln` or `.slnx`), Dockerfile, test pro
 │   ├── agents/                        # 6 custom agent definitions
 │   ├── prompts/                       # 4 prompt templates
 │   ├── skills/                        # 18 skills (OWASP, accessibility, etc.)
-│   └── workflows/                     # 28 GitHub Actions workflows
+│   └── workflows/                     # 31 GitHub Actions workflows
 ├── docs/
 │   ├── standards/                     # Commit standards, conventions
 │   └── decision-records/              # Architecture Decision Records
 ├── infra/
 │   ├── core/main.bicep                # Shared infrastructure
 │   ├── apps/{service}/main.bicep      # Per-service infrastructure
-│   └── modules/{domain}/              # 15 reusable Bicep modules
+│   └── modules/{domain}/              # 19 reusable Bicep modules
 ├── scripts/                           # System prompt upload, identity scripts
 └── src/
-    └── Biotrackr.{Domain}.{Type}/     # 13 service directories
+    └── Biotrackr.{Domain}.{Type}/     # 14 service directories
         ├── Biotrackr.{Domain}.{Type}/ # Application project
         ├── *.UnitTests/               # Unit tests
         ├── *.IntegrationTests/        # Integration tests (optional)
@@ -139,6 +140,7 @@ dotnet build --no-restore --no-dependencies -v:q
 | Food Svc | `src/Biotrackr.Food.Svc` | `.sln` | Yes | Yes (E2E + Contract) |
 | MCP Server | `src/Biotrackr.Mcp.Server` | `.slnx` | Yes | Yes (E2E + Contract) |
 | Reporting API | `src/Biotrackr.Reporting.Api` | `.slnx` | Yes | Yes (E2E + Contract) |
+| Reporting Svc | `src/Biotrackr.Reporting.Svc` | `.slnx` | Yes | Yes (Contract) |
 | Sleep API | `src/Biotrackr.Sleep.Api` | `.sln` | Yes | Yes (E2E + Contract) |
 | Sleep Svc | `src/Biotrackr.Sleep.Svc` | `.sln` | Yes | Yes (E2E + Contract) |
 | UI | `src/Biotrackr.UI` | `.slnx` | Yes | No |
