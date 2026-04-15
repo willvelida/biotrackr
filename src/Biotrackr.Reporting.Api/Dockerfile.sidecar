@@ -21,8 +21,7 @@ RUN curl -fsSL "https://github.com/github/copilot-cli/releases/download/v${COPIL
     tar -xzf /tmp/copilot.tar.gz -C /tmp/copilot-extract && \
     cp /tmp/copilot-extract/copilot /usr/local/bin/copilot || cp /tmp/copilot-extract/*/copilot /usr/local/bin/copilot && \
     chmod +x /usr/local/bin/copilot && \
-    rm -rf /tmp/copilot.tar.gz /tmp/copilot-extract && \
-    copilot --version
+    rm -rf /tmp/copilot.tar.gz /tmp/copilot-extract /root/.cache/copilot
 
 # Install Python data science and reporting packages
 RUN pip install --no-cache-dir \
