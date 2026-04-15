@@ -15,7 +15,7 @@ namespace Biotrackr.Reporting.Api.Services
     public class ReportGenerationService : IReportGenerationService
     {
         private const string ReportsDirectory = "/tmp/reports";
-        private const int MaxRetries = 2;
+        private const int MaxRetries = 1;
 
         private readonly IBlobStorageService _blobStorageService;
         private readonly ICopilotService _copilotService;
@@ -75,6 +75,9 @@ namespace Biotrackr.Reporting.Api.Services
                 };
             }
 
+            // Force sidecar Python runtime initialization so the first real session starts hot
+            await _copilotService.WarmUpSidecarAsync();
+
             // Create job in Blob Storage
             var jobId = await _blobStorageService.CreateJobAsync(reportType, startDate, endDate);
             _logger.LogInformation("Created report job {JobId} for {ReportType} ({StartDate} to {EndDate})",
@@ -85,9 +88,10 @@ namespace Biotrackr.Reporting.Api.Services
             {
                 try
                 {
-                    using var cts = new CancellationTokenSource(
-                        TimeSpan.FromMinutes(_settings.ReportGenerationTimeoutMinutes));
-                    await GenerateReportAsync(jobId, taskMessage, sourceDataSnapshot, cts.Token);
+                    // Job-level deadline: total budget across all attempts (ASI08)
+                    using var jobCts = new CancellationTokenSource(
+                        TimeSpan.FromMinutes(_settings.ReportGenerationTimeoutMinutes * (MaxRetries + 1)));
+                    await GenerateReportAsync(jobId, taskMessage, sourceDataSnapshot, jobCts.Token);
                 }
                 catch (OperationCanceledException)
                 {
@@ -132,14 +136,18 @@ namespace Biotrackr.Reporting.Api.Services
                 _logger.LogInformation("Report generation attempt {Attempt}/{MaxAttempts} for job {JobId}",
                     attempt, MaxRetries + 1, jobId);
 
+                // Per-attempt timeout so a wasted attempt doesn't steal budget from a productive one
+                using var attemptCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+                attemptCts.CancelAfter(TimeSpan.FromMinutes(_settings.ReportGenerationTimeoutMinutes));
+
                 try
                 {
                     // Create a Copilot CLI session and send the task message directly via the SDK
                     await using var client = _copilotService.Client;
-                    await client.StartAsync(cancellationToken);
+                    await client.StartAsync(attemptCts.Token);
 
                     var sessionConfig = _copilotService.CreateSessionConfig();
-                    await using var session = await client.CreateSessionAsync(sessionConfig, cancellationToken);
+                    await using var session = await client.CreateSessionAsync(sessionConfig, attemptCts.Token);
 
                     // Track tool execution and session events for observability
                     var eventSubscription = session.On(evt =>
@@ -173,7 +181,7 @@ namespace Biotrackr.Reporting.Api.Services
                     var result = await session.SendAndWaitAsync(
                         new MessageOptions { Prompt = fullPrompt },
                         timeout: TimeSpan.FromMinutes(_settings.ReportGenerationTimeoutMinutes - 1),
-                        cancellationToken: cancellationToken);
+                        cancellationToken: attemptCts.Token);
                     var responseText = result?.Data?.Content;
 
                     _logger.LogInformation("Copilot session completed for job {JobId}. Response length: {Length}",
@@ -203,8 +211,20 @@ namespace Biotrackr.Reporting.Api.Services
                         }
                     }
                 }
+                catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested)
+                {
+                    // Per-attempt timeout fired but job-level deadline hasn't — retry
+                    _logger.LogWarning(
+                        "Attempt {Attempt} timed out after {Timeout}m for job {JobId}, will retry",
+                        attempt, _settings.ReportGenerationTimeoutMinutes, jobId);
+                    if (attempt <= MaxRetries)
+                    {
+                        CleanReportsDirectory();
+                    }
+                }
                 catch (OperationCanceledException)
                 {
+                    // Job-level deadline reached — propagate to caller
                     throw;
                 }
                 catch (Exception ex)

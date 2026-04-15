@@ -31,6 +31,9 @@ param envVariables array
 @description('The maximum number of seconds a replica is allowed to run')
 param replicaTimeout int = 600
 
+@description('Number of retry attempts for failed job replicas')
+param replicaRetryLimit int = 0
+
 resource containerAppEnv 'Microsoft.App/managedEnvironments@2024-03-01' existing = {
   name: containerAppEnvironmentName
 }
@@ -51,6 +54,7 @@ resource containerAppJob 'Microsoft.App/jobs@2024-03-01' = {
     environmentId: containerAppEnv.id
     configuration: {
       replicaTimeout: replicaTimeout
+      replicaRetryLimit: replicaRetryLimit
       triggerType: 'Schedule'
       scheduleTriggerConfig: {
         cronExpression: cronExpression

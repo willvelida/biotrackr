@@ -103,6 +103,12 @@ resource httpContainerApp 'Microsoft.App/containerApps@2024-03-01' = {
         transport: 'http'
         targetPort: targetPort
         allowInsecure: false
+        traffic: [
+          {
+            latestRevision: true
+            weight: 100
+          }
+        ]
       }
       registries: [
         {

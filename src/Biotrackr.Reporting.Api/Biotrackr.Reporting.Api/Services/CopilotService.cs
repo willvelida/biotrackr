@@ -1,3 +1,4 @@
+using System.Collections.Concurrent;
 using System.Text.Json;
 using Biotrackr.Reporting.Api.Configuration;
 using GitHub.Copilot.SDK;
@@ -10,6 +11,7 @@ namespace Biotrackr.Reporting.Api.Services
         CopilotClient Client { get; }
         SessionConfig CreateSessionConfig();
         Task<bool> IsHealthyAsync(CancellationToken cancellationToken = default);
+        Task WarmUpSidecarAsync(CancellationToken cancellationToken = default);
     }
 
     public class CopilotService(
@@ -41,6 +43,12 @@ namespace Biotrackr.Reporting.Api.Services
             "bash ", "sh -c", "os.popen"
         ];
 
+        // Maximum read_agent polls per agent before denying to break infinite loops (ASI08)
+        // Each poll waits ~60s; 8 polls ≈ 8 min per sub-agent — enough for legitimate runs,
+        // short enough to break stuck loops well before the 19-min session timeout.
+        internal const int MaxReadAgentPollsPerAgent = 8;
+
+        private readonly ConcurrentDictionary<string, int> _readAgentPollCounts = new();
         private CopilotClient? _client;
 
         public CopilotClient Client
@@ -198,6 +206,47 @@ namespace Biotrackr.Reporting.Api.Services
         }
 
         /// <summary>
+        /// Sends a lightweight session to force the Copilot CLI sidecar to initialize its Python runtime.
+        /// Without this, the first real session often produces an empty response while the runtime cold-starts.
+        /// </summary>
+        public async Task WarmUpSidecarAsync(CancellationToken cancellationToken = default)
+        {
+            try
+            {
+                using var cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+                cts.CancelAfter(TimeSpan.FromSeconds(90));
+
+                logger.LogInformation("Warming up Copilot CLI sidecar...");
+
+                // Use a separate disposable client so we don't dispose the shared _client singleton
+                await using var warmUpClient = new CopilotClient(new CopilotClientOptions
+                {
+                    CliUrl = settings.Value.CopilotCliUrl,
+                });
+                await warmUpClient.StartAsync(cts.Token);
+
+                var warmUpConfig = new SessionConfig
+                {
+                    Model = "claude-sonnet-4-6",
+                    OnPermissionRequest = PermissionHandler.ApproveAll,
+                };
+
+                await using var session = await warmUpClient.CreateSessionAsync(warmUpConfig, cts.Token);
+                await session.SendAndWaitAsync(
+                    new MessageOptions { Prompt = "Run: echo 'warm-up complete'" },
+                    timeout: TimeSpan.FromSeconds(60),
+                    cancellationToken: cts.Token);
+
+                logger.LogInformation("Copilot CLI sidecar warm-up completed");
+            }
+            catch (Exception ex)
+            {
+                // Warm-up failure is non-fatal — the real session may still succeed
+                logger.LogWarning(ex, "Copilot CLI sidecar warm-up failed, proceeding with report generation");
+            }
+        }
+
+        /// <summary>
         /// Hook: Pre-tool-use gate — replaces HandlePermissionRequest with tool-name and argument-level control (ASI02).
         /// Only allows shell, read, and write tools. File operations restricted to /tmp/reports paths.
         /// </summary>
@@ -225,6 +274,21 @@ namespace Biotrackr.Reporting.Api.Services
                     logger.LogWarning(
                         "Denied file operation outside /tmp/reports: Tool={ToolName}, Args={Args}",
                         input.ToolName, argsDetail);
+                    return Task.FromResult<PreToolUseHookOutput?>(new PreToolUseHookOutput { PermissionDecision = "deny" });
+                }
+            }
+
+            // Track and limit read_agent polling to prevent infinite sub-agent loops (ASI08)
+            if (input.ToolName == "read_agent")
+            {
+                var agentId = ExtractJsonField(argsDetail, "agent_id") ?? "unknown";
+                var count = _readAgentPollCounts.AddOrUpdate(agentId, 1, (_, c) => c + 1);
+
+                if (count > MaxReadAgentPollsPerAgent)
+                {
+                    logger.LogWarning(
+                        "Denied read_agent for agent '{AgentId}': poll count {Count} exceeded limit {Max} (ASI08)",
+                        agentId, count, MaxReadAgentPollsPerAgent);
                     return Task.FromResult<PreToolUseHookOutput?>(new PreToolUseHookOutput { PermissionDecision = "deny" });
                 }
             }
@@ -288,6 +352,7 @@ namespace Biotrackr.Reporting.Api.Services
         private Task<SessionStartHookOutput?> OnSessionStart(
             SessionStartHookInput input, HookInvocation invocation)
         {
+            _readAgentPollCounts.Clear();
             logger.LogInformation("Copilot session started: Source={Source}", input.Source);
             return Task.FromResult<SessionStartHookOutput?>(null);
         }
@@ -300,6 +365,23 @@ namespace Biotrackr.Reporting.Api.Services
         {
             logger.LogInformation("Copilot session ended");
             return Task.FromResult<SessionEndHookOutput?>(null);
+        }
+
+        internal static string? ExtractJsonField(string json, string fieldName)
+        {
+            try
+            {
+                using var doc = JsonDocument.Parse(json);
+                if (doc.RootElement.TryGetProperty(fieldName, out var value))
+                {
+                    return value.GetString();
+                }
+            }
+            catch
+            {
+                // ToolArgs may not be valid JSON
+            }
+            return null;
         }
 
         private static string SafeSerialize(object? obj)

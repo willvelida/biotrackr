@@ -473,6 +473,7 @@ Order matters — these execute in sequence:
 ### MCP Server
 
 - **12 tools:** 4 domains × 3 methods (ByDate, ByDateRange, Records)
+- **Tool naming:** The MCP SDK auto-converts C# PascalCase method names to snake_case. Use `get_activity_by_date_range`, not `GetActivityByDateRange`, when calling tools via `McpClient.CallToolAsync()`.
 - **Transport:** HTTP Stateless
 - **Rate limiting:** 100 req/min per IP, 10 queue
 - **Authentication:** API key validation (redacted in traces)
@@ -555,6 +556,7 @@ Do not modify decision records — they are append-only historical documents.
 ### NEVER
 
 - Commit secrets, credentials, API keys, or connection strings to the repository
+- Push code without running unit tests first — always `dotnet test` the affected service before pushing, especially when adding or modifying tests
 - Push directly to `main` — all changes go through pull requests
 - Force push (`--force`) to any shared branch
 - Auto-merge pull requests — wait for CI/CD pipeline completion and user approval
