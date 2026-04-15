@@ -60,6 +60,7 @@ public class ContractTestFixture : IntegrationTestFixture
         services.AddSingleton(mockEmailClientWrapper.Object);
 
         services.AddSingleton<IMcpClientFactory, McpClientFactory>();
+        services.AddSingleton<IMetricExtractor, MetricExtractor>();
 
         services.AddHttpClient("ReportingApi", client =>
         {

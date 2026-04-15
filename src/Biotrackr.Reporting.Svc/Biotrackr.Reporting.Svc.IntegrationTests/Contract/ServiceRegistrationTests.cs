@@ -60,4 +60,20 @@ public class ServiceRegistrationTests(ContractTestFixture fixture)
 
         ReferenceEquals(scopedInstance1, scopedInstance2).Should().BeFalse("ISummaryService should return different instances across scopes");
     }
+
+    [Fact]
+    public void MetricExtractor_ShouldBeRegisteredAsSingleton()
+    {
+        // Arrange
+        var serviceProvider = _fixture.ServiceProvider!;
+
+        // Act
+        var instance1 = serviceProvider.GetService<IMetricExtractor>();
+        var instance2 = serviceProvider.GetService<IMetricExtractor>();
+
+        // Assert
+        instance1.Should().NotBeNull("IMetricExtractor should be registered");
+        instance2.Should().NotBeNull("IMetricExtractor should be registered");
+        instance1.Should().BeSameAs(instance2, "IMetricExtractor should be registered as Singleton");
+    }
 }

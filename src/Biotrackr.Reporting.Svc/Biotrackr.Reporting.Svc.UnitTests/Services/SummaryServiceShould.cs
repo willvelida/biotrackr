@@ -15,6 +15,7 @@ public class SummaryServiceShould
     private readonly Mock<IHealthDataService> _healthDataServiceMock;
     private readonly Mock<IReportingApiService> _reportingApiServiceMock;
     private readonly Mock<IEmailService> _emailServiceMock;
+    private readonly Mock<IMetricExtractor> _metricExtractorMock;
     private readonly Mock<ILogger<SummaryService>> _loggerMock;
     private readonly Fixture _fixture;
 
@@ -23,8 +24,13 @@ public class SummaryServiceShould
         _healthDataServiceMock = new Mock<IHealthDataService>();
         _reportingApiServiceMock = new Mock<IReportingApiService>();
         _emailServiceMock = new Mock<IEmailService>();
+        _metricExtractorMock = new Mock<IMetricExtractor>();
         _loggerMock = new Mock<ILogger<SummaryService>>();
         _fixture = new Fixture();
+
+        _metricExtractorMock
+            .Setup(x => x.ExtractMetrics(It.IsAny<HealthDataSnapshot>()))
+            .Returns(new List<MetricCard>());
     }
 
     private SummaryService CreateService(string cadence = "weekly")
@@ -35,6 +41,7 @@ public class SummaryServiceShould
             _healthDataServiceMock.Object,
             _reportingApiServiceMock.Object,
             _emailServiceMock.Object,
+            _metricExtractorMock.Object,
             options,
             _loggerMock.Object);
     }
@@ -65,7 +72,7 @@ public class SummaryServiceShould
             .ReturnsAsync([0x01, 0x02]);
 
         _emailServiceMock
-            .Setup(x => x.SendReportEmailAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string?>(), It.IsAny<byte[]>(), It.IsAny<CancellationToken>()))
+            .Setup(x => x.SendReportEmailAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string?>(), It.IsAny<byte[]>(), It.IsAny<List<MetricCard>>(), It.IsAny<CancellationToken>()))
             .Returns(Task.CompletedTask);
 
         var sut = CreateService("weekly");
@@ -77,7 +84,7 @@ public class SummaryServiceShould
         _healthDataServiceMock.Verify(x => x.FetchHealthDataAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Once);
         _reportingApiServiceMock.Verify(x => x.GenerateReportAsync("weekly_summary", It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), snapshot, It.IsAny<CancellationToken>()), Times.Once);
         _reportingApiServiceMock.Verify(x => x.DownloadArtifactAsync("https://example.com/report.pdf", It.IsAny<CancellationToken>()), Times.Once);
-        _emailServiceMock.Verify(x => x.SendReportEmailAsync("weekly", It.IsAny<string>(), It.IsAny<string>(), "Weekly summary", It.IsAny<byte[]>(), It.IsAny<CancellationToken>()), Times.Once);
+        _emailServiceMock.Verify(x => x.SendReportEmailAsync("weekly", It.IsAny<string>(), It.IsAny<string>(), "Weekly summary", It.IsAny<byte[]>(), It.IsAny<List<MetricCard>>(), It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
@@ -158,7 +165,7 @@ public class SummaryServiceShould
 
         // Assert
         _reportingApiServiceMock.Verify(x => x.DownloadArtifactAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Never);
-        _emailServiceMock.Verify(x => x.SendReportEmailAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string?>(), Array.Empty<byte>(), It.IsAny<CancellationToken>()), Times.Once);
+        _emailServiceMock.Verify(x => x.SendReportEmailAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string?>(), Array.Empty<byte>(), It.IsAny<List<MetricCard>>(), It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]

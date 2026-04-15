@@ -9,6 +9,7 @@ public class SummaryService : ISummaryService
     private readonly IHealthDataService _healthDataService;
     private readonly IReportingApiService _reportingApiService;
     private readonly IEmailService _emailService;
+    private readonly IMetricExtractor _metricExtractor;
     private readonly Settings _settings;
     private readonly ILogger<SummaryService> _logger;
 
@@ -16,12 +17,14 @@ public class SummaryService : ISummaryService
         IHealthDataService healthDataService,
         IReportingApiService reportingApiService,
         IEmailService emailService,
+        IMetricExtractor metricExtractor,
         IOptions<Settings> settings,
         ILogger<SummaryService> logger)
     {
         _healthDataService = healthDataService;
         _reportingApiService = reportingApiService;
         _emailService = emailService;
+        _metricExtractor = metricExtractor;
         _settings = settings.Value;
         _logger = logger;
     }
@@ -50,7 +53,9 @@ public class SummaryService : ISummaryService
             _logger.LogInformation("PDF artifact downloaded ({Size} bytes)", pdfBytes.Length);
         }
 
-        await _emailService.SendReportEmailAsync(cadence, startDate, endDate, result.Summary, pdfBytes, cancellationToken);
+        var metrics = _metricExtractor.ExtractMetrics(snapshot);
+
+        await _emailService.SendReportEmailAsync(cadence, startDate, endDate, result.Summary, pdfBytes, metrics, cancellationToken);
         _logger.LogInformation("{Cadence} health summary email sent successfully", cadence);
     }
 
