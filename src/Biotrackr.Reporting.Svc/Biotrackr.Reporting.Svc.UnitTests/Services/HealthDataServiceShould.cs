@@ -180,7 +180,7 @@ public class HealthDataServiceShould
                 It.Is<It.IsAnyType>((v, t) => v.ToString()!.Contains("get_food_by_date_range") && v.ToString()!.Contains("error")),
                 null,
                 It.IsAny<Func<It.IsAnyType, Exception?, string>>()),
-            Times.Once);
+            Times.Exactly(2)); // Once per attempt (initial + retry)
     }
 
     [Fact]

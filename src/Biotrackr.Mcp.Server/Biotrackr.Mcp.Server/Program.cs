@@ -99,7 +99,13 @@ builder.Services.AddHttpClient("BiotrackrApi", (sp, client) =>
     client.BaseAddress = new Uri(settings.BaseUrl ?? throw new InvalidOperationException("biotrackrapiendpoint is not configured."));
 })
 .AddHttpMessageHandler<ApiKeyDelegatingHandler>()
-.AddStandardResilienceHandler();
+.AddStandardResilienceHandler(options =>
+{
+    // Domain APIs run on Container Apps with scale-to-zero; cold starts can take 15-20s
+    options.AttemptTimeout.Timeout = TimeSpan.FromSeconds(60);
+    options.TotalRequestTimeout.Timeout = TimeSpan.FromSeconds(90);
+    options.CircuitBreaker.SamplingDuration = TimeSpan.FromSeconds(120);
+});
 
 builder.Services.AddSingleton<HttpClient>(provider =>
     provider.GetRequiredService<IHttpClientFactory>().CreateClient("BiotrackrApi"));

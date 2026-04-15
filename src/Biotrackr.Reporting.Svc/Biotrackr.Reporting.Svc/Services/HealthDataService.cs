@@ -43,6 +43,25 @@ public class HealthDataService : IHealthDataService
     {
         _logger.LogInformation("Calling MCP tool {ToolName} for {StartDate} to {EndDate}", toolName, startDate, endDate);
 
+        const int maxRetries = 1;
+        for (var attempt = 0; attempt <= maxRetries; attempt++)
+        {
+            var result = await FetchDomainDataCoreAsync(mcpToolCaller, toolName, startDate, endDate, cancellationToken);
+            if (result.success || attempt == maxRetries)
+            {
+                return result.data;
+            }
+
+            _logger.LogWarning("Retrying MCP tool {ToolName} after failure (attempt {Attempt})", toolName, attempt + 1);
+            await Task.Delay(TimeSpan.FromSeconds(5), cancellationToken);
+        }
+
+        // Unreachable, but satisfies compiler
+        return SerializeEmpty();
+    }
+
+    private async Task<(bool success, string data)> FetchDomainDataCoreAsync(IMcpToolCaller mcpToolCaller, string toolName, string startDate, string endDate, CancellationToken cancellationToken)
+    {
         var allItems = new List<JsonElement>();
         var pageNumber = 1;
         const int pageSize = 50;
@@ -74,7 +93,7 @@ public class HealthDataService : IHealthDataService
             if (root.TryGetProperty("error", out var error))
             {
                 _logger.LogError("MCP tool {ToolName} returned error on page {Page}: {Error}", toolName, pageNumber, error.GetString());
-                break;
+                return (false, SerializeEmpty());
             }
 
             if (root.TryGetProperty("items", out var items) && items.ValueKind == JsonValueKind.Array)
@@ -92,6 +111,11 @@ public class HealthDataService : IHealthDataService
         _logger.LogInformation("MCP tool {ToolName} returned {Count} items across {Pages} pages", toolName, allItems.Count, pageNumber - 1);
 
         var aggregated = new { items = allItems, totalCount = allItems.Count };
-        return JsonSerializer.Serialize(aggregated);
+        return (allItems.Count > 0, JsonSerializer.Serialize(aggregated));
+    }
+
+    private static string SerializeEmpty()
+    {
+        return JsonSerializer.Serialize(new { items = Array.Empty<object>(), totalCount = 0 });
     }
 }
