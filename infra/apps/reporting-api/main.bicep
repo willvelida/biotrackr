@@ -114,7 +114,7 @@ module reportingApi '../../modules/host/container-app-http-sidecar.bicep' = {
           port: 8080
           path: '/api/healthz'
         }
-        initialDelaySeconds: 15
+        initialDelaySeconds: 30
         periodSeconds: 30
         failureThreshold: 3
         timeoutSeconds: 5
@@ -166,10 +166,10 @@ module reportingApi '../../modules/host/container-app-http-sidecar.bicep' = {
             tcpSocket: {
               port: 4321
             }
-            initialDelaySeconds: 5
-            periodSeconds: 10
-            failureThreshold: 3
-            timeoutSeconds: 2
+            initialDelaySeconds: 15
+            periodSeconds: 15
+            failureThreshold: 5
+            timeoutSeconds: 5
           }
         ]
         volumeMounts: [
