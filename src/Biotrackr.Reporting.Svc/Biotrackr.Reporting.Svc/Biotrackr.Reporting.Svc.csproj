@@ -12,6 +12,7 @@
     <PackageReference Include="Azure.Identity" Version="1.18.0" />
     <PackageReference Include="Azure.Monitor.OpenTelemetry.Exporter" Version="1.4.0" />
     <PackageReference Include="Azure.Security.KeyVault.Secrets" Version="4.8.0" />
+    <PackageReference Include="Markdig" Version="1.1.2" />
     <PackageReference Include="Microsoft.Extensions.Configuration.AzureAppConfiguration" Version="8.5.0" />
     <PackageReference Include="Microsoft.Extensions.Hosting" Version="10.0.3" />
     <PackageReference Include="Microsoft.Extensions.Http.Resilience" Version="9.6.0" />
@@ -20,6 +21,7 @@
     <PackageReference Include="Microsoft.Identity.Web.AgentIdentities" Version="4.5.0" />
     <PackageReference Include="ModelContextProtocol" Version="1.1.0" />
     <PackageReference Include="OpenTelemetry.Extensions.Hosting" Version="1.12.0" />
+    <PackageReference Include="PreMailer.Net" Version="2.7.2" />
   </ItemGroup>
 
   <ItemGroup>

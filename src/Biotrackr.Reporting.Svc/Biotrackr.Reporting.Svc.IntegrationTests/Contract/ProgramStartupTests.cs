@@ -42,6 +42,9 @@ public class ProgramStartupTests(ContractTestFixture fixture)
         var emailService = scope.ServiceProvider.GetService<IEmailService>();
         emailService.Should().NotBeNull("IEmailService should be registered");
 
+        var metricExtractor = serviceProvider.GetService<IMetricExtractor>();
+        metricExtractor.Should().NotBeNull("IMetricExtractor should be registered");
+
         var agentTokenProvider = serviceProvider.GetService<IAgentTokenProvider>();
         agentTokenProvider.Should().NotBeNull("IAgentTokenProvider should be registered");
     }

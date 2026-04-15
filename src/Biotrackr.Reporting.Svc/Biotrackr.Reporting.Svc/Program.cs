@@ -92,6 +92,7 @@ IHost host = Host.CreateDefaultBuilder(args)
         services.AddHttpClient("ArtifactDownload");
 
         services.AddSingleton<IMcpClientFactory, McpClientFactory>();
+        services.AddSingleton<IMetricExtractor, MetricExtractor>();
         services.AddScoped<IHealthDataService, HealthDataService>();
         services.AddScoped<IReportingApiService, ReportingApiService>();
         services.AddScoped<IEmailService, EmailService>();
