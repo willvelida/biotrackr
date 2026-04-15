@@ -63,6 +63,12 @@ resource httpContainerApp 'Microsoft.App/containerApps@2024-03-01' = {
         targetPort: targetPort
         allowInsecure: false
         customDomains: empty(customDomains) ? null : customDomains
+        traffic: [
+          {
+            latestRevision: true
+            weight: 100
+          }
+        ]
       }
       registries: [
         {
