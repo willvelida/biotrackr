@@ -75,6 +75,9 @@ namespace Biotrackr.Reporting.Api.Services
                 };
             }
 
+            // Force sidecar Python runtime initialization so the first real session starts hot
+            await _copilotService.WarmUpSidecarAsync();
+
             // Create job in Blob Storage
             var jobId = await _blobStorageService.CreateJobAsync(reportType, startDate, endDate);
             _logger.LogInformation("Created report job {JobId} for {ReportType} ({StartDate} to {EndDate})",

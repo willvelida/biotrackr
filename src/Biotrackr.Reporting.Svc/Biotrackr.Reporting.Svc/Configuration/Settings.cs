@@ -16,5 +16,5 @@ public class Settings
     public string EmailRecipientAddress { get; set; } = string.Empty;
     public string AcsEndpoint { get; set; } = string.Empty;
     public int ReportPollIntervalSeconds { get; set; } = 15;
-    public int ReportTimeoutMinutes { get; set; } = 20;
+    public int ReportTimeoutMinutes { get; set; } = 25;
 }

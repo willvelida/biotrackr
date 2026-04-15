@@ -11,6 +11,7 @@ namespace Biotrackr.Reporting.Api.Services
         CopilotClient Client { get; }
         SessionConfig CreateSessionConfig();
         Task<bool> IsHealthyAsync(CancellationToken cancellationToken = default);
+        Task WarmUpSidecarAsync(CancellationToken cancellationToken = default);
     }
 
     public class CopilotService(
@@ -201,6 +202,43 @@ namespace Biotrackr.Reporting.Api.Services
             {
                 logger.LogWarning(ex, "Copilot CLI sidecar is not reachable at {CliUrl}", settings.Value.CopilotCliUrl);
                 return false;
+            }
+        }
+
+        /// <summary>
+        /// Sends a lightweight session to force the Copilot CLI sidecar to initialize its Python runtime.
+        /// Without this, the first real session often produces an empty response while the runtime cold-starts.
+        /// </summary>
+        public async Task WarmUpSidecarAsync(CancellationToken cancellationToken = default)
+        {
+            try
+            {
+                using var cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+                cts.CancelAfter(TimeSpan.FromSeconds(90));
+
+                logger.LogInformation("Warming up Copilot CLI sidecar...");
+
+                await using var client = Client;
+                await client.StartAsync(cts.Token);
+
+                var warmUpConfig = new SessionConfig
+                {
+                    Model = "claude-sonnet-4-6",
+                    OnPermissionRequest = PermissionHandler.ApproveAll,
+                };
+
+                await using var session = await client.CreateSessionAsync(warmUpConfig, cts.Token);
+                await session.SendAndWaitAsync(
+                    new MessageOptions { Prompt = "Run: echo 'warm-up complete'" },
+                    timeout: TimeSpan.FromSeconds(60),
+                    cancellationToken: cts.Token);
+
+                logger.LogInformation("Copilot CLI sidecar warm-up completed");
+            }
+            catch (Exception ex)
+            {
+                // Warm-up failure is non-fatal — the real session may still succeed
+                logger.LogWarning(ex, "Copilot CLI sidecar warm-up failed, proceeding with report generation");
             }
         }
 
