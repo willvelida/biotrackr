@@ -49,10 +49,38 @@ builder.Services.AddOptions<BiotrackrApiSettings>()
         settings.SubscriptionKey = configuration.GetValue<string>("biotrackrapisubscriptionkey");
     });
 
+builder.Services.AddHttpContextAccessor();
+
 builder.Services
     .AddMcpServer()
     .WithHttpTransport(o => o.Stateless = true)
-    .WithToolsFromAssembly();
+    .WithToolsFromAssembly()
+    .WithRequestFilters(filters =>
+    {
+        filters.AddListToolsFilter(next => async (context, cancellationToken) =>
+        {
+            var result = await next(context, cancellationToken);
+
+            var httpContextAccessor = context.Services?.GetService<IHttpContextAccessor>();
+            var apiKey = httpContextAccessor?.HttpContext?.Request.Headers["X-Api-Key"].ToString();
+
+            var internalApiKeys = context.Services?.GetService<IConfiguration>()?
+                .GetSection("InternalApiKeys")
+                .Get<string[]>() ?? [];
+
+            var isInternal = !string.IsNullOrEmpty(apiKey) && internalApiKeys.Contains(apiKey);
+
+            if (!isInternal)
+            {
+                foreach (var tool in result.Tools)
+                {
+                    tool.Description = $"Health data query tool: {tool.Name}";
+                }
+            }
+
+            return result;
+        });
+    });
 
 var appInsightsConnectionString = builder.Configuration["applicationinsightsconnectionstring"];
 
