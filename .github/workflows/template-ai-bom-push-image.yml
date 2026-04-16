@@ -84,7 +84,10 @@ jobs:
           continue-on-error: true
 
         - name: Install CycloneDX CLI
-          run: dotnet tool install --global CycloneDX.Cli --version 3.1.0
+          run: |
+            curl -sSLo cyclonedx-cli https://github.com/CycloneDX/cyclonedx-cli/releases/download/v0.27.1/cyclonedx-linux-x64
+            chmod +x cyclonedx-cli
+            sudo mv cyclonedx-cli /usr/local/bin/cyclonedx
 
         - name: Merge SBOM with AI-BOM overlay
           if: hashFiles(format('{0}/sbom.cdx.json', github.workspace)) != ''
