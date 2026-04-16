@@ -173,7 +173,7 @@ When you use Biotrackr's AI features (conversational queries or report generatio
 * **Data transmitted:** Only the health data relevant to your specific query or report request is sent. Bulk data exports are not transmitted.
 * **Provider data usage:** Per Anthropic's commercial terms of service, data sent through the API is not used to train or improve their models.
 * **Encryption:** All data transmitted to the AI provider is encrypted in transit.
-* **No PII beyond health metrics:** The platform does not send your name, email, device identifiers, or account credentials to the AI provider. Only anonymized health metric values are transmitted.
+* **Account identifiers not sent:** The platform does not intentionally send your name, email, device identifiers, or account credentials to the AI provider. However, health metrics with dates and timestamps are personal data, and user-provided chat messages are forwarded without redaction — users should avoid including sensitive personal information in their queries.
 * **Local storage:** Your conversation history and generated reports are stored in your own database instance. They are not stored by the AI provider beyond the duration needed to process your request.
 
 ### Your Controls
