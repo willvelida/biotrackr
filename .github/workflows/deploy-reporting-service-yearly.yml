@@ -7,12 +7,14 @@ on:
         paths:
             - 'infra/apps/reporting-service-yearly/**'
             - 'src/Biotrackr.Reporting.Svc/**'
+            - '.github/workflows/deploy-reporting-service-yearly.yml'
 
 permissions:
     contents: read
     id-token: write
     pull-requests: write
     checks: write  # Required for dorny/test-reporter@v2
+    attestations: write
 
 env:
   DOTNET_VERSION: 10.0.x
@@ -68,7 +70,7 @@ jobs:
     build-container-image-dev:
         name: Build and Push Container Image
         needs: [run-unit-tests, run-contract-tests, run-e2e-tests]
-        uses: willvelida/biotrackr/.github/workflows/template-acr-push-image.yml@main
+        uses: willvelida/biotrackr/.github/workflows/template-ai-bom-push-image.yml@main
         with:
           working-directory: ./src/Biotrackr.Reporting.Svc
           app-name: biotrackr-reporting-svc
