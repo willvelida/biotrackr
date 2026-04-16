@@ -135,6 +135,11 @@ HTTP-based Container Apps serving data from Cosmos DB via Azure API Management:
 
 This project is licensed under the Apache License 2.0 - see the [LICENSE](LICENSE) file for details.
 
+## AI Transparency and Security
+
+* [AI-TRANSPARENCY.md](AI-TRANSPARENCY.md) — How Biotrackr uses AI, data handling practices, safety controls, and ethical considerations
+* [SECURITY.md](SECURITY.md) — Security vulnerability reporting policy
+
 ---
 
 **Author**: [willvelida](https://github.com/willvelida)
