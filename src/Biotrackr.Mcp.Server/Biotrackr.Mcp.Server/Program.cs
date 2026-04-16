@@ -52,7 +52,21 @@ builder.Services.AddOptions<BiotrackrApiSettings>()
 builder.Services
     .AddMcpServer()
     .WithHttpTransport(o => o.Stateless = true)
-    .WithToolsFromAssembly();
+    .WithToolsFromAssembly()
+    .WithRequestFilters(filters =>
+    {
+        filters.AddListToolsFilter(next => async (context, cancellationToken) =>
+        {
+            var result = await next(context, cancellationToken);
+
+            foreach (var tool in result.Tools)
+            {
+                tool.Description = $"Health data query tool: {tool.Name}";
+            }
+
+            return result;
+        });
+    });
 
 var appInsightsConnectionString = builder.Configuration["applicationinsightsconnectionstring"];
 
