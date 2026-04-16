@@ -7,12 +7,14 @@ on:
         paths:
             - 'infra/apps/reporting-api/**'
             - 'src/Biotrackr.Reporting.Api/**'
+            - '.github/workflows/deploy-reporting-api.yml'
 
 permissions:
     contents: write
     id-token: write
     pull-requests: write
     checks: write
+    attestations: write
 
 env:
   DOTNET_VERSION: 10.0.x
@@ -52,7 +54,7 @@ jobs:
     build-container-image-dev:
           name: Build and Push Container Image
           needs: [run-unit-tests, run-contract-tests]
-          uses: willvelida/biotrackr/.github/workflows/template-acr-push-image.yml@main
+          uses: willvelida/biotrackr/.github/workflows/template-ai-bom-push-image.yml@main
           with:
             working-directory: ./src/Biotrackr.Reporting.Api
             app-name: biotrackr-reporting-api
@@ -111,6 +113,22 @@ jobs:
             - name: Push Docker image
               run: |
                 docker push ${{ steps.acr.outputs.loginServer }}/biotrackr-copilot-python:${{ github.sha }}
+
+            - name: Generate Sidecar SBOM
+              uses: aquasecurity/trivy-action@0.35.0
+              with:
+                image-ref: ${{ steps.acr.outputs.loginServer }}/biotrackr-copilot-python:${{ github.sha }}
+                format: 'cyclonedx'
+                output: 'sidecar-sbom.cdx.json'
+              continue-on-error: true
+
+            - name: Upload Sidecar SBOM as artifact
+              if: always()
+              uses: actions/upload-artifact@v7
+              with:
+                name: sbom-biotrackr-copilot-python
+                path: sidecar-sbom.cdx.json
+                retention-days: 90
 
     retrieve-container-image-dev:
         name: Retrieve Container Image
