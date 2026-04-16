@@ -416,5 +416,8 @@ scripts/chat-system-prompt/reviewer-prompt.txt
 # researcher files
 .copilot-tracking/*
 
+# Presentation notes — working files, not published
+docs/presentation-notes/*
+
 # Auto-generated ARM templates from Bicep compilation
 infra/apps/*/main.json
