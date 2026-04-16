@@ -88,8 +88,14 @@
             "Over-eagerness behavior observed in alignment evaluations — model may take creative actions not explicitly requested. Mitigated via system prompt constraints."
           ],
           "ethicalConsiderations": [
-            "Processes personal health data (PHI) including activity, sleep, nutrition, and weight records. Prompt injection mitigations (ASI01) and tool policy limits are in place.",
-            "Deployed under Anthropic's ASL-3 Standard with enhanced security and deployment safeguards."
+            {
+              "name": "Personal health data processing",
+              "mitigationStrategy": "Processes PHI including activity, sleep, nutrition, and weight records. Prompt injection mitigations (ASI01) and tool policy limits are in place."
+            },
+            {
+              "name": "AI safety classification",
+              "mitigationStrategy": "Deployed under Anthropic's ASL-3 Standard with enhanced security and deployment safeguards."
+            }
           ],
           "users": [
             "Biotrackr users querying personal health data via conversational AI interface. Not intended for clinical diagnosis or medical advice."
@@ -157,8 +163,14 @@
             "Knowledge cutoff: May 2025 (reliable), August 2025 (training data)."
           ],
           "ethicalConsiderations": [
-            "Processes personal health data (PHI) for report generation. Reports undergo independent reviewer agent validation (ASI09). Code validation gate prevents dangerous pattern execution (ASI05).",
-            "Deployed under Anthropic's ASL-3 Standard."
+            {
+              "name": "Personal health data processing",
+              "mitigationStrategy": "Processes PHI for report generation. Reports undergo independent reviewer agent validation (ASI09). Code validation gate prevents dangerous pattern execution (ASI05)."
+            },
+            {
+              "name": "AI safety classification",
+              "mitigationStrategy": "Deployed under Anthropic's ASL-3 Standard."
+            }
           ]
         }
       },

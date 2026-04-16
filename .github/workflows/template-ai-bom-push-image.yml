@@ -85,7 +85,7 @@ jobs:
 
         - name: Install CycloneDX CLI
           run: |
-            curl -sSLo cyclonedx-cli https://github.com/CycloneDX/cyclonedx-cli/releases/download/v0.27.1/cyclonedx-linux-x64
+            curl -sSLo cyclonedx-cli https://github.com/CycloneDX/cyclonedx-cli/releases/download/v0.30.0/cyclonedx-linux-x64
             chmod +x cyclonedx-cli
             sudo mv cyclonedx-cli /usr/local/bin/cyclonedx
 
