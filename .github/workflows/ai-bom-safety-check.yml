@@ -1,0 +1,24 @@
+name: AI-BOM Safety Check
+
+on:
+    pull_request:
+        branches:
+            - main
+        paths:
+            - '**/*.md'
+            - '!.copilot-tracking/**'
+
+permissions:
+    contents: read
+
+jobs:
+    safety-check:
+        name: Scan for Tier 3 Detail Leakage
+        runs-on: ubuntu-latest
+        steps:
+            - name: Checkout code
+              uses: actions/checkout@v5
+
+            - name: Run AI-BOM safety check
+              shell: pwsh
+              run: ./scripts/check-ai-bom-safety.ps1

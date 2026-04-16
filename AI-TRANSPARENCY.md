@@ -10,6 +10,8 @@ ms.date: 2026-04-16
 
 **Last Updated:** April 2026
 
+<!-- AI-BOM safety check validates this file on every PR -->
+
 ---
 
 ## Table of Contents
