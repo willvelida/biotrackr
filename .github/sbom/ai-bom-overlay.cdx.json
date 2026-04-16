@@ -83,16 +83,22 @@
         },
         "considerations": {
           "technicalLimitations": [
-            { "description": "1M token context window. 64k max output tokens (300k on Batch API). API rate limits apply. Provider-managed versioning — model behavior may change without notice." },
-            { "description": "Knowledge cutoff: May 2025 (reliable), January 2026 (training data). Information after these dates may be absent or inaccurate." },
-            { "description": "Over-eagerness behavior observed in alignment evaluations — model may take creative actions not explicitly requested. Mitigated via system prompt constraints." }
+            "1M token context window. 64k max output tokens (300k on Batch API). API rate limits apply. Provider-managed versioning — model behavior may change without notice.",
+            "Knowledge cutoff: May 2025 (reliable), January 2026 (training data). Information after these dates may be absent or inaccurate.",
+            "Over-eagerness behavior observed in alignment evaluations — model may take creative actions not explicitly requested. Mitigated via system prompt constraints."
           ],
           "ethicalConsiderations": [
-            { "description": "Processes personal health data (PHI) including activity, sleep, nutrition, and weight records. Prompt injection mitigations (ASI01) and tool policy limits are in place." },
-            { "description": "Deployed under Anthropic's ASL-3 Standard with enhanced security and deployment safeguards." }
+            {
+              "name": "Personal health data processing",
+              "mitigationStrategy": "Processes PHI including activity, sleep, nutrition, and weight records. Prompt injection mitigations (ASI01) and tool policy limits are in place."
+            },
+            {
+              "name": "AI safety classification",
+              "mitigationStrategy": "Deployed under Anthropic's ASL-3 Standard with enhanced security and deployment safeguards."
+            }
           ],
           "users": [
-            { "description": "Biotrackr users querying personal health data via conversational AI interface. Not intended for clinical diagnosis or medical advice." }
+            "Biotrackr users querying personal health data via conversational AI interface. Not intended for clinical diagnosis or medical advice."
           ]
         }
       },
@@ -153,12 +159,18 @@
         },
         "considerations": {
           "technicalLimitations": [
-            { "description": "1M token context window. 128k max output tokens. API rate limits apply. Provider-managed versioning." },
-            { "description": "Knowledge cutoff: May 2025 (reliable), August 2025 (training data)." }
+            "1M token context window. 128k max output tokens. API rate limits apply. Provider-managed versioning.",
+            "Knowledge cutoff: May 2025 (reliable), August 2025 (training data)."
           ],
           "ethicalConsiderations": [
-            { "description": "Processes personal health data (PHI) for report generation. Reports undergo independent reviewer agent validation (ASI09). Code validation gate prevents dangerous pattern execution (ASI05)." },
-            { "description": "Deployed under Anthropic's ASL-3 Standard." }
+            {
+              "name": "Personal health data processing",
+              "mitigationStrategy": "Processes PHI for report generation. Reports undergo independent reviewer agent validation (ASI09). Code validation gate prevents dangerous pattern execution (ASI05)."
+            },
+            {
+              "name": "AI safety classification",
+              "mitigationStrategy": "Deployed under Anthropic's ASL-3 Standard."
+            }
           ]
         }
       },
