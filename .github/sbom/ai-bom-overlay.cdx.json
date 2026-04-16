@@ -1,0 +1,335 @@
+{
+  "bomFormat": "CycloneDX",
+  "specVersion": "1.6",
+  "serialNumber": "urn:uuid:00000000-0000-0000-0000-000000000000",
+  "version": 1,
+  "metadata": {
+    "timestamp": "2026-01-01T00:00:00Z",
+    "tools": {
+      "components": [
+        {
+          "type": "application",
+          "name": "cyclonedx-dotnet",
+          "version": "6.1.1",
+          "description": "Auto-generates NuGet dependency SBOM per service"
+        },
+        {
+          "type": "application",
+          "name": "manual-curation",
+          "version": "1.0.0",
+          "description": "AI components, external services, and data flows manually curated for AI-BOM overlay"
+        }
+      ]
+    },
+    "component": {
+      "type": "application",
+      "name": "Biotrackr",
+      "version": "1.0.0",
+      "description": "Personal health and fitness tracking platform with AI-powered conversational agent and reporting"
+    },
+    "authors": [
+      {
+        "name": "Will Velida"
+      }
+    ]
+  },
+  "components": [
+    {
+      "type": "machine-learning-model",
+      "bom-ref": "claude-sonnet-4-6",
+      "name": "Claude Sonnet 4.6",
+      "version": "claude-sonnet-4-6",
+      "supplier": {
+        "name": "Anthropic",
+        "url": [
+          "https://www.anthropic.com"
+        ]
+      },
+      "description": "Primary LLM for Biotrackr Chat API. Powers conversational health data queries via Microsoft Agent Framework. Processes user prompts containing health context and returns natural-language analysis.",
+      "modelCard": {
+        "modelParameters": {
+          "approach": {
+            "type": "supervised",
+            "description": "Pretrained on large diverse datasets with reinforcement learning from AI feedback (RLAIF) and Constitutional AI character trait training"
+          },
+          "task": "text-generation",
+          "architectureFamily": "transformer",
+          "modelArchitecture": "NoAssertion",
+          "datasets": [],
+          "inputs": [
+            { "format": "text/plain" },
+            { "format": "image/png" },
+            { "format": "image/jpeg" },
+            { "format": "image/gif" },
+            { "format": "image/webp" }
+          ],
+          "outputs": [
+            { "format": "text/plain" }
+          ]
+        },
+        "quantitativeAnalysis": {
+          "performanceMetrics": [
+            {
+              "type": "SWE-bench Verified",
+              "value": "~80.2%",
+              "slice": "with prompt modification, 10-trial average"
+            },
+            {
+              "type": "ARC-AGI-2",
+              "value": "60.4%",
+              "slice": "high effort, 120k thinking budget"
+            }
+          ]
+        },
+        "considerations": {
+          "technicalLimitations": [
+            { "description": "1M token context window. 64k max output tokens (300k on Batch API). API rate limits apply. Provider-managed versioning — model behavior may change without notice." },
+            { "description": "Knowledge cutoff: May 2025 (reliable), January 2026 (training data). Information after these dates may be absent or inaccurate." },
+            { "description": "Over-eagerness behavior observed in alignment evaluations — model may take creative actions not explicitly requested. Mitigated via system prompt constraints." }
+          ],
+          "ethicalConsiderations": [
+            { "description": "Processes personal health data (PHI) including activity, sleep, nutrition, and weight records. Prompt injection mitigations (ASI01) and tool policy limits are in place." },
+            { "description": "Deployed under Anthropic's ASL-3 Standard with enhanced security and deployment safeguards." }
+          ],
+          "users": [
+            { "description": "Biotrackr users querying personal health data via conversational AI interface. Not intended for clinical diagnosis or medical advice." }
+          ]
+        }
+      },
+      "properties": [
+        { "name": "deployment-model", "value": "api" },
+        { "name": "api-provider", "value": "anthropic" },
+        { "name": "api-id", "value": "claude-sonnet-4-6" },
+        { "name": "version-pinning", "value": "provider-managed" },
+        { "name": "context-window", "value": "1000000" },
+        { "name": "max-output-tokens", "value": "64000" },
+        { "name": "safety-classification", "value": "ASL-3" }
+      ],
+      "externalReferences": [
+        {
+          "type": "documentation",
+          "url": "https://platform.claude.com/docs/en/docs/about-claude/models",
+          "comment": "Anthropic Claude models documentation"
+        },
+        {
+          "type": "other",
+          "url": "https://www.anthropic.com/transparency",
+          "comment": "Anthropic Transparency Hub — model reports and safety evaluations"
+        }
+      ]
+    },
+    {
+      "type": "machine-learning-model",
+      "bom-ref": "claude-opus-4-6",
+      "name": "Claude Opus 4.6",
+      "version": "claude-opus-4-6",
+      "supplier": {
+        "name": "Anthropic",
+        "url": [
+          "https://www.anthropic.com"
+        ]
+      },
+      "description": "LLM used by Biotrackr Reporting API via Copilot SDK sidecar for AI-generated health reports. Handles complex multi-step reasoning for report generation, code validation review, and data synthesis.",
+      "modelCard": {
+        "modelParameters": {
+          "approach": {
+            "type": "supervised",
+            "description": "Pretrained on large diverse datasets with reinforcement learning from AI feedback (RLAIF) and Constitutional AI character trait training"
+          },
+          "task": "text-generation",
+          "architectureFamily": "transformer",
+          "modelArchitecture": "NoAssertion",
+          "datasets": [],
+          "inputs": [
+            { "format": "text/plain" },
+            { "format": "image/png" },
+            { "format": "image/jpeg" },
+            { "format": "image/gif" },
+            { "format": "image/webp" }
+          ],
+          "outputs": [
+            { "format": "text/plain" }
+          ]
+        },
+        "considerations": {
+          "technicalLimitations": [
+            { "description": "1M token context window. 128k max output tokens. API rate limits apply. Provider-managed versioning." },
+            { "description": "Knowledge cutoff: May 2025 (reliable), August 2025 (training data)." }
+          ],
+          "ethicalConsiderations": [
+            { "description": "Processes personal health data (PHI) for report generation. Reports undergo independent reviewer agent validation (ASI09). Code validation gate prevents dangerous pattern execution (ASI05)." },
+            { "description": "Deployed under Anthropic's ASL-3 Standard." }
+          ]
+        }
+      },
+      "properties": [
+        { "name": "deployment-model", "value": "api-via-sidecar" },
+        { "name": "api-provider", "value": "anthropic-via-copilot-sdk" },
+        { "name": "api-id", "value": "claude-opus-4-6" },
+        { "name": "version-pinning", "value": "provider-managed" },
+        { "name": "context-window", "value": "1000000" },
+        { "name": "max-output-tokens", "value": "128000" },
+        { "name": "safety-classification", "value": "ASL-3" }
+      ],
+      "externalReferences": [
+        {
+          "type": "documentation",
+          "url": "https://platform.claude.com/docs/en/docs/about-claude/models",
+          "comment": "Anthropic Claude models documentation"
+        },
+        {
+          "type": "other",
+          "url": "https://www.anthropic.com/transparency",
+          "comment": "Anthropic Transparency Hub — Opus 4.6 model report"
+        }
+      ]
+    },
+    {
+      "type": "application",
+      "bom-ref": "copilot-sidecar",
+      "name": "GitHub Copilot CLI Sidecar",
+      "version": "1.0.24",
+      "supplier": {
+        "name": "GitHub",
+        "url": [
+          "https://github.com"
+        ]
+      },
+      "description": "Go binary sidecar deployed alongside Biotrackr Reporting API in Azure Container Apps. Provides code generation capabilities for AI-generated health reports via the Copilot SDK.",
+      "properties": [
+        { "name": "deployment-pattern", "value": "sidecar" },
+        { "name": "sidecar-host", "value": "azure-container-apps" },
+        { "name": "runtime", "value": "go" },
+        { "name": "sbom-source", "value": "manual-entry" },
+        { "name": "sbom-note", "value": "Go binary — dependencies unknown without Go SBOM from vendor." }
+      ],
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://github.com/github/copilot-sdk",
+          "comment": "GitHub Copilot SDK — sidecar binary source"
+        }
+      ]
+    }
+  ],
+  "services": [
+    {
+      "bom-ref": "anthropic-messages-api",
+      "name": "Anthropic Messages API",
+      "description": "External API endpoint for Claude LLM inference. Called by Chat API for conversational health queries. Crosses external trust boundary — health data (PHI) is sent in prompts.",
+      "provider": {
+        "name": "Anthropic",
+        "url": [
+          "https://www.anthropic.com"
+        ]
+      },
+      "endpoints": [
+        "https://api.anthropic.com/v1/messages"
+      ],
+      "authenticated": true,
+      "x-trust-boundary": true,
+      "data": [
+        {
+          "classification": "PHI",
+          "flow": "bi-directional",
+          "name": "health-data-queries",
+          "description": "User health queries containing activity, sleep, food, and vitals data sent as prompt context. AI analysis responses returned."
+        }
+      ],
+      "properties": [
+        { "name": "auth-method", "value": "api-key" },
+        { "name": "protocol", "value": "HTTPS REST" },
+        { "name": "rate-limiting", "value": "provider-managed" }
+      ],
+      "externalReferences": [
+        {
+          "type": "documentation",
+          "url": "https://platform.claude.com/docs/en/api/messages",
+          "comment": "Anthropic Messages API documentation"
+        }
+      ]
+    },
+    {
+      "bom-ref": "copilot-sidecar-service",
+      "name": "Copilot SDK Sidecar Service",
+      "description": "Sidecar container running alongside Reporting API in Azure Container Apps. Provides code generation for health report creation. Communicates with GitHub/Microsoft Copilot infrastructure.",
+      "endpoints": [
+        "http://localhost:8080"
+      ],
+      "authenticated": true,
+      "x-trust-boundary": true,
+      "data": [
+        {
+          "classification": "PHI",
+          "flow": "bi-directional",
+          "name": "report-generation-data",
+          "description": "Health report content (activity summaries, sleep patterns, nutrition data, weight trends) sent for code generation. Generated report artifacts returned."
+        }
+      ],
+      "properties": [
+        { "name": "auth-method", "value": "agent-identity-token" },
+        { "name": "deployment-pattern", "value": "sidecar" },
+        { "name": "protocol", "value": "HTTP REST (internal)" }
+      ]
+    },
+    {
+      "bom-ref": "mcp-server-service",
+      "name": "Biotrackr MCP Server",
+      "description": "Model Context Protocol server providing 12 read-only health data query tools across 4 domains (activity, food, sleep, vitals). HTTP Stateless transport with API key authentication.",
+      "authenticated": true,
+      "x-trust-boundary": false,
+      "data": [
+        {
+          "classification": "PHI",
+          "flow": "outbound",
+          "name": "health-data-responses",
+          "description": "Activity, food, sleep, and vitals records from Cosmos DB returned to consuming agents via MCP tools."
+        }
+      ],
+      "properties": [
+        { "name": "mcp-transport", "value": "http-stateless" },
+        { "name": "mcp-tool-count", "value": "12" },
+        { "name": "mcp-tools", "value": "get_activity_by_date, get_activity_by_date_range, get_activity_records, get_food_by_date, get_food_by_date_range, get_food_records, get_sleep_by_date, get_sleep_by_date_range, get_sleep_records, get_weight_by_date, get_weight_by_date_range, get_weight_records" },
+        { "name": "auth-method", "value": "api-key" },
+        { "name": "sdk-version", "value": "ModelContextProtocol 1.1.0" }
+      ]
+    }
+  ],
+  "dependencies": [
+    {
+      "ref": "biotrackr-chat-api",
+      "dependsOn": [
+        "claude-sonnet-4-6",
+        "anthropic-messages-api",
+        "mcp-server-service"
+      ]
+    },
+    {
+      "ref": "biotrackr-reporting-api",
+      "dependsOn": [
+        "claude-opus-4-6",
+        "copilot-sidecar",
+        "copilot-sidecar-service"
+      ]
+    },
+    {
+      "ref": "biotrackr-reporting-svc",
+      "dependsOn": [
+        "mcp-server-service",
+        "biotrackr-reporting-api"
+      ]
+    },
+    {
+      "ref": "claude-sonnet-4-6",
+      "dependsOn": [
+        "anthropic-messages-api"
+      ]
+    },
+    {
+      "ref": "claude-opus-4-6",
+      "dependsOn": [
+        "copilot-sidecar-service"
+      ]
+    }
+  ]
+}

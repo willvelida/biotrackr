@@ -1,0 +1,147 @@
+name: Build and Push AI Service Container Image to ACR
+
+on:
+    workflow_call:
+      inputs:
+            working-directory:
+                description: 'The working directory to build the container image in'
+                required: true
+                type: string
+            app-name:
+                description: 'The name of the application. Used in the container image name'
+                required: true
+                type: string
+            dockerfile:
+                description: 'The Dockerfile to use for building the image. Defaults to Dockerfile.'
+                required: false
+                type: string
+                default: 'Dockerfile'
+      secrets:
+            client-id:
+                required: true
+            tenant-id:
+                required: true
+            subscription-id:
+                required: true
+            resource-group-name:
+                required: false
+
+jobs:
+    build-container-image:
+      name: Build AI Service Container Image
+      runs-on: ubuntu-latest
+      permissions:
+        contents: read
+        id-token: write
+        attestations: write
+      defaults:
+        run:
+          working-directory: ${{ inputs.working-directory }}
+      steps:
+        - name: Checkout code
+          uses: actions/checkout@v5
+
+        - name: Azure login
+          uses: azure/login@v2
+          with:
+            client-id: ${{ secrets.client-id }}
+            tenant-id: ${{ secrets.tenant-id }}
+            subscription-id: ${{ secrets.subscription-id }}
+
+        - name: Set up Docker Buildx
+          uses: docker/setup-buildx-action@v4
+
+        - name: Get ACR name
+          id: getacrname
+          run: |
+            acrName=$(az acr list --resource-group ${{ secrets.resource-group-name }} --query "[0].name" -o tsv)
+            echo "acrName=$acrName" >> "$GITHUB_OUTPUT"
+
+        - name: Get ACR Server
+          id: getacrserver
+          run: |
+            loginServer=$(az acr list --resource-group ${{ secrets.resource-group-name }} --query "[0].loginServer" -o tsv)
+            echo "loginServer=$loginServer" >> "$GITHUB_OUTPUT"
+
+        - name: Login to Azure Container Registry
+          run: az acr login --name ${{ steps.getacrname.outputs.acrName }}
+
+        - name: Build and push Docker image
+          id: build-push
+          uses: docker/build-push-action@v6
+          with:
+            context: ${{ inputs.working-directory }}
+            file: ${{ inputs.working-directory }}/${{ inputs.dockerfile }}
+            push: true
+            tags: ${{ steps.getacrserver.outputs.loginServer }}/${{ inputs.app-name }}:${{ github.sha }}
+
+        - name: Generate SBOM
+          uses: aquasecurity/trivy-action@0.35.0
+          with:
+            image-ref: ${{ steps.getacrserver.outputs.loginServer }}/${{ inputs.app-name }}@${{ steps.build-push.outputs.digest }}
+            format: 'cyclonedx'
+            output: 'sbom.cdx.json'
+          continue-on-error: true
+
+        - name: Install CycloneDX CLI
+          run: dotnet tool install --global CycloneDX.Cli
+          continue-on-error: true
+
+        - name: Merge SBOM with AI-BOM overlay
+          if: hashFiles('sbom.cdx.json') != ''
+          run: |
+            if [ -f "${{ github.workspace }}/.github/sbom/ai-bom-overlay.cdx.json" ]; then
+              cyclonedx merge \
+                --input-files sbom.cdx.json ${{ github.workspace }}/.github/sbom/ai-bom-overlay.cdx.json \
+                --output-file sbom.cdx.json \
+                --output-format json \
+                --output-version v1_6
+            fi
+          continue-on-error: true
+
+        - name: Upload SBOM as artifact
+          if: always()
+          uses: actions/upload-artifact@v7
+          with:
+            name: sbom-${{ inputs.app-name }}
+            path: sbom.cdx.json
+            retention-days: 90
+
+        - name: Submit SBOM to GitHub Dependency Graph
+          uses: anchore/sbom-action@v0
+          with:
+            image: ${{ steps.getacrserver.outputs.loginServer }}/${{ inputs.app-name }}@${{ steps.build-push.outputs.digest }}
+            dependency-snapshot: true
+            upload-artifact: false
+          continue-on-error: true
+
+        - name: Run Dockle
+          uses: erzz/dockle-action@v1
+          with:
+            image: ${{ steps.getacrserver.outputs.loginServer }}/${{ inputs.app-name }}:${{ github.sha }}
+
+        - name: Run Trivy vulnerability scanner
+          uses: aquasecurity/trivy-action@0.35.0
+          with:
+            image-ref: ${{ steps.getacrserver.outputs.loginServer }}/${{ inputs.app-name }}@${{ steps.build-push.outputs.digest }}
+            format: 'table'
+            exit-code: '1'
+            ignore-unfixed: true
+            vuln-type: 'os,library'
+            severity: 'CRITICAL,HIGH'
+
+        - name: Attest build provenance
+          uses: actions/attest@v4
+          with:
+            subject-name: ${{ steps.getacrserver.outputs.loginServer }}/${{ inputs.app-name }}
+            subject-digest: ${{ steps.build-push.outputs.digest }}
+            push-to-registry: true
+
+        - name: Attest SBOM
+          if: hashFiles('sbom.cdx.json') != ''
+          uses: actions/attest@v4
+          with:
+            subject-name: ${{ steps.getacrserver.outputs.loginServer }}/${{ inputs.app-name }}
+            subject-digest: ${{ steps.build-push.outputs.digest }}
+            sbom-path: 'sbom.cdx.json'
+            push-to-registry: true
