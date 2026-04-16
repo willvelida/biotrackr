@@ -585,6 +585,8 @@ Do not modify decision records — they are append-only historical documents.
 
 * `AGENTS.md` — Standalone agent guide (9 sections, cross-tool compatible)
 * `CLAUDE.md` — Claude Code import file (`@AGENTS.md`)
+* `AI-TRANSPARENCY.md` — Public AI transparency statement (models, data categories, safety approach, ethical considerations)
+* `SECURITY.md` — Security vulnerability reporting policy (GitHub Private Advisory, AI-specific concerns)
 * `.github/instructions/csharp-conventions.instructions.md` — C# coding conventions (auto-loaded for `**/*.cs`)
 * `.github/instructions/css-conventions.instructions.md` — CSS isolation conventions (auto-loaded for `**/*.razor.css`)
 * `.github/instructions/razor-components.instructions.md` — Razor component conventions (auto-loaded for `**/*.razor`)

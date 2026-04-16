@@ -289,6 +289,8 @@ Full standard: `docs/standards/commit-standards.md`
 
 Full OWASP Agentic Security (ASI01-ASI10) details are in `.github/copilot-instructions.md`.
 
+For public AI transparency documentation, see `AI-TRANSPARENCY.md`. For security vulnerability reporting, see `SECURITY.md`.
+
 ## Boundary Rules
 
 ### NEVER
