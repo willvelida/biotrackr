@@ -80,31 +80,29 @@ jobs:
           with:
             image-ref: ${{ steps.getacrserver.outputs.loginServer }}/${{ inputs.app-name }}@${{ steps.build-push.outputs.digest }}
             format: 'cyclonedx'
-            output: 'sbom.cdx.json'
+            output: '${{ github.workspace }}/sbom.cdx.json'
           continue-on-error: true
 
         - name: Install CycloneDX CLI
-          run: dotnet tool install --global CycloneDX.Cli
-          continue-on-error: true
+          run: dotnet tool install --global CycloneDX.Cli --version 3.1.0
 
         - name: Merge SBOM with AI-BOM overlay
-          if: hashFiles('sbom.cdx.json') != ''
+          if: hashFiles(format('{0}/sbom.cdx.json', github.workspace)) != ''
           run: |
             if [ -f "${{ github.workspace }}/.github/sbom/ai-bom-overlay.cdx.json" ]; then
               cyclonedx merge \
-                --input-files sbom.cdx.json ${{ github.workspace }}/.github/sbom/ai-bom-overlay.cdx.json \
-                --output-file sbom.cdx.json \
+                --input-files ${{ github.workspace }}/sbom.cdx.json ${{ github.workspace }}/.github/sbom/ai-bom-overlay.cdx.json \
+                --output-file ${{ github.workspace }}/sbom.cdx.json \
                 --output-format json \
                 --output-version v1_6
             fi
-          continue-on-error: true
 
         - name: Upload SBOM as artifact
           if: always()
           uses: actions/upload-artifact@v7
           with:
             name: sbom-${{ inputs.app-name }}
-            path: sbom.cdx.json
+            path: ${{ github.workspace }}/sbom.cdx.json
             retention-days: 90
 
         - name: Submit SBOM to GitHub Dependency Graph
@@ -138,10 +136,10 @@ jobs:
             push-to-registry: true
 
         - name: Attest SBOM
-          if: hashFiles('sbom.cdx.json') != ''
+          if: hashFiles(format('{0}/sbom.cdx.json', github.workspace)) != ''
           uses: actions/attest@v4
           with:
             subject-name: ${{ steps.getacrserver.outputs.loginServer }}/${{ inputs.app-name }}
             subject-digest: ${{ steps.build-push.outputs.digest }}
-            sbom-path: 'sbom.cdx.json'
+            sbom-path: '${{ github.workspace }}/sbom.cdx.json'
             push-to-registry: true

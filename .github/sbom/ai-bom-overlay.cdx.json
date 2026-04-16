@@ -227,7 +227,6 @@
         "https://api.anthropic.com/v1/messages"
       ],
       "authenticated": true,
-      "x-trust-boundary": true,
       "data": [
         {
           "classification": "PHI",
@@ -239,7 +238,8 @@
       "properties": [
         { "name": "auth-method", "value": "api-key" },
         { "name": "protocol", "value": "HTTPS REST" },
-        { "name": "rate-limiting", "value": "provider-managed" }
+        { "name": "rate-limiting", "value": "provider-managed" },
+        { "name": "trust-boundary", "value": "true" }
       ],
       "externalReferences": [
         {
@@ -257,7 +257,6 @@
         "http://localhost:8080"
       ],
       "authenticated": true,
-      "x-trust-boundary": true,
       "data": [
         {
           "classification": "PHI",
@@ -269,7 +268,8 @@
       "properties": [
         { "name": "auth-method", "value": "agent-identity-token" },
         { "name": "deployment-pattern", "value": "sidecar" },
-        { "name": "protocol", "value": "HTTP REST (internal)" }
+        { "name": "protocol", "value": "HTTP REST (internal)" },
+        { "name": "trust-boundary", "value": "true" }
       ]
     },
     {
@@ -277,7 +277,6 @@
       "name": "Biotrackr MCP Server",
       "description": "Model Context Protocol server providing 12 read-only health data query tools across 4 domains (activity, food, sleep, vitals). HTTP Stateless transport with API key authentication.",
       "authenticated": true,
-      "x-trust-boundary": false,
       "data": [
         {
           "classification": "PHI",
@@ -291,7 +290,8 @@
         { "name": "mcp-tool-count", "value": "12" },
         { "name": "mcp-tools", "value": "get_activity_by_date, get_activity_by_date_range, get_activity_records, get_food_by_date, get_food_by_date_range, get_food_records, get_sleep_by_date, get_sleep_by_date_range, get_sleep_records, get_weight_by_date, get_weight_by_date_range, get_weight_records" },
         { "name": "auth-method", "value": "api-key" },
-        { "name": "sdk-version", "value": "ModelContextProtocol 1.1.0" }
+        { "name": "sdk-version", "value": "ModelContextProtocol 1.1.0" },
+        { "name": "trust-boundary", "value": "false" }
       ]
     }
   ],
