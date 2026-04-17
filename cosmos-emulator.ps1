@@ -12,6 +12,7 @@ param(
 )
 
 $ErrorActionPreference = 'Stop'
+$PSNativeCommandUseErrorActionPreference = $true
 
 $containerName = "biotrackr-cosmos-emulator"
 $composeFile = "docker-compose.cosmos.yml"
