@@ -49,7 +49,7 @@ jobs:
             - uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
               name: Checkout Repository Code
 
-            - uses: azure/login@a457da9ea143d694b1b9c7c869ebb04ebe844ef5 # v2
+            - uses: azure/login@532459ea530d8321f2fb9bb10d1e0bcf23869a43 # v3.0.0
               name: Login to Azure
               with:
                 client-id: ${{ secrets.client-id }}
