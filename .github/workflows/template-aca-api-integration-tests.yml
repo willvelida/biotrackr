@@ -39,9 +39,9 @@ jobs:
 
         steps:
             - name: Checkout Repository code
-              uses: actions/checkout@v5
+              uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
 
-            - uses: azure/login@v2
+            - uses: azure/login@a457da9ea143d694b1b9c7c869ebb04ebe844ef5 # v2
               name: Login to Azure
               with:
                 client-id: ${{ secrets.client-id }}
@@ -69,7 +69,7 @@ jobs:
                 echo "appconfigurl=$appconfigurl" >> "$GITHUB_OUTPUT"
             
             - name: Setup .NET ${{ inputs.dotnet-version }}
-              uses: actions/setup-dotnet@v5
+              uses: actions/setup-dotnet@c2fa09f4bde5ebb9d1777cf28262a3eb3db3ced7 # v5
               with:
                 dotnet-version: ${{ inputs.dotnet-version }}
             
