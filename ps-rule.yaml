@@ -1,0 +1,92 @@
+# PSRule configuration for Biotrackr infrastructure
+# See: https://azure.github.io/PSRule.Rules.Azure/using-bicep/
+
+requires:
+  PSRule.Rules.Azure: '>=1.47.0'
+
+include:
+  module:
+    - PSRule.Rules.Azure
+
+configuration:
+  AZURE_BICEP_FILE_EXPANSION: true
+  AZURE_BICEP_FILE_EXPANSION_TIMEOUT: 30
+
+  # Provide fallback values for required Bicep parameters
+  AZURE_PARAMETER_DEFAULTS:
+    baseName: 'biotrackr'
+    tags:
+      environment: 'dev'
+      project: 'biotrackr'
+    name: 'test-app'
+    imageName: 'mcr.microsoft.com/dotnet/aspnet:10.0'
+    containerAppEnvironmentName: 'cae-biotrackr-dev'
+    containerRegistryName: 'acrbiotrackrdev'
+    uaiName: 'uai-biotrackr-dev'
+    appConfigName: 'appcs-biotrackr-dev'
+    cosmosDbAccountName: 'cosmos-biotrackr-dev'
+    logAnalyticsName: 'log-biotrackr-dev'
+    appInsightsName: 'appi-biotrackr-dev'
+    apimName: 'apim-biotrackr-dev'
+    tenantId: 'ffffffff-ffff-ffff-ffff-ffffffffffff'
+    audience: 'api://biotrackr-test'
+    keyVaultName: 'kv-biotrackr-dev'
+    storageAccountName: 'stbiotrackrdev'
+    foundryProjectName: 'fp-biotrackr-dev'
+    enableManagedIdentityAuth: true
+    environment: 'dev'
+    location: 'australiaeast'
+
+  AZURE_RESOURCE_GROUP:
+    name: 'rg-biotrackr-dev'
+    location: 'australiaeast'
+
+input:
+  pathIgnore:
+    - '*.md'
+    - '.github/'
+    - 'src/'
+    - 'scripts/'
+    - 'docs/'
+    - '.copilot-tracking/'
+
+rule:
+  exclude:
+    # Container Apps: scale-to-zero and public access by design (APIM fronts traffic)
+    - Azure.ContainerApp.MinReplicas
+    - Azure.ContainerApp.AvailabilityZone
+    - Azure.ContainerApp.PublicAccess
+    - Azure.ContainerApp.ExternalIngress
+    - Azure.ContainerApp.RestrictIngress
+
+    # Cosmos DB: serverless mode limitations
+    - Azure.Cosmos.AvailabilityZone
+    - Azure.Cosmos.ContinuousBackup
+    - Azure.Cosmos.SLA
+
+    # APIM: Consumption tier limitations
+    - Azure.APIM.AvailabilityZone
+    - Azure.APIM.Ciphers
+    - Azure.APIM.Protocols
+    - Azure.APIM.MultiRegion
+    - Azure.APIM.MultiRegionGateway
+
+    # App Configuration: Free tier limitations
+    - Azure.AppConfig.GeoReplica
+    - Azure.AppConfig.PurgeProtect
+    - Azure.AppConfig.SKU
+
+    # Container Registry: Basic SKU limitations
+    - Azure.ACR.GeoReplica
+    - Azure.ACR.MinSku
+    - Azure.ACR.ExportPolicy
+
+    # Storage: dev-tier replication
+    - Azure.Storage.UseReplication
+
+    # Log Analytics: single-region dev
+    - Azure.Log.Replication
+
+    # AI Services: dev environment access
+    - Azure.AI.PrivateEndpoints
+    - Azure.AI.PublicAccess
