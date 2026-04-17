@@ -53,10 +53,10 @@ jobs:
 
         steps:
             - name: Checkout Repository code
-              uses: actions/checkout@v5
+              uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
 
             - name: Setup .NET ${{ inputs.dotnet-version }}
-              uses: actions/setup-dotnet@v5
+              uses: actions/setup-dotnet@c2fa09f4bde5ebb9d1777cf28262a3eb3db3ced7 # v5
               with:
                 dotnet-version: ${{ inputs.dotnet-version }}
 
@@ -102,7 +102,7 @@ jobs:
                 tenantid: ${{ secrets.tenant-id }}
 
             - name: Upload Test Results
-              uses: actions/upload-artifact@v7
+              uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
               if: always()
               with:
                 name: e2e-test-results-${{ github.run_number }}
@@ -110,7 +110,7 @@ jobs:
                 retention-days: 30
 
             - name: Publish Test Results
-              uses: dorny/test-reporter@v2
+              uses: dorny/test-reporter@df6247429542221bc30d46a036ee47af1102c451 # v2
               if: always()
               with:
                 name: E2E Test Results

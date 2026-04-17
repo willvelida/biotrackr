@@ -13,7 +13,7 @@ permissions:
     contents: read
     id-token: write
     pull-requests: write
-    checks: write  # Required for dorny/test-reporter@v2
+    checks: write  # Required for dorny/test-reporter@df6247429542221bc30d46a036ee47af1102c451 # v2
     attestations: write
 
 env:
@@ -88,7 +88,7 @@ jobs:
         loginServer: ${{ steps.get-acr-server.outputs.loginServer }}
       steps:
         - name: Azure login
-          uses: azure/login@v2
+          uses: azure/login@a457da9ea143d694b1b9c7c869ebb04ebe844ef5 # v2
           with:
             client-id: ${{ secrets.AZURE_CLIENT_ID }}
             tenant-id: ${{ secrets.AZURE_TENANT_ID }}

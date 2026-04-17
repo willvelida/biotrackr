@@ -22,10 +22,10 @@ jobs:
         runs-on: ubuntu-latest
         steps:
             - name: Checkout repository
-              uses: actions/checkout@v5
+              uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
 
             - name: Run Checkov
-              uses: bridgecrewio/checkov-action@v12
+              uses: bridgecrewio/checkov-action@de2bfaecd21d58ef232e0d2a3391c33c32c460d7 # v12
               with:
                 directory: infra/modules/
                 framework: bicep
@@ -34,7 +34,7 @@ jobs:
                 soft_fail: true
 
             - name: Upload SARIF
-              uses: github/codeql-action/upload-sarif@v4
+              uses: github/codeql-action/upload-sarif@95e58e9a2cdfd71adc6e0353d5c52f41a045d225 # v4
               if: success() || failure()
               with:
                 sarif_file: results.sarif
