@@ -11,6 +11,8 @@ param(
     [string]$Action
 )
 
+$ErrorActionPreference = 'Stop'
+
 $containerName = "biotrackr-cosmos-emulator"
 $composeFile = "docker-compose.cosmos.yml"
 

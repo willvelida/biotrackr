@@ -12,6 +12,8 @@ param(
     [string]$VaultName
 )
 
+$ErrorActionPreference = 'Stop'
+
 $scriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
 $promptFile = Join-Path $scriptDir 'report-generator-prompt.txt'
 

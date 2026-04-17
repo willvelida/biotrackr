@@ -1,0 +1,49 @@
+name: PSScriptAnalyzer
+
+on:
+    push:
+        branches:
+            - main
+        paths:
+            - 'scripts/**/*.ps1'
+            - 'cosmos-emulator.ps1'
+            - 'PSScriptAnalyzerSettings.psd1'
+    pull_request:
+        branches:
+            - main
+        paths:
+            - 'scripts/**/*.ps1'
+            - 'cosmos-emulator.ps1'
+            - 'PSScriptAnalyzerSettings.psd1'
+
+permissions:
+    contents: read
+
+jobs:
+    analyze:
+        name: Analyze PowerShell
+        runs-on: ubuntu-latest
+        steps:
+            - name: Checkout repository
+              uses: actions/checkout@v5
+              with:
+                persist-credentials: false
+
+            - name: Install PSScriptAnalyzer
+              shell: pwsh
+              run: Install-Module -Name PSScriptAnalyzer -Force -Scope CurrentUser
+
+            - name: Run PSScriptAnalyzer
+              shell: pwsh
+              run: |
+                $results = @()
+                $results += Invoke-ScriptAnalyzer -Path ./scripts -Recurse -Severity Warning,Error -Settings ./PSScriptAnalyzerSettings.psd1
+                $results += Invoke-ScriptAnalyzer -Path ./cosmos-emulator.ps1 -Severity Warning,Error -Settings ./PSScriptAnalyzerSettings.psd1
+
+                if ($results.Count -gt 0) {
+                    $results | Format-Table RuleName, Severity, ScriptName, Line, Message -AutoSize
+                    Write-Error "PSScriptAnalyzer found $($results.Count) issue(s)"
+                    exit 1
+                } else {
+                    Write-Host "No issues found." -ForegroundColor Green
+                }
