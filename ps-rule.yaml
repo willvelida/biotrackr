@@ -2,7 +2,7 @@
 # See: https://azure.github.io/PSRule.Rules.Azure/using-bicep/
 
 requires:
-  PSRule.Rules.Azure: '>=1.47.0'
+  PSRule.Rules.Azure: '1.47.0'
 
 include:
   module:

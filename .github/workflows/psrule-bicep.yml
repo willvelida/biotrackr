@@ -6,11 +6,13 @@ on:
             - main
         paths:
             - 'infra/**'
+            - 'ps-rule.yaml'
     pull_request:
         branches:
             - main
         paths:
             - 'infra/**'
+            - 'ps-rule.yaml'
 
 permissions:
     contents: read
