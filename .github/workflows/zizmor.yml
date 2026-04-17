@@ -12,6 +12,7 @@ permissions: {}
 jobs:
     zizmor:
         name: Run zizmor
+        if: github.event_name != 'pull_request' || !github.event.pull_request.head.repo.fork
         runs-on: ubuntu-latest
         permissions:
             security-events: write
@@ -24,4 +25,4 @@ jobs:
                 persist-credentials: false
 
             - name: Run zizmor
-              uses: zizmorcore/zizmor-action@v1
+              uses: zizmorcore/zizmor-action@v0
