@@ -1,0 +1,7 @@
+# Default owner for everything
+* @willvelida
+
+# Security-sensitive paths require explicit review
+scripts/ @willvelida
+infra/ @willvelida
+.github/workflows/ @willvelida
