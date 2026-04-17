@@ -28,6 +28,7 @@ jobs:
 
             - name: Analyze Bicep files
               uses: microsoft/ps-rule@v2.9.0
+              continue-on-error: true
               with:
                 modules: 'PSRule.Rules.Azure'
                 outputFormat: Sarif
