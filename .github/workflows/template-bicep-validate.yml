@@ -65,6 +65,8 @@ jobs:
                 TENANT_ID: ${{ secrets.tenant-id }}
                 INJECT_EASY_AUTH: ${{ inputs.inject-easy-auth-config }}
                 EASY_AUTH_CLIENT_ID: ${{ secrets.easy-auth-client-id }}
+                INJECT_ALERT_EMAIL: ${{ inputs.inject-alert-email }}
+                ALERT_EMAIL_ADDRESS: ${{ secrets.alert-email-address }}
               run: |
                 PARAMS="$INPUT_PARAMS"
 
@@ -84,8 +86,8 @@ jobs:
                   fi
                 fi
 
-                if [ "${{ inputs.inject-alert-email }}" = "true" ]; then
-                  PARAMS=$(echo "$PARAMS" | jq -c --arg alertEmailAddress "${{ secrets.alert-email-address }}" '. + {"alertEmailAddress": $alertEmailAddress}')
+                if [ "$INJECT_ALERT_EMAIL" = "true" ]; then
+                  PARAMS=$(echo "$PARAMS" | jq -c --arg alertEmailAddress "$ALERT_EMAIL_ADDRESS" '. + {"alertEmailAddress": $alertEmailAddress}')
                 fi
 
                 echo "params=$PARAMS" >> "$GITHUB_OUTPUT"
