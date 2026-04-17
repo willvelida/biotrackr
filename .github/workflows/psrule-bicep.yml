@@ -1,0 +1,41 @@
+name: PSRule Bicep Analysis
+
+on:
+    push:
+        branches:
+            - main
+        paths:
+            - 'infra/**'
+            - 'ps-rule.yaml'
+    pull_request:
+        branches:
+            - main
+        paths:
+            - 'infra/**'
+            - 'ps-rule.yaml'
+
+permissions:
+    contents: read
+    security-events: write
+
+jobs:
+    analyze:
+        name: Analyze Bicep
+        runs-on: ubuntu-latest
+        steps:
+            - name: Checkout repository
+              uses: actions/checkout@v5
+
+            - name: Analyze Bicep files
+              uses: microsoft/ps-rule@v2.9.0
+              continue-on-error: true
+              with:
+                modules: 'PSRule.Rules.Azure'
+                outputFormat: Sarif
+                outputPath: results.sarif
+
+            - name: Upload SARIF
+              uses: github/codeql-action/upload-sarif@v4
+              if: success() || failure()
+              with:
+                sarif_file: results.sarif
