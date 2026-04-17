@@ -54,19 +54,19 @@ jobs:
                 echo "Installing containerapp extension"
                 az extension add -n containerapp --yes
                 apiURL=$(az containerapp revision list -g ${{ secrets.resource-group-name }} -n ${{ inputs.api-name }} --query 'reverse(sort_by([].{Revision:name,Replicas:properties.replicas,Active:properties.active,Created:properties.createdTime,FQDN:properties.fqdn}[?Active!=`false`], &Created))| [0].FQDN' -o tsv)
-                echo "::set-output name=apiURL::$apiURL"
+                echo "apiURL=$apiURL" >> "$GITHUB_OUTPUT"
 
             - name: Get Cosmos DB endpoint
               id: getcosmosendpoint
               run: |
                 cosmosurl=$(az cosmosdb list --resource-group ${{ secrets.resource-group-name }} --query "[0].documentEndpoint" --output tsv)
-                echo "::Set-output name=cosmosurl::$cosmosurl"
+                echo "cosmosurl=$cosmosurl" >> "$GITHUB_OUTPUT"
 
             - name: Get App Config endpoint
               id: getappconfigendpoint
               run: |
                 appconfigurl=$(az appconfig list --resource-group ${{ secrets.resource-group-name }} --query "[0].endpoint" --output tsv)
-                echo "::set-output name=appconfigurl::$appconfigurl"
+                echo "appconfigurl=$appconfigurl" >> "$GITHUB_OUTPUT"
             
             - name: Setup .NET ${{ inputs.dotnet-version }}
               uses: actions/setup-dotnet@v5

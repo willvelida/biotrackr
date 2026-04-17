@@ -11,7 +11,7 @@ on:
             - '.github/workflows/deploy-chat-api.yml'
 
 permissions:
-    contents: write
+    contents: read
     id-token: write
     pull-requests: write
     checks: write

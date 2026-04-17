@@ -59,27 +59,35 @@ jobs:
             - name: Prepare Parameters
               id: prepare-params
               shell: bash
+              env:
+                INPUT_PARAMS: ${{ inputs.parameters }}
+                INJECT_TENANT_ID: ${{ inputs.inject-tenant-id }}
+                TENANT_ID: ${{ secrets.tenant-id }}
+                INJECT_EASY_AUTH: ${{ inputs.inject-easy-auth-config }}
+                EASY_AUTH_CLIENT_ID: ${{ secrets.easy-auth-client-id }}
+                INJECT_ALERT_EMAIL: ${{ inputs.inject-alert-email }}
+                ALERT_EMAIL_ADDRESS: ${{ secrets.alert-email-address }}
               run: |
-                PARAMS='${{ inputs.parameters }}'
+                PARAMS="$INPUT_PARAMS"
 
                 if [ -z "$PARAMS" ]; then
                   PARAMS='{}'
                 fi
 
-                if [ "${{ inputs.inject-tenant-id }}" = "true" ]; then
-                  PARAMS=$(echo "$PARAMS" | jq -c --arg tenantId "${{ secrets.tenant-id }}" '. + {"tenantId": $tenantId}')
+                if [ "$INJECT_TENANT_ID" = "true" ]; then
+                  PARAMS=$(echo "$PARAMS" | jq -c --arg tenantId "$TENANT_ID" '. + {"tenantId": $tenantId}')
                 fi
 
-                if [ "${{ inputs.inject-easy-auth-config }}" = "true" ]; then
-                  PARAMS=$(echo "$PARAMS" | jq -c --arg easyAuthTenantId "${{ secrets.tenant-id }}" '. + {"easyAuthTenantId": $easyAuthTenantId}')
+                if [ "$INJECT_EASY_AUTH" = "true" ]; then
+                  PARAMS=$(echo "$PARAMS" | jq -c --arg easyAuthTenantId "$TENANT_ID" '. + {"easyAuthTenantId": $easyAuthTenantId}')
 
-                  if [ -n "${{ secrets.easy-auth-client-id }}" ]; then
-                    PARAMS=$(echo "$PARAMS" | jq -c --arg easyAuthClientId "${{ secrets.easy-auth-client-id }}" '. + {"easyAuthClientId": $easyAuthClientId}')
+                  if [ -n "$EASY_AUTH_CLIENT_ID" ]; then
+                    PARAMS=$(echo "$PARAMS" | jq -c --arg easyAuthClientId "$EASY_AUTH_CLIENT_ID" '. + {"easyAuthClientId": $easyAuthClientId}')
                   fi
                 fi
 
-                if [ "${{ inputs.inject-alert-email }}" = "true" ]; then
-                  PARAMS=$(echo "$PARAMS" | jq -c --arg alertEmailAddress "${{ secrets.alert-email-address }}" '. + {"alertEmailAddress": $alertEmailAddress}')
+                if [ "$INJECT_ALERT_EMAIL" = "true" ]; then
+                  PARAMS=$(echo "$PARAMS" | jq -c --arg alertEmailAddress "$ALERT_EMAIL_ADDRESS" '. + {"alertEmailAddress": $alertEmailAddress}')
                 fi
 
                 echo "params=$PARAMS" >> "$GITHUB_OUTPUT"
