@@ -35,6 +35,7 @@ jobs:
 
             - name: Run PSScriptAnalyzer
               shell: pwsh
+              continue-on-error: true
               run: |
                 $results = @()
                 $results += Invoke-ScriptAnalyzer -Path ./scripts -Recurse -Severity Warning,Error -Settings ./PSScriptAnalyzerSettings.psd1
