@@ -62,7 +62,11 @@ all pairs/windows by maintaining and updating a running state as the window slid
 
 ```csharp
 // Maximum sum of any subarray of length k — O(n)
-int windowSum = nums[..k].Sum();
+int windowSum = 0;
+for (int i = 0; i < k; i++)
+{
+    windowSum += nums[i];
+}
 int maxSum = windowSum;
 for (int i = k; i < nums.Length; i++)
 {

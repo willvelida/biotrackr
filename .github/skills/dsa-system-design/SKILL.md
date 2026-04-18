@@ -123,18 +123,26 @@ write performance is the bottleneck.
 ### Biotrackr Anchor — MCP Server Rate Limiting
 
 `Biotrackr.Mcp.Server` enforces **100 requests/minute per IP, queue size 10** using ASP.NET
-Core rate limiting middleware. This uses a **fixed window counter**: each IP can make up
-to 100 requests in a one-minute window, the counter resets at the next window boundary,
-and up to 10 additional requests can wait in the queue.
+Core rate limiting middleware. The service configures a **global partitioned rate limiter**
+with a **fixed window counter** per client IP: each IP can make up to 100 requests in a
+one-minute window, the counter resets at the next window boundary, and up to 10
+additional requests can wait in the queue.
 
 ```csharp
-// Fixed-window limiter per IP
-options.AddFixedWindowLimiter("mcp-rate-limit", opt =>
+// Global fixed-window limiter partitioned by client IP
+options.GlobalLimiter = PartitionedRateLimiter.Create<HttpContext, string>(httpContext =>
 {
-    opt.PermitLimit = 100;
-    opt.Window = TimeSpan.FromMinutes(1);
-    opt.QueueProcessingOrder = QueueProcessingOrder.OldestFirst;
-    opt.QueueLimit = 10;
+    var ipAddress = httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown";
+
+    return RateLimitPartition.GetFixedWindowLimiter(
+        partitionKey: ipAddress,
+        factory: _ => new FixedWindowRateLimiterOptions
+        {
+            PermitLimit = 100,
+            Window = TimeSpan.FromMinutes(1),
+            QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
+            QueueLimit = 10
+        });
 });
 ```
 
