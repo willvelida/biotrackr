@@ -63,15 +63,16 @@ requests for a given key are routed to the same physical partition — O(1) disp
 
 | Container | Partition Key | Rationale |
 |---|---|---|
-| Activity records | `/date` | Queries almost always filter by date; high cardinality |
-| Sleep records | `/date` | Same date-based access pattern |
-| Vitals records | `/date` | Same pattern — Withings data is date-keyed |
-| Conversations | `/sessionId` | Each session is isolated; sessionId is unique |
+| Records | `/documentType` | Biotrackr services share one `records` container; partitioning by document type groups related documents and matches the current container design |
+| Conversations | `/sessionId` | Each chat session is isolated; session-scoped reads and deletes naturally target a single partition |
 
-**Teaching angle:** Using `/userId` as the partition key would concentrate all activity for
-one user in one partition — a hot partition problem if a user is very active. Using `/date`
-distributes writes across dates. If future multi-user support is added, a composite key
-(`userId_date`) would be needed.
+**Teaching angle:** In Biotrackr, the shared `records` container is partitioned by
+`/documentType`, not `/date`. That reflects the current service design, where activity,
+sleep, food, and vitals documents are separated by type inside one container. For
+conversations, `/sessionId` is the right partition key because history is loaded,
+appended, and deleted per session. If query patterns or tenant boundaries change in the
+future, re-evaluate the partition key against actual access patterns and hot-partition risk
+rather than assuming a date-based strategy.
 
 ### Hot Partition Anti-Pattern
 
@@ -122,11 +123,12 @@ write performance is the bottleneck.
 ### Biotrackr Anchor — MCP Server Rate Limiting
 
 `Biotrackr.Mcp.Server` enforces **100 requests/minute per IP, queue size 10** using ASP.NET
-Core rate limiting middleware. This is a **token bucket** variant — each IP gets a refill
-rate of 100/min with a queue buffer of 10 for short bursts.
+Core rate limiting middleware. This uses a **fixed window counter**: each IP can make up
+to 100 requests in a one-minute window, the counter resets at the next window boundary,
+and up to 10 additional requests can wait in the queue.
 
 ```csharp
-// Conceptual token bucket per IP
+// Fixed-window limiter per IP
 options.AddFixedWindowLimiter("mcp-rate-limit", opt =>
 {
     opt.PermitLimit = 100;
@@ -150,15 +152,20 @@ store (Redis, APIM internal store) rather than in-process memory.
 
 ### Database-per-Service
 
-Biotrackr follows a modified database-per-service pattern: each domain (Activity, Sleep,
-Food, Vitals) has its own **Cosmos DB container** within a shared account, with separate
-partition keys and read/write access isolated per service.
+Biotrackr follows a modified database-per-service pattern: Activity, Sleep, Food, and
+Vitals share a single **Cosmos DB `records` container** within a shared account rather
+than provisioning one container per domain. The container is partitioned by
+**`/documentType`**, and each domain writes and queries its own document types. This
+gives logical domain isolation within the shared container.
 
 **Trade-offs:**
 
-- Avoids coupling through a shared schema
-- Cross-domain queries require service-to-service calls or read models
-- Each service can scale its container independently
+- Reduces infrastructure overhead by reusing one container for multiple domains
+- Keeps domain records separated logically through `documentType`-based partitioning
+- Cross-domain queries require explicit filtering because unrelated document types
+  coexist in the same container
+- Domains share container-level throughput and storage characteristics instead of scaling
+  completely independently
 
 ### Eventual Consistency and the CAP Theorem
 

@@ -83,14 +83,15 @@ call `.FirstOrDefault(m => m.Type == x)` five times, that is 5 × O(n) = O(5n) �
 With a dictionary, the five lookups are 5 × O(1). The up-front O(n) build cost pays for itself
 after the first reuse.
 
-### Date Key Partitioning as O(1) Access
+### Partition Key Routing as O(1) Access
 
-Cosmos DB partition keys in Biotrackr use date strings (e.g., `2024-01-15`). Routing a
-query to the correct partition is O(1) hash dispatch — no full-container scan needed.
+Cosmos DB partitioning in Biotrackr is based on logical keys such as `/documentType` for
+the shared `records` container and `/sessionId` for `conversations`. Routing a query to
+the correct partition is O(1) hash dispatch — no full-container scan needed.
 
 **Teaching angle:** The partition key is a hash map key. Choosing a poor partition key
-(low cardinality, hot partition) degrades effective lookup from O(1) to O(n/k) where k is
-the number of distinct partitions.
+(for example, one with low cardinality or one that creates hot partitions) degrades
+effective lookup from O(1) to O(n/k) where k is the number of distinct partitions.
 
 ## Complexity Selection Guidelines
 

@@ -24,9 +24,9 @@ description: "Core algorithm design paradigms including dynamic programming, gre
 | Quick sort | O(n log n) | O(n log n) | O(n²) | O(log n) | No |
 | Heap sort | O(n log n) | O(n log n) | O(n log n) | O(1) | No |
 | Insertion sort | O(n) | O(n²) | O(n²) | O(1) | Yes |
-| Tim sort (.NET) | O(n) | O(n log n) | O(n log n) | O(n) | Yes |
+| Introspective sort (.NET `Array.Sort()` / `List<T>.Sort()`) | O(n log n) | O(n log n) | O(n log n) | O(log n) | No (not guaranteed) |
 
-.NET's `Array.Sort()` and `List<T>.Sort()` use Tim sort — stable and adaptive (fast on nearly-sorted data).
+.NET's `Array.Sort()` and `List<T>.Sort()` use an introspective sort variant and are not guaranteed stable. If you need a stable sort in .NET, LINQ's `OrderBy` is stable.
 
 ### Binary Search
 

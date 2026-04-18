@@ -93,10 +93,11 @@ Every lesson must ground abstract concepts in real Biotrackr production code. Us
 
 ### Session Start
 
-1. Read `.copilot-tracking/research/dsa-learning-progress.md` to load the current learning state.
-2. Identify topics where `NextReviewOn <= today` — these are due for review.
-3. Announce due topics to the learner and ask whether to review now or continue planned work.
-4. If the file does not exist, offer to create it with the standard ledger schema.
+1. Check whether `.copilot-tracking/research/dsa-learning-progress.md` exists.
+2. If the file exists, read it to load the current learning state.
+3. Identify topics where `NextReviewOn <= today` — these are due for review.
+4. Announce due topics to the learner and ask whether to review now or continue planned work.
+5. If the file does not exist, offer to create it with the standard ledger schema.
 
 ### Session End
 
