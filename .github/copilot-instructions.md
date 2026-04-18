@@ -9,18 +9,19 @@ Biotrackr is a personal health and fitness tracking platform that integrates wit
 
 ### Architecture
 
-The system comprises 13 independently-deployable services:
+The system comprises 14 independently-deployable services:
 
 | Service | Type | Purpose |
 |---------|------|---------|
 | `Biotrackr.Activity.Api` | Domain API | Activity data queries |
 | `Biotrackr.Activity.Svc` | Domain Service | Fitbit activity data ingestion |
-| `Biotrackr.Auth.Svc` | Domain Service | Fitbit OAuth token management |
+| `Biotrackr.Auth.Svc` | Domain Service | Fitbit and Withings OAuth token management |
 | `Biotrackr.Chat.Api` | AI Component | Conversational AI agent (Claude via MAF) |
 | `Biotrackr.Food.Api` | Domain API | Nutrition data queries |
 | `Biotrackr.Food.Svc` | Domain Service | Fitbit food data ingestion |
 | `Biotrackr.Mcp.Server` | AI Component | Model Context Protocol tool server |
-| `Biotrackr.Reporting.Api` | AI Component | AI-generated health reports |
+| `Biotrackr.Reporting.Api` | AI Component | AI-generated health reports with A2A protocol support |
+| `Biotrackr.Reporting.Svc` | Domain Service | Scheduled summary cadence and email notifications; calls into Reporting.Api |
 | `Biotrackr.Sleep.Api` | Domain API | Sleep data queries |
 | `Biotrackr.Sleep.Svc` | Domain Service | Fitbit sleep data ingestion |
 | `Biotrackr.UI` | Frontend | Blazor Server dashboard |
@@ -47,20 +48,20 @@ Each service has its own solution file (`.sln` or `.slnx`), Dockerfile, test pro
 ├── .github/
 │   ├── copilot-instructions.md        # Comprehensive Copilot guide (14 sections)
 │   ├── instructions/                  # Path-scoped .instructions.md files
-│   ├── agents/                        # 6 custom agent definitions
-│   ├── prompts/                       # 4 prompt templates
-│   ├── skills/                        # 18 skills (OWASP, accessibility, etc.)
-│   └── workflows/                     # 28 GitHub Actions workflows
+│   ├── agents/                        # 7 custom agent definitions
+│   ├── prompts/                       # 8 prompt templates
+│   ├── skills/                        # 25 skills (OWASP, accessibility, DSA, etc.)
+│   └── workflows/                     # 28 workflows + 10 reusable templates
 ├── docs/
 │   ├── standards/                     # Commit standards, conventions
 │   └── decision-records/              # Architecture Decision Records
 ├── infra/
 │   ├── core/main.bicep                # Shared infrastructure
 │   ├── apps/{service}/main.bicep      # Per-service infrastructure
-│   └── modules/{domain}/              # 15 reusable Bicep modules
+│   └── modules/{domain}/              # 19 reusable Bicep modules
 ├── scripts/                           # System prompt upload, identity scripts
 └── src/
-    └── Biotrackr.{Domain}.{Type}/     # 13 service directories
+    └── Biotrackr.{Domain}.{Type}/     # 14 service directories
         ├── Biotrackr.{Domain}.{Type}/ # Application project
         ├── *.UnitTests/               # Unit tests
         ├── *.IntegrationTests/        # Integration tests (optional)
@@ -500,7 +501,7 @@ Order matters — these execute in sequence:
 
 ## Agent Configuration Inventory
 
-### Agents (6)
+### Agents (7)
 
 | Agent                    | File                                                    | Purpose                          |
 |--------------------------|---------------------------------------------------------|----------------------------------|
@@ -510,8 +511,9 @@ Order matters — these execute in sequence:
 | Front-End Designer       | `.github/agents/front-end-designer.agent.md`            | Blazor/UI design                 |
 | GitHub Actions Expert    | `.github/agents/github-actions-expert.agent.md`         | CI/CD workflow authoring         |
 | Vulnerability Scanner    | `.github/agents/vulnerability-scanner.agent.md`         | Security vulnerability analysis  |
+| DSA Mentor               | `.github/agents/dsa-mentor.agent.md`                    | DSA learning, algorithm design, complexity analysis, codebase DSA review |
 
-### Prompts (4)
+### Prompts (8)
 
 | Prompt              | File                                            | Purpose                      |
 |---------------------|-------------------------------------------------|------------------------------|
@@ -519,8 +521,12 @@ Order matters — these execute in sequence:
 | Design Review       | `.github/prompts/design-review.prompt.md`       | UI/UX design evaluation      |
 | New Component       | `.github/prompts/new-component.prompt.md`       | Scaffold new Blazor component |
 | Perf Optimize       | `.github/prompts/perf-optimize.prompt.md`       | Performance optimization     |
+| DSA Code Review     | `.github/prompts/dsa-code-review.prompt.md`     | Review code for DSA anti-patterns and suggest improvements |
+| DSA Concept Explain | `.github/prompts/dsa-concept-explain.prompt.md` | Deep-explain a DSA concept using Biotrackr examples        |
+| DSA Algorithm Design | `.github/prompts/dsa-algorithm-design.prompt.md` | Design an algorithm or data structure for a given requirement |
+| DSA Performance Analysis | `.github/prompts/dsa-performance-analysis.prompt.md` | Profile code for time/space complexity and suggest optimizations |
 
-### Instructions (5)
+### Instructions (6)
 
 | Instruction          | File                                                            | Trigger              |
 |----------------------|-----------------------------------------------------------------|----------------------|
@@ -529,13 +535,15 @@ Order matters — these execute in sequence:
 | Razor Components     | `.github/instructions/razor-components.instructions.md`         | `**/*.razor`         |
 | Bicep Conventions    | `.github/instructions/bicep-conventions.instructions.md`        | `**/*.bicep`         |
 | Testing Conventions  | `.github/instructions/testing-conventions.instructions.md`      | `**/*Tests*/**/*.cs` |
+| DSA Awareness        | `.github/instructions/dsa-awareness.instructions.md`            | `**/*.cs`            |
 
-### Skills (18)
+### Skills (25)
 
 - **OWASP vulnerability frameworks (11):** agentic, CICD, Docker, infrastructure, LLM, MCP, ML, mobile, OSS, serverless, web
 - **Design/UX (4):** accessibility, Blazor design, mobile design, web design
 - **.NET/DevOps (2):** dotnet best practices, front-end performance
 - **GitHub (1):** create PR from specification
+- **DSA/Learning (7):** dsa-foundations, dsa-linear-structures, dsa-trees-and-heaps, dsa-graphs, dsa-algorithm-paradigms, dsa-interview-patterns, dsa-system-design
 
 ## Decision Records Reference
 

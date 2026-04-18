@@ -20,8 +20,8 @@ The system comprises 14 independently-deployable services:
 | `Biotrackr.Food.Api` | Domain API | Nutrition data queries |
 | `Biotrackr.Food.Svc` | Domain Service | Fitbit food data ingestion |
 | `Biotrackr.Mcp.Server` | AI Component | Model Context Protocol tool server |
-| `Biotrackr.Reporting.Api` | AI Component | AI-generated health reports with A2A protocol |
-| `Biotrackr.Reporting.Svc` | Domain Service | Scheduled health summary generation and email delivery |
+| `Biotrackr.Reporting.Api` | AI Component | AI-generated health reports with A2A protocol support |
+| `Biotrackr.Reporting.Svc` | Domain Service | Scheduled summary cadence and email notifications; calls into Reporting.Api |
 | `Biotrackr.Sleep.Api` | Domain API | Sleep data queries |
 | `Biotrackr.Sleep.Svc` | Domain Service | Fitbit sleep data ingestion |
 | `Biotrackr.UI` | Frontend | Blazor Server dashboard |
@@ -48,10 +48,10 @@ Each service has its own solution file (`.sln` or `.slnx`), Dockerfile, test pro
 ├── .github/
 │   ├── copilot-instructions.md        # Comprehensive Copilot guide (14 sections)
 │   ├── instructions/                  # Path-scoped .instructions.md files
-│   ├── agents/                        # 6 custom agent definitions
-│   ├── prompts/                       # 4 prompt templates
-│   ├── skills/                        # 18 skills (OWASP, accessibility, etc.)
-│   └── workflows/                     # 31 GitHub Actions workflows
+│   ├── agents/                        # 7 custom agent definitions
+│   ├── prompts/                       # 8 prompt templates
+│   ├── skills/                        # 25 skills (OWASP, accessibility, DSA, etc.)
+│   └── workflows/                     # 28 workflows + 10 reusable templates
 ├── docs/
 │   ├── standards/                     # Commit standards, conventions
 │   └── decision-records/              # Architecture Decision Records
@@ -289,8 +289,6 @@ Full standard: `docs/standards/commit-standards.md`
 
 Full OWASP Agentic Security (ASI01-ASI10) details are in `.github/copilot-instructions.md`.
 
-For public AI transparency documentation, see `AI-TRANSPARENCY.md`. For security vulnerability reporting, see `SECURITY.md`.
-
 ## Boundary Rules
 
 ### NEVER
@@ -324,3 +322,6 @@ For public AI transparency documentation, see `AI-TRANSPARENCY.md`. For security
 ## Additional Resources
 
 For comprehensive Copilot-specific guidance including testing conventions, PR guidelines, infrastructure details, full OWASP Agentic Security (ASI01-ASI10), AI/agent architecture, and agent configuration inventory, see `.github/copilot-instructions.md`.
+
+* `AI-TRANSPARENCY.md` — AI Transparency statement
+* `SECURITY.md` — Security policy and reporting
