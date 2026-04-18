@@ -40,7 +40,7 @@ For each identified bottleneck, provide a concrete suggestion:
 |------------|---------|-----------------|----------------------|
 | Description | O(...) | What to change and how | New complexity |
 
-Provide a corrected code snippet for every High and Critical optimisation suggestion.
+Provide a corrected code snippet for each suggested change.
 
 ### Summary
 
