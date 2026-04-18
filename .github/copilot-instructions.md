@@ -50,7 +50,7 @@ Each service has its own solution file (`.sln` or `.slnx`), Dockerfile, test pro
 │   ├── agents/                        # 7 custom agent definitions
 │   ├── prompts/                       # 8 prompt templates
 │   ├── skills/                        # 25 skills (OWASP, accessibility, DSA, etc.)
-│   └── workflows/                     # 28 GitHub Actions workflows
+│   └── workflows/                     # 28 workflows + 10 reusable templates
 ├── docs/
 │   ├── standards/                     # Commit standards, conventions
 │   └── decision-records/              # Architecture Decision Records

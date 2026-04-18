@@ -20,8 +20,8 @@ The system comprises 14 independently-deployable services:
 | `Biotrackr.Food.Api` | Domain API | Nutrition data queries |
 | `Biotrackr.Food.Svc` | Domain Service | Fitbit food data ingestion |
 | `Biotrackr.Mcp.Server` | AI Component | Model Context Protocol tool server |
-| `Biotrackr.Reporting.Api` | AI Component | AI-generated health reports |
-| `Biotrackr.Reporting.Svc` | AI Component | Background report generation via Copilot sidecar |
+| `Biotrackr.Reporting.Api` | AI Component | AI-generated health reports with A2A protocol support |
+| `Biotrackr.Reporting.Svc` | Domain Service | Scheduled summary cadence and email notifications; calls into Reporting.Api |
 | `Biotrackr.Sleep.Api` | Domain API | Sleep data queries |
 | `Biotrackr.Sleep.Svc` | Domain Service | Fitbit sleep data ingestion |
 | `Biotrackr.UI` | Frontend | Blazor Server dashboard |
@@ -51,7 +51,7 @@ Each service has its own solution file (`.sln` or `.slnx`), Dockerfile, test pro
 │   ├── agents/                        # 7 custom agent definitions
 │   ├── prompts/                       # 8 prompt templates
 │   ├── skills/                        # 25 skills (OWASP, accessibility, DSA, etc.)
-│   └── workflows/                     # 28 GitHub Actions workflows
+│   └── workflows/                     # 28 workflows + 10 reusable templates
 ├── docs/
 │   ├── standards/                     # Commit standards, conventions
 │   └── decision-records/              # Architecture Decision Records
@@ -140,7 +140,7 @@ dotnet build --no-restore --no-dependencies -v:q
 | Food Svc | `src/Biotrackr.Food.Svc` | `.sln` | Yes | Yes (E2E + Contract) |
 | MCP Server | `src/Biotrackr.Mcp.Server` | `.slnx` | Yes | Yes (E2E + Contract) |
 | Reporting API | `src/Biotrackr.Reporting.Api` | `.slnx` | Yes | Yes (E2E + Contract) |
-| Reporting Svc | `src/Biotrackr.Reporting.Svc` | `.slnx` | Yes | Yes (E2E + Contract) |
+| Reporting Svc | `src/Biotrackr.Reporting.Svc` | `.slnx` | Yes | Yes (Contract) |
 | Sleep API | `src/Biotrackr.Sleep.Api` | `.sln` | Yes | Yes (E2E + Contract) |
 | Sleep Svc | `src/Biotrackr.Sleep.Svc` | `.sln` | Yes | Yes (E2E + Contract) |
 | UI | `src/Biotrackr.UI` | `.slnx` | Yes | No |

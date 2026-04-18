@@ -86,7 +86,7 @@ Every lesson must ground abstract concepts in real Biotrackr production code. Us
 | Trie / prefix | App Configuration key namespaces use hierarchical prefix-based lookup (e.g., `Biotrackr:Activity:`) | App Configuration across all services |
 | Tree traversal | Cosmos DB query plan evaluation and nested JSON document traversal | CosmosRepository implementations |
 | Two pointers | Conversation history management — head pointer at oldest kept message, tail at newest (bounded window) | `ConversationPersistenceMiddleware` in Chat API |
-| Dynamic programming | Spaced-repetition scheduling — `nextInterval = baseInterval * confidenceMultiplier`, memoized per topic | `.copilot-tracking/` DSA progress ledger |
+| Dynamic programming | Spaced-repetition scheduling — `nextInterval = baseInterval * confidenceMultiplier`, memoized per topic | `.copilot-tracking/research/dsa-learning-progress.md` |
 | Big-O analysis | `Where().OrderBy().First()` chain — O(n) + O(n log n) + O(1) vs `Where().MinBy()` — O(n) total | Any LINQ chain in domain service handlers |
 
 ## Session Protocol

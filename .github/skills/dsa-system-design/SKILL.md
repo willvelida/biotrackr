@@ -175,10 +175,11 @@ CAP theorem: a distributed system can guarantee at most two of:
 - **Availability** — every request gets a response (possibly stale)
 - **Partition tolerance** — the system continues despite network splits
 
-Cosmos DB is **CP** (consistent + partition tolerant) by default with strong consistency,
-or **AP** (available + partition tolerant) with eventual consistency. Biotrackr uses
-**session consistency** — reads see writes from the same logical session, balancing
-performance and correctness.
+Cosmos DB supports multiple consistency levels, from **strong** through **eventual**,
+letting systems choose the trade-off between read freshness, latency, and availability
+characteristics. Biotrackr is configured to use **session consistency** — reads see
+writes from the same logical session, providing a practical balance of performance and
+correctness for user-scoped workloads.
 
 ### Event-Driven Data Flow
 
