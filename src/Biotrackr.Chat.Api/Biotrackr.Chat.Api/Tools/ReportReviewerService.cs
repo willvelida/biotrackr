@@ -193,19 +193,27 @@ namespace Biotrackr.Chat.Api.Tools
 
             using (var hash = IncrementalHash.CreateHash(HashAlgorithmName.SHA256))
             {
-                AppendUtf8(hash, reportType);
-                hash.AppendData(":"u8);
-                AppendUtf8(hash, reportSummary);
-                hash.AppendData(":"u8);
-                AppendUtf8(hash, sourceDataJson);
-                hash.TryGetHashAndReset(hashBytes, out _);
+                AppendLengthPrefixedUtf8(hash, reportType);
+                AppendLengthPrefixedUtf8(hash, reportSummary);
+                AppendLengthPrefixedUtf8(hash, sourceDataJson);
+
+                if (!hash.TryGetHashAndReset(hashBytes, out _))
+                {
+                    throw new CryptographicException("Failed to compute SHA-256 hash for cache key.");
+                }
             }
 
             return $"reviewer:{reportType}:{Convert.ToHexString(hashBytes)}";
 
-            static void AppendUtf8(IncrementalHash hash, ReadOnlySpan<char> text)
+            static void AppendLengthPrefixedUtf8(IncrementalHash hash, ReadOnlySpan<char> text)
             {
                 int byteCount = System.Text.Encoding.UTF8.GetByteCount(text);
+
+                // Write a 4-byte big-endian length prefix to make framing unambiguous
+                Span<byte> lengthPrefix = stackalloc byte[4];
+                System.Buffers.Binary.BinaryPrimitives.WriteInt32BigEndian(lengthPrefix, byteCount);
+                hash.AppendData(lengthPrefix);
+
                 if (byteCount <= StackallocUtf8Threshold)
                 {
                     Span<byte> buffer = stackalloc byte[byteCount];
