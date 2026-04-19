@@ -1,4 +1,5 @@
 using System.Text.Json;
+using Azure;
 using Azure.Identity;
 using Azure.Storage.Blobs;
 using Azure.Storage.Blobs.Models;
@@ -17,6 +18,7 @@ namespace Biotrackr.Reporting.Api.Services
     {
         private const string ContainerName = "reports";
         private const string MetadataFileName = "metadata.json";
+        private const string JobIndexPrefix = "jobs";
         private static readonly TimeSpan DefaultSasExpiry = TimeSpan.FromHours(24);
 
         // ASI09: Mandatory disclaimer for AI-generated health reports
@@ -52,6 +54,7 @@ namespace Biotrackr.Reporting.Api.Services
             };
 
             await UploadMetadataAsync(blobPath, metadata);
+            await UploadJobIndexAsync(jobId, metadata);
             logger.LogInformation("Created report job {JobId} at {BlobPath}", jobId, blobPath);
 
             return jobId;
@@ -64,6 +67,8 @@ namespace Biotrackr.Reporting.Api.Services
             string summary,
             object sourceDataSnapshot)
         {
+            ArgumentException.ThrowIfNullOrWhiteSpace(jobId);
+
             var metadata = await GetMetadataAsync(jobId);
             if (metadata is null)
             {
@@ -103,11 +108,14 @@ namespace Biotrackr.Reporting.Api.Services
             metadata.SourceDataSnapshot = sourceDataSnapshot;
 
             await UploadMetadataAsync(blobPath, metadata);
+            await UploadJobIndexAsync(jobId, metadata);
             logger.LogInformation("Report job {JobId} completed with {ArtifactCount} artifacts", jobId, artifacts.Count);
         }
 
         public async Task UpdateJobStatusAsync(string jobId, string status, string? error = null)
         {
+            ArgumentException.ThrowIfNullOrWhiteSpace(jobId);
+
             var metadata = await GetMetadataAsync(jobId);
             if (metadata is null)
             {
@@ -123,16 +131,45 @@ namespace Biotrackr.Reporting.Api.Services
             var blobPath = metadata.BlobPath
                 ?? BuildBlobPath(metadata.DateRange.Start, metadata.DateRange.End, metadata.ReportType);
             await UploadMetadataAsync(blobPath, metadata);
+            await UploadJobIndexAsync(jobId, metadata);
             logger.LogInformation("Updated job {JobId} status to {Status}", jobId, status);
         }
 
         public async Task<ReportMetadata?> GetMetadataAsync(string jobId)
         {
+            ArgumentException.ThrowIfNullOrWhiteSpace(jobId);
+
             var containerClient = Client.GetBlobContainerClient(ContainerName);
+
+            // O(1) direct lookup via job index blob
+            var indexBlobName = $"{JobIndexPrefix}/{jobId}/{MetadataFileName}";
+            var indexBlob = containerClient.GetBlobClient(indexBlobName);
+
+            try
+            {
+                var content = await indexBlob.DownloadContentAsync();
+                var metadata = JsonSerializer.Deserialize<ReportMetadata>(content.Value.Content.ToString());
+                if (metadata is not null)
+                {
+                    logger.LogInformation("Resolved job {JobId} via O(1) index lookup", jobId);
+                    return metadata;
+                }
+            }
+            catch (RequestFailedException ex) when (ex.Status == 404)
+            {
+                // Index blob does not exist — fall through to O(N) scan
+            }
+
+            // O(N) fallback for pre-existing jobs without index blobs
+            logger.LogWarning("Job {JobId} not found in index, falling back to O(N) container scan", jobId);
 
             await foreach (var blob in containerClient.GetBlobsAsync(prefix: ""))
             {
                 if (!blob.Name.EndsWith($"/{MetadataFileName}"))
+                    continue;
+
+                // Skip job index blobs during fallback scan
+                if (blob.Name.StartsWith($"{JobIndexPrefix}/"))
                     continue;
 
                 var blobClient = containerClient.GetBlobClient(blob.Name);
@@ -181,6 +218,10 @@ namespace Biotrackr.Reporting.Api.Services
                 if (!blob.Name.EndsWith($"/{MetadataFileName}"))
                     continue;
 
+                // Skip job index blobs to avoid duplicate entries
+                if (blob.Name.StartsWith($"{JobIndexPrefix}/"))
+                    continue;
+
                 var blobClient = containerClient.GetBlobClient(blob.Name);
                 var content = await blobClient.DownloadContentAsync();
                 var metadata = JsonSerializer.Deserialize<ReportMetadata>(content.Value.Content.ToString());
@@ -210,6 +251,16 @@ namespace Biotrackr.Reporting.Api.Services
 
             var json = JsonSerializer.Serialize(metadata, new JsonSerializerOptions { WriteIndented = true });
             await metadataBlob.UploadAsync(new BinaryData(json), overwrite: true);
+        }
+
+        private async Task UploadJobIndexAsync(string jobId, ReportMetadata metadata)
+        {
+            var containerClient = Client.GetBlobContainerClient(ContainerName);
+            var indexBlobName = $"{JobIndexPrefix}/{jobId}/{MetadataFileName}";
+            var indexBlob = containerClient.GetBlobClient(indexBlobName);
+
+            var json = JsonSerializer.Serialize(metadata, new JsonSerializerOptions { WriteIndented = true });
+            await indexBlob.UploadAsync(new BinaryData(json), overwrite: true);
         }
 
         private static string BuildBlobPath(string startDate, string endDate, string reportType)
