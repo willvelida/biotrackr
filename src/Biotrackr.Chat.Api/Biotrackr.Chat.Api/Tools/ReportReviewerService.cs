@@ -1,3 +1,4 @@
+using System.Buffers;
 using System.Security.Cryptography;
 using System.Text.Json;
 using Anthropic;
@@ -53,7 +54,11 @@ namespace Biotrackr.Chat.Api.Tools
                 };
             }
 
-            var cacheKey = DeriveCacheKey(reportSummary, sourceDataSnapshot, reportType);
+            var sourceDataJson = sourceDataSnapshot is JsonElement je
+                ? je.GetRawText()
+                : JsonSerializer.Serialize(sourceDataSnapshot);
+
+            var cacheKey = DeriveCacheKey(sourceDataJson, reportSummary, reportType);
 
             if (_cache.TryGetValue(cacheKey, out ReviewResult? cachedResult))
             {
@@ -70,8 +75,6 @@ namespace Biotrackr.Chat.Api.Tools
                     ApiKey = _settings.AnthropicApiKey,
                     HttpClient = httpClient
                 };
-
-                var sourceDataJson = JsonSerializer.Serialize(sourceDataSnapshot, new JsonSerializerOptions { WriteIndented = false });
 
                 var reviewPrompt = $"Review the following report for accuracy and safety.\n\n" +
                     $"Report Type: {reportType}\n" +
@@ -181,14 +184,56 @@ namespace Biotrackr.Chat.Api.Tools
             };
         }
 
+        private const int StackallocUtf8Threshold = 512;
+
         private static string DeriveCacheKey(
-            string reportSummary, object? sourceDataSnapshot, string reportType)
+            string sourceDataJson, string reportSummary, string reportType)
         {
-            var content = $"{reportType}:{reportSummary}:{JsonSerializer.Serialize(sourceDataSnapshot)}";
-            var hash = Convert.ToHexString(
-                SHA256.HashData(
-                    System.Text.Encoding.UTF8.GetBytes(content)));
-            return $"reviewer:{reportType}:{hash}";
+            Span<byte> hashBytes = stackalloc byte[SHA256.HashSizeInBytes];
+
+            using (var hash = IncrementalHash.CreateHash(HashAlgorithmName.SHA256))
+            {
+                AppendLengthPrefixedUtf8(hash, reportType);
+                AppendLengthPrefixedUtf8(hash, reportSummary);
+                AppendLengthPrefixedUtf8(hash, sourceDataJson);
+
+                if (!hash.TryGetHashAndReset(hashBytes, out _))
+                {
+                    throw new CryptographicException("Failed to compute SHA-256 hash for cache key.");
+                }
+            }
+
+            return $"reviewer:{reportType}:{Convert.ToHexString(hashBytes)}";
+
+            static void AppendLengthPrefixedUtf8(IncrementalHash hash, ReadOnlySpan<char> text)
+            {
+                int byteCount = System.Text.Encoding.UTF8.GetByteCount(text);
+
+                // Write a 4-byte big-endian length prefix to make framing unambiguous
+                Span<byte> lengthPrefix = stackalloc byte[4];
+                System.Buffers.Binary.BinaryPrimitives.WriteInt32BigEndian(lengthPrefix, byteCount);
+                hash.AppendData(lengthPrefix);
+
+                if (byteCount <= StackallocUtf8Threshold)
+                {
+                    Span<byte> buffer = stackalloc byte[byteCount];
+                    System.Text.Encoding.UTF8.GetBytes(text, buffer);
+                    hash.AppendData(buffer);
+                }
+                else
+                {
+                    byte[] rented = ArrayPool<byte>.Shared.Rent(byteCount);
+                    try
+                    {
+                        int written = System.Text.Encoding.UTF8.GetBytes(text, rented);
+                        hash.AppendData(rented.AsSpan(0, written));
+                    }
+                    finally
+                    {
+                        ArrayPool<byte>.Shared.Return(rented);
+                    }
+                }
+            }
         }
     }
 

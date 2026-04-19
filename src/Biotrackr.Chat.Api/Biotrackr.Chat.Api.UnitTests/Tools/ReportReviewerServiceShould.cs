@@ -208,6 +208,57 @@ namespace Biotrackr.Chat.Api.UnitTests.Tools
             result.ValidatedSummary.Should().Contain("Test summary");
         }
 
+        [Fact]
+        public async Task ReturnFailClosedResultWhenSourceDataIsJsonElement()
+        {
+            // Arrange — pass a JsonElement to exercise the GetRawText() fast-path
+            var handler = new Mock<HttpMessageHandler>();
+            handler.Protected()
+                .Setup<Task<HttpResponseMessage>>(
+                    "SendAsync",
+                    ItExpr.IsAny<HttpRequestMessage>(),
+                    ItExpr.IsAny<CancellationToken>())
+                .ThrowsAsync(new HttpRequestException("Connection refused"));
+            var jsonElement = JsonDocument.Parse("{\"steps\":5000,\"calories\":2100}").RootElement;
+            var sut = CreateServiceWithHandler(handler);
+
+            // Act
+            var result = await sut.ReviewReportAsync("Test summary", jsonElement, "weekly_summary");
+
+            // Assert
+            result.ReviewCompleted.Should().BeFalse();
+            result.Approved.Should().BeTrue();
+            result.ReviewSkipReason.Should().Contain("service error");
+        }
+
+        [Fact]
+        public async Task ReturnFailClosedResultWhenSourceDataIsLargeJsonElement()
+        {
+            // Arrange — pass a large JsonElement (>512 bytes UTF-8) to exercise the ArrayPool path in DeriveCacheKey
+            var handler = new Mock<HttpMessageHandler>();
+            handler.Protected()
+                .Setup<Task<HttpResponseMessage>>(
+                    "SendAsync",
+                    ItExpr.IsAny<HttpRequestMessage>(),
+                    ItExpr.IsAny<CancellationToken>())
+                .ThrowsAsync(new HttpRequestException("Connection refused"));
+            var largeData = new Dictionary<string, object>();
+            for (int i = 0; i < 50; i++)
+            {
+                largeData[$"metric_{i:D3}"] = new { value = i * 100, unit = "steps", date = $"2025-01-{(i % 28) + 1:D2}" };
+            }
+            var jsonElement = JsonDocument.Parse(JsonSerializer.Serialize(largeData)).RootElement;
+            var sut = CreateServiceWithHandler(handler);
+
+            // Act
+            var result = await sut.ReviewReportAsync("Test summary", jsonElement, "weekly_summary");
+
+            // Assert
+            result.ReviewCompleted.Should().BeFalse();
+            result.Approved.Should().BeTrue();
+            result.ReviewSkipReason.Should().Contain("service error");
+        }
+
         private ReportReviewerService CreateService(string reviewerSystemPrompt = "Review this report", IMemoryCache? cache = null)
         {
             var settings = Options.Create(new Settings
