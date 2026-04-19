@@ -151,25 +151,25 @@ namespace Biotrackr.Reporting.Api.Services
                 var metadata = JsonSerializer.Deserialize<ReportMetadata>(content.Value.Content.ToString());
                 if (metadata is not null)
                 {
-                    logger.LogInformation("Resolved job {JobId} via O(1) index lookup", jobId);
+                    logger.LogDebug("Resolved job {JobId} via index lookup", jobId);
                     return metadata;
                 }
             }
             catch (RequestFailedException ex) when (ex.Status == 404)
             {
-                // Index blob does not exist — fall through to O(N) scan
+                // Index blob does not exist — fall through to container scan
             }
 
-            // O(N) fallback for pre-existing jobs without index blobs
-            logger.LogWarning("Job {JobId} not found in index, falling back to O(N) container scan", jobId);
+            // Fallback for pre-existing jobs without index blobs
+            logger.LogWarning("Job {JobId} not found in index, falling back to container scan", jobId);
 
             await foreach (var blob in containerClient.GetBlobsAsync(prefix: ""))
             {
-                if (!blob.Name.EndsWith($"/{MetadataFileName}"))
+                if (!blob.Name.EndsWith($"/{MetadataFileName}", StringComparison.Ordinal))
                     continue;
 
                 // Skip job index blobs during fallback scan
-                if (blob.Name.StartsWith($"{JobIndexPrefix}/"))
+                if (blob.Name.StartsWith($"{JobIndexPrefix}/", StringComparison.Ordinal))
                     continue;
 
                 var blobClient = containerClient.GetBlobClient(blob.Name);
@@ -215,11 +215,11 @@ namespace Biotrackr.Reporting.Api.Services
 
             await foreach (var blob in containerClient.GetBlobsAsync(prefix: ""))
             {
-                if (!blob.Name.EndsWith($"/{MetadataFileName}"))
+                if (!blob.Name.EndsWith($"/{MetadataFileName}", StringComparison.Ordinal))
                     continue;
 
                 // Skip job index blobs to avoid duplicate entries
-                if (blob.Name.StartsWith($"{JobIndexPrefix}/"))
+                if (blob.Name.StartsWith($"{JobIndexPrefix}/", StringComparison.Ordinal))
                     continue;
 
                 var blobClient = containerClient.GetBlobClient(blob.Name);
