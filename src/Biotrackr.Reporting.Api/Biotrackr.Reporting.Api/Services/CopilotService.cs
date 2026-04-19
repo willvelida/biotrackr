@@ -227,7 +227,7 @@ namespace Biotrackr.Reporting.Api.Services
 
                 var warmUpConfig = new SessionConfig
                 {
-                    Model = "claude-sonnet-4-6",
+                    Model = "claude-sonnet-4.6",
                     OnPermissionRequest = PermissionHandler.ApproveAll,
                 };
 
