@@ -162,11 +162,16 @@ namespace Biotrackr.Reporting.Api.Agents
                 throw new InvalidOperationException("Continuation token missing JobId.");
             }
 
+            _logger.LogInformation("A2A status poll for job {JobId}", continuation.JobId);
+
             var metadata = await _blobStorageService.GetMetadataAsync(continuation.JobId);
             if (metadata is null)
             {
                 throw new InvalidOperationException($"Report job {continuation.JobId} not found.");
             }
+
+            _logger.LogInformation("A2A poll result for job {JobId}: Status={Status}",
+                continuation.JobId, metadata.Status);
 
             return metadata.Status switch
             {
@@ -193,6 +198,9 @@ namespace Biotrackr.Reporting.Api.Agents
 
         private async Task<AgentResponse> CreateCompletedResponseAsync(ReportMetadata metadata)
         {
+            _logger.LogInformation("A2A report completed for job {JobId} with {ArtifactCount} artifacts",
+                metadata.JobId, metadata.Artifacts.Count);
+
             var resultBuilder = new StringBuilder();
             resultBuilder.AppendLine($"Report generation completed. Job ID: {metadata.JobId}");
             resultBuilder.AppendLine($"Report Type: {metadata.ReportType}");

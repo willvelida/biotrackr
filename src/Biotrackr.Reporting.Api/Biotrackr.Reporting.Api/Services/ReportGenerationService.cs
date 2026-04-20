@@ -1,6 +1,8 @@
+using System.Diagnostics;
 using System.Text.Json;
 using Biotrackr.Reporting.Api.Configuration;
 using Biotrackr.Reporting.Api.Models;
+using Biotrackr.Reporting.Api.Telemetry;
 using GitHub.Copilot.SDK;
 using Microsoft.Extensions.Options;
 
@@ -83,6 +85,8 @@ namespace Biotrackr.Reporting.Api.Services
             _logger.LogInformation("Created report job {JobId} for {ReportType} ({StartDate} to {EndDate})",
                 jobId, reportType, startDate, endDate);
 
+            ReportingTelemetry.ConcurrentJobs.Add(1);
+
             // Run generation in background with timeout (ASI08)
             _ = Task.Run(async () =>
             {
@@ -107,6 +111,7 @@ namespace Biotrackr.Reporting.Api.Services
                 }
                 finally
                 {
+                    ReportingTelemetry.ConcurrentJobs.Add(-1);
                     _concurrencyLimiter.Release();
                 }
             });
@@ -122,6 +127,10 @@ namespace Biotrackr.Reporting.Api.Services
         private async Task GenerateReportAsync(
             string jobId, string taskMessage, object sourceDataSnapshot, CancellationToken cancellationToken)
         {
+            using var activity = ReportingTelemetry.ActivitySource.StartActivity("report.generate");
+            activity?.SetTag("report.job_id", jobId);
+            var stopwatch = Stopwatch.StartNew();
+
             // Clean working directory before generation
             CleanReportsDirectory();
 
@@ -149,11 +158,35 @@ namespace Biotrackr.Reporting.Api.Services
                     var sessionConfig = _copilotService.CreateSessionConfig();
                     await using var session = await client.CreateSessionAsync(sessionConfig, attemptCts.Token);
 
+                    using var sessionActivity = ReportingTelemetry.ActivitySource.StartActivity("copilot.session");
+                    sessionActivity?.SetTag("report.job_id", jobId);
+                    sessionActivity?.SetTag("report.attempt", attempt);
+
                     // Track tool execution and session events for observability
                     var eventSubscription = session.On(evt =>
                     {
                         switch (evt)
                         {
+                            case SubagentStartedEvent started:
+                                _logger.LogInformation(
+                                    "Subagent started for job {JobId}: Agent={AgentName}, DisplayName={DisplayName}, ToolCallId={ToolCallId}",
+                                    jobId, started.Data?.AgentName, started.Data?.AgentDisplayName, started.Data?.ToolCallId);
+                                break;
+                            case SubagentCompletedEvent completed:
+                                _logger.LogInformation(
+                                    "Subagent completed for job {JobId}: Agent={AgentName}, Duration={DurationMs}ms, ToolCalls={ToolCalls}, Tokens={Tokens}, Model={Model}",
+                                    jobId, completed.Data?.AgentDisplayName, completed.Data?.DurationMs,
+                                    completed.Data?.TotalToolCalls, completed.Data?.TotalTokens, completed.Data?.Model);
+                                ReportingTelemetry.SubagentDuration.Record(
+                                    completed.Data?.DurationMs ?? 0,
+                                    new KeyValuePair<string, object?>("agent.name", completed.Data?.AgentName));
+                                break;
+                            case SubagentFailedEvent failed:
+                                _logger.LogWarning(
+                                    "Subagent failed for job {JobId}: Agent={AgentName}, Error={Error}, Duration={DurationMs}ms, ToolCalls={ToolCalls}",
+                                    jobId, failed.Data?.AgentDisplayName, failed.Data?.Error,
+                                    failed.Data?.DurationMs, failed.Data?.TotalToolCalls);
+                                break;
                             case ToolExecutionStartEvent toolStart:
                                 _logger.LogInformation(
                                     "Copilot tool started for job {JobId}: Tool={ToolName}",
@@ -168,6 +201,14 @@ namespace Biotrackr.Reporting.Api.Services
                                 _logger.LogWarning(
                                     "Copilot session error for job {JobId}: {Message}",
                                     jobId, sessionError.Data?.Message);
+                                break;
+                            // TODO: Verify AssistantUsageEvent type name at runtime — SDK may expose usage
+                            // data via a different event type or as AssistantUsageData on a generic event.
+                            case AssistantUsageEvent usage:
+                                _logger.LogInformation(
+                                    "LLM usage for job {JobId}: Model={Model}, InputTokens={InputTokens}, OutputTokens={OutputTokens}, Duration={Duration}ms, Initiator={Initiator}",
+                                    jobId, usage.Data?.Model, usage.Data?.InputTokens,
+                                    usage.Data?.OutputTokens, usage.Data?.Duration, usage.Data?.Initiator);
                                 break;
                         }
                     });
@@ -194,10 +235,14 @@ namespace Biotrackr.Reporting.Api.Services
                     ValidateGeneratedCode(jobId);
 
                     // Check for generated artifacts
+                    using var scanActivity = ReportingTelemetry.ActivitySource.StartActivity("report.artifact_scan");
                     var artifacts = ScanForArtifacts(jobId);
+                    scanActivity?.SetTag("report.artifact_count", artifacts.Count);
                     if (artifacts.Count > 0)
                     {
                         success = true;
+                        using var uploadActivity = ReportingTelemetry.ActivitySource.StartActivity("report.artifact_upload");
+                        uploadActivity?.SetTag("report.artifact_count", artifacts.Count);
                         await UploadArtifactsAsync(jobId, artifacts, responseText, sourceDataSnapshot);
                         _logger.LogInformation("Report job {JobId} completed with {Count} artifacts",
                             jobId, artifacts.Count);
@@ -239,8 +284,15 @@ namespace Biotrackr.Reporting.Api.Services
                 }
             }
 
-            if (!success)
+            stopwatch.Stop();
+            if (success)
             {
+                ReportingTelemetry.ReportsGenerated.Add(1);
+                ReportingTelemetry.ReportDuration.Record(stopwatch.Elapsed.TotalMilliseconds);
+            }
+            else
+            {
+                ReportingTelemetry.ReportsFailed.Add(1);
                 await _blobStorageService.UpdateJobStatusAsync(jobId, ReportStatus.Failed,
                     $"No report artifacts generated after {attempt} attempts.");
             }
