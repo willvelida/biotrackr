@@ -135,6 +135,34 @@ namespace Biotrackr.Reporting.Api.Services
             logger.LogInformation("Updated job {JobId} status to {Status}", jobId, status);
         }
 
+        public async Task UpdateReviewResultAsync(string jobId, bool approved, List<string> concerns, string validatedSummary)
+        {
+            ArgumentException.ThrowIfNullOrWhiteSpace(jobId);
+
+            var metadata = await GetMetadataAsync(jobId);
+            if (metadata is null)
+            {
+                throw new InvalidOperationException($"Job {jobId} not found");
+            }
+
+            if (metadata.Status != ReportStatus.Generated)
+            {
+                throw new InvalidOperationException($"Job {jobId} is not in generated status (current: {metadata.Status})");
+            }
+
+            metadata.Status = ReportStatus.Reviewed;
+            metadata.ReviewedAt = DateTimeOffset.UtcNow;
+            metadata.ReviewApproved = approved;
+            metadata.ReviewConcerns = concerns;
+            metadata.ReviewValidatedSummary = validatedSummary;
+
+            var blobPath = metadata.BlobPath
+                ?? BuildBlobPath(metadata.DateRange.Start, metadata.DateRange.End, metadata.ReportType);
+            await UploadMetadataAsync(blobPath, metadata);
+            await UploadJobIndexAsync(jobId, metadata);
+            logger.LogInformation("Updated job {JobId} with review result: Approved={Approved}", jobId, approved);
+        }
+
         public async Task<ReportMetadata?> GetMetadataAsync(string jobId)
         {
             ArgumentException.ThrowIfNullOrWhiteSpace(jobId);

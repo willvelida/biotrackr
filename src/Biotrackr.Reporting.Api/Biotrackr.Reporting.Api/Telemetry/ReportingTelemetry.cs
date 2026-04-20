@@ -17,6 +17,9 @@ internal static class ReportingTelemetry
     public static readonly Counter<long> ReportsFailed = Meter.CreateCounter<long>(
         "reporting.reports.failed", description: "Total reports failed");
 
+    public static readonly Counter<long> ReportsReviewed = Meter.CreateCounter<long>(
+        "reporting.reports.reviewed", description: "Total reports reviewed");
+
     public static readonly Histogram<double> ReportDuration = Meter.CreateHistogram<double>(
         "reporting.reports.duration_ms", "ms", "Report generation duration");
 

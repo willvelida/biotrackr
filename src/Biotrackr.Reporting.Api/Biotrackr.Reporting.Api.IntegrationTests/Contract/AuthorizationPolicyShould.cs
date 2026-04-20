@@ -1,4 +1,6 @@
 using System.Net;
+using System.Net.Http.Json;
+using Biotrackr.Reporting.Api.Endpoints;
 using Biotrackr.Reporting.Api.IntegrationTests.Fixtures;
 using FluentAssertions;
 
@@ -106,6 +108,32 @@ public class AuthorizationPolicyShould
 
         // Act
         var response = await client.GetAsync("/api/reports");
+
+        // Assert
+        response.StatusCode.Should().Be(HttpStatusCode.Forbidden);
+    }
+
+    [Fact]
+    public async Task SubmitReview_ShouldRequireAuthorization()
+    {
+        // Arrange
+        await using var factory = new AuthorizationTestWebApplicationFactory
+        {
+            ChatApiAgentIdentityId = "chat-api-identity",
+            ReportingSvcAgentIdentityId = "reporting-svc-identity"
+        };
+        var client = factory.CreateClient();
+        ConfigurableAuthHandler.AzpClaimValue = string.Empty;
+
+        var request = new SubmitReviewRequest
+        {
+            Approved = true,
+            Concerns = [],
+            ValidatedSummary = "Summary"
+        };
+
+        // Act
+        var response = await client.PutAsJsonAsync("/api/reports/test-job/review", request);
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.Forbidden);

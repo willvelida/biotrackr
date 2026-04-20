@@ -152,6 +152,9 @@ app.MapGenerateEndpoints();
 // Report retrieval endpoints
 app.MapReportEndpoints();
 
+// Review submission endpoint
+app.MapReviewEndpoints();
+
 // A2A endpoint (alongside existing HTTP endpoints for backward compatibility)
 app.MapA2AEndpoints(reportAgent);
 

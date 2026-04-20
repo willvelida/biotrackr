@@ -33,6 +33,18 @@ namespace Biotrackr.Reporting.Api.Models
 
         [JsonPropertyName("blobPath")]
         public string? BlobPath { get; set; }
+
+        [JsonPropertyName("reviewedAt")]
+        public DateTimeOffset? ReviewedAt { get; set; }
+
+        [JsonPropertyName("reviewApproved")]
+        public bool? ReviewApproved { get; set; }
+
+        [JsonPropertyName("reviewConcerns")]
+        public List<string>? ReviewConcerns { get; set; }
+
+        [JsonPropertyName("reviewValidatedSummary")]
+        public string? ReviewValidatedSummary { get; set; }
     }
 
     public class ReportDateRange
