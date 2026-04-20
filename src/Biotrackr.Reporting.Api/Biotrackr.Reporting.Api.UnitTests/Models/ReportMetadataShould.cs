@@ -61,5 +61,45 @@ namespace Biotrackr.Reporting.Api.UnitTests.Models
             range.Start.Should().BeEmpty();
             range.End.Should().BeEmpty();
         }
+
+        [Fact]
+        public void HaveNullReviewedAtByDefault()
+        {
+            // Arrange & Act
+            var metadata = new ReportMetadata();
+
+            // Assert
+            metadata.ReviewedAt.Should().BeNull();
+        }
+
+        [Fact]
+        public void HaveNullReviewApprovedByDefault()
+        {
+            // Arrange & Act
+            var metadata = new ReportMetadata();
+
+            // Assert
+            metadata.ReviewApproved.Should().BeNull();
+        }
+
+        [Fact]
+        public void HaveNullReviewConcernsByDefault()
+        {
+            // Arrange & Act
+            var metadata = new ReportMetadata();
+
+            // Assert
+            metadata.ReviewConcerns.Should().BeNull();
+        }
+
+        [Fact]
+        public void HaveNullReviewValidatedSummaryByDefault()
+        {
+            // Arrange & Act
+            var metadata = new ReportMetadata();
+
+            // Assert
+            metadata.ReviewValidatedSummary.Should().BeNull();
+        }
     }
 }

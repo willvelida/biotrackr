@@ -74,6 +74,14 @@ namespace Biotrackr.Reporting.Api.UnitTests.Services
             _blobStorageService.Setup(b => b.CreateJobAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>()))
                 .ReturnsAsync("job-id");
 
+            // Keep the background task alive by blocking UpdateJobStatusAsync
+            // (called from Task.Run's catch when GenerateReportAsync throws).
+            // Without this, the background task completes instantly and releases
+            // the semaphore before the second call executes — causing a flaky test.
+            var backgroundGate = new TaskCompletionSource();
+            _blobStorageService.Setup(b => b.UpdateJobStatusAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>()))
+                .Returns(backgroundGate.Task);
+
             var sut = CreateService(maxConcurrentJobs: 1);
 
             // First call should succeed (takes the semaphore slot)
@@ -81,16 +89,15 @@ namespace Biotrackr.Reporting.Api.UnitTests.Services
                 "weekly_summary", "2026-03-01", "2026-03-07", "Generate report 1", new object());
             result1.Status.Should().Be(ReportStatus.Generating);
 
-            // Reset the health check for second call
-            _copilotService.Setup(c => c.IsHealthyAsync(It.IsAny<CancellationToken>()))
-                .ReturnsAsync(true);
-
             // Second call should fail due to concurrency limit
             var result2 = await sut.StartReportGenerationAsync(
                 "weekly_summary", "2026-03-08", "2026-03-14", "Generate report 2", new object());
 
             result2.Status.Should().Be(ReportStatus.Failed);
             result2.Message.Should().Contain("concurrent");
+
+            // Release the background task so it can reach finally block and clean up
+            backgroundGate.SetResult();
         }
 
         [Fact]
