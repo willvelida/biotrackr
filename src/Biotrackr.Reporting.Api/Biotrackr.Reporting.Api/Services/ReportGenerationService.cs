@@ -163,7 +163,7 @@ namespace Biotrackr.Reporting.Api.Services
                     sessionActivity?.SetTag("report.attempt", attempt);
 
                     // Track tool execution and session events for observability
-                    var eventSubscription = session.On(evt =>
+                    using var eventSubscription = session.On(evt =>
                     {
                         switch (evt)
                         {
@@ -174,8 +174,8 @@ namespace Biotrackr.Reporting.Api.Services
                                 break;
                             case SubagentCompletedEvent completed:
                                 _logger.LogInformation(
-                                    "Subagent completed for job {JobId}: Agent={AgentName}, Duration={DurationMs}ms, ToolCalls={ToolCalls}, Tokens={Tokens}, Model={Model}",
-                                    jobId, completed.Data?.AgentDisplayName, completed.Data?.DurationMs,
+                                    "Subagent completed for job {JobId}: Agent={AgentName}, DisplayName={DisplayName}, Duration={DurationMs}ms, ToolCalls={ToolCalls}, Tokens={Tokens}, Model={Model}",
+                                    jobId, completed.Data?.AgentName, completed.Data?.AgentDisplayName, completed.Data?.DurationMs,
                                     completed.Data?.TotalToolCalls, completed.Data?.TotalTokens, completed.Data?.Model);
                                 ReportingTelemetry.SubagentDuration.Record(
                                     completed.Data?.DurationMs ?? 0,
@@ -183,8 +183,8 @@ namespace Biotrackr.Reporting.Api.Services
                                 break;
                             case SubagentFailedEvent failed:
                                 _logger.LogWarning(
-                                    "Subagent failed for job {JobId}: Agent={AgentName}, Error={Error}, Duration={DurationMs}ms, ToolCalls={ToolCalls}",
-                                    jobId, failed.Data?.AgentDisplayName, failed.Data?.Error,
+                                    "Subagent failed for job {JobId}: Agent={AgentName}, DisplayName={DisplayName}, Error={Error}, Duration={DurationMs}ms, ToolCalls={ToolCalls}",
+                                    jobId, failed.Data?.AgentName, failed.Data?.AgentDisplayName, failed.Data?.Error,
                                     failed.Data?.DurationMs, failed.Data?.TotalToolCalls);
                                 break;
                             case ToolExecutionStartEvent toolStart:
@@ -227,9 +227,6 @@ namespace Biotrackr.Reporting.Api.Services
 
                     _logger.LogInformation("Copilot session completed for job {JobId}. Response length: {Length}",
                         jobId, responseText?.Length ?? 0);
-
-                    // Dispose event subscription after session completes
-                    eventSubscription?.Dispose();
 
                     // Defense-in-depth code validation — primary gate is OnPostToolUse hook (ASI05)
                     ValidateGeneratedCode(jobId);
@@ -279,22 +276,28 @@ namespace Biotrackr.Reporting.Api.Services
                     {
                         await _blobStorageService.UpdateJobStatusAsync(jobId, ReportStatus.Failed,
                             $"Report generation failed after {attempt} attempts: {ex.Message}");
-                        return;
                     }
                 }
             }
 
             stopwatch.Stop();
-            if (success)
+            try
             {
-                ReportingTelemetry.ReportsGenerated.Add(1);
-                ReportingTelemetry.ReportDuration.Record(stopwatch.Elapsed.TotalMilliseconds);
+                if (success)
+                {
+                    ReportingTelemetry.ReportsGenerated.Add(1);
+                    ReportingTelemetry.ReportDuration.Record(stopwatch.Elapsed.TotalMilliseconds);
+                }
+                else
+                {
+                    ReportingTelemetry.ReportsFailed.Add(1);
+                    await _blobStorageService.UpdateJobStatusAsync(jobId, ReportStatus.Failed,
+                        $"No report artifacts generated after {attempt} attempts.");
+                }
             }
-            else
+            catch (Exception ex)
             {
-                ReportingTelemetry.ReportsFailed.Add(1);
-                await _blobStorageService.UpdateJobStatusAsync(jobId, ReportStatus.Failed,
-                    $"No report artifacts generated after {attempt} attempts.");
+                _logger.LogError(ex, "Failed to record metrics for job {JobId}", jobId);
             }
         }
 
