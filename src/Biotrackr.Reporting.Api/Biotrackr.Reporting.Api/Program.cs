@@ -4,6 +4,7 @@ using Biotrackr.Reporting.Api.Agents;
 using Biotrackr.Reporting.Api.Configuration;
 using Biotrackr.Reporting.Api.Endpoints;
 using Biotrackr.Reporting.Api.Services;
+using Biotrackr.Reporting.Api.Telemetry;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.Agents.AI.Hosting;
 using Microsoft.Extensions.Configuration.AzureAppConfiguration;
@@ -88,6 +89,7 @@ builder.Services.AddOpenTelemetry()
     .WithTracing(tracing =>
     {
         tracing.SetResourceBuilder(resourceBuilder)
+            .AddSource(ReportingTelemetry.SourceName)
             .AddAspNetCoreInstrumentation()
             .AddHttpClientInstrumentation();
 
@@ -102,6 +104,7 @@ builder.Services.AddOpenTelemetry()
     .WithMetrics(metrics =>
     {
         metrics.SetResourceBuilder(resourceBuilder)
+            .AddMeter(ReportingTelemetry.SourceName)
             .AddAspNetCoreInstrumentation()
             .AddHttpClientInstrumentation();
 

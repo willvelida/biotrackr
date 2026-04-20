@@ -60,10 +60,17 @@ namespace Biotrackr.Reporting.Api.Services
                     _client = new CopilotClient(new CopilotClientOptions
                     {
                         CliUrl = settings.Value.CopilotCliUrl,
+                        LogLevel = "info",
+                        Logger = logger,
+                        // NOTE: TelemetryConfig has no effect in external server mode (sidecar).
+                        // The CLI is already running when the SDK connects via CliUrl.
+                        // To configure CLI telemetry, set COPILOT_OTEL_* env vars on the
+                        // container in Bicep. Keeping this block for documentation and
+                        // future subprocess mode compatibility.
                         Telemetry = new TelemetryConfig
                         {
                             SourceName = "Biotrackr.Reporting.Api.Copilot",
-                            CaptureContent = false, // Avoid logging health data in traces
+                            CaptureContent = false,
                         },
                     });
                 }
