@@ -24,25 +24,28 @@ public static class ReviewEndpoints
             return Results.BadRequest(new { error = "jobId is required" });
         }
 
+        var concerns = request.Concerns ?? [];
+        var validatedSummary = request.ValidatedSummary ?? string.Empty;
+
         try
         {
             await blobStorageService.UpdateReviewResultAsync(
                 jobId,
                 request.Approved,
-                request.Concerns,
-                request.ValidatedSummary);
+                concerns,
+                validatedSummary);
 
             ReportingTelemetry.ReportsReviewed.Add(1);
             logger.LogInformation("Report {JobId} reviewed: Approved={Approved}, Concerns={ConcernCount}",
-                jobId, request.Approved, request.Concerns.Count);
+                jobId, request.Approved, concerns.Count);
 
             return Results.NoContent();
         }
-        catch (InvalidOperationException ex) when (ex.Message.Contains("not found"))
+        catch (KeyNotFoundException ex)
         {
             return Results.NotFound(new { error = ex.Message });
         }
-        catch (InvalidOperationException ex) when (ex.Message.Contains("not in generated status"))
+        catch (InvalidOperationException ex)
         {
             return Results.Conflict(new { error = ex.Message });
         }

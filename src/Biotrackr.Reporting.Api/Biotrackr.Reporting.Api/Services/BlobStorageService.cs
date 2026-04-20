@@ -138,11 +138,13 @@ namespace Biotrackr.Reporting.Api.Services
         public async Task UpdateReviewResultAsync(string jobId, bool approved, List<string> concerns, string validatedSummary)
         {
             ArgumentException.ThrowIfNullOrWhiteSpace(jobId);
+            ArgumentNullException.ThrowIfNull(concerns);
+            ArgumentNullException.ThrowIfNull(validatedSummary);
 
             var metadata = await GetMetadataAsync(jobId);
             if (metadata is null)
             {
-                throw new InvalidOperationException($"Job {jobId} not found");
+                throw new KeyNotFoundException($"Job {jobId} not found");
             }
 
             if (metadata.Status != ReportStatus.Generated)

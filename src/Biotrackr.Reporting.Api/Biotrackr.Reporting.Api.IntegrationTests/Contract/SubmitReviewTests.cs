@@ -59,7 +59,7 @@ public class SubmitReviewTests : IClassFixture<ReportingApiWebApplicationFactory
 
         _factory.MockBlobStorageService
             .Setup(s => s.UpdateReviewResultAsync(jobId, It.IsAny<bool>(), It.IsAny<List<string>>(), It.IsAny<string>()))
-            .ThrowsAsync(new InvalidOperationException($"Job {jobId} not found"));
+            .ThrowsAsync(new KeyNotFoundException($"Job {jobId} not found"));
 
         // Act
         var response = await _client.PutAsJsonAsync($"/api/reports/{jobId}/review", request);

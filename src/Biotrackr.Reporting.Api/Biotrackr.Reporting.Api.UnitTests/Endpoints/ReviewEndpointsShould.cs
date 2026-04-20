@@ -59,7 +59,7 @@ public class ReviewEndpointsShould
 
         _blobStorageServiceMock
             .Setup(s => s.UpdateReviewResultAsync(jobId, It.IsAny<bool>(), It.IsAny<List<string>>(), It.IsAny<string>()))
-            .ThrowsAsync(new InvalidOperationException($"Job {jobId} not found"));
+            .ThrowsAsync(new KeyNotFoundException($"Job {jobId} not found"));
 
         // Act
         var result = await ReviewEndpoints.HandleSubmitReview(
