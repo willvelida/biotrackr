@@ -1,0 +1,55 @@
+{
+  "$schema": "https://aka.ms/codetour-schema",
+  "title": "NDC Sydney — Anatomy of a Responsible Agent",
+  "description": "Demo 1: Walk through Biotrackr's AI agent architecture showing how responsible AI controls are embedded at every layer — middleware pipeline, code validation, agent identity, independent review, and observability.",
+  "steps": [
+    {
+      "file": "src/Biotrackr.Chat.Api/Biotrackr.Chat.Api/Program.cs",
+      "line": 171,
+      "title": "1. AG-UI Protocol — One Line Maps SSE Streaming",
+      "description": "## AG-UI: The Agent-User Interface Protocol\n\n`AddAGUI()` on line 171 registers all AG-UI services. `MapAGUI(\"/\", dynamicAgent)` on line 197 maps the entire SSE streaming protocol at the root path.\n\n**Key point:** One line gives us real-time streaming from agent to UI — tool call events, text deltas, run lifecycle.\n\nNotice the `dynamicAgent` wrapper (lines 186–193) — it delegates to `ChatAgentProvider.RunStreamingWithLatestAgentAsync()`. This ensures the agent is **rebuilt at runtime** when MCP tools become available after a degraded start. If the MCP Server is down at boot, the agent starts with 0 tools and self-heals when connectivity returns.\n\n> **OWASP mapping:** This dynamic rebuild is part of **ASI08 (Cascading Failures)** — graceful degradation on startup."
+    },
+    {
+      "file": "src/Biotrackr.Chat.Api/Biotrackr.Chat.Api/Services/ChatAgentProvider.cs",
+      "line": 157,
+      "title": "2. Microsoft Agent Framework — Building the Agent",
+      "description": "## Agent Construction with MAF\n\n`anthropicClient.AsAIAgent()` (line 158) creates a `ChatClientAgent` — the core MAF abstraction. It takes:\n- **model:** Claude model name\n- **name:** `BiotrackrChatAgent`\n- **instructions:** Today's date + system prompt (loaded from Key Vault)\n- **tools:** MCP tools + native report tools\n\nLine 167: `AllowConcurrentInvocation = true` — Claude batches parallel tool calls but the framework defaults to sequential execution. This unlocks parallel tool calling.\n\n> **Key insight:** The agent is a **singleton** that's rebuilt only when the MCP tool count changes. Thread-safe with `SemaphoreSlim` + double-check locking."
+    },
+    {
+      "file": "src/Biotrackr.Chat.Api/Biotrackr.Chat.Api/Services/ChatAgentProvider.cs",
+      "line": 189,
+      "title": "3. The Middleware Pipeline — Security as Architecture",
+      "description": "## Three Middleware Layers\n\n```\nRequest → ToolPolicy → ConversationPersistence → GracefulDegradation → Claude\n```\n\nThe `.AsBuilder().Use()` pattern (lines 188–192) is the **same concept as ASP.NET middleware** — each layer wraps the next, intercepting the streaming response.\n\n| Middleware | OWASP Control | What It Enforces |\n|---|---|---|\n| **ToolPolicyMiddleware** | ASI02 | Tool whitelist + 20-call budget |\n| **ConversationPersistenceMiddleware** | ASI06 | 50 hydrated msgs, 10K char limit, 100 msg cap |\n| **GracefulDegradationMiddleware** | ASI08 | Catches 503/429/timeout mid-stream |\n\n> **Core thesis:** Every tool call passes through all three layers before reaching Claude. Security is structural, not bolted on."
+    },
+    {
+      "file": "src/Biotrackr.Chat.Api/Biotrackr.Chat.Api/Middleware/ToolPolicyMiddleware.cs",
+      "line": 48,
+      "title": "4. Tool Policy — The Action Boundary (ASI02)",
+      "description": "## Tool Whitelist + Budget Enforcement\n\nValidates every tool name against `AllowedToolNames` — 14 tools total (12 MCP + GenerateReport + CheckReportStatus). If the agent tries to call a tool not on the list, a **warning is logged** for monitoring and alerting. The tool call is not terminated — the warning provides visibility for incident response while avoiding false-positive disruption.\n\nPer-session budget check — `MaxToolCallsPerSession` defaults to 20. Uses `IMemoryCache` with 1-hour sliding expiration. When exceeded, the agent returns a friendly message and `yield break`s the stream. This is the **hard enforcement boundary**.\n\nEvery tool invocation is logged with tool name + session ID for monitoring.\n\n> **Why this matters:** This is the **action boundary** pattern. The agent can reason about anything, but can only *act* through the tools we've approved. 14 tools. 20 calls. Every one logged. Unrecognised tools are flagged, over-budget sessions are stopped."
+    },
+    {
+      "file": "src/Biotrackr.Reporting.Api/Biotrackr.Reporting.Api/Services/CopilotService.cs",
+      "line": 37,
+      "title": "5. Code Validation Gate — Scanning for Dangerous Patterns (ASI05)",
+      "description": "## Dual-Layer Code Validation\n\n**`DangerousCodePatterns` (line 40):** 17 patterns — `os.system`, `subprocess`, `eval(`, `exec(`, `shutil.rmtree`, `os.popen`, and more.\n\n**Primary gate (real-time):** The `OnPostToolUse` hook (line 312) fires after every shell/bash command. If any pattern appears in the output, the model is instructed to regenerate safely — via `AdditionalContext`, not by aborting.\n\n**Secondary gate (post-hoc):** `ValidateGeneratedCode()` scans all `.py` files in `/tmp/reports` after the session completes. Defense-in-depth.\n\n**Pre-tool-use restriction (line 255):** File operations are restricted to `/tmp/reports` paths only. No reading `/etc/passwd`.\n\n**Tool allow-list (line 27):** The Copilot sidecar has its own separate tool allow-list — 13 tools.\n\n> **Architecture:** Two services, two allow-lists, two code scanning gates. Defense-in-depth is real."
+    },
+    {
+      "file": "src/Biotrackr.Chat.Api/Biotrackr.Chat.Api/Services/AgentTokenProvider.cs",
+      "line": 35,
+      "title": "6. Entra Agent Identity — Zero-Trust Between Agents (ASI03/ASI07)",
+      "description": "## The Agent Has Its Own Identity\n\n`.WithAgentIdentity()` sets the Entra Agent Identity ID. `RequestAppToken = true` — this is an **autonomous app flow**, not a delegated user flow. No user context needed.\n\nThe full auth chain:\n```\nManaged Identity → Federated Identity Credential → Agent Identity → JWT Bearer Token\n```\n\n`AgentIdentityTokenHandler` (a `DelegatingHandler`) attaches this token to every outbound HTTP call to Reporting.Api.\n\nOn the receiving side, Reporting.Api validates:\n1. JWT signature via OIDC discovery\n2. `aud` claim matches the agent blueprint\n3. `azp` claim matches the Chat.Api or Reporting.Svc agent identity\n\n> **Key insight:** The agent authenticates as itself — not as a user, not as a generic service principal. This is zero-trust for AI agents."
+    },
+    {
+      "file": "src/Biotrackr.Chat.Api/Biotrackr.Chat.Api/Tools/ReportReviewerService.cs",
+      "line": 41,
+      "title": "7. Independent Review Agent — Trust Through Transparency (ASI09)",
+      "description": "## A Second Claude Call Validates the First\n\n`ReviewReportAsync` (line 44) takes the report summary, source data snapshot, and report type. It sends them to a **completely separate Claude instance** with a validation-focused system prompt.\n\nThe reviewer returns `{ approved, concerns, validatedSummary }`.\n\n### Three Fail-Safe Disclosure Paths\n\n| Path | Line | Message |\n|---|---|---|\n| Prompt not configured | 49 | ⚠️ \"This report has not been independently reviewed\" |\n| Reviewer service fails | 131 | ⚠️ \"Could not be independently reviewed due to a service error\" |\n| Response unparseable | 181 | ⚠️ \"The independent review could not be completed\" |\n\n> **Critical design decision:** The reviewer is **fail-open but disclosure-mandatory**. If review fails, the report still delivers — but the user **always** knows the review status. Transparency is not optional."
+    },
+    {
+      "file": "src/Biotrackr.Chat.Api/Biotrackr.Chat.Api/Telemetry/AnthropicTelemetry.cs",
+      "line": 16,
+      "title": "8. Observability — The Audit Trail Foundation",
+      "description": "## OpenTelemetry GenAI Semantic Conventions\n\n`ActivitySource` named `gen_ai.anthropic` — follows the OpenTelemetry GenAI provider convention.\n\nEvery chat session produces a span with:\n- `gen_ai.operation.name` = `\"chat\"`\n- `gen_ai.request.model` — the Claude model used\n- `gen_ai.usage.input_tokens` — total input including cache\n- `gen_ai.usage.cache_read.input_tokens` — Anthropic prompt cache hits\n- `gen_ai.agents.id` — agent identifier\n\nUsed by both the chat agent AND the reviewer agent — complete token accounting across both LLM calls.\n\n**Infrastructure alerts** (defined in Bicep):\n- Tool call spike: >50 calls/5min per session\n- Auth failure spike: >10 401/403s in 15min\n\n> **The audit trail:** Every agent action, every token consumed, every tool called — queryable in Application Insights, alertable via KQL."
+    }
+  ]
+}
