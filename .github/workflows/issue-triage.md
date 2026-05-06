@@ -2,7 +2,6 @@
 on:
   issues:
     types: [opened]
-  skip-if-match: 'is:issue is:open label:duplicate label:wont-fix'
 engine:
   id: copilot
 permissions:
@@ -32,6 +31,7 @@ Analyze the newly opened issue and classify it.
 
 ## Instructions
 
+- If the issue already has a `duplicate` or `wont-fix` label, call `noop` — it has already been triaged
 - Read the issue title and body carefully
 - Check the repository structure under `src/` to understand which services exist
 - If the issue is unclear, add a comment asking for clarification rather than guessing labels
