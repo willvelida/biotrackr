@@ -4,7 +4,9 @@ on:
   workflow_dispatch:
 engine:
   id: copilot
-permissions: read-all
+permissions:
+  contents: read
+  actions: read
 safe-outputs:
   create-issue:
     title-prefix: "[security-scan] "

@@ -4,7 +4,8 @@ on:
   workflow_dispatch:
 engine:
   id: copilot
-permissions: read-all
+permissions:
+  contents: read
 safe-outputs:
   create-issue:
     title-prefix: "[doc-drift] "

@@ -5,7 +5,9 @@ on:
   skip-if-match: 'label:duplicate OR label:wont-fix'
 engine:
   id: copilot
-permissions: read-all
+permissions:
+  contents: read
+  issues: read
 rate-limit:
   max: 5
   window: 60

@@ -4,7 +4,9 @@ on:
     types: [opened, synchronize]
 engine:
   id: copilot
-permissions: read-all
+permissions:
+  contents: read
+  pull-requests: read
 rate-limit:
   max: 5
   window: 60
