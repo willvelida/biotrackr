@@ -2,7 +2,7 @@
 on:
   issues:
     types: [opened]
-  skip-if-match: 'label:duplicate OR label:wont-fix'
+  skip-if-match: 'is:issue is:open label:duplicate label:wont-fix'
 engine:
   id: copilot
 permissions:
