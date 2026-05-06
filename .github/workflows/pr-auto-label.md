@@ -12,7 +12,7 @@ rate-limit:
   window: 60
 safe-outputs:
   add-labels:
-    allowed: [activity, auth, chat, food, mcp, reporting, sleep, ui, vitals, weight, infrastructure, documentation, testing, ai-agent, security, dependencies]
+    allowed: [activity, auth, chat, food, mcp, reporting, sleep, ui, vitals, infrastructure, documentation, testing, ai-agent, security, dependencies]
     max: 5
 timeout-minutes: 10
 ---
@@ -32,7 +32,6 @@ Analyze the pull request's changed files and add appropriate labels.
 - Changes to `src/Biotrackr.Sleep.*/**` → `sleep`
 - Changes to `src/Biotrackr.UI/**` → `ui`
 - Changes to `src/Biotrackr.Vitals.*/**` → `vitals`
-- Changes to `src/Biotrackr.Weight.*/**` → `weight`
 - Changes to `infra/**` or `.github/workflows/**` → `infrastructure`
 - Changes to `docs/**` or `*.md` (excluding `.copilot-tracking/`) → `documentation`
 - Changes to `**/*Tests*/**` → `testing`

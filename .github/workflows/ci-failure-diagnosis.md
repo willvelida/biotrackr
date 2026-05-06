@@ -2,7 +2,25 @@
 on:
   workflow_run:
     types: [completed]
-    workflows: ["*"]
+    workflows:
+      - Deploy Activity Api
+      - Deploy Activity Service
+      - Deploy Auth Fitbit Service
+      - Deploy Auth Withings Service
+      - Deploy Chat Api
+      - Deploy Core Biotrackr Infrastructure
+      - Deploy Food Api
+      - Deploy Food Service
+      - Deploy MCP Server
+      - Deploy Reporting Api
+      - Deploy Reporting Service (Monthly)
+      - Deploy Reporting Service (Weekly)
+      - Deploy Reporting Service (Yearly)
+      - Deploy Sleep Api
+      - Deploy Sleep Service
+      - Deploy UI
+      - Deploy Vitals Api
+      - Deploy Vitals Service
     branches: [main]
 engine:
   id: copilot

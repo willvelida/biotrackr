@@ -13,7 +13,7 @@ rate-limit:
   window: 60
 safe-outputs:
   add-labels:
-    allowed: [bug, enhancement, infrastructure, ai-agent, documentation, security, testing, activity, auth, chat, food, mcp, reporting, sleep, ui, vitals, weight]
+    allowed: [bug, enhancement, infrastructure, ai-agent, documentation, security, testing, activity, auth, chat, food, mcp, reporting, sleep, ui, vitals]
     max: 4
   add-comment:
     max: 1
@@ -27,7 +27,7 @@ Analyze the newly opened issue and classify it.
 ## Classification Rules
 
 1. **Type labels** (pick one): `bug`, `enhancement`, `infrastructure`, `documentation`, `security`, `testing`
-2. **Service labels** (pick one or more if applicable): `activity`, `auth`, `chat`, `food`, `mcp`, `reporting`, `sleep`, `ui`, `vitals`, `weight`
+2. **Service labels** (pick one or more if applicable): `activity`, `auth`, `chat`, `food`, `mcp`, `reporting`, `sleep`, `ui`, `vitals`
 3. **AI flag**: Add `ai-agent` if the issue involves Chat API, MCP Server, Reporting API, or agent behavior
 
 ## Instructions
@@ -40,6 +40,6 @@ Analyze the newly opened issue and classify it.
 
 ## Repository Context
 
-This is a 14-service microservices platform (Biotrackr) for personal health tracking. Services: Activity, Auth, Chat, Food, MCP Server, Reporting, Sleep, UI, Vitals, Weight. Tech stack: .NET 10, Blazor Server, Azure Container Apps, Cosmos DB, Azure API Management.
+This is a 14-service microservices platform (Biotrackr) for personal health tracking. Services: Activity, Auth, Chat, Food, MCP Server, Reporting, Sleep, UI, Vitals. Tech stack: .NET 10, Blazor Server, Azure Container Apps, Cosmos DB, Azure API Management.
 
 If no action is needed, you MUST call the `noop` tool with a message explaining why.
