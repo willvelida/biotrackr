@@ -1,6 +1,6 @@
 ---
 schedule: every 6h
-target-metric: 0.85
+target-metric: 85
 ---
 
 # Test Coverage
@@ -39,6 +39,7 @@ set -e
 # Find all solution files and run unit tests with coverage collection
 TOTAL_COVERED=0
 TOTAL_COVERABLE=0
+FAILED_SERVICES=0
 
 for sln in src/Biotrackr.*/Biotrackr.*.sln src/Biotrackr.*/Biotrackr.*.slnx; do
   [ -f "$sln" ] || continue
@@ -46,12 +47,14 @@ for sln in src/Biotrackr.*/Biotrackr.*.sln src/Biotrackr.*/Biotrackr.*.slnx; do
   
   # Restore and run unit tests with coverage
   dotnet restore "$sln" -v:q 2>/dev/null
-  dotnet test "$sln" --no-restore \
+  if ! dotnet test "$sln" --no-restore \
     --collect:"XPlat Code Coverage" \
     --settings "$SVC_DIR/coverage.runsettings" \
     --results-directory "$SVC_DIR/TestResults" \
     --filter "FullyQualifiedName!~Contract&FullyQualifiedName!~E2E" \
-    -v:q 2>/dev/null || true
+    -v:q 2>/dev/null; then
+    FAILED_SERVICES=$((FAILED_SERVICES + 1))
+  fi
 
   # Parse coverage XML
   for cov in "$SVC_DIR"/TestResults/*/coverage.cobertura.xml; do
@@ -73,7 +76,12 @@ else
   PERCENT=0
 fi
 
-echo "{\"coverage_percent\": $PERCENT, \"covered_lines\": $TOTAL_COVERED, \"coverable_lines\": $TOTAL_COVERABLE}"
+echo "{\"coverage_percent\": $PERCENT, \"covered_lines\": $TOTAL_COVERED, \"coverable_lines\": $TOTAL_COVERABLE, \"failed_services\": $FAILED_SERVICES}"
+
+# Fail evaluation if any service had test failures
+if [ "$FAILED_SERVICES" -gt 0 ]; then
+  exit 1
+fi
 ```
 
 The metric is `coverage_percent` from the JSON output. **Higher is better.**
