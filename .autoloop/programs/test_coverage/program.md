@@ -44,10 +44,11 @@ for sln in src/Biotrackr.*/Biotrackr.*.sln src/Biotrackr.*/Biotrackr.*.slnx; do
   [ -f "$sln" ] || continue
   SVC_DIR=$(dirname "$sln")
   
-  # Run unit tests with coverage
+  # Restore and run unit tests with coverage
+  dotnet restore "$sln" -v:q 2>/dev/null
   dotnet test "$sln" --no-restore \
     --collect:"XPlat Code Coverage" \
-    --settings src/coverage.runsettings \
+    --settings "$SVC_DIR/coverage.runsettings" \
     --results-directory "$SVC_DIR/TestResults" \
     --filter "FullyQualifiedName!~Contract&FullyQualifiedName!~E2E" \
     -v:q 2>/dev/null || true
@@ -67,7 +68,7 @@ done
 
 # Calculate overall percentage
 if [ "$TOTAL_COVERABLE" -gt 0 ]; then
-  PERCENT=$(echo "scale=2; $TOTAL_COVERED * 100 / $TOTAL_COVERABLE" | bc)
+  PERCENT=$(python3 -c "print(round($TOTAL_COVERED * 100 / $TOTAL_COVERABLE, 2))")
 else
   PERCENT=0
 fi
