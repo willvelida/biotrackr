@@ -23,7 +23,7 @@ on:
 
 permissions: read-all
 
-timeout-minutes: 45
+timeout-minutes: 75
 
 network:
   allowed:
@@ -33,6 +33,10 @@ network:
   - rust
   - java
   - dotnet
+
+runtimes:
+  dotnet:
+    version: "10.0"
 
 safe-outputs:
   max-patch-size: 10240
@@ -69,6 +73,7 @@ checkout:
   fetch-depth: 0
 
 tools:
+  timeout: 600
   web-fetch:
   github:
     toolsets: [all]
