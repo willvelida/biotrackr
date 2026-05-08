@@ -28,7 +28,7 @@ tools:
 
 Detect breaking changes across the Biotrackr microservices platform and post deployment ordering recommendations.
 
-{{#runtime-import instructions/cosmos-conventions.instructions.md}}
+{{#runtime-import .github/instructions/cosmos-conventions.instructions.md}}
 
 ## Instructions
 
