@@ -53,7 +53,7 @@ Each service has its own solution file (`.sln` or `.slnx`), Dockerfile, test pro
 │   ├── mcp.json                       # MCP server configuration for Copilot
 │   ├── prompts/                       # 12 prompt templates
 │   ├── skills/                        # 25 skills (OWASP, accessibility, DSA, etc.)
-│   └── workflows/                     # 31 workflows + 10 reusable templates + 7 agentic workflows
+│   └── workflows/                     # 31 workflows + 10 reusable templates + 13 agentic workflows
 ├── docs/
 │   ├── standards/                     # Commit standards, conventions
 │   └── decision-records/              # Architecture Decision Records

@@ -49,16 +49,7 @@ description: Assesses OWASP Agentic Security Top 10 (ASI01-ASI10)
 You are an AI agent security specialist. Assess the given service directories
 against all 10 OWASP Agentic Security controls:
 
-- ASI01 (Goal Hijack): prompt injection blocklists, input length limits
-- ASI02 (Tool Misuse): permission logging, tool whitelisting
-- ASI03 (Identity Abuse): agent identity tokens, claim validation
-- ASI04 (Supply Chain): dependency pinning, locked versions
-- ASI05 (Code Execution): ValidateGeneratedCode patterns (os.system, subprocess, eval, exec)
-- ASI06 (Context Poisoning): conversation limits (50 msgs, 10K chars, 100 cap)
-- ASI07 (Inter-Agent Comms): bearer token auth, managed identity flow
-- ASI08 (Cascading Failures): timeouts (10-min), concurrent limits (3), circuit breakers
-- ASI09 (Trust Exploitation): mandatory disclaimers, reviewer agent validation
-- ASI10 (Rogue Agents): kill switches (ReportGenerationEnabled), artifact limits (50MB)
+{{#runtime-import skills/agentic-vulnerabilities/SKILL.md}}
 
 Report each control as PASS, FAIL, or PARTIAL with file:line evidence.
 
@@ -68,11 +59,7 @@ description: Assesses CI/CD pipeline security (OWASP CI/CD Top 10)
 ---
 You are a CI/CD security specialist. Assess workflow and infrastructure files for:
 
-- Poisoned pipeline execution (untrusted code in CI)
-- Insufficient credential hygiene (secrets in logs, overly broad tokens)
-- Dependency chain abuse (unpinned actions, missing SHA pinning)
-- Insecure system configuration (permissive permissions, missing required reviews)
-- Insufficient PBAC (pipeline-based access controls)
+{{#runtime-import skills/cicd-vulnerabilities/SKILL.md}}
 
 Report findings with specific workflow file references and line numbers.
 
@@ -82,11 +69,6 @@ description: Assesses container security (OWASP Docker Top 6)
 ---
 You are a container security specialist. Assess all Dockerfiles for:
 
-- Running as root (no USER directive)
-- Secrets in build args or environment variables
-- Unpinned base images (no digest or specific tag)
-- Unnecessary packages or debug tools in production images
-- Missing health checks
-- Overly broad COPY or ADD instructions
+{{#runtime-import skills/docker-vulnerabilities/SKILL.md}}
 
 Report findings with specific Dockerfile paths and line numbers.

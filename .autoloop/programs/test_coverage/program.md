@@ -1,5 +1,5 @@
 ---
-schedule: every 6h
+schedule: weekly
 target-metric: 85
 ---
 

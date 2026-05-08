@@ -11,7 +11,7 @@ description: |
   - Maintains a single draft PR per program that accumulates all accepted iterations
 
 on:
-  schedule: every 6h
+  schedule: weekly
   workflow_dispatch:
     inputs:
       program:
@@ -268,7 +268,7 @@ Programs without a `target-metric` are **open-ended** and run indefinitely until
 
 ```markdown
 ---
-schedule: every 6h
+schedule: weekly
 target-metric: 0.95
 ---
 
@@ -282,7 +282,7 @@ By default Autoloop assumes **higher is better** — `best_metric` is ratcheted 
 
 ```markdown
 ---
-schedule: every 6h
+schedule: weekly
 metric_direction: lower   # defaults to "higher" if omitted
 target-metric: 0.9        # interpreted as "program is complete when best_metric ≤ 0.9"
 ---
@@ -661,7 +661,7 @@ Programs can be **open-ended** (run indefinitely until manually stopped) or **go
 
 ```markdown
 ---
-schedule: every 6h
+schedule: weekly
 target-metric: 0.95
 ---
 
