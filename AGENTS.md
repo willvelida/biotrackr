@@ -53,7 +53,7 @@ Each service has its own solution file (`.sln` or `.slnx`), Dockerfile, test pro
 │   ├── mcp.json                       # MCP server configuration for Copilot
 │   ├── prompts/                       # 12 prompt templates
 │   ├── skills/                        # 25 skills (OWASP, accessibility, DSA, etc.)
-│   └── workflows/                     # 31 workflows + 10 reusable templates + 7 agentic workflows
+│   └── workflows/                     # 31 workflows + 10 reusable templates + 13 agentic workflows
 ├── docs/
 │   ├── standards/                     # Commit standards, conventions
 │   └── decision-records/              # Architecture Decision Records
@@ -319,7 +319,7 @@ Full OWASP Agentic Security (ASI01-ASI10) details are in `.github/copilot-instru
 - Change Cosmos DB partition keys or container structure
 - Delete files or data without explicit user confirmation
 - Use base `Exception` class — use precise exception types
-- Skip DCO sign-off on commits
+- Skip DCO sign-off on commits — bot accounts (`github-actions[bot]`, `dependabot[bot]`) are exempt as their provenance is established through GitHub App identity
 
 ### ASK FIRST
 

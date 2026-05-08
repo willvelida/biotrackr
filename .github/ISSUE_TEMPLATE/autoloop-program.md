@@ -11,7 +11,7 @@ labels: autoloop-program
 <!-- After each run, a status comment will be posted/updated with links and results. -->
 
 ---
-schedule: every 6h
+schedule: weekly
 # target-metric: 0.95  ← uncomment and set to make this a goal-oriented program that stops when reached
 ---
 
