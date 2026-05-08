@@ -1,5 +1,5 @@
-using FluentAssertions;
 using System.Text.Json;
+using FluentAssertions;
 using Biotrackr.UI.Models.Activity;
 
 namespace Biotrackr.UI.UnitTests.Models.Activity;
@@ -7,7 +7,7 @@ namespace Biotrackr.UI.UnitTests.Models.Activity;
 public class ActivityLogShould
 {
     [Fact]
-    public void ShouldSerializeAndDeserialize()
+    public void Serialize_ShouldRoundTripActivityLog_WhenValidJson()
     {
         // Arrange
         var log = new ActivityLog

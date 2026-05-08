@@ -1,5 +1,5 @@
-using FluentAssertions;
 using System.Text.Json;
+using FluentAssertions;
 using Biotrackr.Mcp.Server.Models.Food;
 
 namespace Biotrackr.Mcp.Server.UnitTests.Models;
@@ -7,7 +7,7 @@ namespace Biotrackr.Mcp.Server.UnitTests.Models;
 public class FoodModelsShould
 {
     [Fact]
-    public void FoodEntry_ShouldSerializeAndDeserialize()
+    public void Serialize_ShouldRoundTripFoodEntry_WhenValidJson()
     {
         // Arrange
         var entry = new FoodEntry
@@ -31,7 +31,7 @@ public class FoodModelsShould
     }
 
     [Fact]
-    public void FoodUnit_ShouldSerializeAndDeserialize()
+    public void Serialize_ShouldRoundTripFoodUnit_WhenValidJson()
     {
         // Arrange
         var unit = new FoodUnit
@@ -51,7 +51,7 @@ public class FoodModelsShould
     }
 
     [Fact]
-    public void LoggedFood_ShouldSerializeAndDeserialize()
+    public void Serialize_ShouldRoundTripLoggedFood_WhenValidJson()
     {
         // Arrange
         var food = new LoggedFood
@@ -82,7 +82,7 @@ public class FoodModelsShould
     }
 
     [Fact]
-    public void NutritionalValues_ShouldSerializeAndDeserialize()
+    public void Serialize_ShouldRoundTripNutritionalValues_WhenValidJson()
     {
         // Arrange
         var values = new NutritionalValues

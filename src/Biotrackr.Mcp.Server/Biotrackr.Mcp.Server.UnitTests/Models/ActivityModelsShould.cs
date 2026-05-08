@@ -1,6 +1,6 @@
+using System.Text.Json;
 using AutoFixture;
 using FluentAssertions;
-using System.Text.Json;
 using Biotrackr.Mcp.Server.Models.Activity;
 
 namespace Biotrackr.Mcp.Server.UnitTests.Models;
@@ -10,7 +10,7 @@ public class ActivityModelsShould
     private readonly Fixture _fixture = new();
 
     [Fact]
-    public void ActivityLog_ShouldSerializeAndDeserialize()
+    public void Serialize_ShouldRoundTripActivityLog_WhenValidJson()
     {
         // Arrange
         var log = _fixture.Create<ActivityLog>();
@@ -33,7 +33,7 @@ public class ActivityModelsShould
     }
 
     [Fact]
-    public void ActivityResponse_ShouldSerializeAndDeserialize()
+    public void Serialize_ShouldRoundTripActivityResponse_WhenValidJson()
     {
         // Arrange
         var response = new ActivityResponse
@@ -63,7 +63,7 @@ public class ActivityModelsShould
     }
 
     [Fact]
-    public void DistanceData_ShouldSerializeAndDeserialize()
+    public void Serialize_ShouldRoundTripDistanceData_WhenValidJson()
     {
         // Arrange
         var distance = new DistanceData
@@ -83,7 +83,7 @@ public class ActivityModelsShould
     }
 
     [Fact]
-    public void HeartRateZone_ShouldSerializeAndDeserialize()
+    public void Serialize_ShouldRoundTripHeartRateZone_WhenValidJson()
     {
         // Arrange
         var zone = new HeartRateZone

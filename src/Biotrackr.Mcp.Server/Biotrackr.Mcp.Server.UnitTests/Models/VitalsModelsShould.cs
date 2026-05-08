@@ -1,5 +1,5 @@
-using FluentAssertions;
 using System.Text.Json;
+using FluentAssertions;
 using Biotrackr.Mcp.Server.Models.Vitals;
 
 namespace Biotrackr.Mcp.Server.UnitTests.Models;
@@ -7,7 +7,7 @@ namespace Biotrackr.Mcp.Server.UnitTests.Models;
 public class VitalsModelsShould
 {
     [Fact]
-    public void VitalsData_ShouldSerializeAndDeserialize()
+    public void Serialize_ShouldRoundTripVitalsData_WhenValidJson()
     {
         // Arrange
         var data = new VitalsData
@@ -47,7 +47,7 @@ public class VitalsModelsShould
     }
 
     [Fact]
-    public void BloodPressureReadingData_ShouldSerializeAndDeserialize()
+    public void Serialize_ShouldRoundTripBloodPressureReadingData_WhenValidJson()
     {
         // Arrange
         var reading = new BloodPressureReadingData

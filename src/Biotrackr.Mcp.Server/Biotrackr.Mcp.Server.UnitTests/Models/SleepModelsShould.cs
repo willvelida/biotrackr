@@ -1,5 +1,5 @@
-using FluentAssertions;
 using System.Text.Json;
+using FluentAssertions;
 using Biotrackr.Mcp.Server.Models.Sleep;
 
 namespace Biotrackr.Mcp.Server.UnitTests.Models;
@@ -7,7 +7,7 @@ namespace Biotrackr.Mcp.Server.UnitTests.Models;
 public class SleepModelsShould
 {
     [Fact]
-    public void SleepRecord_ShouldSerializeAndDeserialize()
+    public void Serialize_ShouldRoundTripSleepRecord_WhenValidJson()
     {
         // Arrange
         var record = new SleepRecord
@@ -48,7 +48,7 @@ public class SleepModelsShould
     }
 
     [Fact]
-    public void SleepLevelData_ShouldSerializeAndDeserialize()
+    public void Serialize_ShouldRoundTripSleepLevelData_WhenValidJson()
     {
         // Arrange
         var data = new SleepLevelData
@@ -69,7 +69,7 @@ public class SleepModelsShould
     }
 
     [Fact]
-    public void SleepDetails_ShouldSerializeAndDeserialize()
+    public void Serialize_ShouldRoundTripSleepDetails_WhenValidJson()
     {
         // Arrange
         var details = new SleepDetails
@@ -91,7 +91,7 @@ public class SleepModelsShould
     }
 
     [Fact]
-    public void SleepLevels_ShouldSerializeAndDeserialize()
+    public void Serialize_ShouldRoundTripSleepLevels_WhenValidJson()
     {
         // Arrange
         var levels = new SleepLevels

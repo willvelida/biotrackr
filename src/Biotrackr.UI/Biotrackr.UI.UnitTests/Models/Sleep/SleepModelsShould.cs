@@ -1,5 +1,5 @@
-using FluentAssertions;
 using System.Text.Json;
+using FluentAssertions;
 using Biotrackr.UI.Models.Sleep;
 
 namespace Biotrackr.UI.UnitTests.Models.Sleep;
@@ -7,7 +7,7 @@ namespace Biotrackr.UI.UnitTests.Models.Sleep;
 public class SleepModelsShould
 {
     [Fact]
-    public void SleepDetails_ShouldRoundTrip()
+    public void Serialize_ShouldRoundTripSleepDetails_WhenValidJson()
     {
         // Arrange
         var details = new SleepDetails
@@ -29,7 +29,7 @@ public class SleepModelsShould
     }
 
     [Fact]
-    public void SleepLevelData_ShouldRoundTrip()
+    public void Serialize_ShouldRoundTripSleepLevelData_WhenValidJson()
     {
         // Arrange
         var data = new SleepLevelData
