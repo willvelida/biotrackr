@@ -48,10 +48,10 @@ Each service has its own solution file (`.sln` or `.slnx`), Dockerfile, test pro
 ├── .github/
 │   ├── copilot-instructions.md        # Comprehensive Copilot guide (14 sections)
 │   ├── instructions/                  # Path-scoped .instructions.md files
-│   ├── agents/                        # 8 custom agent definitions
+│   ├── agents/                        # 9 custom agent definitions
 │   ├── aw/                            # Agentic workflow runtime artifacts
 │   ├── mcp.json                       # MCP server configuration for Copilot
-│   ├── prompts/                       # 8 prompt templates
+│   ├── prompts/                       # 12 prompt templates
 │   ├── skills/                        # 25 skills (OWASP, accessibility, DSA, etc.)
 │   └── workflows/                     # 31 workflows + 10 reusable templates + 7 agentic workflows
 ├── docs/
@@ -333,6 +333,22 @@ Full OWASP Agentic Security (ASI01-ASI10) details are in `.github/copilot-instru
 - Schema or data model changes affecting Cosmos DB documents
 - Changes to the AI agent architecture (MAF, AGUI, MCP patterns)
 - Adding or removing services from the architecture
+
+## Execution Plans and Progress Files
+
+For complex features spanning multiple sessions or services, use execution plans and progress files to bridge context across sessions.
+
+### Execution Plans
+
+Create execution plans at `.copilot-tracking/plans/{feature}-plan.md` using the template at `.copilot-tracking/templates/exec-plan-template.md`. Use for CS-3+ complexity tasks (cross-service, schema changes, new services).
+
+### Progress Files
+
+Create progress files at `.copilot-tracking/tasks/{task-name}.md` using the template at `.copilot-tracking/templates/progress-template.md`. Session startup protocol: read progress → parse next unchecked item → read Current State → verify build passes → continue.
+
+### Complexity Scoring
+
+Assign a complexity score (CS-1 through CS-5) before starting work. CS-1/2: proceed directly. CS-3+: create an execution plan first. See `docs/standards/harness-governance.md` for the full rubric.
 
 ## Additional Resources
 

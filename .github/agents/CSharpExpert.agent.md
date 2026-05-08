@@ -202,3 +202,20 @@ When invoked:
 - Avoid mocks/Fakes if possible
 - External dependencies can be mocked. Never mock code whose implementation is part of the solution under test.
 - Try to verify that the outputs (e.g. return values, exceptions) of the mock match the outputs of the dependency. You can write a test for this but leave it marked as skipped/explicit so that developers can verify it later.
+
+## Verification Protocol
+
+After generating or modifying C# code, run these deterministic checks before presenting results:
+
+1. **Build check**: Run `dotnet build --no-restore -v:q` in the service directory
+   - If build fails, read errors and fix before proceeding
+   - Maximum 2 retry attempts on build failures
+2. **Test check** (when tests are affected): Run `dotnet test --no-build`
+   - If tests fail, read output and fix
+   - Maximum 2 retry attempts on test failures
+3. **Escalation**: If any check fails after 2 retries, present the error to the user with:
+   - The exact error message
+   - What you tried
+   - Your assessment of the root cause
+
+Reference implementation: See Bicep Specialist agent for the build → check → retry pattern.

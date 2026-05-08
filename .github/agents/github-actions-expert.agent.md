@@ -41,10 +41,9 @@ Before creating or modifying workflows:
 - Grant minimal necessary permissions
 
 **Action Pinning**:
-- Pin to specific versions for stability
-- Use major version tags (`@v4`) for balance of security and maintenance
-- Consider full commit SHA for maximum security (requires more maintenance)
-- Never use `@main` or `@latest`
+- Pin third-party actions to full commit SHA for maximum supply-chain security
+- Pin internal reusable templates to `@main`
+- Never use `@latest` or floating tags on third-party actions
 
 **Secrets**:
 - Access via environment variables only
@@ -104,6 +103,16 @@ Eliminate long-lived credentials:
 - [ ] Secret scanning with push protection
 - [ ] No hardcoded credentials
 - [ ] Third-party actions from trusted sources
+
+## Verification Protocol
+
+After creating or modifying workflow files:
+
+1. **Syntax check**: Verify YAML syntax is valid (proper indentation, no tab characters, correct key-value pairs)
+2. **Action reference check**: Verify all action references use pinned versions (SHA for third-party, @main for internal templates)
+3. **Permissions check**: Verify `permissions:` block exists at workflow level with `contents: read` default
+4. **Escalation**: If validation reveals structural issues, present them to the user before proceeding
+   - Maximum 2 retry attempts on validation failures before escalating
 
 ## Best Practices Summary
 
