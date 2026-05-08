@@ -32,6 +32,7 @@ echo "Gitleaks pre-commit hook installed."
 
 # Restore NuGet packages for in-scope services
 echo "Restoring NuGet packages for in-scope services..."
+RESTORE_FAILURES=0
 SERVICES=(
     "src/Biotrackr.Activity.Api"
     "src/Biotrackr.Food.Api"
@@ -46,7 +47,10 @@ for svc in "${SERVICES[@]}"; do
     for sln in "$svc"/*.sln "$svc"/*.slnx; do
         if [ -f "$sln" ]; then
             echo "  Restoring $sln..."
-            dotnet restore "$sln" || true
+            if ! dotnet restore "$sln"; then
+                echo "  WARNING: Restore failed for $sln"
+                RESTORE_FAILURES=$((RESTORE_FAILURES + 1))
+            fi
         fi
     done
 done
@@ -54,15 +58,23 @@ echo "NuGet restore complete."
 
 # Build all in-scope services
 echo "Building all in-scope services..."
+BUILD_FAILURES=0
 for svc in "${SERVICES[@]}"; do
     for sln in "$svc"/*.sln "$svc"/*.slnx; do
         if [ -f "$sln" ]; then
             echo "  Building $sln..."
-            dotnet build "$sln" --no-restore -v:q || true
+            if ! dotnet build "$sln" --no-restore -v:q; then
+                echo "  WARNING: Build failed for $sln"
+                BUILD_FAILURES=$((BUILD_FAILURES + 1))
+            fi
         fi
     done
 done
-echo "Build complete."
+if [ $RESTORE_FAILURES -gt 0 ] || [ $BUILD_FAILURES -gt 0 ]; then
+    echo "WARNING: $RESTORE_FAILURES restore(s) and $BUILD_FAILURES build(s) failed. Some services may not start correctly."
+else
+    echo "Build complete."
+fi
 
 # Initialize Cosmos DB schema and seed data
 echo "Initializing Cosmos DB with schema and sample data..."

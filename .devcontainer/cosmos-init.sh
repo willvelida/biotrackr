@@ -63,9 +63,10 @@ create_container() {
 
     local body="{\"id\": \"${container_name}\", \"partitionKey\": {\"paths\": [\"/${partition_key}\"], \"kind\": \"Hash\", \"version\": 2}"
     if [ -n "$default_ttl" ]; then
-        body="${body}, \"defaultTtl\": ${default_ttl}"
+        body="${body}, \"defaultTtl\": ${default_ttl}}"
+    else
+        body="${body}}"
     fi
-    body="${body}}"
 
     HTTP_CODE=$(curl -k -s -o /dev/null -w "%{http_code}" \
         -X POST "${COSMOS_ENDPOINT}/dbs/${DATABASE_NAME}/colls" \

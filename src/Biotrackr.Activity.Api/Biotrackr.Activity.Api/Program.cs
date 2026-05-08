@@ -53,7 +53,8 @@ var cosmosClientOptions = new CosmosClientOptions
     }
 };
 var cosmosDbEndpoint = builder.Configuration.GetValue<string>("cosmosdbendpoint");
-var cosmosDbAccountKey = builder.Configuration.GetValue<string>("cosmosdbaccountkey");
+var cosmosDbAccountKey = builder.Configuration.GetValue<string>("Biotrackr:CosmosDb:AccountKey")
+    ?? builder.Configuration.GetValue<string>("cosmosdbaccountkey");
 
 CosmosClient cosmosClient;
 if (!string.IsNullOrWhiteSpace(cosmosDbAccountKey))
