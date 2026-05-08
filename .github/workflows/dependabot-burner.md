@@ -50,4 +50,4 @@ Analyze Dependabot pull requests and post advisory comments based on version bum
 ## Important
 
 - This workflow is strictly advisory. It provides triage information to help maintainers prioritize Dependabot PRs but never takes merge actions.
-- If no Dependabot PRs match the trigger, call `noop`.
+- If the triggering PR author is not `dependabot[bot]`, call `noop` immediately.
