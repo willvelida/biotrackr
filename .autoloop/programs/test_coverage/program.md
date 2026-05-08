@@ -36,7 +36,29 @@ The baseline table format:
 
 Update baselines on both accepted AND rejected iterations — the per-service data reflects the pre-change state and is valid regardless of whether the aggregate metric improved.
 
-The repository is a .NET 10 microservices platform with 14 services. Each service has its own solution file under `src/Biotrackr.{Domain}.{Type}/`. Unit tests use xUnit, FluentAssertions, Moq, and AutoFixture. Follow the existing test naming convention: class `{ClassUnderTest}Should`, method `{Method}_Should{Behavior}_When{Condition}`. Use strict Arrange/Act/Assert with comments.
+The repository is a .NET 10 microservices platform with 14 services. Each service has its own solution file under `src/Biotrackr.{Domain}.{Type}/`. Unit tests use xUnit, FluentAssertions, Moq, and AutoFixture. Follow these conventions strictly:
+
+### Test Naming
+
+- **Class:** `{ClassUnderTest}Should` (e.g., `ActivityHandlersShould`)
+- **Method:** `{Method}_Should{Behavior}_When{Condition}` (e.g., `GetActivityByDate_ShouldReturnOk_WhenActivityIsFound`)
+- Never use short names like `ShouldSerializeAndDeserialize()` — always include the subject and condition.
+
+### Using Directive Ordering
+
+- `System.*` namespaces must come first, followed by third-party libraries (e.g., `AutoFixture`, `FluentAssertions`, `Moq`), then project namespaces.
+- Example:
+  ```csharp
+  using System.Text.Json;
+  using AutoFixture;
+  using FluentAssertions;
+  using Biotrackr.Mcp.Server.Models.Activity;
+  ```
+
+### Code Style
+
+- Use strict Arrange/Act/Assert with `// Arrange`, `// Act`, `// Assert` comments.
+- Use file-scoped namespaces (e.g., `namespace Biotrackr.Mcp.Server.UnitTests.Models;`).
 
 ## Target
 
