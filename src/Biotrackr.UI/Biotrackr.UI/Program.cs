@@ -134,32 +134,35 @@ if (!app.Environment.IsDevelopment())
 app.UseStatusCodePagesWithReExecute("/not-found", createScopeForStatusCodePages: true);
 app.UseHttpsRedirection();
 
-// EasyAuth: redirect unauthenticated users to /login
-app.Use(async (context, next) =>
+// EasyAuth: redirect unauthenticated users to /login (skip in Development)
+if (!app.Environment.IsDevelopment())
 {
-    var path = context.Request.Path.Value?.ToLowerInvariant() ?? "";
-
-    var isPublicPath = path == "/login"
-        || path.StartsWith("/.auth/")
-        || path == "/healthz"
-        || path.StartsWith("/_framework/")
-        || path.StartsWith("/_blazor")
-        || path.StartsWith("/_content/")
-        || path.StartsWith("/lib/")
-        || path.EndsWith(".css")
-        || path.EndsWith(".js")
-        || path.EndsWith(".png")
-        || path.EndsWith(".ico")
-        || path.EndsWith(".map");
-
-    if (!isPublicPath && !context.Request.Headers.ContainsKey("X-MS-CLIENT-PRINCIPAL"))
+    app.Use(async (context, next) =>
     {
-        context.Response.Redirect("/login");
-        return;
-    }
+        var path = context.Request.Path.Value?.ToLowerInvariant() ?? "";
 
-    await next();
-});
+        var isPublicPath = path == "/login"
+            || path.StartsWith("/.auth/")
+            || path == "/healthz"
+            || path.StartsWith("/_framework/")
+            || path.StartsWith("/_blazor")
+            || path.StartsWith("/_content/")
+            || path.StartsWith("/lib/")
+            || path.EndsWith(".css")
+            || path.EndsWith(".js")
+            || path.EndsWith(".png")
+            || path.EndsWith(".ico")
+            || path.EndsWith(".map");
+
+        if (!isPublicPath && !context.Request.Headers.ContainsKey("X-MS-CLIENT-PRINCIPAL"))
+        {
+            context.Response.Redirect("/login");
+            return;
+        }
+
+        await next();
+    });
+}
 
 app.UseAntiforgery();
 

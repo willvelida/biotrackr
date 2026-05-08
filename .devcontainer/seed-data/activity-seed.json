@@ -1,0 +1,471 @@
+[
+  {
+    "id": "a1d24e01-1001-4b8a-9c01-000000000001",
+    "activity": {
+      "activities": [
+        {
+          "activityId": 90009,
+          "activityParentId": 90009,
+          "activityParentName": "Running",
+          "calories": 345,
+          "description": "Morning run",
+          "duration": 2400000,
+          "hasActiveZoneMinutes": true,
+          "hasStartTime": true,
+          "isFavorite": true,
+          "lastModified": "2026-04-24T07:40:00Z",
+          "logId": 61000000001,
+          "name": "Running",
+          "startDate": "2026-04-24",
+          "startTime": "07:00:00",
+          "steps": 4800,
+          "distance": 5.5
+        }
+      ],
+      "goals": {
+        "activeMinutes": 30,
+        "caloriesOut": 2200,
+        "distance": 8.0,
+        "floors": 10,
+        "steps": 10000
+      },
+      "summary": {
+        "activeScore": 0,
+        "activityCalories": 920,
+        "calorieEstimationMu": 0,
+        "caloriesBMR": 1650,
+        "caloriesOut": 2570,
+        "caloriesOutUnestimated": 0,
+        "distances": [
+          { "activity": "total", "distance": 8.92 },
+          { "activity": "tracker", "distance": 8.92 },
+          { "activity": "loggedActivities", "distance": 5.5 },
+          { "activity": "veryActive", "distance": 4.6 },
+          { "activity": "moderatelyActive", "distance": 2.1 },
+          { "activity": "lightlyActive", "distance": 2.22 },
+          { "activity": "sedentaryActive", "distance": 0.0 }
+        ],
+        "elevation": 48.77,
+        "fairlyActiveMinutes": 28,
+        "floors": 8,
+        "heartRateZones": [
+          { "caloriesOut": 580.2, "max": 94, "min": 30, "minutes": 710, "name": "Out of Range" },
+          { "caloriesOut": 310.5, "max": 132, "min": 94, "minutes": 50, "name": "Fat Burn" },
+          { "caloriesOut": 370.1, "max": 160, "min": 132, "minutes": 32, "name": "Cardio" },
+          { "caloriesOut": 130.0, "max": 220, "min": 160, "minutes": 8, "name": "Peak" }
+        ],
+        "lightlyActiveMinutes": 195,
+        "marginalCalories": 480,
+        "restingHeartRate": 60,
+        "sedentaryMinutes": 660,
+        "steps": 11250,
+        "useEstimation": false,
+        "veryActiveMinutes": 32
+      }
+    },
+    "date": "2026-04-24",
+    "documentType": "Activity"
+  },
+  {
+    "id": "a1d24e01-1001-4b8a-9c01-000000000002",
+    "activity": {
+      "activities": [
+        {
+          "activityId": 90013,
+          "activityParentId": 90013,
+          "activityParentName": "Walking",
+          "calories": 180,
+          "description": "Weekend stroll",
+          "duration": 2700000,
+          "hasActiveZoneMinutes": true,
+          "hasStartTime": true,
+          "isFavorite": false,
+          "lastModified": "2026-04-25T10:50:00Z",
+          "logId": 61000000002,
+          "name": "Walking",
+          "startDate": "2026-04-25",
+          "startTime": "10:05:00",
+          "steps": 3200,
+          "distance": 2.8
+        }
+      ],
+      "goals": {
+        "activeMinutes": 30,
+        "caloriesOut": 2200,
+        "distance": 8.0,
+        "floors": 10,
+        "steps": 10000
+      },
+      "summary": {
+        "activeScore": 0,
+        "activityCalories": 520,
+        "calorieEstimationMu": 0,
+        "caloriesBMR": 1650,
+        "caloriesOut": 2050,
+        "caloriesOutUnestimated": 0,
+        "distances": [
+          { "activity": "total", "distance": 4.35 },
+          { "activity": "tracker", "distance": 4.35 },
+          { "activity": "loggedActivities", "distance": 2.8 },
+          { "activity": "veryActive", "distance": 1.2 },
+          { "activity": "moderatelyActive", "distance": 1.0 },
+          { "activity": "lightlyActive", "distance": 2.15 },
+          { "activity": "sedentaryActive", "distance": 0.0 }
+        ],
+        "elevation": 15.24,
+        "fairlyActiveMinutes": 15,
+        "floors": 3,
+        "heartRateZones": [
+          { "caloriesOut": 620.0, "max": 94, "min": 30, "minutes": 800, "name": "Out of Range" },
+          { "caloriesOut": 180.3, "max": 132, "min": 94, "minutes": 25, "name": "Fat Burn" },
+          { "caloriesOut": 110.5, "max": 160, "min": 132, "minutes": 10, "name": "Cardio" },
+          { "caloriesOut": 0.0, "max": 220, "min": 160, "minutes": 0, "name": "Peak" }
+        ],
+        "lightlyActiveMinutes": 140,
+        "marginalCalories": 280,
+        "restingHeartRate": 63,
+        "sedentaryMinutes": 780,
+        "steps": 5200,
+        "useEstimation": false,
+        "veryActiveMinutes": 8
+      }
+    },
+    "date": "2026-04-25",
+    "documentType": "Activity"
+  },
+  {
+    "id": "a1d24e01-1001-4b8a-9c01-000000000003",
+    "activity": {
+      "activities": [
+        {
+          "activityId": 15670,
+          "activityParentId": 15670,
+          "activityParentName": "Yoga",
+          "calories": 120,
+          "description": "Morning yoga",
+          "duration": 1800000,
+          "hasActiveZoneMinutes": false,
+          "hasStartTime": true,
+          "isFavorite": false,
+          "lastModified": "2026-04-26T09:35:00Z",
+          "logId": 61000000003,
+          "name": "Yoga",
+          "startDate": "2026-04-26",
+          "startTime": "09:00:00",
+          "steps": 0,
+          "distance": null
+        }
+      ],
+      "goals": {
+        "activeMinutes": 30,
+        "caloriesOut": 2200,
+        "distance": 8.0,
+        "floors": 10,
+        "steps": 10000
+      },
+      "summary": {
+        "activeScore": 0,
+        "activityCalories": 410,
+        "calorieEstimationMu": 0,
+        "caloriesBMR": 1650,
+        "caloriesOut": 1870,
+        "caloriesOutUnestimated": 0,
+        "distances": [
+          { "activity": "total", "distance": 3.12 },
+          { "activity": "tracker", "distance": 3.12 },
+          { "activity": "loggedActivities", "distance": 0.0 },
+          { "activity": "veryActive", "distance": 0.5 },
+          { "activity": "moderatelyActive", "distance": 0.8 },
+          { "activity": "lightlyActive", "distance": 1.82 },
+          { "activity": "sedentaryActive", "distance": 0.0 }
+        ],
+        "elevation": 9.14,
+        "fairlyActiveMinutes": 12,
+        "floors": 3,
+        "heartRateZones": [
+          { "caloriesOut": 640.0, "max": 94, "min": 30, "minutes": 830, "name": "Out of Range" },
+          { "caloriesOut": 140.2, "max": 132, "min": 94, "minutes": 18, "name": "Fat Burn" },
+          { "caloriesOut": 60.0, "max": 160, "min": 132, "minutes": 5, "name": "Cardio" },
+          { "caloriesOut": 0.0, "max": 220, "min": 160, "minutes": 0, "name": "Peak" }
+        ],
+        "lightlyActiveMinutes": 120,
+        "marginalCalories": 210,
+        "restingHeartRate": 61,
+        "sedentaryMinutes": 820,
+        "steps": 4100,
+        "useEstimation": false,
+        "veryActiveMinutes": 5
+      }
+    },
+    "date": "2026-04-26",
+    "documentType": "Activity"
+  },
+  {
+    "id": "a1d24e01-1001-4b8a-9c01-000000000004",
+    "activity": {
+      "activities": [
+        {
+          "activityId": 90009,
+          "activityParentId": 90009,
+          "activityParentName": "Running",
+          "calories": 380,
+          "description": "Interval training",
+          "duration": 2700000,
+          "hasActiveZoneMinutes": true,
+          "hasStartTime": true,
+          "isFavorite": true,
+          "lastModified": "2026-04-27T07:50:00Z",
+          "logId": 61000000004,
+          "name": "Running",
+          "startDate": "2026-04-27",
+          "startTime": "06:45:00",
+          "steps": 5100,
+          "distance": 6.0
+        }
+      ],
+      "goals": {
+        "activeMinutes": 30,
+        "caloriesOut": 2200,
+        "distance": 8.0,
+        "floors": 10,
+        "steps": 10000
+      },
+      "summary": {
+        "activeScore": 0,
+        "activityCalories": 1050,
+        "calorieEstimationMu": 0,
+        "caloriesBMR": 1650,
+        "caloriesOut": 2700,
+        "caloriesOutUnestimated": 0,
+        "distances": [
+          { "activity": "total", "distance": 9.84 },
+          { "activity": "tracker", "distance": 9.84 },
+          { "activity": "loggedActivities", "distance": 6.0 },
+          { "activity": "veryActive", "distance": 5.2 },
+          { "activity": "moderatelyActive", "distance": 2.4 },
+          { "activity": "lightlyActive", "distance": 2.24 },
+          { "activity": "sedentaryActive", "distance": 0.0 }
+        ],
+        "elevation": 54.86,
+        "fairlyActiveMinutes": 35,
+        "floors": 10,
+        "heartRateZones": [
+          { "caloriesOut": 540.0, "max": 94, "min": 30, "minutes": 680, "name": "Out of Range" },
+          { "caloriesOut": 340.8, "max": 132, "min": 94, "minutes": 55, "name": "Fat Burn" },
+          { "caloriesOut": 400.2, "max": 160, "min": 132, "minutes": 38, "name": "Cardio" },
+          { "caloriesOut": 150.0, "max": 220, "min": 160, "minutes": 10, "name": "Peak" }
+        ],
+        "lightlyActiveMinutes": 200,
+        "marginalCalories": 520,
+        "restingHeartRate": 59,
+        "sedentaryMinutes": 640,
+        "steps": 12450,
+        "useEstimation": false,
+        "veryActiveMinutes": 35
+      }
+    },
+    "date": "2026-04-27",
+    "documentType": "Activity"
+  },
+  {
+    "id": "a1d24e01-1001-4b8a-9c01-000000000005",
+    "activity": {
+      "activities": [
+        {
+          "activityId": 90001,
+          "activityParentId": 90001,
+          "activityParentName": "Cycling",
+          "calories": 290,
+          "description": "Cycling to office",
+          "duration": 1800000,
+          "hasActiveZoneMinutes": true,
+          "hasStartTime": true,
+          "isFavorite": false,
+          "lastModified": "2026-04-28T08:35:00Z",
+          "logId": 61000000005,
+          "name": "Cycling",
+          "startDate": "2026-04-28",
+          "startTime": "08:00:00",
+          "steps": 0,
+          "distance": 8.5
+        }
+      ],
+      "goals": {
+        "activeMinutes": 30,
+        "caloriesOut": 2200,
+        "distance": 8.0,
+        "floors": 10,
+        "steps": 10000
+      },
+      "summary": {
+        "activeScore": 0,
+        "activityCalories": 880,
+        "calorieEstimationMu": 0,
+        "caloriesBMR": 1650,
+        "caloriesOut": 2480,
+        "caloriesOutUnestimated": 0,
+        "distances": [
+          { "activity": "total", "distance": 8.50 },
+          { "activity": "tracker", "distance": 8.50 },
+          { "activity": "loggedActivities", "distance": 8.5 },
+          { "activity": "veryActive", "distance": 3.8 },
+          { "activity": "moderatelyActive", "distance": 2.2 },
+          { "activity": "lightlyActive", "distance": 2.50 },
+          { "activity": "sedentaryActive", "distance": 0.0 }
+        ],
+        "elevation": 36.58,
+        "fairlyActiveMinutes": 30,
+        "floors": 7,
+        "heartRateZones": [
+          { "caloriesOut": 560.0, "max": 94, "min": 30, "minutes": 720, "name": "Out of Range" },
+          { "caloriesOut": 290.0, "max": 132, "min": 94, "minutes": 42, "name": "Fat Burn" },
+          { "caloriesOut": 330.5, "max": 160, "min": 132, "minutes": 28, "name": "Cardio" },
+          { "caloriesOut": 95.0, "max": 220, "min": 160, "minutes": 6, "name": "Peak" }
+        ],
+        "lightlyActiveMinutes": 185,
+        "marginalCalories": 440,
+        "restingHeartRate": 62,
+        "sedentaryMinutes": 670,
+        "steps": 10350,
+        "useEstimation": false,
+        "veryActiveMinutes": 28
+      }
+    },
+    "date": "2026-04-28",
+    "documentType": "Activity"
+  },
+  {
+    "id": "a1d24e01-1001-4b8a-9c01-000000000006",
+    "activity": {
+      "activities": [
+        {
+          "activityId": 90013,
+          "activityParentId": 90013,
+          "activityParentName": "Walking",
+          "calories": 210,
+          "description": "Lunchtime walk",
+          "duration": 1800000,
+          "hasActiveZoneMinutes": true,
+          "hasStartTime": true,
+          "isFavorite": false,
+          "lastModified": "2026-04-29T12:35:00Z",
+          "logId": 61000000006,
+          "name": "Walking",
+          "startDate": "2026-04-29",
+          "startTime": "12:00:00",
+          "steps": 3500,
+          "distance": 3.0
+        }
+      ],
+      "goals": {
+        "activeMinutes": 30,
+        "caloriesOut": 2200,
+        "distance": 8.0,
+        "floors": 10,
+        "steps": 10000
+      },
+      "summary": {
+        "activeScore": 0,
+        "activityCalories": 860,
+        "calorieEstimationMu": 0,
+        "caloriesBMR": 1650,
+        "caloriesOut": 2420,
+        "caloriesOutUnestimated": 0,
+        "distances": [
+          { "activity": "total", "distance": 7.65 },
+          { "activity": "tracker", "distance": 7.65 },
+          { "activity": "loggedActivities", "distance": 3.0 },
+          { "activity": "veryActive", "distance": 3.5 },
+          { "activity": "moderatelyActive", "distance": 1.8 },
+          { "activity": "lightlyActive", "distance": 2.35 },
+          { "activity": "sedentaryActive", "distance": 0.0 }
+        ],
+        "elevation": 42.67,
+        "fairlyActiveMinutes": 25,
+        "floors": 9,
+        "heartRateZones": [
+          { "caloriesOut": 570.0, "max": 94, "min": 30, "minutes": 730, "name": "Out of Range" },
+          { "caloriesOut": 275.0, "max": 132, "min": 94, "minutes": 40, "name": "Fat Burn" },
+          { "caloriesOut": 310.0, "max": 160, "min": 132, "minutes": 25, "name": "Cardio" },
+          { "caloriesOut": 80.0, "max": 220, "min": 160, "minutes": 5, "name": "Peak" }
+        ],
+        "lightlyActiveMinutes": 190,
+        "marginalCalories": 430,
+        "restingHeartRate": 61,
+        "sedentaryMinutes": 665,
+        "steps": 9870,
+        "useEstimation": false,
+        "veryActiveMinutes": 25
+      }
+    },
+    "date": "2026-04-29",
+    "documentType": "Activity"
+  },
+  {
+    "id": "a1d24e01-1001-4b8a-9c01-000000000007",
+    "activity": {
+      "activities": [
+        {
+          "activityId": 90009,
+          "activityParentId": 90009,
+          "activityParentName": "Running",
+          "calories": 320,
+          "description": "Morning run",
+          "duration": 2100000,
+          "hasActiveZoneMinutes": true,
+          "hasStartTime": true,
+          "isFavorite": true,
+          "lastModified": "2026-04-30T08:35:00Z",
+          "logId": 61000000007,
+          "name": "Running",
+          "startDate": "2026-04-30",
+          "startTime": "07:00:00",
+          "steps": 4500,
+          "distance": 5.2
+        }
+      ],
+      "goals": {
+        "activeMinutes": 30,
+        "caloriesOut": 2200,
+        "distance": 8.0,
+        "floors": 10,
+        "steps": 10000
+      },
+      "summary": {
+        "activeScore": 0,
+        "activityCalories": 850,
+        "calorieEstimationMu": 0,
+        "caloriesBMR": 1650,
+        "caloriesOut": 2500,
+        "caloriesOutUnestimated": 0,
+        "distances": [
+          { "activity": "total", "distance": 7.85 },
+          { "activity": "tracker", "distance": 7.85 },
+          { "activity": "loggedActivities", "distance": 5.2 },
+          { "activity": "veryActive", "distance": 4.1 },
+          { "activity": "moderatelyActive", "distance": 1.9 },
+          { "activity": "lightlyActive", "distance": 1.85 },
+          { "activity": "sedentaryActive", "distance": 0.0 }
+        ],
+        "elevation": 45.72,
+        "fairlyActiveMinutes": 25,
+        "floors": 6,
+        "heartRateZones": [
+          { "caloriesOut": 550.5, "max": 94, "min": 30, "minutes": 720, "name": "Out of Range" },
+          { "caloriesOut": 280.3, "max": 132, "min": 94, "minutes": 45, "name": "Fat Burn" },
+          { "caloriesOut": 350.2, "max": 160, "min": 132, "minutes": 30, "name": "Cardio" },
+          { "caloriesOut": 120.0, "max": 220, "min": 160, "minutes": 5, "name": "Peak" }
+        ],
+        "lightlyActiveMinutes": 180,
+        "marginalCalories": 450,
+        "restingHeartRate": 62,
+        "sedentaryMinutes": 680,
+        "steps": 8543,
+        "useEstimation": false,
+        "veryActiveMinutes": 30
+      }
+    },
+    "date": "2026-04-30",
+    "documentType": "Activity"
+  }
+]

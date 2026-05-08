@@ -73,6 +73,19 @@ Each service has its own solution file (`.sln` or `.slnx`), Dockerfile, test pro
 
 ## Dev Environment Setup
 
+### Recommended: Dev Container
+
+The fastest way to get started. Provides .NET 10.0, Cosmos DB vNext emulator, CLI tools, pre-built services, and 30 seed documents — no manual setup required.
+
+1. Open the repo in VS Code with the [Dev Containers extension](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-containers)
+2. Run **Dev Containers: Reopen in Container** (`Ctrl+Shift+P`)
+3. After setup completes: `bash scripts/start-local.sh`
+4. Open `http://localhost:5239`
+
+See [docs/devcontainer-setup.md](docs/devcontainer-setup.md) for secrets, ports, seed data, and troubleshooting.
+
+### Alternative: Manual Setup
+
 ### Prerequisites
 
 - **.NET 10.0 SDK**

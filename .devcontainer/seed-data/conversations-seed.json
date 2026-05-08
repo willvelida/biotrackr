@@ -1,0 +1,68 @@
+[
+  {
+    "id": "e5b68a05-5005-4fce-d005-000000000001",
+    "sessionId": "session-2026-04-30-001",
+    "title": "Weekly activity summary",
+    "lastUpdated": "2026-04-30T14:25:00Z",
+    "messages": [
+      {
+        "role": "user",
+        "content": "How many steps did I take last week?",
+        "timestamp": "2026-04-30T14:20:00Z",
+        "toolCalls": null
+      },
+      {
+        "role": "assistant",
+        "content": "Based on your activity data from April 24-30, you averaged 8,823 steps per day. Your best day was Monday April 27 with 12,450 steps, and your lowest was Sunday April 26 with 4,100 steps. You hit your 10,000 step goal on 3 out of 7 days.",
+        "timestamp": "2026-04-30T14:20:15Z",
+        "toolCalls": ["get_activity_by_date_range"]
+      },
+      {
+        "role": "user",
+        "content": "Which days did I meet my step goal?",
+        "timestamp": "2026-04-30T14:22:00Z",
+        "toolCalls": null
+      },
+      {
+        "role": "assistant",
+        "content": "You met your 10,000 step goal on three days: Thursday April 24 (11,250 steps), Monday April 27 (12,450 steps), and Tuesday April 28 (10,350 steps). The weekdays generally showed higher activity than the weekend.",
+        "timestamp": "2026-04-30T14:22:12Z",
+        "toolCalls": null
+      }
+    ],
+    "ttl": 7776000
+  },
+  {
+    "id": "e5b68a05-5005-4fce-d005-000000000002",
+    "sessionId": "session-2026-04-30-002",
+    "title": "Sleep quality check",
+    "lastUpdated": "2026-04-30T19:10:00Z",
+    "messages": [
+      {
+        "role": "user",
+        "content": "How has my sleep been this week?",
+        "timestamp": "2026-04-30T19:05:00Z",
+        "toolCalls": null
+      },
+      {
+        "role": "assistant",
+        "content": "This week (April 24-30), you averaged about 418 minutes (roughly 7 hours) of sleep per night with an average efficiency of 89%. Your best night was Saturday April 25 with 480 minutes of sleep and 93% efficiency. Monday April 27 was your shortest night at 365 minutes with 85% efficiency. Your deep sleep ranged from 55 to 100 minutes per night.",
+        "timestamp": "2026-04-30T19:05:18Z",
+        "toolCalls": ["get_sleep_by_date_range"]
+      },
+      {
+        "role": "user",
+        "content": "Is my deep sleep enough?",
+        "timestamp": "2026-04-30T19:08:00Z",
+        "toolCalls": null
+      },
+      {
+        "role": "assistant",
+        "content": "Your deep sleep averaged about 77 minutes per night this week. For adults, 60-90 minutes of deep sleep is generally considered healthy, so you're within a good range. However, on Monday and Wednesday you dipped to 55 minutes, which is on the lower end. Consistent sleep schedules and avoiding late caffeine can help maintain deeper sleep.",
+        "timestamp": "2026-04-30T19:08:14Z",
+        "toolCalls": null
+      }
+    ],
+    "ttl": 7776000
+  }
+]

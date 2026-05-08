@@ -421,3 +421,6 @@ docs/presentation-notes/*
 
 # Auto-generated ARM templates from Bicep compilation
 infra/apps/*/main.json
+
+# Dev Container secrets
+.devcontainer/.env

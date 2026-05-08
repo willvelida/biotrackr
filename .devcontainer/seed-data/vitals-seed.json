@@ -1,0 +1,200 @@
+[
+  {
+    "id": "d4a57f04-4004-4ebd-cf04-000000000001",
+    "weight": {
+      "bmi": 24.8,
+      "date": "2026-04-24",
+      "fat": 18.5,
+      "logId": null,
+      "source": "Withings",
+      "time": "07:10:00",
+      "weight": 78.2,
+      "fatMassKg": 14.5,
+      "fatFreeMassKg": 63.7,
+      "muscleMassKg": 35.5,
+      "boneMassKg": 3.4,
+      "waterMassKg": 41.8,
+      "visceralFatIndex": 8
+    },
+    "bloodPressureReadings": [
+      {
+        "systolic": 122,
+        "diastolic": 78,
+        "heartRate": 64,
+        "timestamp": "2026-04-24T07:15:00Z",
+        "time": "07:15:00",
+        "source": "Withings",
+        "logId": 51000000001,
+        "deviceId": "abc123def456"
+      }
+    ],
+    "date": "2026-04-24",
+    "documentType": "Vitals",
+    "provider": "Withings"
+  },
+  {
+    "id": "d4a57f04-4004-4ebd-cf04-000000000002",
+    "weight": {
+      "bmi": 24.6,
+      "date": "2026-04-25",
+      "fat": 18.3,
+      "logId": null,
+      "source": "Withings",
+      "time": "08:45:00",
+      "weight": 77.9,
+      "fatMassKg": 14.3,
+      "fatFreeMassKg": 63.6,
+      "muscleMassKg": 35.6,
+      "boneMassKg": 3.4,
+      "waterMassKg": 42.0,
+      "visceralFatIndex": 8
+    },
+    "bloodPressureReadings": null,
+    "date": "2026-04-25",
+    "documentType": "Vitals",
+    "provider": "Withings"
+  },
+  {
+    "id": "d4a57f04-4004-4ebd-cf04-000000000003",
+    "weight": {
+      "bmi": 24.9,
+      "date": "2026-04-26",
+      "fat": 18.6,
+      "logId": null,
+      "source": "Withings",
+      "time": "09:20:00",
+      "weight": 78.4,
+      "fatMassKg": 14.6,
+      "fatFreeMassKg": 63.8,
+      "muscleMassKg": 35.4,
+      "boneMassKg": 3.4,
+      "waterMassKg": 41.7,
+      "visceralFatIndex": 8
+    },
+    "bloodPressureReadings": [
+      {
+        "systolic": 118,
+        "diastolic": 75,
+        "heartRate": 62,
+        "timestamp": "2026-04-26T09:25:00Z",
+        "time": "09:25:00",
+        "source": "Withings",
+        "logId": 51000000002,
+        "deviceId": "abc123def456"
+      }
+    ],
+    "date": "2026-04-26",
+    "documentType": "Vitals",
+    "provider": "Withings"
+  },
+  {
+    "id": "d4a57f04-4004-4ebd-cf04-000000000004",
+    "weight": {
+      "bmi": 24.5,
+      "date": "2026-04-27",
+      "fat": 18.2,
+      "logId": null,
+      "source": "Withings",
+      "time": "06:50:00",
+      "weight": 77.7,
+      "fatMassKg": 14.2,
+      "fatFreeMassKg": 63.5,
+      "muscleMassKg": 35.7,
+      "boneMassKg": 3.4,
+      "waterMassKg": 42.2,
+      "visceralFatIndex": 7
+    },
+    "bloodPressureReadings": null,
+    "date": "2026-04-27",
+    "documentType": "Vitals",
+    "provider": "Withings"
+  },
+  {
+    "id": "d4a57f04-4004-4ebd-cf04-000000000005",
+    "weight": {
+      "bmi": 24.7,
+      "date": "2026-04-28",
+      "fat": 18.4,
+      "logId": null,
+      "source": "Withings",
+      "time": "07:05:00",
+      "weight": 78.0,
+      "fatMassKg": 14.4,
+      "fatFreeMassKg": 63.6,
+      "muscleMassKg": 35.5,
+      "boneMassKg": 3.4,
+      "waterMassKg": 41.9,
+      "visceralFatIndex": 8
+    },
+    "bloodPressureReadings": [
+      {
+        "systolic": 125,
+        "diastolic": 80,
+        "heartRate": 66,
+        "timestamp": "2026-04-28T07:10:00Z",
+        "time": "07:10:00",
+        "source": "Withings",
+        "logId": 51000000003,
+        "deviceId": "abc123def456"
+      }
+    ],
+    "date": "2026-04-28",
+    "documentType": "Vitals",
+    "provider": "Withings"
+  },
+  {
+    "id": "d4a57f04-4004-4ebd-cf04-000000000006",
+    "weight": {
+      "bmi": 24.6,
+      "date": "2026-04-29",
+      "fat": 18.3,
+      "logId": null,
+      "source": "Withings",
+      "time": "07:00:00",
+      "weight": 77.8,
+      "fatMassKg": 14.3,
+      "fatFreeMassKg": 63.5,
+      "muscleMassKg": 35.6,
+      "boneMassKg": 3.4,
+      "waterMassKg": 42.0,
+      "visceralFatIndex": 8
+    },
+    "bloodPressureReadings": null,
+    "date": "2026-04-29",
+    "documentType": "Vitals",
+    "provider": "Withings"
+  },
+  {
+    "id": "d4a57f04-4004-4ebd-cf04-000000000007",
+    "weight": {
+      "bmi": 24.5,
+      "date": "2026-04-30",
+      "fat": 18.2,
+      "logId": null,
+      "source": "Withings",
+      "time": "07:15:00",
+      "weight": 78.5,
+      "fatMassKg": 14.3,
+      "fatFreeMassKg": 64.2,
+      "muscleMassKg": 35.8,
+      "boneMassKg": 3.4,
+      "waterMassKg": 42.1,
+      "visceralFatIndex": 8
+    },
+    "bloodPressureReadings": [
+      {
+        "systolic": 118,
+        "diastolic": 75,
+        "heartRate": 65,
+        "timestamp": "2026-04-30T07:20:00Z",
+        "time": "07:20:00",
+        "source": "Withings",
+        "logId": 51000000004,
+        "deviceId": "abc123def456"
+      }
+    ],
+    "date": "2026-04-30",
+    "documentType": "Vitals",
+    "provider": "Withings"
+  }
+]

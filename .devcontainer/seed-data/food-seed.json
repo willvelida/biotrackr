@@ -1,0 +1,649 @@
+[
+  {
+    "id": "b2f35e02-2002-4c9b-ad02-000000000001",
+    "food": {
+      "foods": [
+        {
+          "isFavorite": false,
+          "logDate": "2026-04-24",
+          "logId": 71000000001,
+          "loggedFood": {
+            "accessLevel": "PUBLIC",
+            "amount": 1,
+            "brand": "",
+            "calories": 380,
+            "foodId": 541001,
+            "locale": "en_US",
+            "mealTypeId": 1,
+            "name": "Scrambled Eggs with Toast",
+            "unit": { "id": 304, "name": "serving", "plural": "servings" },
+            "units": [304, 226]
+          },
+          "nutritionalValues": {
+            "calories": 380.0,
+            "carbs": 30.0,
+            "fat": 18.0,
+            "fiber": 2.0,
+            "protein": 24.0,
+            "sodium": 520.0
+          }
+        },
+        {
+          "isFavorite": true,
+          "logDate": "2026-04-24",
+          "logId": 71000000002,
+          "loggedFood": {
+            "accessLevel": "PUBLIC",
+            "amount": 1,
+            "brand": "",
+            "calories": 520,
+            "foodId": 234001,
+            "locale": "en_US",
+            "mealTypeId": 2,
+            "name": "Turkey Club Sandwich",
+            "unit": { "id": 304, "name": "serving", "plural": "servings" },
+            "units": [304]
+          },
+          "nutritionalValues": {
+            "calories": 520.0,
+            "carbs": 42.0,
+            "fat": 22.0,
+            "fiber": 3.0,
+            "protein": 35.0,
+            "sodium": 890.0
+          }
+        },
+        {
+          "isFavorite": false,
+          "logDate": "2026-04-24",
+          "logId": 71000000003,
+          "loggedFood": {
+            "accessLevel": "PUBLIC",
+            "amount": 1,
+            "brand": "",
+            "calories": 620,
+            "foodId": 345001,
+            "locale": "en_US",
+            "mealTypeId": 7,
+            "name": "Grilled Steak with Potatoes",
+            "unit": { "id": 304, "name": "serving", "plural": "servings" },
+            "units": [304]
+          },
+          "nutritionalValues": {
+            "calories": 620.0,
+            "carbs": 40.0,
+            "fat": 24.0,
+            "fiber": 4.0,
+            "protein": 52.0,
+            "sodium": 680.0
+          }
+        }
+      ],
+      "goals": {
+        "calories": 2200
+      },
+      "summary": {
+        "calories": 1520.0,
+        "carbs": 112.0,
+        "fat": 64.0,
+        "fiber": 9.0,
+        "protein": 111.0,
+        "sodium": 2090.0,
+        "water": 2200.0
+      }
+    },
+    "date": "2026-04-24",
+    "documentType": "Food"
+  },
+  {
+    "id": "b2f35e02-2002-4c9b-ad02-000000000002",
+    "food": {
+      "foods": [
+        {
+          "isFavorite": false,
+          "logDate": "2026-04-25",
+          "logId": 71000000004,
+          "loggedFood": {
+            "accessLevel": "PUBLIC",
+            "amount": 1,
+            "brand": "",
+            "calories": 420,
+            "foodId": 541002,
+            "locale": "en_US",
+            "mealTypeId": 1,
+            "name": "Pancakes with Maple Syrup",
+            "unit": { "id": 304, "name": "serving", "plural": "servings" },
+            "units": [304]
+          },
+          "nutritionalValues": {
+            "calories": 420.0,
+            "carbs": 65.0,
+            "fat": 12.0,
+            "fiber": 2.0,
+            "protein": 10.0,
+            "sodium": 480.0
+          }
+        },
+        {
+          "isFavorite": false,
+          "logDate": "2026-04-25",
+          "logId": 71000000005,
+          "loggedFood": {
+            "accessLevel": "PUBLIC",
+            "amount": 1,
+            "brand": "",
+            "calories": 480,
+            "foodId": 234002,
+            "locale": "en_US",
+            "mealTypeId": 2,
+            "name": "Caesar Salad with Grilled Shrimp",
+            "unit": { "id": 300, "name": "bowl", "plural": "bowls" },
+            "units": [300]
+          },
+          "nutritionalValues": {
+            "calories": 480.0,
+            "carbs": 18.0,
+            "fat": 25.0,
+            "fiber": 4.0,
+            "protein": 42.0,
+            "sodium": 920.0
+          }
+        },
+        {
+          "isFavorite": false,
+          "logDate": "2026-04-25",
+          "logId": 71000000006,
+          "loggedFood": {
+            "accessLevel": "PUBLIC",
+            "amount": 1,
+            "brand": "",
+            "calories": 700,
+            "foodId": 345002,
+            "locale": "en_US",
+            "mealTypeId": 7,
+            "name": "BBQ Ribs with Coleslaw",
+            "unit": { "id": 304, "name": "serving", "plural": "servings" },
+            "units": [304]
+          },
+          "nutritionalValues": {
+            "calories": 700.0,
+            "carbs": 35.0,
+            "fat": 38.0,
+            "fiber": 3.0,
+            "protein": 48.0,
+            "sodium": 1100.0
+          }
+        }
+      ],
+      "goals": {
+        "calories": 2200
+      },
+      "summary": {
+        "calories": 1600.0,
+        "carbs": 118.0,
+        "fat": 75.0,
+        "fiber": 9.0,
+        "protein": 100.0,
+        "sodium": 2500.0,
+        "water": 1800.0
+      }
+    },
+    "date": "2026-04-25",
+    "documentType": "Food"
+  },
+  {
+    "id": "b2f35e02-2002-4c9b-ad02-000000000003",
+    "food": {
+      "foods": [
+        {
+          "isFavorite": true,
+          "logDate": "2026-04-26",
+          "logId": 71000000007,
+          "loggedFood": {
+            "accessLevel": "PUBLIC",
+            "amount": 1,
+            "brand": "",
+            "calories": 350,
+            "foodId": 541003,
+            "locale": "en_US",
+            "mealTypeId": 1,
+            "name": "Greek Yogurt with Granola",
+            "unit": { "id": 304, "name": "serving", "plural": "servings" },
+            "units": [304]
+          },
+          "nutritionalValues": {
+            "calories": 350.0,
+            "carbs": 45.0,
+            "fat": 8.0,
+            "fiber": 4.0,
+            "protein": 22.0,
+            "sodium": 120.0
+          }
+        },
+        {
+          "isFavorite": false,
+          "logDate": "2026-04-26",
+          "logId": 71000000008,
+          "loggedFood": {
+            "accessLevel": "PUBLIC",
+            "amount": 1,
+            "brand": "",
+            "calories": 550,
+            "foodId": 345003,
+            "locale": "en_US",
+            "mealTypeId": 7,
+            "name": "Pasta Bolognese",
+            "unit": { "id": 304, "name": "serving", "plural": "servings" },
+            "units": [304]
+          },
+          "nutritionalValues": {
+            "calories": 550.0,
+            "carbs": 62.0,
+            "fat": 18.0,
+            "fiber": 5.0,
+            "protein": 30.0,
+            "sodium": 780.0
+          }
+        }
+      ],
+      "goals": {
+        "calories": 2200
+      },
+      "summary": {
+        "calories": 900.0,
+        "carbs": 107.0,
+        "fat": 26.0,
+        "fiber": 9.0,
+        "protein": 52.0,
+        "sodium": 900.0,
+        "water": 2000.0
+      }
+    },
+    "date": "2026-04-26",
+    "documentType": "Food"
+  },
+  {
+    "id": "b2f35e02-2002-4c9b-ad02-000000000004",
+    "food": {
+      "foods": [
+        {
+          "isFavorite": false,
+          "logDate": "2026-04-27",
+          "logId": 71000000009,
+          "loggedFood": {
+            "accessLevel": "PUBLIC",
+            "amount": 1,
+            "brand": "",
+            "calories": 350,
+            "foodId": 541004,
+            "locale": "en_US",
+            "mealTypeId": 1,
+            "name": "Oatmeal with Banana",
+            "unit": { "id": 304, "name": "serving", "plural": "servings" },
+            "units": [304, 226]
+          },
+          "nutritionalValues": {
+            "calories": 350.0,
+            "carbs": 55.0,
+            "fat": 8.5,
+            "fiber": 6.0,
+            "protein": 12.0,
+            "sodium": 150.0
+          }
+        },
+        {
+          "isFavorite": true,
+          "logDate": "2026-04-27",
+          "logId": 71000000010,
+          "loggedFood": {
+            "accessLevel": "PUBLIC",
+            "amount": 1,
+            "brand": "Brand X",
+            "calories": 450,
+            "foodId": 234003,
+            "locale": "en_US",
+            "mealTypeId": 2,
+            "name": "Grilled Chicken Salad",
+            "unit": { "id": 300, "name": "bowl", "plural": "bowls" },
+            "units": [300]
+          },
+          "nutritionalValues": {
+            "calories": 450.0,
+            "carbs": 20.0,
+            "fat": 15.0,
+            "fiber": 5.0,
+            "protein": 45.0,
+            "sodium": 680.0
+          }
+        },
+        {
+          "isFavorite": false,
+          "logDate": "2026-04-27",
+          "logId": 71000000011,
+          "loggedFood": {
+            "accessLevel": "PUBLIC",
+            "amount": 1,
+            "brand": "",
+            "calories": 580,
+            "foodId": 345004,
+            "locale": "en_US",
+            "mealTypeId": 7,
+            "name": "Chicken Stir Fry with Noodles",
+            "unit": { "id": 304, "name": "serving", "plural": "servings" },
+            "units": [304]
+          },
+          "nutritionalValues": {
+            "calories": 580.0,
+            "carbs": 52.0,
+            "fat": 16.0,
+            "fiber": 4.0,
+            "protein": 44.0,
+            "sodium": 850.0
+          }
+        }
+      ],
+      "goals": {
+        "calories": 2200
+      },
+      "summary": {
+        "calories": 1380.0,
+        "carbs": 127.0,
+        "fat": 39.5,
+        "fiber": 15.0,
+        "protein": 101.0,
+        "sodium": 1680.0,
+        "water": 2800.0
+      }
+    },
+    "date": "2026-04-27",
+    "documentType": "Food"
+  },
+  {
+    "id": "b2f35e02-2002-4c9b-ad02-000000000005",
+    "food": {
+      "foods": [
+        {
+          "isFavorite": false,
+          "logDate": "2026-04-28",
+          "logId": 71000000012,
+          "loggedFood": {
+            "accessLevel": "PUBLIC",
+            "amount": 1,
+            "brand": "",
+            "calories": 310,
+            "foodId": 541005,
+            "locale": "en_US",
+            "mealTypeId": 1,
+            "name": "Avocado Toast with Egg",
+            "unit": { "id": 304, "name": "serving", "plural": "servings" },
+            "units": [304]
+          },
+          "nutritionalValues": {
+            "calories": 310.0,
+            "carbs": 28.0,
+            "fat": 16.0,
+            "fiber": 7.0,
+            "protein": 14.0,
+            "sodium": 340.0
+          }
+        },
+        {
+          "isFavorite": false,
+          "logDate": "2026-04-28",
+          "logId": 71000000013,
+          "loggedFood": {
+            "accessLevel": "PUBLIC",
+            "amount": 1,
+            "brand": "",
+            "calories": 490,
+            "foodId": 234004,
+            "locale": "en_US",
+            "mealTypeId": 2,
+            "name": "Tuna Wrap with Vegetables",
+            "unit": { "id": 304, "name": "serving", "plural": "servings" },
+            "units": [304]
+          },
+          "nutritionalValues": {
+            "calories": 490.0,
+            "carbs": 38.0,
+            "fat": 18.0,
+            "fiber": 4.0,
+            "protein": 38.0,
+            "sodium": 720.0
+          }
+        },
+        {
+          "isFavorite": false,
+          "logDate": "2026-04-28",
+          "logId": 71000000014,
+          "loggedFood": {
+            "accessLevel": "PUBLIC",
+            "amount": 1,
+            "brand": "",
+            "calories": 550,
+            "foodId": 345005,
+            "locale": "en_US",
+            "mealTypeId": 7,
+            "name": "Salmon with Rice and Vegetables",
+            "unit": { "id": 304, "name": "serving", "plural": "servings" },
+            "units": [304]
+          },
+          "nutritionalValues": {
+            "calories": 550.0,
+            "carbs": 45.0,
+            "fat": 18.0,
+            "fiber": 4.0,
+            "protein": 42.0,
+            "sodium": 520.0
+          }
+        }
+      ],
+      "goals": {
+        "calories": 2200
+      },
+      "summary": {
+        "calories": 1350.0,
+        "carbs": 111.0,
+        "fat": 52.0,
+        "fiber": 15.0,
+        "protein": 94.0,
+        "sodium": 1580.0,
+        "water": 2600.0
+      }
+    },
+    "date": "2026-04-28",
+    "documentType": "Food"
+  },
+  {
+    "id": "b2f35e02-2002-4c9b-ad02-000000000006",
+    "food": {
+      "foods": [
+        {
+          "isFavorite": false,
+          "logDate": "2026-04-29",
+          "logId": 71000000015,
+          "loggedFood": {
+            "accessLevel": "PUBLIC",
+            "amount": 1,
+            "brand": "",
+            "calories": 400,
+            "foodId": 541006,
+            "locale": "en_US",
+            "mealTypeId": 1,
+            "name": "Smoothie Bowl with Berries",
+            "unit": { "id": 300, "name": "bowl", "plural": "bowls" },
+            "units": [300]
+          },
+          "nutritionalValues": {
+            "calories": 400.0,
+            "carbs": 58.0,
+            "fat": 10.0,
+            "fiber": 8.0,
+            "protein": 18.0,
+            "sodium": 80.0
+          }
+        },
+        {
+          "isFavorite": true,
+          "logDate": "2026-04-29",
+          "logId": 71000000016,
+          "loggedFood": {
+            "accessLevel": "PUBLIC",
+            "amount": 1,
+            "brand": "",
+            "calories": 500,
+            "foodId": 234005,
+            "locale": "en_US",
+            "mealTypeId": 2,
+            "name": "Chicken Burrito Bowl",
+            "unit": { "id": 300, "name": "bowl", "plural": "bowls" },
+            "units": [300]
+          },
+          "nutritionalValues": {
+            "calories": 500.0,
+            "carbs": 48.0,
+            "fat": 16.0,
+            "fiber": 8.0,
+            "protein": 38.0,
+            "sodium": 950.0
+          }
+        },
+        {
+          "isFavorite": false,
+          "logDate": "2026-04-29",
+          "logId": 71000000017,
+          "loggedFood": {
+            "accessLevel": "PUBLIC",
+            "amount": 1,
+            "brand": "",
+            "calories": 600,
+            "foodId": 345006,
+            "locale": "en_US",
+            "mealTypeId": 7,
+            "name": "Beef Tacos with Guacamole",
+            "unit": { "id": 304, "name": "serving", "plural": "servings" },
+            "units": [304]
+          },
+          "nutritionalValues": {
+            "calories": 600.0,
+            "carbs": 42.0,
+            "fat": 28.0,
+            "fiber": 6.0,
+            "protein": 36.0,
+            "sodium": 880.0
+          }
+        }
+      ],
+      "goals": {
+        "calories": 2200
+      },
+      "summary": {
+        "calories": 1500.0,
+        "carbs": 148.0,
+        "fat": 54.0,
+        "fiber": 22.0,
+        "protein": 92.0,
+        "sodium": 1910.0,
+        "water": 2400.0
+      }
+    },
+    "date": "2026-04-29",
+    "documentType": "Food"
+  },
+  {
+    "id": "b2f35e02-2002-4c9b-ad02-000000000007",
+    "food": {
+      "foods": [
+        {
+          "isFavorite": false,
+          "logDate": "2026-04-30",
+          "logId": 71000000018,
+          "loggedFood": {
+            "accessLevel": "PUBLIC",
+            "amount": 1,
+            "brand": "",
+            "calories": 350,
+            "foodId": 541007,
+            "locale": "en_US",
+            "mealTypeId": 1,
+            "name": "Oatmeal with Banana",
+            "unit": { "id": 304, "name": "serving", "plural": "servings" },
+            "units": [304, 226]
+          },
+          "nutritionalValues": {
+            "calories": 350.0,
+            "carbs": 55.0,
+            "fat": 8.5,
+            "fiber": 6.0,
+            "protein": 12.0,
+            "sodium": 150.0
+          }
+        },
+        {
+          "isFavorite": true,
+          "logDate": "2026-04-30",
+          "logId": 71000000019,
+          "loggedFood": {
+            "accessLevel": "PUBLIC",
+            "amount": 1,
+            "brand": "Brand X",
+            "calories": 450,
+            "foodId": 234006,
+            "locale": "en_US",
+            "mealTypeId": 2,
+            "name": "Grilled Chicken Salad",
+            "unit": { "id": 300, "name": "bowl", "plural": "bowls" },
+            "units": [300]
+          },
+          "nutritionalValues": {
+            "calories": 450.0,
+            "carbs": 20.0,
+            "fat": 15.0,
+            "fiber": 5.0,
+            "protein": 45.0,
+            "sodium": 680.0
+          }
+        },
+        {
+          "isFavorite": false,
+          "logDate": "2026-04-30",
+          "logId": 71000000020,
+          "loggedFood": {
+            "accessLevel": "PUBLIC",
+            "amount": 1,
+            "brand": "",
+            "calories": 550,
+            "foodId": 345007,
+            "locale": "en_US",
+            "mealTypeId": 7,
+            "name": "Salmon with Rice and Vegetables",
+            "unit": { "id": 304, "name": "serving", "plural": "servings" },
+            "units": [304]
+          },
+          "nutritionalValues": {
+            "calories": 550.0,
+            "carbs": 45.0,
+            "fat": 18.0,
+            "fiber": 4.0,
+            "protein": 42.0,
+            "sodium": 520.0
+          }
+        }
+      ],
+      "goals": {
+        "calories": 2200
+      },
+      "summary": {
+        "calories": 1350.0,
+        "carbs": 120.0,
+        "fat": 41.5,
+        "fiber": 15.0,
+        "protein": 99.0,
+        "sodium": 1350.0,
+        "water": 2500.0
+      }
+    },
+    "date": "2026-04-30",
+    "documentType": "Food"
+  }
+]
