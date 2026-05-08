@@ -52,10 +52,20 @@ var cosmosClientOptions = new CosmosClientOptions
         PropertyNamingPolicy = CosmosPropertyNamingPolicy.CamelCase
     }
 };
-var cosmosClient = new CosmosClient(
-    builder.Configuration.GetValue<string>("cosmosdbendpoint"),
-    new DefaultAzureCredential(defaultCredentialOptions),
-    cosmosClientOptions);
+var cosmosDbEndpoint = builder.Configuration.GetValue<string>("cosmosdbendpoint");
+var cosmosDbAccountKey = builder.Configuration.GetValue<string>("cosmosdbaccountkey");
+
+CosmosClient cosmosClient;
+if (!string.IsNullOrWhiteSpace(cosmosDbAccountKey))
+{
+    cosmosClient = new CosmosClient(cosmosDbEndpoint, cosmosDbAccountKey, cosmosClientOptions);
+}
+else
+{
+    cosmosClient = new CosmosClient(cosmosDbEndpoint,
+        new DefaultAzureCredential(defaultCredentialOptions),
+        cosmosClientOptions);
+}
 builder.Services.AddSingleton(cosmosClient);
 builder.Services.AddScoped<ICosmosRepository, CosmosRepository>();
 

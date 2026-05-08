@@ -8,11 +8,25 @@
 
 ## 📋 Table of Contents
 
+- [Getting Started](#-getting-started)
 - [Architecture](#-architecture)
 - [Features](#-features)
 - [Tech Stack](#-tech-stack)
 - [Build Status](#-build-status)
 - [License](#-license)
+
+## 🚀 Getting Started
+
+The fastest way to start developing is with the **Dev Container**, which provides a fully configured environment with .NET 10.0, Cosmos DB emulator, pre-built services, and sample data.
+
+**Prerequisites**: [Docker Desktop](https://www.docker.com/products/docker-desktop/) + [VS Code](https://code.visualstudio.com/) with the [Dev Containers extension](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-containers)
+
+1. Open the repo in VS Code
+2. Run **Dev Containers: Reopen in Container** (`Ctrl+Shift+P`)
+3. After setup completes: `bash scripts/start-local.sh`
+4. Open `http://localhost:5239`
+
+See [docs/devcontainer-setup.md](docs/devcontainer-setup.md) for details, secrets configuration, and troubleshooting. For manual setup without the dev container, see [AGENTS.md](AGENTS.md#dev-environment-setup).
 
 ## 🏗️ Architecture
 

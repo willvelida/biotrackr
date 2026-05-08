@@ -1,5 +1,9 @@
 # Cosmos DB Emulator for Local Development
 
+> **Recommended**: Use the [Dev Container](devcontainer-setup.md) instead of manual setup. It automatically starts the vNext Cosmos DB emulator, trusts the certificate, creates the database schema, and seeds sample data.
+
+The instructions below are for **manual setup without the dev container**.
+
 This directory contains Docker Compose configuration and helper scripts for running Azure Cosmos DB Emulator locally.
 
 ## Quick Start

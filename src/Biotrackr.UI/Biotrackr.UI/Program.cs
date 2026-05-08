@@ -134,7 +134,9 @@ if (!app.Environment.IsDevelopment())
 app.UseStatusCodePagesWithReExecute("/not-found", createScopeForStatusCodePages: true);
 app.UseHttpsRedirection();
 
-// EasyAuth: redirect unauthenticated users to /login
+// EasyAuth: redirect unauthenticated users to /login (skip in Development)
+if (!app.Environment.IsDevelopment())
+{
 app.Use(async (context, next) =>
 {
     var path = context.Request.Path.Value?.ToLowerInvariant() ?? "";
@@ -160,6 +162,7 @@ app.Use(async (context, next) =>
 
     await next();
 });
+}
 
 app.UseAntiforgery();
 

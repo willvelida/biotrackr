@@ -1,0 +1,39 @@
+{
+  "features": {
+    "ghcr.io/devcontainers/features/azure-cli:1": {
+      "version": "1.2.9",
+      "resolved": "ghcr.io/devcontainers/features/azure-cli@sha256:4549175fbfd3475d1d62e82f6e5425d03954a6ae06027b2515b0ba41a8206417",
+      "integrity": "sha256:4549175fbfd3475d1d62e82f6e5425d03954a6ae06027b2515b0ba41a8206417"
+    },
+    "ghcr.io/devcontainers/features/docker-outside-of-docker:1": {
+      "version": "1.9.1",
+      "resolved": "ghcr.io/devcontainers/features/docker-outside-of-docker@sha256:dc89605f01ff2f24252c61f7c8ba2a58ccdbc14f2ebf87a7952d9e2b89834850",
+      "integrity": "sha256:dc89605f01ff2f24252c61f7c8ba2a58ccdbc14f2ebf87a7952d9e2b89834850"
+    },
+    "ghcr.io/devcontainers/features/github-cli:1": {
+      "version": "1.1.0",
+      "resolved": "ghcr.io/devcontainers/features/github-cli@sha256:d22f50b70ed75339b4eed1ba9ecde3a1791f90e88d37936517e3bace0bbad671",
+      "integrity": "sha256:d22f50b70ed75339b4eed1ba9ecde3a1791f90e88d37936517e3bace0bbad671"
+    },
+    "ghcr.io/devcontainers/features/powershell:2": {
+      "version": "2.0.2",
+      "resolved": "ghcr.io/devcontainers/features/powershell@sha256:82ea3880c5706ac3963f1b5e940a7f5871835393a5472f80008148b995d58d61",
+      "integrity": "sha256:82ea3880c5706ac3963f1b5e940a7f5871835393a5472f80008148b995d58d61"
+    },
+    "ghcr.io/jsburckhardt/devcontainer-features/gitleaks:1": {
+      "version": "1.0.0",
+      "resolved": "ghcr.io/jsburckhardt/devcontainer-features/gitleaks@sha256:8ac4946ade23f372e9c23f262c2006c8dd29090bd2b92b1f14948de48eb077d4",
+      "integrity": "sha256:8ac4946ade23f372e9c23f262c2006c8dd29090bd2b92b1f14948de48eb077d4"
+    },
+    "ghcr.io/rchaganti/vsc-devcontainer-features/azurebicep:1": {
+      "version": "1.0.5",
+      "resolved": "ghcr.io/rchaganti/vsc-devcontainer-features/azurebicep@sha256:2032cc9b359b599c177392144e1d0f10b9513f8d2859f88c2a95da6e69e02683",
+      "integrity": "sha256:2032cc9b359b599c177392144e1d0f10b9513f8d2859f88c2a95da6e69e02683"
+    },
+    "ghcr.io/stuartleeks/dev-container-features/azure-cli-persistence:0": {
+      "version": "0.0.9",
+      "resolved": "ghcr.io/stuartleeks/dev-container-features/azure-cli-persistence@sha256:ccd1446a5d87b6b9486a0198dcaa3b6ffc2dba2d9de3f042169938eb9b54e6a0",
+      "integrity": "sha256:ccd1446a5d87b6b9486a0198dcaa3b6ffc2dba2d9de3f042169938eb9b54e6a0"
+    }
+  }
+}

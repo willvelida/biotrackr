@@ -1,0 +1,75 @@
+{
+    "name": "Biotrackr",
+    "dockerComposeFile": "docker-compose.yml",
+    "service": "app",
+    "workspaceFolder": "/workspaces/biotrackr",
+    "hostRequirements": {
+        "cpus": 4,
+        "memory": "8gb",
+        "storage": "32gb"
+    },
+    "secrets": {
+        "ANTHROPIC_API_KEY": {
+            "description": "Anthropic API key for Chat.Api. Get from https://console.anthropic.com/settings/keys",
+            "documentationUrl": "https://console.anthropic.com/settings/keys"
+        },
+        "MCP_SERVER_API_KEY": {
+            "description": "MCP Server API key for inter-service auth. Generate any random string for local dev."
+        },
+        "COPILOT_GITHUB_TOKEN": {
+            "description": "GitHub PAT with Copilot access for Reporting.Api sidecar."
+        }
+    },
+    "features": {
+        "ghcr.io/devcontainers/features/azure-cli:1": {},
+        "ghcr.io/devcontainers/features/docker-outside-of-docker:1": {},
+        "ghcr.io/devcontainers/features/powershell:2": {},
+        "ghcr.io/devcontainers/features/github-cli:1": {},
+        "ghcr.io/rchaganti/vsc-devcontainer-features/azurebicep:1": {},
+        "ghcr.io/jsburckhardt/devcontainer-features/gitleaks:1": {},
+        "ghcr.io/stuartleeks/dev-container-features/azure-cli-persistence:0": {}
+    },
+    "customizations": {
+        "vscode": {
+            "extensions": [
+                "ms-dotnettools.csharp",
+                "ms-dotnettools.csdevkit",
+                "ms-azuretools.vscode-bicep",
+                "ms-azuretools.vscode-docker",
+                "ms-azuretools.vscode-cosmosdb",
+                "ms-vscode.powershell",
+                "GitHub.vscode-pull-request-github",
+                "ryanluker.vscode-coverage-gutters",
+                "DavidAnson.vscode-markdownlint",
+                "EditorConfig.EditorConfig"
+            ],
+            "settings": {
+                "dotnet.defaultSolution": "disable"
+            }
+        }
+    },
+    "remoteEnv": {
+        "Biotrackr__AnthropicApiKey": "${localEnv:ANTHROPIC_API_KEY}",
+        "Biotrackr__McpServerApiKey": "${localEnv:MCP_SERVER_API_KEY}",
+        "GITHUB_TOKEN": "${localEnv:COPILOT_GITHUB_TOKEN}",
+        "azureappconfigendpoint": "",
+        "managedidentityclientid": ""
+    },
+    "forwardPorts": [8081, 1234, 9000, 5272, 5006, 5004, 5062, 5096, 5000, 5148, 5239],
+    "portsAttributes": {
+        "8081": { "label": "Cosmos DB Emulator", "onAutoForward": "silent" },
+        "1234": { "label": "Cosmos Data Explorer", "onAutoForward": "silent" },
+        "9000": { "label": "API Gateway (Caddy)", "onAutoForward": "silent" },
+        "5272": { "label": "Activity API", "onAutoForward": "notify" },
+        "5006": { "label": "Food API", "onAutoForward": "notify" },
+        "5004": { "label": "Sleep API", "onAutoForward": "notify" },
+        "5062": { "label": "Vitals API", "onAutoForward": "notify" },
+        "5096": { "label": "Chat API", "onAutoForward": "notify" },
+        "5000": { "label": "MCP Server", "onAutoForward": "notify" },
+        "5148": { "label": "Reporting API", "onAutoForward": "notify" },
+        "5239": { "label": "UI", "onAutoForward": "notify" }
+    },
+    "onCreateCommand": "bash .devcontainer/on-create.sh",
+    "postCreateCommand": "bash .devcontainer/post-create.sh",
+    "remoteUser": "vscode"
+}

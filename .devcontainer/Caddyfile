@@ -1,0 +1,22 @@
+:9000 {
+	route /activity* {
+		uri strip_prefix /activity
+		reverse_proxy localhost:5272
+	}
+	route /food* {
+		uri strip_prefix /food
+		reverse_proxy localhost:5006
+	}
+	route /sleep* {
+		uri strip_prefix /sleep
+		reverse_proxy localhost:5004
+	}
+	route /vitals* {
+		uri strip_prefix /vitals
+		reverse_proxy localhost:5062
+	}
+	route /chat* {
+		uri strip_prefix /chat
+		reverse_proxy localhost:5096
+	}
+}
