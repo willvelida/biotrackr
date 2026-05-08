@@ -68,3 +68,12 @@ When proposing UI changes:
 2. **How**: Implementation approach with code
 3. **Accessibility**: How the change meets WCAG requirements
 4. **Responsiveness**: How it adapts across breakpoints
+
+## Verification Protocol
+
+After modifying Razor components or CSS files, verify the build compiles:
+
+1. **Build check**: Run `dotnet build --no-restore -v:q` in the Biotrackr.UI directory
+   - If build fails, read errors and fix Razor syntax or CSS issues
+   - Maximum 2 retry attempts
+2. **Escalation**: If build fails after 2 retries, present the error to the user

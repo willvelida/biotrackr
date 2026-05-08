@@ -70,3 +70,21 @@ public async Task GetActivityByDate_ShouldReturnOk_WhenActivityIsFound()
 - 70% minimum warning threshold, 80% healthy (CI enforced)
 - `coverage.runsettings` per service (excludes OpenAPI generated code)
 - Use `[ExcludeFromCodeCoverage]` for generated or infrastructure code
+
+## Agent-Readable Assertion Messages
+
+When writing structural tests (convention enforcement, DI registration verification, route validation), include fix instructions in assertion failure messages. This creates computational feedback sensors that guide agents to self-correct.
+
+Pattern:
+
+```csharp
+result.Should().BeOfType<string>(
+    $"AGENT FIX: Parameter '{paramName}' must be string type. "
+    + $"Date parameters use yyyy-MM-dd format, not DateTime. "
+    + $"See .github/instructions/csharp-conventions.instructions.md.");
+```
+
+- Start assertion messages with `AGENT FIX:` prefix for easy identification
+- Include the specific convention being violated
+- Reference the instruction file containing the rule
+- Keep messages actionable — tell the agent exactly what to change

@@ -48,10 +48,10 @@ Each service has its own solution file (`.sln` or `.slnx`), Dockerfile, test pro
 ├── .github/
 │   ├── copilot-instructions.md        # Comprehensive Copilot guide (14 sections)
 │   ├── instructions/                  # Path-scoped .instructions.md files
-│   ├── agents/                        # 8 custom agent definitions
+│   ├── agents/                        # 9 custom agent definitions
 │   ├── aw/                            # Agentic workflow runtime artifacts
 │   ├── mcp.json                       # MCP server configuration for Copilot
-│   ├── prompts/                       # 8 prompt templates
+│   ├── prompts/                       # 12 prompt templates
 │   ├── skills/                        # 25 skills (OWASP, accessibility, DSA, etc.)
 │   └── workflows/                     # 31 workflows + 10 reusable templates + 7 agentic workflows
 ├── docs/
@@ -516,7 +516,7 @@ Order matters — these execute in sequence:
 
 ## Agent Configuration Inventory
 
-### Agents (8)
+### Agents (9)
 
 | Agent                    | File                                                    | Purpose                          |
 |--------------------------|---------------------------------------------------------|----------------------------------|
@@ -524,34 +524,41 @@ Order matters — these execute in sequence:
 | Azure Principal Architect | `.github/agents/azure-principal-architect.agent.md`   | Azure architecture guidance      |
 | Bicep Specialist         | `.github/agents/bicep-implement.agent.md`               | Bicep IaC implementation         |
 | C# Expert                | `.github/agents/CSharpExpert.agent.md`                  | C#/.NET coding guidance          |
+| Code Reviewer            | `.github/agents/code-reviewer.agent.md`                 | Read-only code review            |
 | Front-End Designer       | `.github/agents/front-end-designer.agent.md`            | Blazor/UI design                 |
 | GitHub Actions Expert    | `.github/agents/github-actions-expert.agent.md`         | CI/CD workflow authoring         |
 | Vulnerability Scanner    | `.github/agents/vulnerability-scanner.agent.md`         | Security vulnerability analysis  |
 | DSA Mentor               | `.github/agents/dsa-mentor.agent.md`                    | DSA learning, algorithm design, complexity analysis, codebase DSA review |
 
-### Prompts (8)
+### Prompts (12)
 
-| Prompt              | File                                            | Purpose                      |
-|---------------------|-------------------------------------------------|------------------------------|
-| Accessibility Audit | `.github/prompts/accessibility-audit.prompt.md` | WCAG compliance review       |
-| Design Review       | `.github/prompts/design-review.prompt.md`       | UI/UX design evaluation      |
-| New Component       | `.github/prompts/new-component.prompt.md`       | Scaffold new Blazor component |
-| Perf Optimize       | `.github/prompts/perf-optimize.prompt.md`       | Performance optimization     |
-| DSA Code Review     | `.github/prompts/dsa-code-review.prompt.md`     | Review code for DSA anti-patterns and suggest improvements |
-| DSA Concept Explain | `.github/prompts/dsa-concept-explain.prompt.md` | Deep-explain a DSA concept using Biotrackr examples        |
-| DSA Algorithm Design | `.github/prompts/dsa-algorithm-design.prompt.md` | Design an algorithm or data structure for a given requirement |
-| DSA Performance Analysis | `.github/prompts/dsa-performance-analysis.prompt.md` | Profile code for time/space complexity and suggest optimizations |
+| Prompt                 | File                                                     | Purpose                                                           |
+|------------------------|----------------------------------------------------------|-------------------------------------------------------------------|
+| Accessibility Audit    | `.github/prompts/accessibility-audit.prompt.md`          | WCAG compliance review                                            |
+| Cross-Service Change   | `.github/prompts/cross-service-change.prompt.md`         | Blueprint prompt with per-service validation loop                 |
+| Design Review          | `.github/prompts/design-review.prompt.md`                | UI/UX design evaluation                                           |
+| DSA Algorithm Design   | `.github/prompts/dsa-algorithm-design.prompt.md`         | Design an algorithm or data structure for a given requirement     |
+| DSA Code Review        | `.github/prompts/dsa-code-review.prompt.md`              | Review code for DSA anti-patterns and suggest improvements        |
+| DSA Concept Explain    | `.github/prompts/dsa-concept-explain.prompt.md`          | Deep-explain a DSA concept using Biotrackr examples               |
+| DSA Performance Analysis | `.github/prompts/dsa-performance-analysis.prompt.md`   | Profile code for time/space complexity and suggest optimizations   |
+| Harness Health         | `.github/prompts/harness-health.prompt.md`               | Harness self-assessment audit (4-dimension PASS/WARN/FAIL)        |
+| New Component          | `.github/prompts/new-component.prompt.md`                | Scaffold new Blazor component                                     |
+| New Endpoint           | `.github/prompts/new-endpoint.prompt.md`                 | Blueprint prompt with build/test verification for new endpoints   |
+| Perf Optimize          | `.github/prompts/perf-optimize.prompt.md`                | Performance optimization                                          |
+| Refactor               | `.github/prompts/refactor.prompt.md`                     | Blueprint prompt with pre/post regression verification            |
 
-### Instructions (6)
+### Instructions (8)
 
-| Instruction          | File                                                            | Trigger              |
-|----------------------|-----------------------------------------------------------------|----------------------|
-| C# Conventions       | `.github/instructions/csharp-conventions.instructions.md`       | `**/*.cs`            |
-| CSS Conventions      | `.github/instructions/css-conventions.instructions.md`          | `**/*.razor.css`     |
-| Razor Components     | `.github/instructions/razor-components.instructions.md`         | `**/*.razor`         |
-| Bicep Conventions    | `.github/instructions/bicep-conventions.instructions.md`        | `**/*.bicep`         |
-| Testing Conventions  | `.github/instructions/testing-conventions.instructions.md`      | `**/*Tests*/**/*.cs` |
-| DSA Awareness        | `.github/instructions/dsa-awareness.instructions.md`            | `**/*.cs`            |
+| Instruction              | File                                                                | Trigger                                                     |
+|--------------------------|---------------------------------------------------------------------|-------------------------------------------------------------|
+| Bicep Conventions        | `.github/instructions/bicep-conventions.instructions.md`            | `**/*.bicep`                                                |
+| Cosmos DB Conventions    | `.github/instructions/cosmos-conventions.instructions.md`           | `**/*Repository*.cs,**/*Document*.cs,**/*Cosmos*.cs`        |
+| C# Conventions           | `.github/instructions/csharp-conventions.instructions.md`           | `**/*.cs`                                                   |
+| CSS Conventions          | `.github/instructions/css-conventions.instructions.md`              | `**/*.razor.css`                                            |
+| DSA Awareness            | `.github/instructions/dsa-awareness.instructions.md`                | `**/*.cs`                                                   |
+| GitHub Actions Conventions | `.github/instructions/github-actions-conventions.instructions.md` | `**/*.yml`                                                  |
+| Razor Components         | `.github/instructions/razor-components.instructions.md`             | `**/*.razor`                                                |
+| Testing Conventions      | `.github/instructions/testing-conventions.instructions.md`          | `**/*Tests*/**/*.cs`                                        |
 
 ### Skills (25)
 
