@@ -597,7 +597,7 @@ Do not modify decision records — they are append-only historical documents.
 - Change Cosmos DB partition keys or container structure
 - Delete files or data without explicit user confirmation
 - Use base `Exception` class — use precise exception types
-- Skip DCO sign-off on commits
+- Skip DCO sign-off on commits — bot accounts (`github-actions[bot]`, `dependabot[bot]`) are exempt as their provenance is established through GitHub App identity
 
 ### ASK FIRST
 

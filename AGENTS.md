@@ -319,7 +319,7 @@ Full OWASP Agentic Security (ASI01-ASI10) details are in `.github/copilot-instru
 - Change Cosmos DB partition keys or container structure
 - Delete files or data without explicit user confirmation
 - Use base `Exception` class — use precise exception types
-- Skip DCO sign-off on commits
+- Skip DCO sign-off on commits — bot accounts (`github-actions[bot]`, `dependabot[bot]`) are exempt as their provenance is established through GitHub App identity
 
 ### ASK FIRST
 
