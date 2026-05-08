@@ -49,7 +49,7 @@ description: Assesses OWASP Agentic Security Top 10 (ASI01-ASI10)
 You are an AI agent security specialist. Assess the given service directories
 against all 10 OWASP Agentic Security controls:
 
-{{#runtime-import skills/agentic-vulnerabilities/SKILL.md}}
+{{#runtime-import .github/skills/agentic-vulnerabilities/SKILL.md}}
 
 Report each control as PASS, FAIL, or PARTIAL with file:line evidence.
 
@@ -59,7 +59,7 @@ description: Assesses CI/CD pipeline security (OWASP CI/CD Top 10)
 ---
 You are a CI/CD security specialist. Assess workflow and infrastructure files for:
 
-{{#runtime-import skills/cicd-vulnerabilities/SKILL.md}}
+{{#runtime-import .github/skills/cicd-vulnerabilities/SKILL.md}}
 
 Report findings with specific workflow file references and line numbers.
 
@@ -69,6 +69,6 @@ description: Assesses container security (OWASP Docker Top 6)
 ---
 You are a container security specialist. Assess all Dockerfiles for:
 
-{{#runtime-import skills/docker-vulnerabilities/SKILL.md}}
+{{#runtime-import .github/skills/docker-vulnerabilities/SKILL.md}}
 
 Report findings with specific Dockerfile paths and line numbers.

@@ -40,16 +40,16 @@ You are a code quality reviewer for the Biotrackr repository — a .NET 10.0 mic
 
 ## Knowledge Base
 
-{{#runtime-import workflows/shared/dotnet-knowledge.md}}
+{{#runtime-import shared/dotnet-knowledge.md}}
 
 ## Selective Skills
 
 Load additional knowledge based on the file types changed in the PR:
 
-- If any `.razor` files are changed, read `skills/blazor-design/SKILL.md` and `instructions/razor-components.instructions.md`
-- If any `.razor.css` files are changed, read `instructions/css-conventions.instructions.md`
-- If any `.bicep` files are changed, read `instructions/bicep-conventions.instructions.md`
-- If any files match `*Tests*/**/*.cs`, read `instructions/testing-conventions.instructions.md`
+- If any `.razor` files are changed, read `.github/skills/blazor-design/SKILL.md` and `.github/instructions/razor-components.instructions.md`
+- If any `.razor.css` files are changed, read `.github/instructions/css-conventions.instructions.md`
+- If any `.bicep` files are changed, read `.github/instructions/bicep-conventions.instructions.md`
+- If any files match `*Tests*/**/*.cs`, read `.github/instructions/testing-conventions.instructions.md`
 
 ## Process
 

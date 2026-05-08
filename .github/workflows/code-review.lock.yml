@@ -279,7 +279,7 @@ jobs:
           fi
           cat << 'GH_AW_PROMPT_e889ff61af7c8284_EOF'
           </system>
-          {{#runtime-import .github/workflows/workflows/shared/dotnet-knowledge.md}}
+          {{#runtime-import .github/workflows/shared/dotnet-knowledge.md}}
           {{#runtime-import .github/workflows/code-review.md}}
           GH_AW_PROMPT_e889ff61af7c8284_EOF
           } > "$GH_AW_PROMPT"

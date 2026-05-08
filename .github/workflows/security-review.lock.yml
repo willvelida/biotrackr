@@ -276,7 +276,7 @@ jobs:
           fi
           cat << 'GH_AW_PROMPT_22ed48957e5e0876_EOF'
           </system>
-          {{#runtime-import .github/workflows/workflows/shared/security-knowledge.md}}
+          {{#runtime-import .github/workflows/shared/security-knowledge.md}}
           {{#runtime-import .github/workflows/security-review.md}}
           GH_AW_PROMPT_22ed48957e5e0876_EOF
           } > "$GH_AW_PROMPT"

@@ -39,15 +39,15 @@ You are a security specialist for the Biotrackr repository — a .NET 10.0 micro
 
 ## Knowledge Base
 
-{{#runtime-import workflows/shared/security-knowledge.md}}
+{{#runtime-import shared/security-knowledge.md}}
 
 ## Selective Skills
 
 Load additional knowledge based on the file types changed or referenced:
 
-- If any `.yml` files are changed, read `skills/cicd-vulnerabilities/SKILL.md`
-- If any `Dockerfile` files are changed, read `skills/docker-vulnerabilities/SKILL.md`
-- If any `.bicep` files are changed, read `skills/infrastructure-vulnerabilities/SKILL.md`
+- If any `.yml` files are changed, read `.github/skills/cicd-vulnerabilities/SKILL.md`
+- If any `Dockerfile` files are changed, read `.github/skills/docker-vulnerabilities/SKILL.md`
+- If any `.bicep` files are changed, read `.github/skills/infrastructure-vulnerabilities/SKILL.md`
 
 ## Process
 
