@@ -155,6 +155,7 @@ dotnet build --no-restore --no-dependencies -v:q
 | Food Svc | `src/Biotrackr.Food.Svc` | `.sln` | Yes | Yes (E2E + Contract) |
 | MCP Server | `src/Biotrackr.Mcp.Server` | `.slnx` | Yes | Yes (E2E + Contract) |
 | Reporting API | `src/Biotrackr.Reporting.Api` | `.slnx` | Yes | Yes (E2E + Contract) |
+| Reporting Svc | `src/Biotrackr.Reporting.Svc` | `.slnx` | Yes | Yes (Contract) |
 | Sleep API | `src/Biotrackr.Sleep.Api` | `.sln` | Yes | Yes (E2E + Contract) |
 | Sleep Svc | `src/Biotrackr.Sleep.Svc` | `.sln` | Yes | Yes (E2E + Contract) |
 | UI | `src/Biotrackr.UI` | `.slnx` | Yes | No |
@@ -407,6 +408,7 @@ infra/
 |------------------|--------------------------------------------------------------------------|
 | `ai/`            | Foundry                                                                  |
 | `apim/`          | API Management (consumption, named values, products)                     |
+| `communication/` | Communication Services (ACS email, Azure-managed domain)                 |
 | `configuration/` | App Configuration                                                        |
 | `database/`      | Cosmos DB (serverless)                                                   |
 | `host/`          | Container Apps (HTTP, sidecar, jobs), Container Registry                 |
