@@ -46,7 +46,7 @@ Each service has its own solution file (`.sln` or `.slnx`), Dockerfile, test pro
 ├── AGENTS.md                          # This file
 ├── CLAUDE.md                          # @AGENTS.md import for Claude Code
 ├── .github/
-│   ├── copilot-instructions.md        # Comprehensive Copilot guide (14 sections)
+│   ├── copilot-instructions.md        # Comprehensive Copilot guide (15 sections)
 │   ├── instructions/                  # Path-scoped .instructions.md files
 │   ├── agents/                        # 9 custom agent definitions
 │   ├── aw/                            # Agentic workflow runtime artifacts

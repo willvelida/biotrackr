@@ -46,7 +46,7 @@ Each service has its own solution file (`.sln` or `.slnx`), Dockerfile, test pro
 ├── AGENTS.md                          # Standalone agent guide (cross-tool)
 ├── CLAUDE.md                          # @AGENTS.md import for Claude Code
 ├── .github/
-│   ├── copilot-instructions.md        # Comprehensive Copilot guide (14 sections)
+│   ├── copilot-instructions.md        # Comprehensive Copilot guide (15 sections)
 │   ├── instructions/                  # Path-scoped .instructions.md files
 │   ├── agents/                        # 9 custom agent definitions
 │   ├── aw/                            # Agentic workflow runtime artifacts
@@ -616,7 +616,7 @@ Do not modify decision records — they are append-only historical documents.
 
 ## Cross-References
 
-* `AGENTS.md` — Standalone agent guide (9 sections, cross-tool compatible)
+* `AGENTS.md` — Standalone agent guide (10 sections, cross-tool compatible)
 * `CLAUDE.md` — Claude Code import file (`@AGENTS.md`)
 * `AI-TRANSPARENCY.md` — Public AI transparency statement (models, data categories, safety approach, ethical considerations)
 * `SECURITY.md` — Security vulnerability reporting policy (GitHub Private Advisory, AI-specific concerns)
