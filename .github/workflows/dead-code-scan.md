@@ -22,7 +22,7 @@ You are a code hygiene analyst for the Biotrackr repository. Scan services for d
 
 ## Knowledge Base
 
-{{#runtime-import .github/workflows/shared/dotnet-knowledge.md}}
+{{#runtime-import shared/dotnet-knowledge.md}}
 
 ## Service Inventory
 
@@ -50,7 +50,6 @@ This workflow scans **1-2 services per run** using a rotation strategy:
 1. Search for the most recent issue with the `[dead-code]` title prefix.
 2. Read its body to find the **Service Scan Tracker** table showing last-scanned dates.
 3. Select the **2 services** with the oldest (or missing) scan dates.
-4. If a `workflow_dispatch` was triggered, check if the triggering user specified a service name in the run context — if so, scan that service instead.
 
 If no previous `[dead-code]` issue exists, start with the first two services alphabetically (Activity API, Activity Svc).
 
@@ -78,7 +77,7 @@ Find `using` statements that import namespaces not referenced by any type in the
 
 ### 4. Orphaned Test Helpers
 
-In test projects, find public methods and classes in `Helpers/`, `Fixtures/`, and `Tools/` folders that are never referenced by any test class (`*Should.cs` files).
+In test projects, find public methods and classes in `Helpers/`, `Fixtures/`, and `Tools/` folders that are never referenced by any other `.cs` file in the test project.
 
 **Skip:** `IntegrationTestFixture`, `ContractTestFixture`, and classes implementing `IAsyncLifetime` or `IClassFixture<>` — these are wired via xUnit attributes.
 
@@ -106,7 +105,7 @@ If findings exist, create an issue with:
 
 ### Title
 
-`[dead-code] {Service Name(s)} scan — {date} — {count} findings`
+`{Service Name(s)} scan — {date} — {count} findings`
 
 ### Body Structure
 
