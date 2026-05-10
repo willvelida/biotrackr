@@ -31,6 +31,12 @@ Analyze the Biotrackr repository for documentation that has drifted from the act
 
 5. **Architecture overview**: Check that the service count (currently "14 independently-deployable services") in AGENTS.md and copilot-instructions.md matches the actual `src/Biotrackr.*` directory count.
 
+6. **Workflow category counts**: Verify the workflow counts in the repository structure tree ("N workflows + N reusable templates + N agentic workflows") in both `AGENTS.md` and `.github/copilot-instructions.md` match actual files in `.github/workflows/`: regular `.yml` files (excluding `*.lock.yml` and `template-*.yml`), `template-*.yml` templates, and `*.lock.yml` agentic workflow locks paired with `.md` prompt bodies.
+
+7. **Section heading counts**: Verify the documented section counts for `copilot-instructions.md` ("N sections") and `AGENTS.md` ("N sections") in the repository structure tree and cross-references of both files match the actual count of `##` headings in each file.
+
+8. **Bicep module count**: Verify the "N reusable Bicep modules" count in the repository structure tree of both `AGENTS.md` and `.github/copilot-instructions.md` matches the actual number of `.bicep` files across `infra/modules/` subdirectories, and the Module Domains table row count in `.github/copilot-instructions.md` matches the number of `infra/modules/` subdirectories.
+
 ## Output
 
 If drift is found, create an issue listing each discrepancy with:
