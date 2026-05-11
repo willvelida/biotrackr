@@ -45,7 +45,7 @@ Analyze all Biotrackr test projects for quality and convention adherence across 
    - A `*.IntegrationTests/E2E/` directory exists where expected (informational if missing)
    The UI service is exempt from integration test requirements.
 
-6. **Excessive mocking**: In test class constructors, count `new Mock<T>()` or `Mock<T>()` field instantiations. Flag test classes with 6 or more mock fields as warnings, suggesting the class under test may have too many dependencies.
+6. **Excessive mocking**: Count `Mock<T>` field declarations in test classes (fields of type `Mock<T>` or initialized via `new Mock<T>()`). Flag test classes with 6 or more mock fields as warnings, suggesting the class under test may have too many dependencies.
 
 ## Output
 
