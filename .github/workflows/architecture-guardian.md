@@ -23,8 +23,8 @@ First, read all ADR files in `docs/decision-records/` to understand the decision
 
 ## Checks
 
-1. **Service lifetime registrations (ADR 7)**: Verify `Program.cs` in every service
-   registers components with the correct DI lifetime:
+1. **Service lifetime registrations (`2025-10-28-service-lifetime-registration.md`)**: Verify
+   `Program.cs` in every service registers components with the correct DI lifetime:
    - `CosmosClient` must be `AddSingleton`
    - `ICosmosRepository` must be `AddScoped` (not `AddTransient`)
    - `SecretClient` must be `AddSingleton`
@@ -32,28 +32,32 @@ First, read all ADR files in `docs/decision-records/` to understand the decision
      `AddScoped` or `AddTransient` for the same interface
    - Flag any service where `ICosmosRepository` is registered as `AddTransient`
 
-2. **API route structure (ADR 1)**: Verify `EndpointRouteBuilderExtensions.cs` in
-   domain APIs (Activity, Food, Sleep, Vitals):
+2. **API route structure (`2025-10-28-backend-api-route-structure.md`)**: Verify
+   `EndpointRouteBuilderExtensions.cs` in domain APIs (Activity, Food, Sleep, Vitals):
    - Routes must be root-mounted via `MapGroup("/")`
    - Standard route set: `/`, `/{date}`, `/range/{startDate}/{endDate}`
    - Health check at `/healthz/liveness`
    - No `/api/{domain}` prefix in backend code
 
-3. **Contract test architecture (ADR 2)**: Verify integration test projects:
+3. **Contract test architecture (`2025-10-28-contract-test-architecture.md`)**: Verify
+   integration test projects:
    - `ContractTestFixture` must extend `IntegrationTestFixture` (not standalone)
    - `ContractTestFixture` must override `InitializeDatabase => false`
-   - Contract tests must use `[Collection(nameof(ContractTestCollection))]` (not string
-     literals or service-specific names)
+   - Contract tests should use `[Collection(nameof(ContractTestCollection))]` for
+     consistency (convention beyond ADR — flag as LOW severity if using string literals
+     or service-specific names)
 
-4. **Integration test folder structure (ADR 5)**: Verify `*.IntegrationTests/` projects
-   have the mandated subdirectories:
+4. **Integration test folder structure (`2025-10-28-integration-test-project-structure.md`)**:
+   Verify `*.IntegrationTests/` projects have the mandated subdirectories:
    - `Contract/` for smoke and contract tests
    - `E2E/` for endpoint integration tests
    - `Fixtures/` for test fixtures
    - `Collections/` for xUnit collection definitions
+   - `Helpers/` for test utilities
 
-5. **Program entry point coverage exclusion (ADR 6)**: Verify every service `Program.cs`
-   has `[ExcludeFromCodeCoverage]` attribute on the `Program` class.
+5. **Program entry point coverage exclusion (`2025-10-28-program-entry-point-coverage-exclusion.md`)**:
+   Verify every service `Program.cs` has `[ExcludeFromCodeCoverage]` attribute on the
+   `Program` class.
 
 6. **NuGet dependency consistency**: Compare `.csproj` package references across
    services of the same type (all domain APIs, all domain Svc). Flag version
@@ -65,14 +69,15 @@ First, read all ADR files in `docs/decision-records/` to understand the decision
    - Test methods must use `{Method}_Should{Behavior}_When{Condition}`
    - CSS isolation classes must use `bt-` prefix with kebab-case
 
-8. **Telemetry package consistency**: Compare telemetry packages in Svc service
-   `.csproj` files:
+8. **Telemetry package consistency** (convention — no backing ADR): Compare telemetry
+   packages in Svc service `.csproj` files:
    - All Svc services should use `Azure.Monitor.OpenTelemetry.Exporter` (modern OTel)
    - Flag any service still using `Microsoft.ApplicationInsights.WorkerService` (legacy)
    - Flag dead/unused package references (packages in .csproj but not used in code)
+   - Treat findings as LOW severity (informational) until an ADR formalizes the standard
 
-9. **Bicep tenantId injection (ADR 11)**: For each deploy workflow in
-   `.github/workflows/deploy-*.yml`:
+9. **Bicep tenantId injection (`2026-03-04-conditional-tenantid-injection.md`)**: For
+   each deploy workflow in `.github/workflows/deploy-*.yml`:
    - Check the corresponding Bicep template in `infra/apps/` for `param tenantId`
    - If the Bicep template declares `tenantId`, the deploy workflow MUST set
      `inject-tenant-id: true`
