@@ -28,7 +28,7 @@ timeout-minutes: 30
 
 Analyze the Biotrackr CI/CD deployment pipelines and reusable workflow templates for optimization opportunities. Post a ranked summary issue with specific recommendations.
 
-{{#runtime-import .github/workflows/shared/reporting.md}}
+{{#runtime-import shared/reporting.md}}
 
 ## Scope
 
@@ -60,11 +60,11 @@ Use the `audit` tool to deep-dive into the 2-3 slowest or most failure-prone run
 
 Check every deployment pipeline for:
 
-- **Concurrency groups**: Must have a `concurrency` block with a group name following the pattern `deploy-{service}-{branch-ref}` and `cancel-in-progress: false`
+- **Concurrency groups**: Must have a `concurrency` block per the conventions file and `cancel-in-progress: false` for deployment workflows
 - **Timeout values**: Must have `timeout-minutes` set on jobs (default 360 min is too high)
 - **Path filter self-reference**: The workflow file itself must be in the `paths:` filter
 - **Action pinning**: Third-party actions pinned to full commit SHA
-- **Template reference style**: Consistent `willvelida/biotrackr/.github/workflows/template-*.yml@main` format
+- **Template reference style**: Local references using `uses: ./.github/workflows/template-{name}.yml` format per the conventions file
 
 ### 4. Optimization Detection
 
@@ -72,7 +72,7 @@ Check for these optimization opportunities:
 
 #### High Impact
 
-- **Missing NuGet caching**: Check if any test template uses `actions/cache` for `~/.nuget/packages`. Currently 3 independent `dotnet restore` calls per pipeline (48 total across all pipelines).
+- **Missing NuGet caching**: Check if any test template uses `actions/cache` for `~/.nuget/packages`. Count the actual number of independent `dotnet restore` calls per pipeline and across all pipelines.
 - **Missing Docker layer caching**: Check if container build templates use `cache-from: type=gha` / `cache-to: type=gha,mode=max`. Both templates set up Buildx but may not use its cache backend.
 - **Missing concurrency groups**: Any deploy pipeline without a `concurrency` block.
 
