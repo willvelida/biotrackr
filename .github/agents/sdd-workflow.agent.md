@@ -32,8 +32,13 @@ Determine the current SDD cycle state by checking artifact presence:
 |-----------|------------|--------|
 | No plan directory for this topic | Explore | `/sdd-1-explore` |
 | `research-dossier.md` exists, no spec file | Specify | `/sdd-2-specify` |
+| Spec file exists, user requests GitHub Issue generation | Prep Issue (optional) | `/sdd-2b-prep-issue` |
+| Spec file exists, Workshop Opportunities have High priority items and no `workshops/` directory | Workshop (optional) | `/sdd-2c-workshop` |
 | Spec file exists, no clarifications section | Clarify | `/sdd-3-clarify` |
+| Spec clarified, architectural decision needed (cross-cutting change or new external dependency) | ADR (optional) | `/sdd-3a-adr` |
 | Spec clarified, no plan file with task tables | Architect | `/sdd-4-architect` |
+| Plan file exists, user requests validation before implementation | Validate (optional) | `/sdd-4a-validate` |
+| Plan file exists, user requests shared understanding review | Did You Know (optional) | `/sdd-4b-didyouknow` |
 | Plan file exists, uncompleted tasks remain | Implement | `/sdd-5-implement` (include phase number) |
 | All tasks completed, no `review.md` | Review | `/sdd-6-review` |
 | Review verdict is APPROVE, no evolution log entry for this slug | Evolve | `/sdd-7-evolve` |
@@ -49,7 +54,7 @@ Determine the current SDD cycle state by checking artifact presence:
 
 After the user confirms the phase to run:
 
-1. Attach the appropriate prompt file from `.github/prompts/sdd/` and delegate execution.
+1. Attach the appropriate prompt file from `.github/prompts/` and delegate execution.
 2. Pass through any relevant context (slug, plan path, phase number) to the prompt.
 3. Do NOT execute phase logic directly. The phase prompts contain all execution instructions.
 

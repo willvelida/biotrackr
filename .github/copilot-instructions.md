@@ -518,7 +518,7 @@ Order matters — these execute in sequence:
 
 ## Agent Configuration Inventory
 
-### Agents (10)
+### Agents (11)
 
 | Agent                    | File                                                    | Purpose                          |
 |--------------------------|---------------------------------------------------------|----------------------------------|
@@ -529,11 +529,12 @@ Order matters — these execute in sequence:
 | Code Reviewer            | `.github/agents/code-reviewer.agent.md`                 | Read-only code review            |
 | Front-End Designer       | `.github/agents/front-end-designer.agent.md`            | Blazor/UI design                 |
 | GitHub Actions Expert    | `.github/agents/github-actions-expert.agent.md`         | CI/CD workflow authoring         |
+| SDD Review Judge         | `.github/agents/sdd-review-judge.agent.md`              | SDD quality gate with elevated model (LLM-as-judge) |
 | SDD Workflow             | `.github/agents/sdd-workflow.agent.md`                  | SDD phase orchestrator           |
 | Vulnerability Scanner    | `.github/agents/vulnerability-scanner.agent.md`         | Security vulnerability analysis  |
 | DSA Mentor               | `.github/agents/dsa-mentor.agent.md`                    | DSA learning, algorithm design, complexity analysis, codebase DSA review |
 
-### Prompts (19)
+### Prompts (24)
 
 | Prompt                 | File                                                     | Purpose                                                           |
 |------------------------|----------------------------------------------------------|-------------------------------------------------------------------|
@@ -549,13 +550,18 @@ Order matters — these execute in sequence:
 | New Endpoint           | `.github/prompts/new-endpoint.prompt.md`                 | Blueprint prompt with build/test verification for new endpoints   |
 | Perf Optimize          | `.github/prompts/perf-optimize.prompt.md`                | Performance optimization                                          |
 | Refactor               | `.github/prompts/refactor.prompt.md`                     | Blueprint prompt with pre/post regression verification            |
-| SDD 1: Explore         | `.github/prompts/sdd/sdd-1-explore.prompt.md`            | Deep codebase research before specification (read-only)           |
-| SDD 2: Specify         | `.github/prompts/sdd/sdd-2-specify.prompt.md`            | Technology-free feature specification (WHAT/WHY)                  |
-| SDD 3: Clarify         | `.github/prompts/sdd/sdd-3-clarify.prompt.md`            | Targeted disambiguation (≤8 questions)                            |
-| SDD 4: Architect       | `.github/prompts/sdd/sdd-4-architect.prompt.md`          | Phased implementation blueprint with subagent research            |
-| SDD 5: Implement       | `.github/prompts/sdd/sdd-5-implement.prompt.md`          | Per-phase implementation with progress tracking                   |
-| SDD 6: Review          | `.github/prompts/sdd/sdd-6-review.prompt.md`             | Quality gate review with APPROVE/REQUEST_CHANGES verdict          |
-| SDD 7: Evolve          | `.github/prompts/sdd/sdd-7-evolve.prompt.md`             | Encode learnings into agent harness (requires human approval)     |
+| SDD 1: Explore         | `.github/prompts/sdd-1-explore.prompt.md`                | Deep codebase research before specification (read-only)           |
+| SDD 2: Specify         | `.github/prompts/sdd-2-specify.prompt.md`                | Technology-free feature specification (WHAT/WHY)                  |
+| SDD 2b: Prep Issue     | `.github/prompts/sdd-2b-prep-issue.prompt.md`            | Generate structured GitHub Issue text from spec and plan artifacts |
+| SDD 2c: Workshop       | `.github/prompts/sdd-2c-workshop.prompt.md`              | Deep design exploration for Workshop Opportunities identified in a specification |
+| SDD 3: Clarify         | `.github/prompts/sdd-3-clarify.prompt.md`                | Targeted disambiguation (≤8 questions)                            |
+| SDD 3a: ADR            | `.github/prompts/sdd-3a-adr.prompt.md`                   | Generate an Architecture Decision Record from spec and clarifications |
+| SDD 4: Architect       | `.github/prompts/sdd-4-architect.prompt.md`              | Phased implementation blueprint with subagent research            |
+| SDD 4a: Validate       | `.github/prompts/sdd-4a-validate.prompt.md`              | Validate plan readiness before implementation with parallel quality gates |
+| SDD 4b: Did You Know   | `.github/prompts/sdd-4b-didyouknow.prompt.md`            | Build shared understanding by surfacing non-obvious insights      |
+| SDD 5: Implement       | `.github/prompts/sdd-5-implement.prompt.md`              | Per-phase implementation with progress tracking                   |
+| SDD 6: Review          | `.github/prompts/sdd-6-review.prompt.md`                 | Quality gate review with APPROVE/REQUEST_CHANGES verdict          |
+| SDD 7: Evolve          | `.github/prompts/sdd-7-evolve.prompt.md`                 | Encode learnings into agent harness (requires human approval)     |
 
 ### Instructions (9)
 
@@ -571,13 +577,14 @@ Order matters — these execute in sequence:
 | SDD Conventions          | `.github/instructions/sdd-conventions.instructions.md`              | `**/.copilot-tracking/plans/**/*.md,**/.copilot-tracking/harness-evolution-log.md` |
 | Testing Conventions      | `.github/instructions/testing-conventions.instructions.md`          | `**/*Tests*/**/*.cs`                                        |
 
-### Skills (25)
+### Skills (37)
 
 - **OWASP vulnerability frameworks (11):** agentic, CICD, Docker, infrastructure, LLM, MCP, ML, mobile, OSS, serverless, web
 - **Design/UX (4):** accessibility, Blazor design, mobile design, web design
 - **.NET/DevOps (2):** dotnet best practices, front-end performance
 - **GitHub (1):** create PR from specification
 - **DSA/Learning (7):** dsa-foundations, dsa-linear-structures, dsa-trees-and-heaps, dsa-graphs, dsa-algorithm-paradigms, dsa-interview-patterns, dsa-system-design
+- **SDD workflow (12):** sdd-1-explore, sdd-2-specify, sdd-2b-prep-issue, sdd-2c-workshop, sdd-3-clarify, sdd-3a-adr, sdd-4-architect, sdd-4a-validate, sdd-4b-didyouknow, sdd-5-implement, sdd-6-review, sdd-7-evolve
 
 ## Decision Records Reference
 

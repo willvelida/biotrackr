@@ -1,6 +1,6 @@
 ---
-description: "Generate phased implementation blueprint with parallel research subagents"
-argument-hint: "[slug=...] [spec=...] [dossier=...]"
+name: sdd-4-architect
+description: "Generate phased implementation blueprint with parallel research subagents. Use when: a clarified specification is ready for architecture planning, creating task tables, scoring complexity, and defining implementation phases."
 ---
 
 # SDD Phase 4: Architect
@@ -10,9 +10,9 @@ argument-hint: "[slug=...] [spec=...] [dossier=...]"
 
 ## Inputs
 
-* ${input:slug}: (Optional) Slug from prior phases. Inferred from the most recent SDD plan directory if omitted.
-* ${input:spec}: (Optional) Path to the specification file from Phase 2/3.
-* ${input:dossier}: (Optional) Path to the research dossier from Phase 1.
+* **slug** (Optional): Slug from prior phases. Inferred from the most recent SDD plan directory if omitted.
+* **spec** (Optional): Path to the specification file from Phase 2/3.
+* **dossier** (Optional): Path to the research dossier from Phase 1.
 
 ## Step 0: Doctrine Resolution
 
@@ -44,7 +44,7 @@ Read the specification and verify readiness:
 
 Select research depth based on workflow mode (from Clarifications section) and available artifacts.
 
-### Simple Mode or Optimized Mode (dossier provided)
+### Simple Mode (or when dossier already exists)
 
 Launch 2 parallel subagents when the user selected Simple mode in Clarify, or when a research dossier already exists:
 

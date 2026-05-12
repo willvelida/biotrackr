@@ -1,6 +1,6 @@
 ---
-description: "Quality gate review with structured findings and verdict"
-argument-hint: "[slug=...] [plan=...] [phase=1]"
+name: sdd-6-review
+description: "Quality gate review with structured findings and verdict. Use when: reviewing a completed implementation phase, checking spec compliance, convention adherence, test coverage, and issuing APPROVE or REQUEST_CHANGES verdicts."
 ---
 
 # SDD Phase 6: Review
@@ -10,9 +10,9 @@ argument-hint: "[slug=...] [plan=...] [phase=1]"
 
 ## Inputs
 
-* ${input:slug}: (Optional) Slug from prior phases. Inferred from the most recent SDD plan directory if omitted.
-* ${input:plan}: (Optional) Path to the plan file.
-* ${input:phase}: (Optional, default 1) Phase number to review.
+* **slug** (Optional): Slug from prior phases. Inferred from the most recent SDD plan directory if omitted.
+* **plan** (Optional): Path to the plan file.
+* **phase** (Optional, default 1): Phase number to review.
 
 ## Step 0: Doctrine Resolution
 

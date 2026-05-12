@@ -1,6 +1,6 @@
 ---
-description: "Encode learnings from completed SDD cycles into the agent harness"
-argument-hint: "[slug=...] [plan=...]"
+name: sdd-7-evolve
+description: "Encode learnings from completed SDD cycles into the agent harness. Use when: a review has been approved and learnings need to be extracted, classified, and encoded into instruction files, copilot-instructions, or AGENTS.md."
 ---
 
 # SDD Phase 7: Evolve
@@ -10,14 +10,14 @@ argument-hint: "[slug=...] [plan=...]"
 >
 > * NEVER modify harness files without explicit user approval for EACH change.
 > * NEVER modify immutable doctrine items (NEVER rules, security controls, boundary rules).
-> * STOP if a target file would exceed its size budget (200 lines for `.instructions.md`, 500 lines for `copilot-instructions.md`).
+> * STOP if a target file would exceed its size budget (200 lines for `.instructions.md`). For `copilot-instructions.md`, do not grow the file by more than 20 lines per evolution session.
 > * Use external signals (code review feedback, test failures, rework evidence) as evidence, not solely self-assessment.
 > * Separate harness commits from code commits. Harness changes use: `core(harness): encode learnings from {slug}`.
 
 ## Inputs
 
-* ${input:slug}: (Optional) Short kebab-case identifier from prior phases. Inferred from the most recent SDD plan directory if omitted.
-* ${input:plan}: (Optional) Path to the plan file from Phase 4. Auto-detected from `.copilot-tracking/plans/` if omitted.
+* **slug** (Optional): Short kebab-case identifier from prior phases. Inferred from the most recent SDD plan directory if omitted.
+* **plan** (Optional): Path to the plan file from Phase 4. Auto-detected from `.copilot-tracking/plans/` if omitted.
 
 ## Step 0: Doctrine Resolution
 
@@ -89,7 +89,7 @@ For each extracted learning:
 
 4. **De-duplicate** against existing content in the target file. If the learning is already documented, skip it.
 
-5. **Size budget check** — count lines in each target file. If adding the learning would exceed the budget (200 lines for `.instructions.md`, 500 lines for `copilot-instructions.md`), flag for user decision: skip, replace an existing lower-priority rule, or split into a new file.
+5. **Size budget check** — count lines in each target file. For `.instructions.md` files, if adding the learning would exceed 200 lines, flag for user decision: skip, replace an existing lower-priority rule, or split into a new file. For `copilot-instructions.md`, do not grow the file by more than 20 lines per evolution session.
 
 ## Phase C: Draft
 
