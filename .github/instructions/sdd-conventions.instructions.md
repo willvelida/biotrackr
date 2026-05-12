@@ -67,6 +67,8 @@ Reviews produce one of two verdicts:
 
 Doctrine Evolution findings in the review are advisory and do not affect the verdict.
 
+Phase 6 Review uses a dedicated judge agent (`sdd-review-judge.agent.md`) pinned to a different model family than Phase 5 implementation. This cross-model pattern reduces self-enhancement bias — the review model has no tendency to rate its own output favorably. If the judge agent is unavailable, the review still functions with the default session model.
+
 ## Evolution Log Format
 
 The evolution log at `.copilot-tracking/harness-evolution-log.md` uses a structured table:
@@ -87,6 +89,17 @@ Discoveries logged during implementation use typed categories:
 - `decision` — design or implementation choice made
 - `debt` — technical debt identified for future resolution
 - `insight` — pattern or convention worth remembering
+
+## Execution Log Anchors
+
+Each task entry in `execution.log.md` must include an explicit HTML anchor tag before the heading for stable deep-linking from the plan's Notes column:
+
+```text
+<a id="task-{ID}"></a>
+## Task {ID}: {Task Description}
+```
+
+The plan's Notes column links to the anchor using: `execution.log.md#task-{id}`. Do not use `log#task-{id}` or rely on Markdown heading ID derivation — heading IDs vary across renderers.
 
 ## Dual-Format Maintenance (Prompts and Skills)
 
