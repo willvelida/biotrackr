@@ -33,3 +33,6 @@ Example row (commented out):
 
 | Date | PR | Plan | Proposed | Accepted | Severity (C/H/M/L) | Files Modified | Status |
 |------|----|------|----------|----------|---------------------|----------------|--------|
+| 2026-05-12 | #375 | container-apps-single-revision | 1 | 1 | 0/1/0/0 | bicep-conventions.instructions.md | complete |
+| 2026-05-12 | — | copilot-cli-slash-commands | 1 | 1 | 0/0/0/1 | sdd-conventions.instructions.md | complete |
+| 2026-05-12 | — | sdd-additional-phases | 2 | 2 | 0/1/1/0 | sdd-conventions.instructions.md | complete |

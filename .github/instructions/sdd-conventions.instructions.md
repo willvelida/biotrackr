@@ -87,3 +87,24 @@ Discoveries logged during implementation use typed categories:
 - `decision` — design or implementation choice made
 - `debt` — technical debt identified for future resolution
 - `insight` — pattern or convention worth remembering
+
+## Dual-Format Maintenance (Prompts and Skills)
+
+Each SDD phase prompt (`.github/prompts/sdd-{N}-{phase}.prompt.md`) has a corresponding skill mirror (`.github/skills/sdd-{N}-{phase}/SKILL.md`) for GitHub Copilot CLI compatibility. When editing an SDD prompt:
+
+- Update the corresponding `SKILL.md` with the same content changes
+- The Inputs section differs: prompts use `${input:variable}` syntax; skills use `**variable**` bold text with plain-text descriptions
+- YAML frontmatter differs: prompts use `description` and `argument-hint`; skills use `name` and `description`
+- Skills may expand the `description` field with "Use when:" context for CLI discoverability — this divergence is intentional
+- All other body content (steps, gates, outputs) must remain identical
+
+## New Phase Checklist
+
+When adding a new SDD phase (prompt + skill pair):
+
+- Create both `.github/prompts/sdd-{slug}.prompt.md` and `.github/skills/sdd-{slug}/SKILL.md` simultaneously
+- Add a routing entry in `.github/agents/sdd-workflow.agent.md` state detection table
+- Update the Prompts table and Skills table in `copilot-instructions.md` with correct counts
+- Update the directory structure counts in `AGENTS.md`
+- Update the harness guide (`docs/harness-guide.md`) — Mermaid diagram, phase descriptions, quick reference table, artifact chain
+- Verify all path references in agent and documentation files point to the correct prompt location (`.github/prompts/`, not stale subdirectory paths)

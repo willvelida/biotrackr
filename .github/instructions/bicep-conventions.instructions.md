@@ -48,3 +48,9 @@ applyTo: "**/*.bicep"
 - All infrastructure changes require explicit review
 - Never deploy without `what-if` preview
 - Never modify Key Vault secret references without security review
+
+## CI/CD Trigger Awareness
+
+- Per-service deploy workflows only trigger on `infra/apps/{service}/**` and `src/Biotrackr.{Service}/**` path changes
+- Changes to shared modules under `infra/modules/` only trigger `deploy-core-infra.yml` (shared resources — not individual Container Apps)
+- When modifying shared Bicep modules, add a trigger comment to each affected `infra/apps/{service}/main.bicep` to ensure per-service pipelines fire. Always ask for human approval before doing this.

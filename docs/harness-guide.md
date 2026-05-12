@@ -193,8 +193,13 @@ Spec-Driven Development (SDD) is a structured development workflow for features 
 ```mermaid
 flowchart LR
     E[1. Explore] --> S[2. Specify]
+    S -.-> PI[2b. Prep Issue]
+    S -.-> W[2c. Workshop]
     S --> C[3. Clarify]
+    C -.-> ADR[3a. ADR]
     C --> A[4. Architect]
+    A -.-> V[4a. Validate]
+    A -.-> DYK[4b. Did You Know]
     A --> I[5. Implement]
     I --> R[6. Review]
     R -->|REQUEST_CHANGES| I
@@ -202,10 +207,17 @@ flowchart LR
     EV --> Done((Done))
 ```
 
+Dashed lines indicate optional phases. The 7 core phases (solid lines) work standalone.
+
 1. **Explore** (`/sdd-1-explore`) — Research the codebase before writing a spec. Read-only. Produces a research dossier with codebase landscape, existing patterns, dependencies, and integration points. Stops when done.
 2. **Specify** (`/sdd-2-specify`) — Write a technology-free specification. WHAT and WHY only, no HOW. Includes acceptance criteria, complexity scoring, and affected modules. Unknowns are marked with `[NEEDS CLARIFICATION]`.
+2b. **Prep Issue** (`/sdd-2b-prep-issue`) — *(Optional)* Generate structured GitHub Issue text from the spec for external tracking. Produces copy-paste-ready issue text with goals, acceptance criteria, and complexity.
+2c. **Workshop** (`/sdd-2c-workshop`) — *(Optional)* Deep design exploration for topics identified in the spec's Workshop Opportunities table. Produces a design document with options, trade-offs, and recommendations.
 3. **Clarify** (`/sdd-3-clarify`) — Resolve ambiguities through 8 or fewer targeted questions. Decides the workflow mode (Simple or Full) and testing approach (Standard, Lightweight, or None per your project conventions).
+3a. **ADR** (`/sdd-3a-adr`) — *(Optional)* Generate an Architecture Decision Record when a feature requires decisions that outlive the feature itself. Uses the existing `docs/decision-records/` format.
 4. **Architect** (`/sdd-4-architect`) — Generate a phased implementation blueprint. Launches parallel research subagents that gather codebase evidence before analysis. Produces a plan with task tables, discovery findings, and architecture decisions.
+4a. **Validate** (`/sdd-4a-validate`) — *(Optional)* Readiness gate that runs parallel validators (structure, completeness, doctrine, dependencies) and issues a READY or NOT READY verdict before implementation.
+4b. **Did You Know** (`/sdd-4b-didyouknow`) — *(Optional)* Build shared understanding by surfacing non-obvious insights from SDD artifacts. Presents insights one at a time and immediately updates artifacts after each discussion.
 5. **Implement** (`/sdd-5-implement`) — Execute one phase at a time. Delegates to the right agent for the technology being modified. Tracks progress per-task with 4-state checkboxes and verifies build/test after each task.
 6. **Review** (`/sdd-6-review`) — Quality gate. Checks spec compliance, convention adherence, test coverage, and cross-module consistency. Issues APPROVE or REQUEST_CHANGES. Also identifies learning candidates as advisory findings that do not affect the verdict.
 7. **Evolve** (`/sdd-7-evolve`) — Post-cycle learning extraction. Reads discoveries and decisions from the completed cycle, proposes updates to instruction files. Requires human approval for every change.
@@ -236,9 +248,14 @@ Each phase produces a specific artifact that the next phase consumes:
 | Phase | Produces | Consumed By |
 |-------|----------|-------------|
 | 1. Explore | `research-dossier.md` | 2. Specify (optional), 4. Architect |
-| 2. Specify | `{slug}-spec.md` | 3. Clarify, 4. Architect |
-| 3. Clarify | Updated spec with Clarifications | 4. Architect |
-| 4. Architect | `{slug}-plan.md` (with task tables) | 5. Implement |
+| 2. Specify | `{slug}-spec.md` | 2b. Prep Issue, 2c. Workshop, 3. Clarify, 4. Architect |
+| 2b. Prep Issue | GitHub Issue text (copy-paste) | External tracker |
+| 2c. Workshop | `workshops/{topic}.md` | 3. Clarify, 3a. ADR |
+| 3. Clarify | Updated spec with Clarifications | 3a. ADR, 4. Architect |
+| 3a. ADR | `docs/decision-records/{date}-{title}.md` | 4. Architect |
+| 4. Architect | `{slug}-plan.md` (with task tables) | 4a. Validate, 4b. Did You Know, 5. Implement |
+| 4a. Validate | READY/NOT READY verdict | 5. Implement |
+| 4b. Did You Know | Updated artifacts with insights | 5. Implement |
 | 5. Implement | Code + `execution.log.md` | 6. Review |
 | 6. Review | `review.md` (APPROVE/REQUEST_CHANGES) | 7. Evolve, or 5. Implement |
 | 7. Evolve | Harness updates + evolution log entry | Instruction files |
@@ -264,12 +281,17 @@ The evolution log at `.copilot-tracking/harness-evolution-log.md` tracks every c
 
 ### SDD Quick Reference
 
-| I want to...               | Do this                                              |
+| I want to...                | Do this                                              |
 |-----------------------------|------------------------------------------------------|
 | Research before building    | `/sdd-1-explore`                                     |
 | Write a feature spec        | `/sdd-2-specify`                                     |
+| Generate a GitHub Issue     | `/sdd-2b-prep-issue`                                 |
+| Explore a design topic      | `/sdd-2c-workshop`                                   |
 | Resolve ambiguities         | `/sdd-3-clarify`                                     |
+| Document an architecture decision | `/sdd-3a-adr`                                  |
 | Plan implementation phases  | `/sdd-4-architect`                                   |
+| Validate plan readiness     | `/sdd-4a-validate`                                   |
+| Build shared understanding  | `/sdd-4b-didyouknow`                                 |
 | Implement a plan phase      | `/sdd-5-implement`                                   |
 | Review before merging       | `/sdd-6-review`                                      |
 | Encode lessons learned      | `/sdd-7-evolve`                                      |
@@ -277,7 +299,8 @@ The evolution log at `.copilot-tracking/harness-evolution-log.md` tracks every c
 
 ### Related Files
 
-* SDD prompts: `.github/prompts/sdd/`
+* SDD prompts: `.github/prompts/`
+* SDD skills (Copilot CLI): `.github/skills/sdd-*/`
 * Design template: `.copilot-tracking/templates/sdd-design-template.md`
 * Evolution log: `.copilot-tracking/harness-evolution-log.md`
 * Dispatcher agent: `.github/agents/sdd-workflow.agent.md`

@@ -51,8 +51,8 @@ Each service has its own solution file (`.sln` or `.slnx`), Dockerfile, test pro
 │   ├── agents/                        # 9 custom agent definitions
 │   ├── aw/                            # Agentic workflow runtime artifacts
 │   ├── mcp.json                       # MCP server configuration for Copilot
-│   ├── prompts/                       # 12 prompt templates
-│   ├── skills/                        # 25 skills (OWASP, accessibility, DSA, etc.)
+│   ├── prompts/                       # 24 prompt templates
+│   ├── skills/                        # 37 skills (OWASP, accessibility, DSA, SDD workflow, etc.)
 │   └── workflows/                     # 31 workflows + 10 reusable templates + 17 agentic workflows
 ├── docs/
 │   ├── standards/                     # Commit standards, conventions
