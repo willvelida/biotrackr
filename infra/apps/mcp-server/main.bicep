@@ -1,3 +1,4 @@
+// Shared module update: container-app-http revision mode changed to Single
 @description('The name of the MCP Server application')
 param name string
 

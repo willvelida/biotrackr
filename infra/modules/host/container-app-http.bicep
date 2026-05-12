@@ -56,19 +56,13 @@ resource httpContainerApp 'Microsoft.App/containerApps@2024-03-01' = {
   properties: {
     environmentId: containerAppEnv.id
     configuration: {
-      activeRevisionsMode: 'Multiple'
+      activeRevisionsMode: 'Single'
       ingress: {
         external: true
         transport: 'http'
         targetPort: targetPort
         allowInsecure: false
         customDomains: empty(customDomains) ? null : customDomains
-        traffic: [
-          {
-            latestRevision: true
-            weight: 100
-          }
-        ]
       }
       registries: [
         {

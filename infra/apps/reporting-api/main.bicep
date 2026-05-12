@@ -1,3 +1,4 @@
+// Shared module update: container-app-http-sidecar revision mode changed to Single
 @description('The name of the Reporting Api application')
 param name string
 
