@@ -415,6 +415,8 @@ scripts/chat-system-prompt/reviewer-prompt.txt
 
 # researcher files
 .copilot-tracking/*
+!.copilot-tracking/templates/
+!.copilot-tracking/harness-evolution-log.md
 
 # Presentation notes — working files, not published
 docs/presentation-notes/*
