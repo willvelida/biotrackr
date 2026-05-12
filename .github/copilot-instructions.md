@@ -518,7 +518,7 @@ Order matters — these execute in sequence:
 
 ## Agent Configuration Inventory
 
-### Agents (9)
+### Agents (10)
 
 | Agent                    | File                                                    | Purpose                          |
 |--------------------------|---------------------------------------------------------|----------------------------------|
@@ -529,10 +529,11 @@ Order matters — these execute in sequence:
 | Code Reviewer            | `.github/agents/code-reviewer.agent.md`                 | Read-only code review            |
 | Front-End Designer       | `.github/agents/front-end-designer.agent.md`            | Blazor/UI design                 |
 | GitHub Actions Expert    | `.github/agents/github-actions-expert.agent.md`         | CI/CD workflow authoring         |
+| SDD Workflow             | `.github/agents/sdd-workflow.agent.md`                  | SDD phase orchestrator           |
 | Vulnerability Scanner    | `.github/agents/vulnerability-scanner.agent.md`         | Security vulnerability analysis  |
 | DSA Mentor               | `.github/agents/dsa-mentor.agent.md`                    | DSA learning, algorithm design, complexity analysis, codebase DSA review |
 
-### Prompts (12)
+### Prompts (19)
 
 | Prompt                 | File                                                     | Purpose                                                           |
 |------------------------|----------------------------------------------------------|-------------------------------------------------------------------|
@@ -548,8 +549,15 @@ Order matters — these execute in sequence:
 | New Endpoint           | `.github/prompts/new-endpoint.prompt.md`                 | Blueprint prompt with build/test verification for new endpoints   |
 | Perf Optimize          | `.github/prompts/perf-optimize.prompt.md`                | Performance optimization                                          |
 | Refactor               | `.github/prompts/refactor.prompt.md`                     | Blueprint prompt with pre/post regression verification            |
+| SDD 1: Explore         | `.github/prompts/sdd/sdd-1-explore.prompt.md`            | Deep codebase research before specification (read-only)           |
+| SDD 2: Specify         | `.github/prompts/sdd/sdd-2-specify.prompt.md`            | Technology-free feature specification (WHAT/WHY)                  |
+| SDD 3: Clarify         | `.github/prompts/sdd/sdd-3-clarify.prompt.md`            | Targeted disambiguation (≤8 questions)                            |
+| SDD 4: Architect       | `.github/prompts/sdd/sdd-4-architect.prompt.md`          | Phased implementation blueprint with subagent research            |
+| SDD 5: Implement       | `.github/prompts/sdd/sdd-5-implement.prompt.md`          | Per-phase implementation with progress tracking                   |
+| SDD 6: Review          | `.github/prompts/sdd/sdd-6-review.prompt.md`             | Quality gate review with APPROVE/REQUEST_CHANGES verdict          |
+| SDD 7: Evolve          | `.github/prompts/sdd/sdd-7-evolve.prompt.md`             | Encode learnings into agent harness (requires human approval)     |
 
-### Instructions (8)
+### Instructions (9)
 
 | Instruction              | File                                                                | Trigger                                                     |
 |--------------------------|---------------------------------------------------------------------|-------------------------------------------------------------|
@@ -560,6 +568,7 @@ Order matters — these execute in sequence:
 | DSA Awareness            | `.github/instructions/dsa-awareness.instructions.md`                | `**/*.cs`                                                   |
 | GitHub Actions Conventions | `.github/instructions/github-actions-conventions.instructions.md` | `**/*.yml`                                                  |
 | Razor Components         | `.github/instructions/razor-components.instructions.md`             | `**/*.razor`                                                |
+| SDD Conventions          | `.github/instructions/sdd-conventions.instructions.md`              | `**/.copilot-tracking/plans/**/*.md,**/.copilot-tracking/harness-evolution-log.md` |
 | Testing Conventions      | `.github/instructions/testing-conventions.instructions.md`          | `**/*Tests*/**/*.cs`                                        |
 
 ### Skills (25)

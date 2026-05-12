@@ -176,6 +176,112 @@ Session protocol:
 
 Cap progress files at 200 lines. Archive completed tasks.
 
+## SDD Workflow
+
+Spec-Driven Development (SDD) is a structured development workflow for features that benefit from separating WHAT/WHY from HOW before writing code. The workflow is stack-agnostic — the same prompts work in any repository regardless of language, framework, or toolchain. Each phase is independently useful; you can run the full chain or use individual prompts standalone.
+
+### When to Use SDD
+
+| Complexity | Recommended Approach |
+|------------|---------------------|
+| CS-1 / CS-2 | Proceed directly with existing prompts (`/new-endpoint`, `/refactor`, etc.) — SDD is optional |
+| CS-3 / CS-4 | SDD recommended — Simple mode uses lighter architecture research, Full mode uses complete subagent research |
+| CS-5 | SDD strongly recommended — use Full mode (complete subagent research) |
+
+### The Workflow
+
+```mermaid
+flowchart LR
+    E[1. Explore] --> S[2. Specify]
+    S --> C[3. Clarify]
+    C --> A[4. Architect]
+    A --> I[5. Implement]
+    I --> R[6. Review]
+    R -->|REQUEST_CHANGES| I
+    R -->|APPROVE| EV[7. Evolve]
+    EV --> Done((Done))
+```
+
+1. **Explore** (`/sdd-1-explore`) — Research the codebase before writing a spec. Read-only. Produces a research dossier with codebase landscape, existing patterns, dependencies, and integration points. Stops when done.
+2. **Specify** (`/sdd-2-specify`) — Write a technology-free specification. WHAT and WHY only, no HOW. Includes acceptance criteria, complexity scoring, and affected modules. Unknowns are marked with `[NEEDS CLARIFICATION]`.
+3. **Clarify** (`/sdd-3-clarify`) — Resolve ambiguities through 8 or fewer targeted questions. Decides the workflow mode (Simple or Full) and testing approach (Standard, Lightweight, or None per your project conventions).
+4. **Architect** (`/sdd-4-architect`) — Generate a phased implementation blueprint. Launches parallel research subagents that gather codebase evidence before analysis. Produces a plan with task tables, discovery findings, and architecture decisions.
+5. **Implement** (`/sdd-5-implement`) — Execute one phase at a time. Delegates to the right agent for the technology being modified. Tracks progress per-task with 4-state checkboxes and verifies build/test after each task.
+6. **Review** (`/sdd-6-review`) — Quality gate. Checks spec compliance, convention adherence, test coverage, and cross-module consistency. Issues APPROVE or REQUEST_CHANGES. Also identifies learning candidates as advisory findings that do not affect the verdict.
+7. **Evolve** (`/sdd-7-evolve`) — Post-cycle learning extraction. Reads discoveries and decisions from the completed cycle, proposes updates to instruction files. Requires human approval for every change.
+
+You can also select **SDD Workflow** from the chat mode dropdown. The dispatcher agent detects which phase to run next based on what artifacts already exist.
+
+### Skipping Phases
+
+Phases can be skipped. For CS-1/2 tasks (Simple mode), you might skip Explore and Clarify entirely. Each prompt is standalone — you do not need to run the entire chain. The Specify phase is the most valuable standalone use because it forces you to separate WHAT from HOW before coding.
+
+### Design Patterns
+
+#### Doctrine Resolution Protocol
+
+Every SDD prompt starts by resolving project conventions automatically:
+
+1. Looks for project rules files (`copilot-instructions.md`, `AGENTS.md`, `CONTRIBUTING.md`)
+2. If nothing found, scans the codebase (dependency manifests, build systems, test frameworks)
+3. Extracts build command, test command, coverage threshold, and naming conventions
+4. Unknown values become explicit TODOs, never silent assumptions
+
+The prompts never hardcode `dotnet build` or `npm test` — they discover the right commands from your project documentation. The same prompts work in a .NET repo, a Node.js repo, a Rust repo, or anything else.
+
+#### Artifact Chain
+
+Each phase produces a specific artifact that the next phase consumes:
+
+| Phase | Produces | Consumed By |
+|-------|----------|-------------|
+| 1. Explore | `research-dossier.md` | 2. Specify (optional), 4. Architect |
+| 2. Specify | `{slug}-spec.md` | 3. Clarify, 4. Architect |
+| 3. Clarify | Updated spec with Clarifications | 4. Architect |
+| 4. Architect | `{slug}-plan.md` (with task tables) | 5. Implement |
+| 5. Implement | Code + `execution.log.md` | 6. Review |
+| 6. Review | `review.md` (APPROVE/REQUEST_CHANGES) | 7. Evolve, or 5. Implement |
+| 7. Evolve | Harness updates + evolution log entry | Instruction files |
+
+Artifacts are stored under `.copilot-tracking/plans/{date}/{slug}/`. This enables cross-session continuity — a different session or agent can pick up where the last one left off by reading the artifacts.
+
+#### Technology-Appropriate Delegation
+
+During implementation, the workflow detects the technology of each file being modified and checks if a specialized agent exists. If found, it delegates. If not, it proceeds directly. No agent names are hardcoded in the prompts, so the delegation adapts to whatever agents your repository provides.
+
+#### Harness Evolution (Double-Loop Learning)
+
+Most AI tools fix individual tasks (single-loop learning). The Evolve phase goes further — it questions and modifies the governing instructions themselves (double-loop learning). Discoveries from implementation become permanent conventions.
+
+Safety constraints prevent drift:
+
+* Mandatory human approval for every proposed change
+* Size budgets on instruction files (200 lines for path-scoped, 500 lines for project-wide)
+* De-duplication checks against existing instructions
+* Separate commits for harness changes (distinct from code changes)
+
+The evolution log at `.copilot-tracking/harness-evolution-log.md` tracks every change with provenance: which plan generated the learning, what evidence supports it, and which files were modified. This file is committed to source control so the team can see how the harness improves over time.
+
+### SDD Quick Reference
+
+| I want to...               | Do this                                              |
+|-----------------------------|------------------------------------------------------|
+| Research before building    | `/sdd-1-explore`                                     |
+| Write a feature spec        | `/sdd-2-specify`                                     |
+| Resolve ambiguities         | `/sdd-3-clarify`                                     |
+| Plan implementation phases  | `/sdd-4-architect`                                   |
+| Implement a plan phase      | `/sdd-5-implement`                                   |
+| Review before merging       | `/sdd-6-review`                                      |
+| Encode lessons learned      | `/sdd-7-evolve`                                      |
+| See what phase is next      | Select **SDD Workflow** from chat mode dropdown       |
+
+### Related Files
+
+* SDD prompts: `.github/prompts/sdd/`
+* Design template: `.copilot-tracking/templates/sdd-design-template.md`
+* Evolution log: `.copilot-tracking/harness-evolution-log.md`
+* Dispatcher agent: `.github/agents/sdd-workflow.agent.md`
+
 ## The Verification Protocol
 
 Every code-generation agent follows the same pattern, modeled on the Bicep Specialist:
@@ -279,6 +385,7 @@ Run these periodically to keep the harness healthy:
 | Audit harness health | `/harness-health` |
 | Plan a complex feature | Copy `.copilot-tracking/templates/exec-plan-template.md` |
 | Track multi-session work | Copy `.copilot-tracking/templates/progress-template.md` |
+| Plan with SDD workflow | Select **SDD Workflow** from chat mode dropdown |
 | Learn DSA concepts | Select **DSA Mentor** from chat mode dropdown |
 | Run security scan | Select **Vulnerability Scanner** from chat mode dropdown |
 
