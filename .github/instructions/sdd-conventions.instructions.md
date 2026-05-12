@@ -94,7 +94,8 @@ Each SDD phase prompt (`.github/prompts/sdd-{N}-{phase}.prompt.md`) has a corres
 
 - Update the corresponding `SKILL.md` with the same content changes
 - The Inputs section differs: prompts use `${input:variable}` syntax; skills use `**variable**` bold text with plain-text descriptions
-- YAML frontmatter differs: prompts use `description` and `argument-hint`; skills use `name` and `description`
+- YAML frontmatter differs: prompts use `description` and `argument-hint`, and may also include `agent` when the prompt is intended to route to a specific agent; skills use `name` and `description`
+- Prompt `agent` metadata is prompt-only unless the target skill format explicitly supports an equivalent field; do not mirror `agent` into `SKILL.md` frontmatter by default
 - Skills may expand the `description` field with "Use when:" context for CLI discoverability — this divergence is intentional
 - All other body content (steps, gates, outputs) must remain identical
 

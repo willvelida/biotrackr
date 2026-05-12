@@ -273,7 +273,7 @@ Most AI tools fix individual tasks (single-loop learning). The Evolve phase goes
 Safety constraints prevent drift:
 
 * Mandatory human approval for every proposed change
-* Size budgets on instruction files (200 lines for path-scoped, 500 lines for project-wide)
+* Size budgets on instruction files (200 lines for path-scoped). For `copilot-instructions.md`, do not grow the file by more than 20 lines per evolution session
 * De-duplication checks against existing instructions
 * Separate commits for harness changes (distinct from code changes)
 

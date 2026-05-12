@@ -70,13 +70,14 @@ Run the project's build command per doctrine. Run the project's test command per
 
 ### 3d: Mark Completed
 
-Update the task status from `[~]` to `[x]` in the plan file's task table. Add a log anchor reference in the Notes column: `log#task-{id}`.
+Update the task status from `[~]` to `[x]` in the plan file's task table. Add a direct execution log link in the Notes column using this exact format: `execution.log.md#task-{id}`.
 
 ### 3e: Log
 
 Append to `execution.log.md`:
 
 ```markdown
+<a id="task-{ID}"></a>
 ## Task {ID}: {Task Description}
 
 * **Status**: Completed
