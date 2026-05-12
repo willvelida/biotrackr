@@ -44,7 +44,7 @@ Read the specification and verify readiness:
 
 Select research depth based on workflow mode (from Clarifications section) and available artifacts.
 
-### Simple Mode or Optimized Mode (dossier provided)
+### Simple Mode (or when dossier already exists)
 
 Launch 2 parallel subagents when the user selected Simple mode in Clarify, or when a research dossier already exists:
 

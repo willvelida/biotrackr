@@ -18,8 +18,9 @@ Columns:
   Status          — complete | partial | skipped
 
 Idempotency: Before posting an evolve reminder, check this log.
-The PR column always uses the #NNN format (e.g., #375):
-  grep -q "| #<NUMBER> |" .copilot-tracking/harness-evolution-log.md
+The PR column uses #NNN format when a PR exists (e.g., #375), or — (em dash) when
+the evolution occurs before a PR is created. Grep for the plan slug to check:
+  grep -q "| {slug} |" .copilot-tracking/harness-evolution-log.md
 
 Metrics derived from this table:
   Evolution frequency    = row count per time period
@@ -34,5 +35,5 @@ Example row (commented out):
 | Date | PR | Plan | Proposed | Accepted | Severity (C/H/M/L) | Files Modified | Status |
 |------|----|------|----------|----------|---------------------|----------------|--------|
 | 2026-05-12 | #375 | container-apps-single-revision | 1 | 1 | 0/1/0/0 | bicep-conventions.instructions.md | complete |
-| 2026-05-12 | — | copilot-cli-slash-commands | 1 | 1 | 0/0/0/1 | sdd-conventions.instructions.md | complete |
-| 2026-05-12 | — | sdd-additional-phases | 2 | 2 | 0/1/1/0 | sdd-conventions.instructions.md | complete |
+| 2026-05-12 | #376 | copilot-cli-slash-commands | 1 | 1 | 0/0/0/1 | sdd-conventions.instructions.md | complete |
+| 2026-05-12 | #376 | sdd-additional-phases | 2 | 2 | 0/1/1/0 | sdd-conventions.instructions.md | complete |

@@ -250,9 +250,9 @@ Each phase produces a specific artifact that the next phase consumes:
 | 1. Explore | `research-dossier.md` | 2. Specify (optional), 4. Architect |
 | 2. Specify | `{slug}-spec.md` | 2b. Prep Issue, 2c. Workshop, 3. Clarify, 4. Architect |
 | 2b. Prep Issue | GitHub Issue text (copy-paste) | External tracker |
-| 2c. Workshop | `workshops/{topic}.md` | 3. Clarify, 3a. ADR |
+| 2c. Workshop | `workshops/{topic-slug}.md` | 3. Clarify, 3a. ADR |
 | 3. Clarify | Updated spec with Clarifications | 3a. ADR, 4. Architect |
-| 3a. ADR | `docs/decision-records/{date}-{title}.md` | 4. Architect |
+| 3a. ADR | `docs/decision-records/{YYYY-MM-DD}-{title-slug}.md` | 4. Architect |
 | 4. Architect | `{slug}-plan.md` (with task tables) | 4a. Validate, 4b. Did You Know, 5. Implement |
 | 4a. Validate | READY/NOT READY verdict | 5. Implement |
 | 4b. Did You Know | Updated artifacts with insights | 5. Implement |

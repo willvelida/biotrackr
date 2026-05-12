@@ -10,7 +10,7 @@ description: "Encode learnings from completed SDD cycles into the agent harness.
 >
 > * NEVER modify harness files without explicit user approval for EACH change.
 > * NEVER modify immutable doctrine items (NEVER rules, security controls, boundary rules).
-> * STOP if a target file would exceed its size budget (200 lines for `.instructions.md`, 500 lines for `copilot-instructions.md`).
+> * STOP if a target file would exceed its size budget (200 lines for `.instructions.md`). For `copilot-instructions.md`, do not grow the file by more than 20 lines per evolution session.
 > * Use external signals (code review feedback, test failures, rework evidence) as evidence, not solely self-assessment.
 > * Separate harness commits from code commits. Harness changes use: `core(harness): encode learnings from {slug}`.
 
@@ -89,7 +89,7 @@ For each extracted learning:
 
 4. **De-duplicate** against existing content in the target file. If the learning is already documented, skip it.
 
-5. **Size budget check** — count lines in each target file. If adding the learning would exceed the budget (200 lines for `.instructions.md`, 500 lines for `copilot-instructions.md`), flag for user decision: skip, replace an existing lower-priority rule, or split into a new file.
+5. **Size budget check** — count lines in each target file. For `.instructions.md` files, if adding the learning would exceed 200 lines, flag for user decision: skip, replace an existing lower-priority rule, or split into a new file. For `copilot-instructions.md`, do not grow the file by more than 20 lines per evolution session.
 
 ## Phase C: Draft
 
