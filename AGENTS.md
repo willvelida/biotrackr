@@ -48,7 +48,7 @@ Each service has its own solution file (`.sln` or `.slnx`), Dockerfile, test pro
 ├── .github/
 │   ├── copilot-instructions.md        # Comprehensive Copilot guide (15 sections)
 │   ├── instructions/                  # Path-scoped .instructions.md files
-│   ├── agents/                        # 9 custom agent definitions
+│   ├── agents/                        # 11 custom agent definitions
 │   ├── aw/                            # Agentic workflow runtime artifacts
 │   ├── mcp.json                       # MCP server configuration for Copilot
 │   ├── prompts/                       # 24 prompt templates

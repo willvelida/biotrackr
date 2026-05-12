@@ -1,6 +1,7 @@
 ---
 description: "Quality gate review with structured findings and verdict"
 argument-hint: "[slug=...] [plan=...] [phase=1]"
+agent: "SDD Review Judge"
 ---
 
 # SDD Phase 6: Review

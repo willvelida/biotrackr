@@ -518,7 +518,7 @@ Order matters — these execute in sequence:
 
 ## Agent Configuration Inventory
 
-### Agents (10)
+### Agents (11)
 
 | Agent                    | File                                                    | Purpose                          |
 |--------------------------|---------------------------------------------------------|----------------------------------|
@@ -529,6 +529,7 @@ Order matters — these execute in sequence:
 | Code Reviewer            | `.github/agents/code-reviewer.agent.md`                 | Read-only code review            |
 | Front-End Designer       | `.github/agents/front-end-designer.agent.md`            | Blazor/UI design                 |
 | GitHub Actions Expert    | `.github/agents/github-actions-expert.agent.md`         | CI/CD workflow authoring         |
+| SDD Review Judge         | `.github/agents/sdd-review-judge.agent.md`              | SDD quality gate with elevated model (LLM-as-judge) |
 | SDD Workflow             | `.github/agents/sdd-workflow.agent.md`                  | SDD phase orchestrator           |
 | Vulnerability Scanner    | `.github/agents/vulnerability-scanner.agent.md`         | Security vulnerability analysis  |
 | DSA Mentor               | `.github/agents/dsa-mentor.agent.md`                    | DSA learning, algorithm design, complexity analysis, codebase DSA review |
