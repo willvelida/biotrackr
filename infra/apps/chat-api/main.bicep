@@ -1,4 +1,5 @@
 // Chat API infrastructure — AzureAd:ClientId is owned by this template
+// Shared module update: container-app-http revision mode changed to Single
 @description('The name of the Chat Api application')
 param name string
 
