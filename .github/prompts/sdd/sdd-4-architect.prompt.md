@@ -35,10 +35,10 @@ Before starting, resolve project conventions:
 
 Read the specification and verify readiness:
 
-1. Confirm no unresolved `[NEEDS CLARIFICATION]` markers remain.
-2. Confirm a Testing Strategy section exists in the specification.
+1. Confirm no unresolved `[NEEDS CLARIFICATION]` markers remain (warn if found but do not block).
+2. Confirm a Testing Strategy section or a Clarifications section with a testing approach answer exists in the specification. If neither exists, ask the user for the testing approach before proceeding.
 3. If architecture documentation exists in doctrine, validate the specification aligns with documented boundaries and patterns.
-4. If entry gate fails, stop and report the specific gaps to the user.
+4. If critical gaps are found (no spec file, no acceptance criteria), stop and report them to the user.
 
 ## Step 2: Launch Parallel Research Subagents
 

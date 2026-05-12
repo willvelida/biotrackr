@@ -75,6 +75,12 @@ Unresolved decisions or information gaps. Each question identifies who can answe
 
 List of modules, services, or components that this feature touches or depends on, based on research findings or codebase analysis.
 
+### Testing Strategy
+
+Placeholder for Phase 3 (Clarify) to populate. The testing approach (Standard, Lightweight, or None) is decided during clarification.
+
+`[NEEDS CLARIFICATION: Testing approach not yet decided — run SDD Phase 3 (Clarify)]`
+
 ### Workshop Opportunities
 
 Table of topics that would benefit from deeper design exploration before implementation:

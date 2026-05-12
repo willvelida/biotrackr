@@ -14,10 +14,7 @@ Each SDD cycle produces artifacts under `.copilot-tracking/plans/{date}/{slug}/`
 ├── research-dossier.md          # Phase 1: Explore output
 ├── {slug}-spec.md               # Phase 2: Specify output
 ├── {slug}-plan.md               # Phase 4: Architect output
-├── tasks/
-│   └── phase-{n}/
-│       ├── tasks.md             # Phase 5: Task table
-│       └── execution.log.md    # Phase 5: Progress log
+├── execution.log.md             # Phase 5: Progress log
 └── reviews/
     └── review.md                # Phase 6: Review output
 ```
@@ -40,7 +37,8 @@ Specs (`{slug}-spec.md`) use this canonical section order. Downstream phases dep
 6. Risks & Assumptions
 7. Open Questions
 8. Affected Modules/Services
-9. Workshop Opportunities
+9. Testing Strategy (populated during Clarify phase)
+10. Workshop Opportunities
 
 Mark unknowns with `[NEEDS CLARIFICATION]`. Do not include technology or framework choices in specs.
 

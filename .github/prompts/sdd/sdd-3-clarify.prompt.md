@@ -59,7 +59,7 @@ Questions 3 through 8 are generated from the ambiguity analysis, ordered by desc
 
 ## Step 4: Present Questions
 
-Present questions one at a time using the `vscode_askQuestions` tool. Wait for each answer before presenting the next question. Skip remaining questions if the user indicates they want to proceed without further clarification.
+Present questions one at a time in the conversation. Wait for each answer before presenting the next question. Skip remaining questions if the user indicates they want to proceed without further clarification.
 
 ## Step 5: Update Specification
 

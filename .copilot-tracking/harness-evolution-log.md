@@ -17,8 +17,9 @@ Columns:
   Files Modified  — Harness files changed (comma-separated basenames)
   Status          — complete | partial | skipped
 
-Idempotency: Before posting an evolve reminder, check this log:
-  grep -q "| {PR_NUMBER} |" .copilot-tracking/harness-evolution-log.md
+Idempotency: Before posting an evolve reminder, check this log.
+The PR column always uses the #NNN format (e.g., #375):
+  grep -q "| #<NUMBER> |" .copilot-tracking/harness-evolution-log.md
 
 Metrics derived from this table:
   Evolution frequency    = row count per time period

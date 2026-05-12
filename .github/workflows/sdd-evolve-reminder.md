@@ -34,7 +34,7 @@ Search for SDD plan artifacts associated with this PR using two methods:
 **Method A (Changed files):** Read the PR's changed files list. Look for files matching:
 - `.copilot-tracking/plans/**/*-spec.md` (Phase 2 output)
 - `.copilot-tracking/plans/**/*-plan.md` or `*-plan.instructions.md` (Phase 4 output)
-- `.copilot-tracking/plans/**/*-review.md` (Phase 6 output)
+- `.copilot-tracking/plans/**/reviews/review.md` (Phase 6 output)
 
 **Method B (Labels):** Check if the PR has the `sdd-plan` label (added by the SDD Compliance Checker workflow).
 

@@ -46,8 +46,8 @@ Search the PR's changed files for SDD plan artifacts:
 
 - `.copilot-tracking/plans/**/*-spec.md` (Phase 2: Specify)
 - `.copilot-tracking/plans/**/*-plan.md` or `*-plan.instructions.md` (Phase 4: Architect)
-- `.copilot-tracking/plans/**/*-review.md` (Phase 6: Review)
-- `.copilot-tracking/research/` files referencing the feature (Phase 1: Explore)
+- `.copilot-tracking/plans/**/reviews/review.md` (Phase 6: Review)
+- `.copilot-tracking/plans/**/research-dossier.md` (Phase 1: Explore)
 
 Also check the PR description for references to SDD plans.
 

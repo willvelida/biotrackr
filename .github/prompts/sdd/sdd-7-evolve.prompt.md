@@ -48,7 +48,7 @@ Read the completed SDD plan artifacts and gather learning candidates:
 
 1. **Decision log** — Read the plan file's Discoveries & Surprises section and Decision Log entries for rationale and trade-offs.
 2. **Execution log** — Read `execution.log.md` for Implementation Notes, unexpected behaviors, and workarounds.
-3. **Review report** — Read `review.md` for findings, convention violations, and the Doctrine Evolution section (Section E.4) if present.
+3. **Review report** — Read `reviews/review.md` for findings, convention violations, and the Doctrine Evolution section if present.
 4. **PR feedback** — Check for PR review comments and code review threads that surfaced corrections or patterns.
 
 For each candidate learning, record:

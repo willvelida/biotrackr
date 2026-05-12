@@ -117,7 +117,7 @@ Label this section clearly: "Advisory: these findings inform future harness evol
 
 ## Step 7: Write Review Report
 
-Write the report to `.copilot-tracking/plans/{date}/{slug}/reviews/review-phase-{N}.md` with these sections:
+Write the report to `.copilot-tracking/plans/{date}/{slug}/reviews/review.md` with these sections:
 
 ```markdown
 # Review: Phase {N}
