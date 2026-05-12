@@ -1,7 +1,7 @@
 ---
 name: "SDD Review Judge"
 description: "Dedicated quality gate agent for SDD Phase 6 Review. Uses an elevated model to reduce self-enhancement bias when judging LLM-generated code. Read-only — does not modify files."
-model: "Claude Opus 4.6 (copilot)"
+model: "GPT-5.3-Codex (copilot)"
 tools: [search, read, codebase, fetch]
 ---
 
