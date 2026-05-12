@@ -48,7 +48,7 @@ Analyze the specification for:
 
 Produce a maximum of 8 questions, prioritized by impact on downstream phases. The first two questions are mandatory and always appear in this order:
 
-1. **Workflow Mode** — "Should this feature follow Simple mode (CS-1/2, lighter architecture phase) or Full mode (CS-3+, full subagent research in the Architect phase)?" Options: Simple, Full.
+1. **Workflow Mode** — "Should this feature follow Simple mode (lighter architecture phase with fewer subagents) or Full mode (complete subagent research with 4 parallel investigators)?" Options: Simple, Full. Simple mode is typical for straightforward features; Full mode is recommended for cross-cutting or architecturally complex changes.
 2. **Testing Approach** — "What testing approach should this feature follow?" Options: Standard (full test coverage per doctrine), Lightweight (critical paths only), None (skip testing per doctrine allowance).
 
 Questions 3 through 8 are generated from the ambiguity analysis, ordered by descending impact on architecture and implementation decisions. Each question includes:

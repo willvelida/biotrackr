@@ -65,10 +65,10 @@ If SDD artifacts are found at any complexity level, add `sdd-plan` label.
 
 If SDD artifacts are found, assess which phases have artifacts:
 
-- Phase 1 (Explore): Research dossier in `.copilot-tracking/research/`
+- Phase 1 (Explore): Research dossier (`research-dossier.md` in `.copilot-tracking/plans/{date}/{slug}/`)
 - Phase 2 (Specify): Spec document (`*-spec.md`)
 - Phase 4 (Architect): Plan document (`*-plan.md`)
-- Phase 6 (Review): Review document with verdict
+- Phase 6 (Review): Review document (`reviews/review.md`)
 
 Missing phases are reported as informational notes, not failures.
 

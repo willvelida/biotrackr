@@ -17,7 +17,7 @@
 | Novelty (N) | | |
 | Non-Functional (F) | | |
 | Testing (T) | | |
-| **Total** | | **CS-{N}** |}
+| **Total** | | **CS-{N}** |
 
 ## Goals
 

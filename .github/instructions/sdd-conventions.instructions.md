@@ -39,6 +39,7 @@ Specs (`{slug}-spec.md`) use this canonical section order. Downstream phases dep
 8. Affected Modules/Services
 9. Testing Strategy (populated during Clarify phase)
 10. Workshop Opportunities
+11. Clarifications (appended by Phase 3: Clarify — optional, not present until Clarify runs)
 
 Mark unknowns with `[NEEDS CLARIFICATION]`. Do not include technology or framework choices in specs.
 

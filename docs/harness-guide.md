@@ -184,9 +184,9 @@ Spec-Driven Development (SDD) is a structured development workflow for features 
 
 | Complexity | Recommended Approach |
 |------------|---------------------|
-| CS-1 / CS-2 | Proceed directly with existing prompts (`/new-endpoint`, `/refactor`, etc.) |
-| CS-3 | SDD recommended — use Simple mode (lighter architecture phase) |
-| CS-4 / CS-5 | SDD strongly recommended — use Full mode (complete subagent research) |
+| CS-1 / CS-2 | Proceed directly with existing prompts (`/new-endpoint`, `/refactor`, etc.) — SDD is optional |
+| CS-3 / CS-4 | SDD recommended — Simple mode uses lighter architecture research, Full mode uses complete subagent research |
+| CS-5 | SDD strongly recommended — use Full mode (complete subagent research) |
 
 ### The Workflow
 

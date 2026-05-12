@@ -42,18 +42,18 @@ Read the specification and verify readiness:
 
 ## Step 2: Launch Parallel Research Subagents
 
-Select research depth based on available artifacts.
+Select research depth based on workflow mode (from Clarifications section) and available artifacts.
 
-### Optimized Mode (dossier provided)
+### Simple Mode or Optimized Mode (dossier provided)
 
-Launch 2 parallel subagents when a research dossier already exists:
+Launch 2 parallel subagents when the user selected Simple mode in Clarify, or when a research dossier already exists:
 
 1. **Implementation Strategist** — analyze the specification against the dossier findings. Identify implementation order, phase boundaries, dependency chains, and risk-adjusted sequencing.
 2. **Risk and Mitigation Planner** — cross-reference dossier constraints with specification acceptance criteria. Identify blockers, fallback strategies, and validation checkpoints.
 
-### Full Research Mode (no dossier)
+### Full Research Mode (Full mode selected and no dossier)
 
-Launch 4 parallel subagents when no research dossier exists:
+Launch 4 parallel subagents when Full mode was selected and no research dossier exists:
 
 1. **Codebase Pattern Analyst** — use file search, grep, and read operations to map existing architecture, conventions, integration points, and established patterns relevant to the specification.
 2. **Technical Investigator** — identify constraints, API limits, framework quirks, and dependency gotchas that affect implementation.
