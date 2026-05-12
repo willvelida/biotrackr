@@ -8,16 +8,14 @@ namespace Biotrackr.Activity.Api.Repositories
 {
     public class CosmosRepository : ICosmosRepository
     {
-        private readonly CosmosClient _cosmosClient;
         private readonly Container _container;
         private readonly Settings _settings;
         private readonly ILogger<CosmosRepository> _logger;
 
         public CosmosRepository(CosmosClient cosmosClient, IOptions<Settings> options, ILogger<CosmosRepository> logger)
         {
-            _cosmosClient = cosmosClient;
             _settings = options.Value;
-            _container = _cosmosClient.GetContainer(_settings.DatabaseName, _settings.ContainerName);
+            _container = cosmosClient.GetContainer(_settings.DatabaseName, _settings.ContainerName);
             _logger = logger;
         }
 
