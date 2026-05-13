@@ -120,7 +120,7 @@ Label this section clearly: "Advisory: these findings inform future harness evol
 After issuing the verdict, compute the Cycle Measurement Summary for inclusion in the review report:
 
 1. **Cycle Metadata** — extract slug, complexity score, phase count, and total task count from the plan.
-2. **QITE Metrics** — compute from execution log and review findings: verdict, finding density (findings ÷ tasks), first-pass build success rate, fix cycles (count of prior REQUEST_CHANGES verdicts for this slug), discovery density (discoveries ÷ tasks), cycle duration (plan directory date to today), task completion rate, blocked task count.
+2. **QITE Metrics** — compute from execution log and review findings: verdict, finding density (findings ÷ tasks; use `0` if zero tasks), first-pass build success rate, fix cycles (total REQUEST_CHANGES verdicts issued for this slug across all review attempts, including the current one if applicable; `0` on first-pass APPROVE), discovery density (discoveries ÷ tasks; use `0` if zero tasks), cycle duration (plan directory date to today), task completion rate, blocked task count.
 3. **Trend indicators** — if prior review reports exist in `.copilot-tracking/plans/` with Cycle Measurement Summary sections, compare current values to the most recent prior cycle. Use ↑ (increasing), ↓ (decreasing), → (stable). Use — for the first measured cycle.
 4. **Self-Reported scores** — ask the user for mandatory Spec Clarity (1-5) and Flow State (1-5) scores using the rubric in `docs/standards/harness-governance.md`.
 5. **Interpretation** — write 1-3 sentences explaining what the numbers mean and answering "so what?"

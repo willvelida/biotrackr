@@ -37,7 +37,7 @@ Rows with `—` in measurement columns predate the measurement system — skip t
 1. **Filter**: Only include rows where at least Verdict is not `—` (measured cycles).
 2. **If fewer than 3 measured cycles exist**, report the raw data without trend analysis and note that trends require more data.
 3. **If 3+ measured cycles exist**, compute:
-   - **Quality**: Review pass rate (% APPROVE), average finding density. Trend: ↑↓→ comparing last 5 cycles vs prior 5.
+   - **Quality**: Review pass rate (% APPROVE), average finding density. Trend: ↑↓→ comparing available cycles (use all data if < 10 cycles; compare last 5 vs prior 5 when 10+ cycles exist).
    - **Iteration**: Average fix cycles, average finding density. Trend indicator.
    - **Time**: Average cycle time. Trend indicator.
    - **Efficiency**: Implied from task completion (not directly in evolution log — note as N/A).
@@ -53,8 +53,8 @@ Rows with `—` in measurement columns predate the measurement system — skip t
 
 ### QITE Dimension Trends
 
-| Dimension | Key Metric | Current (last 5) | Prior (5 before) | Trend |
-|-----------|-----------|-------------------|------------------|-------|
+| Dimension | Key Metric | Recent | Prior | Trend |
+|-----------|-----------|--------|-------|-------|
 | Quality | Review pass rate | {%} | {%} | {↑↓→} |
 | Quality | Avg finding density | {ratio} | {ratio} | {↑↓→} |
 | Iteration | Avg fix cycles | {N} | {N} | {↑↓→} |
