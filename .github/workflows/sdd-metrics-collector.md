@@ -5,7 +5,6 @@ engine:
   id: copilot
 permissions:
   contents: read
-  issues: write
 safe-outputs:
   create-issue:
     title-prefix: "[sdd-metrics] "
