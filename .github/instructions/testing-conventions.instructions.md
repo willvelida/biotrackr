@@ -56,6 +56,7 @@ public async Task GetActivityByDate_ShouldReturnOk_WhenActivityIsFound()
 - Use `[Collection(nameof(ContractTestCollection))]` for fixture sharing
 - `ContractTestFixture` inherits `IntegrationTestFixture` with `InitializeDatabase => false`
 - Verify: service startup, DI registration (singleton/scoped/transient), health endpoint, OpenAPI doc
+- Test `WebApplicationFactory` implementations must mirror production DI lifetimes (singleton/scoped/transient) — divergent lifetimes mask bugs and invalidate integration tests
 
 ## E2E Tests
 
