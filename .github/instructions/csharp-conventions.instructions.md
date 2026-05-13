@@ -1,6 +1,6 @@
 ---
-description: "C# coding conventions for Biotrackr .NET services. Use when: writing or editing C# source files, service implementations, API handlers, or data models."
-applyTo: "**/*.cs"
+description: "C# coding conventions for Biotrackr .NET services. Use when: writing or editing C# source files, service implementations, API handlers, data models, or project files."
+applyTo: "**/*.cs,**/*.csproj"
 ---
 
 # C# Conventions
@@ -51,3 +51,9 @@ applyTo: "**/*.cs"
 - One class per file (exceptions: small nested types, records)
 - File-scoped namespaces (`namespace Biotrackr.Activity.Api.Models;`)
 - Group `using` directives: System first, then Microsoft, then third-party, then project
+
+## Security Dependency Pins
+
+- When pinning a transitive NuGet dependency to fix a CVE, add an XML comment above the `PackageReference` with the CVE ID and removal condition
+- Example: `<!-- CVE-2026-44375: pin until Microsoft.Agents.AI.* updates to >= 1.1.62 -->`
+- After pinning, verify no new HIGH/CRITICAL audit warnings (NU1902/NU1903) were introduced by the updated package's own transitives
