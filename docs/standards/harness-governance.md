@@ -157,30 +157,88 @@ Cross-service consistency and module boundary enforcement:
 
 QITE (Quality, Iteration, Time, Efficiency) provides a lightweight, directional framework for measuring harness effectiveness. These metrics are not precision instruments — they track trends over time.
 
+### Framework Alignment
+
+QITE is the Biotrackr-native measurement vocabulary. The following table maps QITE dimensions to established external frameworks for cross-reference and literacy.
+
+| QITE Dimension | SPACE Dimension(s) | DORA Proxy | DX Core 4 |
+|---------------|-------------------|------------|-----------|
+| Quality | Performance, Activity | Change Failure Rate | Quality |
+| Iteration | Efficiency & Flow | — | Speed |
+| Time | Efficiency & Flow | Change Lead Time | Speed |
+| Efficiency | Satisfaction | — | Effectiveness |
+
+References: SPACE (Forsgren et al., ACM Queue 2021), Accelerate/DORA (Forsgren, Humble, Kim, 2018), DX Core 4 (Noda, Storey, Forsgren, Greiler, 2023).
+
 ### Quality
 
 - **First-pass CI success rate**: Percentage of pushes that pass CI on the first attempt.
 - **Convention compliance**: Monthly spot-check of recently generated code against `.instructions.md` conventions.
+- **Review first-pass approval rate**: Percentage of SDD cycles where the review verdict is APPROVE on the first attempt (no REQUEST_CHANGES loops).
+- **Finding density**: Number of review findings per task in a cycle (findings ÷ tasks).
 
 ### Iteration
 
 - **Fix cycle count**: Number of edit-test-fix cycles per task before the change is correct.
 - **Conversation depth**: Number of turns in an agent conversation to complete a task.
+- **SDD fix cycles**: Number of REQUEST_CHANGES verdicts before APPROVE in an SDD cycle.
+- **Discovery density**: Number of discoveries logged per task during implementation.
 
 ### Time
 
 - **Wall-clock task time**: Elapsed time from task start to completion. Measured directionally — track whether tasks are trending faster or slower, not absolute precision.
+- **SDD cycle time**: Days from plan directory date to review completion. Uses the plan directory date (`YYYY-MM-DD`) as start and review date as end.
 
 ### Efficiency
 
 - **Human intervention rate**: Percentage of agent-generated changes that require human correction before merge.
+- **Acceptance criteria fulfillment rate**: Percentage of spec acceptance criteria satisfied at review time.
+- **Learning acceptance rate**: Ratio of accepted to proposed learnings in the Evolve phase (from evolution log).
+
+### SDD Cycle Metrics
+
+The following metrics are captured automatically during SDD workflow execution:
+
+| QITE Dimension | SDD Metric | Capture Point | Source Artifact |
+|---------------|------------|---------------|-----------------|
+| Quality | Review verdict | Review (Phase 6) | `reviews/review.md` |
+| Quality | Finding density | Review (Phase 6) | `reviews/review.md` |
+| Iteration | Fix cycles (REQUEST_CHANGES count) | Review (Phase 6) | `reviews/review.md` |
+| Iteration | Discovery density | Implement (Phase 5) | `execution.log.md` |
+| Time | Cycle time (days) | Review (Phase 6) | Plan directory date → review date |
+| Efficiency | Task completion rate | Implement (Phase 5) | Plan task tables |
 
 ### Tracking Methods
 
 - Session journaling in `.copilot-tracking/tasks/` progress files.
 - Git history analysis (commit frequency, fix-up commits, revert rate).
 - CI signals (pipeline pass rate, coverage trends, build times).
+- SDD execution logs, review reports, and evolution log measurement columns.
 
 ### Measurement Window
 
 For a solo-developer project like Biotrackr, collect data across 15-20 tasks per measurement period to establish meaningful trends. Shorter windows produce too much noise for directional conclusions.
+
+### Self-Reported Score Rubrics
+
+Self-reported scores are mandatory for each SDD review. Use these anchor descriptions for consistent scoring across cycles.
+
+**Spec Clarity** — "How well did the specification define the work?"
+
+| Score | Anchor | Description |
+|-------|--------|-------------|
+| 1 | Very unclear | Spec had major gaps; significant rework or re-clarification needed during implementation |
+| 2 | Somewhat unclear | Multiple ambiguities discovered during implementation; frequent reference back to clarify intent |
+| 3 | Adequate | Spec was usable; a few minor gaps but implementation could proceed without major course corrections |
+| 4 | Clear | Spec accurately described the work; minimal surprises during implementation |
+| 5 | Excellent | Spec fully anticipated implementation needs; zero ambiguity, no course corrections required |
+
+**Flow State** — "How smoothly did the implementation flow?"
+
+| Score | Anchor | Description |
+|-------|--------|-------------|
+| 1 | Severely blocked | Constant interruptions, blockers, or context switches; unable to make sustained progress |
+| 2 | Frequently interrupted | Multiple blockers or tool issues; progress was stop-start throughout |
+| 3 | Adequate flow | Some interruptions but able to maintain reasonable progress; typical working session |
+| 4 | Good flow | Few interruptions; sustained focus with only minor context switches |
+| 5 | Deep flow | Uninterrupted, productive session; tools and processes worked seamlessly |

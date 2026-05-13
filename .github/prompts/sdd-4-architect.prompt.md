@@ -143,6 +143,19 @@ Reference the project's build command, test command, and coverage threshold from
 * Coverage: {per doctrine threshold, or [TODO] if unknown}
 ```
 
+### Historical Measurement Feedforward
+
+Before finalizing the plan, scan for prior Cycle Measurement Summaries to inform planning:
+
+1. Search `.copilot-tracking/plans/*/` for directories containing `reviews/review.md` files.
+2. Read any `## Cycle Measurement Summary` sections found in those review reports.
+3. If prior measurement data exists:
+   * Note the average fix-cycle count for similar complexity scores (CS-N) — flag if historically high rework.
+   * Note discovery density trends — inform phase sizing if prior cycles at this complexity had high discovery rates.
+   * Note cycle time trends — provide context for plan scope relative to historical durations.
+   * Include a `### Historical Context` subsection in the plan summarizing relevant prior metrics.
+4. If no prior measurement data exists, include: "No historical measurement data available — first measured cycle. Metrics from this cycle will establish the baseline for future feedforward."
+
 ## Step 6: Present Plan for Review
 
 Present the completed plan to the user with:

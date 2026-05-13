@@ -115,7 +115,17 @@ Label this section clearly: "Advisory: these findings inform future harness evol
 * **APPROVE**: No CRITICAL or HIGH findings. The phase meets acceptance criteria and follows project conventions.
 * **REQUEST_CHANGES**: One or more CRITICAL or HIGH findings exist. List specific fix tasks for the next implementation run.
 
-## Step 7: Write Review Report
+## Step 7: Compute Cycle Measurement Summary
+
+After issuing the verdict, compute the Cycle Measurement Summary for inclusion in the review report:
+
+1. **Cycle Metadata** — extract slug, complexity score, phase count, and total task count from the plan.
+2. **QITE Metrics** — compute from execution log and review findings: verdict, finding density (findings ÷ tasks), first-pass build success rate, fix cycles (count of prior REQUEST_CHANGES verdicts for this slug), discovery density (discoveries ÷ tasks), cycle duration (plan directory date to today), task completion rate, blocked task count.
+3. **Trend indicators** — if prior review reports exist in `.copilot-tracking/plans/` with Cycle Measurement Summary sections, compare current values to the most recent prior cycle. Use ↑ (increasing), ↓ (decreasing), → (stable). Use — for the first measured cycle.
+4. **Self-Reported scores** — ask the user for mandatory Spec Clarity (1-5) and Flow State (1-5) scores using the rubric in `docs/standards/harness-governance.md`.
+5. **Interpretation** — write 1-3 sentences explaining what the numbers mean and answering "so what?"
+
+## Step 8: Write Review Report
 
 Write the report to `.copilot-tracking/plans/{date}/{slug}/reviews/review.md` with these sections:
 
@@ -170,6 +180,43 @@ Write the report to `.copilot-tracking/plans/{date}/{slug}/reviews/review.md` wi
 
 {If APPROVE: recommended next phase or completion actions.}
 {If REQUEST_CHANGES: specific fix tasks with file paths and descriptions for the next sdd-5-implement run.}
+
+## Cycle Measurement Summary
+
+### Cycle Metadata
+
+| Field | Value |
+|-------|-------|
+| Slug | {slug} |
+| Complexity | CS-{N} |
+| Phases | {count} |
+| Total Tasks | {count} |
+
+### Metrics (QITE-Aligned)
+
+| Dimension | Metric | Value | Trend |
+|-----------|--------|-------|-------|
+| Quality | Review verdict | {APPROVE or REQUEST_CHANGES} | — |
+| Quality | Finding density | {findings}/{tasks} = {ratio} | {↑↓→ or — if first cycle} |
+| Quality | First-pass build success | {pass}/{total} = {%} | {↑↓→ or —} |
+| Iteration | Fix cycles | {count} (REQUEST_CHANGES loops) | {↑↓→ or —} |
+| Iteration | Discovery density | {discoveries}/{tasks} = {ratio} | {↑↓→ or —} |
+| Time | Cycle duration | {plan date}→{review date} = {days} | {↑↓→ or —} |
+| Efficiency | Tasks completed / planned | {completed}/{planned} = {ratio} | {↑↓→ or —} |
+| Efficiency | Blocked tasks | {count} | {↑↓→ or —} |
+
+### Self-Reported (Mandatory)
+
+| Metric | Score (1-5) |
+|--------|-------------|
+| Spec Clarity | {score} |
+| Flow State | {score} |
+
+Use the rubric in `docs/standards/harness-governance.md` (Self-Reported Score Rubrics section) for consistent scoring.
+
+### Interpretation
+
+{1-3 sentences: what do these numbers mean for this cycle? What improved or degraded compared to prior cycles? If this is the first measured cycle, note that and set the baseline. Avoid stating numbers without explaining their significance — answer "so what?"}
 ```
 
 ---

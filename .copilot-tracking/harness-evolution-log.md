@@ -16,6 +16,12 @@ Columns:
   Severity (C/H/M/L) — Count of Critical/High/Medium/Low learnings proposed
   Files Modified  — Harness files changed (comma-separated basenames)
   Status          — complete | partial | skipped
+  Verdict         — Final review verdict: APPROVE | REQUEST_CHANGES | — (if no review)
+  FixCycles       — Number of REQUEST_CHANGES loops before APPROVE (0 = first-pass approval)
+  FindDensity     — Review findings per task ratio (e.g., 0.5) | — (if unavailable)
+  CycleTime       — Days from plan directory date to review completion | — (if unavailable)
+  SpecClarity     — Self-reported spec clarity score (1-5) | — (if unavailable)
+  FlowState       — Self-reported flow state score (1-5) | — (if unavailable)
 
 Idempotency: Before posting an evolve reminder, check this log.
 The PR column uses #NNN format when a PR exists (e.g., #375), or — (em dash) when
@@ -27,16 +33,21 @@ Metrics derived from this table:
   Acceptance rate        = sum(Accepted) / sum(Proposed) — healthy range: 40-80%
   Severity distribution  = aggregate C/H/M/L counts over time
   Growth tracking        = Files Modified column shows which files evolve most
+  Review pass rate       = count(Verdict=APPROVE) / count(all rows with Verdict)
+  Avg fix cycles         = mean(FixCycles) — lower is better
+  Avg cycle time         = mean(CycleTime) — track directional trend
+  Satisfaction trend     = mean(SpecClarity), mean(FlowState) over time
 
 Example row (commented out):
-  | 2026-05-12 | #375 | mcp-server-redesign | 6 | 4 | 0/2/3/1 | csharp-conventions, testing-conventions | complete |
+  | 2026-05-12 | #375 | mcp-server-redesign | 6 | 4 | 0/2/3/1 | csharp-conventions, testing-conventions | complete | APPROVE | 0 | 0.5 | 3 | 4 | 4 |
 -->
 
-| Date | PR | Plan | Proposed | Accepted | Severity (C/H/M/L) | Files Modified | Status |
-|------|----|------|----------|----------|---------------------|----------------|--------|
-| 2026-05-12 | #375 | container-apps-single-revision | 1 | 1 | 0/1/0/0 | bicep-conventions.instructions.md | complete |
-| 2026-05-12 | #376 | copilot-cli-slash-commands | 1 | 1 | 0/0/0/1 | sdd-conventions.instructions.md | complete |
-| 2026-05-12 | #376 | sdd-additional-phases | 2 | 2 | 0/1/1/0 | sdd-conventions.instructions.md | complete |
-| 2026-05-12 | #376 | review-llm-as-judge | 2 | 2 | 0/0/2/0 | sdd-conventions.instructions.md | complete |
-| 2026-05-12 | #377 | activity-api-dead-code | 1 | 1 | 0/0/1/0 | testing-conventions.instructions.md | complete |
-| 2026-05-13 |  #378 | reporting-api-trivy-failure | 1 | 1 | 0/0/1/0 | csharp-conventions.instructions.md | complete |
+| Date | PR | Plan | Proposed | Accepted | Severity (C/H/M/L) | Files Modified | Status | Verdict | FixCycles | FindDensity | CycleTime | SpecClarity | FlowState |
+|------|----|------|----------|----------|---------------------|----------------|--------|---------|-----------|-------------|-----------|-------------|-----------|
+| 2026-05-12 | #375 | container-apps-single-revision | 1 | 1 | 0/1/0/0 | bicep-conventions.instructions.md | complete | — | — | — | — | — | — |
+| 2026-05-12 | #376 | copilot-cli-slash-commands | 1 | 1 | 0/0/0/1 | sdd-conventions.instructions.md | complete | — | — | — | — | — | — |
+| 2026-05-12 | #376 | sdd-additional-phases | 2 | 2 | 0/1/1/0 | sdd-conventions.instructions.md | complete | — | — | — | — | — | — |
+| 2026-05-12 | #376 | review-llm-as-judge | 2 | 2 | 0/0/2/0 | sdd-conventions.instructions.md | complete | — | — | — | — | — | — |
+| 2026-05-12 | #377 | activity-api-dead-code | 1 | 1 | 0/0/1/0 | testing-conventions.instructions.md | complete | — | — | — | — | — | — |
+| 2026-05-13 |  #378 | reporting-api-trivy-failure | 1 | 1 | 0/0/1/0 | csharp-conventions.instructions.md | complete | — | — | — | — | — | — |
+| 2026-05-13 | — | sdd-metrics-measurement | 2 | 2 | 0/0/2/0 | sdd-conventions.instructions.md | complete | APPROVE | 0 | 0.27 | 0 | 4 | 4 |
