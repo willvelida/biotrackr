@@ -39,3 +39,4 @@ Example row (commented out):
 | 2026-05-12 | #376 | sdd-additional-phases | 2 | 2 | 0/1/1/0 | sdd-conventions.instructions.md | complete |
 | 2026-05-12 | #376 | review-llm-as-judge | 2 | 2 | 0/0/2/0 | sdd-conventions.instructions.md | complete |
 | 2026-05-12 | #377 | activity-api-dead-code | 1 | 1 | 0/0/1/0 | testing-conventions.instructions.md | complete |
+| 2026-05-13 |  #378 | reporting-api-trivy-failure | 1 | 1 | 0/0/1/0 | csharp-conventions.instructions.md | complete |
