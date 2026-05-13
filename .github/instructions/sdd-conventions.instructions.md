@@ -73,7 +73,7 @@ Phase 6 Review uses a dedicated judge agent (`sdd-review-judge.agent.md`) pinned
 
 The evolution log at `.copilot-tracking/harness-evolution-log.md` uses a structured table:
 
-| Date | PR | Plan | Proposed | Accepted | Severity (C/H/M/L) | Files Modified | Status |
+| Date | PR | Plan | Proposed | Accepted | Severity (C/H/M/L) | Files Modified | Status | Verdict | FixCycles | FindDensity | CycleTime | SpecClarity | FlowState |
 
 - Status values: `complete`, `partial`, `skipped`
 - Check for prior entries by PR number before adding new rows
@@ -122,3 +122,50 @@ When adding a new SDD phase (prompt + skill pair):
 - Update the directory structure counts in `AGENTS.md`
 - Update the harness guide (`docs/harness-guide.md`) — Mermaid diagram, phase descriptions, quick reference table, artifact chain
 - Verify all path references in agent and documentation files point to the correct prompt location (`.github/prompts/`, not stale subdirectory paths)
+
+## Measurement Conventions
+
+### Execution Log Measurement Fields
+
+Each task entry in `execution.log.md` includes a measurement bullet after Verification:
+
+```text
+* **Measurement**: Verification: {pass|fail}, Discoveries: {N}
+```
+
+### Cycle Measurement Summary (Review Report)
+
+The review report (`reviews/review.md`) includes a `## Cycle Measurement Summary` section as the final section, after `## Next Steps`. It contains:
+
+1. **Cycle Metadata** table: Slug, Complexity (CS-N), Phases, Total Tasks
+2. **Metrics (QITE-Aligned)** table with columns: Dimension, Metric, Value, Trend (↑↓→)
+3. **Self-Reported** table (mandatory): Spec Clarity (1-5), Flow State (1-5)
+4. **Interpretation**: 1-3 sentences explaining what the numbers mean for this cycle
+
+### Evolution Log Measurement Columns
+
+The evolution log extends the base 8 columns with 6 measurement columns:
+
+| Base Columns (existing) | Measurement Columns (new) |
+|------------------------|--------------------------|
+| Date, PR, Plan, Proposed, Accepted, Severity, Files Modified, Status | Verdict, FixCycles, FindDensity, CycleTime, SpecClarity, FlowState |
+
+- `Verdict`: APPROVE or REQUEST_CHANGES (final review verdict)
+- `FixCycles`: Number of REQUEST_CHANGES loops before APPROVE
+- `FindDensity`: Findings per task ratio (e.g., `0.5`)
+- `CycleTime`: Days from plan directory date to review completion
+- `SpecClarity`: Self-reported score (1-5)
+- `FlowState`: Self-reported score (1-5)
+- Use `—` for rows where measurement data is unavailable (backward compatibility)
+
+### CycleTime Calculation
+
+CycleTime uses the plan directory date (`YYYY-MM-DD` from `.copilot-tracking/plans/{date}/{slug}/`) as the start point and the review completion date as the end point.
+
+### Design Decision Alignment
+
+When a Did You Know or Workshop insight changes the implementation approach after the spec is written, update the affected spec acceptance criteria to match. Spec-implementation drift causes false review findings.
+
+### Artifact Accessibility
+
+`.copilot-tracking/plans/` is gitignored and not available in CI. Agentic workflows and GitHub Actions must read only committed artifacts (e.g., `.copilot-tracking/harness-evolution-log.md`, not plan-directory files).

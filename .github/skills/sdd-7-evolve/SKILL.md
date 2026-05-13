@@ -49,7 +49,8 @@ Read the completed SDD plan artifacts and gather learning candidates:
 1. **Decision log** — Read the plan file's Discoveries & Surprises section and Decision Log entries for rationale and trade-offs.
 2. **Execution log** — Read `execution.log.md` for Implementation Notes, unexpected behaviors, and workarounds.
 3. **Review report** — Read `reviews/review.md` for findings, convention violations, and the Doctrine Evolution section if present.
-4. **PR feedback** — Check for PR review comments and code review threads that surfaced corrections or patterns.
+4. **Cycle Measurement Summary** — Read the `## Cycle Measurement Summary` section from the review report. Extract: verdict, fix cycles, finding density, cycle time, spec clarity score, and flow state score. These feed into the evolution log measurement columns.
+5. **PR feedback** — Check for PR review comments and code review threads that surfaced corrections or patterns.
 
 For each candidate learning, record:
 
@@ -127,9 +128,11 @@ After all approved changes are applied:
 
 1. **Log the session** by appending a row to `.copilot-tracking/harness-evolution-log.md`:
 
-   | Date | PR | Plan | Proposed | Accepted | Severity (C/H/M/L) | Files Modified | Status |
-   |------|----|------|----------|----------|---------------------|----------------|--------|
-   | {today} | {PR if known} | {slug} | {count proposed} | {count accepted} | {C}/{H}/{M}/{L} | {basenames} | {complete/partial/skipped} |
+   | Date | PR | Plan | Proposed | Accepted | Severity (C/H/M/L) | Files Modified | Status | Verdict | FixCycles | FindDensity | CycleTime | SpecClarity | FlowState |
+   |------|----|------|----------|----------|---------------------|----------------|--------|---------|-----------|-------------|-----------|-------------|-----------|
+   | {today} | {PR if known} | {slug} | {count proposed} | {count accepted} | {C}/{H}/{M}/{L} | {basenames} | {complete/partial/skipped} | {APPROVE/REQUEST_CHANGES} | {count} | {ratio} | {days} | {1-5} | {1-5} |
+
+   Measurement columns are populated from the Cycle Measurement Summary extracted in Phase A. Use `—` for any value not available.
 
 2. **Suggest a commit message** following project commit standards:
 

@@ -83,6 +83,7 @@ Append to `execution.log.md`:
 * **Status**: Completed
 * **Changes Made**: {List of files created, modified, or removed}
 * **Verification**: {Build result, test result, coverage if applicable}
+* **Measurement**: Verification: {pass|fail}, Discoveries: {N}
 * **Discoveries**: {Any findings during implementation, or "None"}
 ```
 

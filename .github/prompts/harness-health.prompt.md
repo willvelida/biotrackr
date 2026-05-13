@@ -47,8 +47,13 @@ Evaluate CI/CD pipeline health, coverage enforcement, and automated drift detect
 
 1. **CI pipeline health**: List all workflow files under `.github/workflows/` and verify each of the 14 services has a corresponding CI pipeline. Check for recent failures if pipeline status is accessible.
 2. **Coverage thresholds**: Verify `coverage.runsettings` exists in each service directory under `src/` and confirms the 70% minimum threshold.
-3. **Agentic workflow schedules**: Check `.github/workflows/` for agentic workflow files (prefixed with `aw-` or containing schedule triggers). Verify they have `schedule:` cron triggers and are not disabled.
+3. **Agentic workflow schedules**: Check `.github/workflows/` for agentic workflow `.md` files with `schedule:` in their frontmatter (e.g., `schedule: daily`, `schedule: weekly`). Verify each has a corresponding compiled `.lock.yml` file. Flag WARN if a `.md` exists without its `.lock.yml` counterpart.
 4. **Documentation drift detection**: Check whether a doc-drift or staleness detection workflow exists. Flag if missing.
+5. **SDD measurement health**: Check that the SDD workflow captures measurement data:
+   - Read `.copilot-tracking/harness-evolution-log.md` and verify the table has 14 columns (including Verdict, FixCycles, FindDensity, CycleTime, SpecClarity, FlowState). Flag WARN if measurement columns are missing.
+   - Check recent rows (last 5) for measurement column values. Flag WARN if all recent rows have `—` for measurement columns (indicates measurement is not being captured).
+   - Verify `docs/standards/harness-governance.md` contains the `### Framework Alignment` table mapping QITE to SPACE/DORA. Flag FAIL if missing.
+   - If ≥15 rows with measurement data exist, check whether directional trends (↑↓→) are reportable across Quality, Iteration, and Efficiency dimensions. Flag WARN if data exists but no trend analysis has been performed.
 
 ### Output
 
