@@ -61,46 +61,8 @@ jobs:
                 dotnet-version: ${{ inputs.dotnet-version }}
 
             - name: Wait for Cosmos DB Emulator
-              run: |
-                echo "Waiting for Cosmos DB Emulator web endpoint to be ready..."
-                cert_ready=false
-                for i in {1..30}; do
-                  if curl -k https://localhost:8081/_explorer/emulator.pem > /dev/null 2>&1; then
-                    echo "Cosmos DB Emulator web endpoint is ready!"
-                    cert_ready=true
-                    break
-                  fi
-                  echo "Waiting for web endpoint... (attempt $i/30)"
-                  sleep 10
-                done
-
-                if [ "$cert_ready" != "true" ]; then
-                  echo "::error::Cosmos DB Emulator web endpoint did not become ready in time"
-                  exit 1
-                fi
-
-                # The web/cert endpoint becomes available before the gateway can serve
-                # account reads, so the first data-plane request can fail with a 503
-                # ServiceUnavailable. Poll the account endpoint until the gateway is
-                # actually serving requests (an authenticated endpoint returns 401 once
-                # ready, versus 503/000 while still initialising).
-                echo "Waiting for Cosmos DB Emulator data plane to be ready..."
-                data_ready=false
-                for i in {1..30}; do
-                  status=$(curl -k -s -o /dev/null -w "%{http_code}" https://localhost:8081/ || echo "000")
-                  if [ "$status" = "401" ] || [ "$status" = "200" ]; then
-                    echo "Cosmos DB Emulator data plane is ready! (HTTP $status)"
-                    data_ready=true
-                    break
-                  fi
-                  echo "Waiting for data plane... (attempt $i/30, HTTP $status)"
-                  sleep 10
-                done
-
-                if [ "$data_ready" != "true" ]; then
-                  echo "::error::Cosmos DB Emulator data plane did not become ready in time"
-                  exit 1
-                fi
+              working-directory: ${{ github.workspace }}
+              run: bash scripts/wait-for-cosmos-emulator.sh https://localhost:8081
 
             - name: Download Cosmos DB Emulator Certificate
               run: |
