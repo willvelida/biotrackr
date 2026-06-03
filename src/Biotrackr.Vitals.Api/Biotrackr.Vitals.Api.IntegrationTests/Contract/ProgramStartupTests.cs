@@ -75,7 +75,8 @@ public class ProgramStartupTests
             var repository2 = scope.ServiceProvider.GetRequiredService<ICosmosRepository>();
 
             // Assert - Scoped service should return same instance within scope
-            repository1.Should().BeSameAs(repository2);
+            repository1.Should().BeSameAs(repository2,
+                "AGENT FIX: Register ICosmosRepository as Scoped so resolves within the same scope share one instance");
         }
 
         // Act - Get repository instance in a different scope
@@ -92,7 +93,8 @@ public class ProgramStartupTests
         }
 
         // Assert - Different scopes should return different instances
-        repository3.Should().NotBeSameAs(repository4);
+        repository3.Should().NotBeSameAs(repository4,
+            "AGENT FIX: Keep ICosmosRepository Scoped so each scope gets a distinct instance");
     }
 
     [Fact]
