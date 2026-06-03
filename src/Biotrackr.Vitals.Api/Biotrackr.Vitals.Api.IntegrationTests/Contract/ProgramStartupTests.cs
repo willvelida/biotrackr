@@ -63,6 +63,39 @@ public class ProgramStartupTests
     }
 
     [Fact]
+    public void CosmosRepository_Should_Be_Scoped()
+    {
+        // Arrange
+        var services = _fixture.Factory.Services;
+
+        // Act - Get repository instances within a scope
+        using (var scope = services.CreateScope())
+        {
+            var repository1 = scope.ServiceProvider.GetService<ICosmosRepository>();
+            var repository2 = scope.ServiceProvider.GetService<ICosmosRepository>();
+
+            // Assert - Scoped service should return same instance within scope
+            repository1.Should().BeSameAs(repository2);
+        }
+
+        // Act - Get repository instance in a different scope
+        ICosmosRepository repository3;
+        using (var scope = services.CreateScope())
+        {
+            repository3 = scope.ServiceProvider.GetService<ICosmosRepository>();
+        }
+
+        ICosmosRepository repository4;
+        using (var scope = services.CreateScope())
+        {
+            repository4 = scope.ServiceProvider.GetService<ICosmosRepository>();
+        }
+
+        // Assert - Different scopes should return different instances
+        repository3.Should().NotBeSameAs(repository4);
+    }
+
+    [Fact]
     public void Settings_Should_Be_Configured()
     {
         // Arrange
