@@ -56,7 +56,7 @@ public class ProgramStartupTests
 
         // Act
         using var scope = services.CreateScope();
-        var repository = scope.ServiceProvider.GetService<ICosmosRepository>();
+        var repository = scope.ServiceProvider.GetRequiredService<ICosmosRepository>();
 
         // Assert
         repository.Should().NotBeNull();
@@ -71,8 +71,8 @@ public class ProgramStartupTests
         // Act - Get repository instances within a scope
         using (var scope = services.CreateScope())
         {
-            var repository1 = scope.ServiceProvider.GetService<ICosmosRepository>();
-            var repository2 = scope.ServiceProvider.GetService<ICosmosRepository>();
+            var repository1 = scope.ServiceProvider.GetRequiredService<ICosmosRepository>();
+            var repository2 = scope.ServiceProvider.GetRequiredService<ICosmosRepository>();
 
             // Assert - Scoped service should return same instance within scope
             repository1.Should().BeSameAs(repository2);
@@ -82,13 +82,13 @@ public class ProgramStartupTests
         ICosmosRepository repository3;
         using (var scope = services.CreateScope())
         {
-            repository3 = scope.ServiceProvider.GetService<ICosmosRepository>();
+            repository3 = scope.ServiceProvider.GetRequiredService<ICosmosRepository>();
         }
 
         ICosmosRepository repository4;
         using (var scope = services.CreateScope())
         {
-            repository4 = scope.ServiceProvider.GetService<ICosmosRepository>();
+            repository4 = scope.ServiceProvider.GetRequiredService<ICosmosRepository>();
         }
 
         // Assert - Different scopes should return different instances
