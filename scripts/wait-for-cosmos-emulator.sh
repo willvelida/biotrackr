@@ -18,7 +18,7 @@ SLEEP_SECONDS=10
 echo "Waiting for Cosmos DB Emulator web endpoint to be ready..."
 cert_ready=false
 for i in $(seq 1 "$MAX_ATTEMPTS"); do
-  if curl -k "${ENDPOINT}/_explorer/emulator.pem" > /dev/null 2>&1; then
+  if curl -kf "${ENDPOINT}/_explorer/emulator.pem" > /dev/null 2>&1; then
     echo "Cosmos DB Emulator web endpoint is ready!"
     cert_ready=true
     break
