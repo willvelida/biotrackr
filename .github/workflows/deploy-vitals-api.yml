@@ -141,7 +141,7 @@ jobs:
     run-e2e-tests:
         name: Run E2E Tests Against Dev
         needs: [deploy-dev, env-setup]
-        uses: willvelida/biotrackr/.github/workflows/template-dotnet-run-e2e-tests.yml@main
+        uses: willvelida/biotrackr/.github/workflows/template-dotnet-run-e2e-tests.yml@copilot/architecture-guardian-fix-cosmos-repository-lifeti
         with:
           dotnet-version: ${{ needs.env-setup.outputs.dotnet-version }}
           working-directory: ./src/Biotrackr.Vitals.Api/Biotrackr.Vitals.Api.IntegrationTests
