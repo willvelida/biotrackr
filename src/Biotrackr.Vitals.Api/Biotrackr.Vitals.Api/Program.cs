@@ -70,7 +70,7 @@ else
 }
 
 builder.Services.AddSingleton(cosmosClient);
-builder.Services.AddTransient<ICosmosRepository, CosmosRepository>();
+builder.Services.AddScoped<ICosmosRepository, CosmosRepository>();
 
 builder.Services.AddOpenApi();
 

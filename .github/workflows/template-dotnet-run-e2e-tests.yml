@@ -61,16 +61,8 @@ jobs:
                 dotnet-version: ${{ inputs.dotnet-version }}
 
             - name: Wait for Cosmos DB Emulator
-              run: |
-                echo "Waiting for Cosmos DB Emulator to be ready..."
-                for i in {1..30}; do
-                  if curl -k https://localhost:8081/_explorer/emulator.pem > /dev/null 2>&1; then
-                    echo "Cosmos DB Emulator is ready!"
-                    break
-                  fi
-                  echo "Waiting... (attempt $i/30)"
-                  sleep 10
-                done
+              working-directory: ${{ github.workspace }}
+              run: bash scripts/wait-for-cosmos-emulator.sh https://localhost:8081
 
             - name: Download Cosmos DB Emulator Certificate
               run: |
