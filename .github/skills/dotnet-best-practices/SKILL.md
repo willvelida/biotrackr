@@ -1,6 +1,8 @@
 ---
 name: dotnet-best-practices
 description: 'Ensure .NET/C# code meets best practices for the solution/project.'
+last_updated: 2026-06-04
+framework_revision: dotnet-10
 ---
 
 # .NET/C# Best Practices
@@ -11,7 +13,7 @@ Your task is to ensure .NET/C# code in ${selection} meets the best practices spe
 
 - Create comprehensive XML documentation comments for all public classes, interfaces, methods, and properties
 - Include parameter descriptions and return value descriptions in XML comments
-- Follow the established namespace structure: {Core|Console|App|Service}.{Feature}
+- Follow the Biotrackr namespace pattern: `Biotrackr.{Domain}.{Type}` (e.g., `Biotrackr.Activity.Api`, `Biotrackr.Sleep.Svc`)
 
 ## Design Patterns & Architecture
 
@@ -42,9 +44,11 @@ Your task is to ensure .NET/C# code in ${selection} meets the best practices spe
 
 ## Testing Standards
 
-- Use MSTest framework with FluentAssertions for assertions
-- Follow AAA pattern (Arrange, Act, Assert)
+- Use xUnit as the test runner
+- Use FluentAssertions for assertions
 - Use Moq for mocking dependencies
+- Use AutoFixture for test data generation
+- Follow AAA pattern (Arrange, Act, Assert) with explicit `// Arrange` / `// Act` / `// Assert` comments
 - Test both success and failure scenarios
 - Include null parameter validation tests
 
@@ -55,11 +59,12 @@ Your task is to ensure .NET/C# code in ${selection} meets the best practices spe
 - Use IConfiguration binding for settings
 - Support appsettings.json configuration files
 
-## Semantic Kernel & AI Integration
+## AI Integration (Microsoft Agent Framework + Copilot SDK)
 
-- Use Microsoft.SemanticKernel for AI operations
-- Implement proper kernel configuration and service registration
-- Handle AI model settings (ChatCompletion, Embedding, etc.)
+- Use Microsoft Agent Framework (MAF) for conversational agents and tool orchestration
+- Use the Microsoft Copilot SDK for sidecar-style code generation and reviewer workflows
+- Register agent services with appropriate lifetimes; prefer managed identity for inter-service authentication
+- Handle AI model settings (chat completion, embedding, structured output) via MAF configuration
 - Use structured output patterns for reliable AI responses
 
 ## Error Handling & Logging
@@ -71,7 +76,7 @@ Your task is to ensure .NET/C# code in ${selection} meets the best practices spe
 
 ## Performance & Security
 
-- Use C# 12+ features and .NET 8 optimizations where applicable
+- Use C# 14 features and .NET 10 optimizations where applicable
 - Implement proper input validation and sanitization
 - Use parameterized queries for database operations
 - Follow secure coding practices for AI/ML operations
