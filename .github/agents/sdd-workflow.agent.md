@@ -17,6 +17,10 @@ Spec-Driven Development (SDD) separates WHAT/WHY from HOW through a structured p
 > [!IMPORTANT]
 > This is a **dispatcher agent**. It detects state and routes to phase prompts. It does NOT execute phases directly.
 
+## Verification Protocol — Not Applicable
+
+This agent is a pure dispatcher: it inspects the state of `.copilot-tracking/plans/` and routes the user to the appropriate phase prompt. It does not author, edit, or delete any files in the repository — every file modification is performed by the delegated phase prompt that runs after dispatch. Each of those phase prompts (`sdd-1-explore` through `sdd-7-evolve`) carries its own verification protocol scoped to the artifacts it produces, which is where the real verification gate lives. Adding a build/test loop to this agent would verify nothing meaningful, because by the time control returns here the work is already complete.
+
 ## Required Phases
 
 ### Phase 1: State Detection
