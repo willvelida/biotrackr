@@ -1,6 +1,8 @@
 ---
 name: blazor-design
 description: "Blazor component architecture, Razor component patterns, Radzen UI library, and Blazor-specific UX patterns. Use when: building Blazor components, structuring Razor component hierarchy, using Radzen components, implementing Blazor forms, managing component state, Blazor rendering modes, Blazor layout design."
+last_updated: 2026-06-04
+framework_revision: radzen-10
 ---
 
 # Blazor Design

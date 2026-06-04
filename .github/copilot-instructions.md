@@ -48,11 +48,11 @@ Each service has its own solution file (`.sln` or `.slnx`), Dockerfile, test pro
 ├── .github/
 │   ├── copilot-instructions.md        # Comprehensive Copilot guide (15 sections)
 │   ├── instructions/                  # Path-scoped .instructions.md files
-│   ├── agents/                        # 9 custom agent definitions
+│   ├── agents/                        # 11 custom agent definitions
 │   ├── aw/                            # Agentic workflow runtime artifacts
 │   ├── mcp.json                       # MCP server configuration for Copilot
-│   ├── prompts/                       # 12 prompt templates
-│   ├── skills/                        # 25 skills (OWASP, accessibility, DSA, etc.)
+│   ├── prompts/                       # 24 prompt templates
+│   ├── skills/                        # 37 skills (OWASP, accessibility, DSA, etc.)
 │   └── workflows/                     # 31 workflows + 10 reusable templates + 17 agentic workflows
 ├── docs/
 │   ├── standards/                     # Commit standards, conventions
@@ -585,6 +585,16 @@ Order matters — these execute in sequence:
 - **GitHub (1):** create PR from specification
 - **DSA/Learning (7):** dsa-foundations, dsa-linear-structures, dsa-trees-and-heaps, dsa-graphs, dsa-algorithm-paradigms, dsa-interview-patterns, dsa-system-design
 - **SDD workflow (12):** sdd-1-explore, sdd-2-specify, sdd-2b-prep-issue, sdd-2c-workshop, sdd-3-clarify, sdd-3a-adr, sdd-4-architect, sdd-4a-validate, sdd-4b-didyouknow, sdd-5-implement, sdd-6-review, sdd-7-evolve
+
+### Agent Authoring Conventions
+
+File-modifying agents under `.github/agents/*.agent.md` must carry a `## Verification Protocol` section. The Harness Health Audit's D1.4 check matches the heading by exact regex (`^## Verification Protocol$`) — semantically equivalent headings (e.g. `## Testing & validation`) fail the gate even when the body is appropriate.
+
+The canonical template has 5 structural elements: (1) heading exactly `## Verification Protocol`, (2) imperative preamble, (3) numbered checks (2-5 steps) with domain-appropriate commands (`dotnet build/test` for C# agents, `bicep build` for Bicep agents — the linter runs as part of `bicep build`, so no separate lint command exists; report-validation for scanner agents — the template is structural, commands are bespoke), (4) `Maximum 2 retry attempts` wording on each remediable check, (5) explicit Escalation step exposing exact error / what was tried / root-cause assessment.
+
+Two suffix variants are accepted as exemptions for non-file-modifying agents: `## Verification Protocol — Not Applicable` (dispatcher/router agents whose file mods are delegated to phase prompts) and `## Verification Protocol — CI-Validated` (agents whose outputs are validated server-side by GitHub Actions on push). Mixed-mode agents (e.g. teaching + code-edit) use a conditional opening sentence as the first paragraph stating verification applies only when the invocation produced file modifications.
+
+Read-only review agents (descriptions and bodies explicitly state "read-only") are exempt and need no section.
 
 ## Decision Records Reference
 

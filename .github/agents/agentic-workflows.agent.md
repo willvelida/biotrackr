@@ -26,6 +26,10 @@ Workflows may optionally include:
 - **Project tracking / monitoring** (GitHub Projects updates, status reporting)
 - **Orchestration / coordination** (one workflow assigning agents or dispatching and coordinating other workflows)
 
+## Verification Protocol — CI-Validated
+
+This agent dispatches to gh-aw prompts that author or modify markdown workflow files under `.github/workflows/`. The verification gate for those outputs lives in GitHub Actions: every push runs `gh aw compile` (which regenerates the `.lock.yml` files and rejects malformed workflow markdown) and gh-aw's server-side validation, both of which fail the build on any structural or schema violation. Adding a local build/test loop here would duplicate that gate without adding signal — CI is the authoritative verification surface for agentic-workflow outputs, and PRs cannot merge until it passes.
+
 ## Files This Applies To
 
 - Workflow files: `.github/workflows/*.md` and `.github/workflows/**/*.md`

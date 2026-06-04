@@ -43,6 +43,10 @@ Specs (`{slug}-spec.md`) use this canonical section order. Downstream phases dep
 
 Mark unknowns with `[NEEDS CLARIFICATION]`. Do not include technology or framework choices in specs.
 
+### Acceptance Criteria Authoring
+
+Do not combine a strict literal clause with a qualifier clause inside a single acceptance criterion. Reviewers apply strict literal reading; an AC like *"all four checks report PASS, with zero findings attributable to the artifacts modified in this cycle"* creates a dual interpretation (strict-vs-qualified) that blocks an APPROVE verdict whenever the literal clause fails — even when the qualifier-clause test passes. Split such requirements into two separate ACs: one for the strict invariant and one for attribution-scoped satisfaction. Each AC must answer pass/fail without negotiation.
+
 ## Task Table Format
 
 Plans and task files use a 6-column table with 4-state checkboxes:
@@ -66,6 +70,10 @@ Reviews produce one of two verdicts:
 - **REQUEST_CHANGES** when CRITICAL or HIGH findings exist (loops back to Implement)
 
 Doctrine Evolution findings in the review are advisory and do not affect the verdict.
+
+### Fix-Loop Scope
+
+When a Phase 5 audit surfaces a scope-adjacent defect the cycle could close cheaply (e.g. one additional file edit with no expansion of cross-cutting work), prefer in-cycle fix-loop absorption over deferral to a separate micro-cycle. Add fix tasks to the existing Phase 5 task table, append `Phase 5 fix-loop end-of-phase verification` to the execution log, and proceed to Phase 6 re-review. Defer to a separate cycle only when the fix expands scope (new dependencies, schema or API surface change, multi-service touches).
 
 Phase 6 Review uses a dedicated judge agent (`sdd-review-judge.agent.md`) pinned to a different model family than Phase 5 implementation. This cross-model pattern reduces self-enhancement bias — the review model has no tendency to rate its own output favorably. If the judge agent is unavailable, the review still functions with the default session model.
 

@@ -58,3 +58,18 @@ For each recommendation:
 - **Microservices and container strategies** on Azure
 
 Always search Microsoft documentation first using `microsoft.docs.mcp` and `azure_query_learn` tools for each Azure service mentioned. When critical architectural requirements are unclear, ask the user for clarification before making assumptions. Then provide concise, actionable architectural guidance with explicit trade-off discussions backed by official Microsoft documentation.
+
+## Verification Protocol
+
+After generating or modifying repository artifacts (Bicep templates, C# code, configuration files, or documentation), run these deterministic checks before presenting results:
+
+1. **Build check**: Run `dotnet build --no-restore -v:q` in the affected service directory
+   - If build fails, read errors and fix before proceeding
+   - Maximum 2 retry attempts on build failures
+2. **Test check** (when tests are affected): Run `dotnet test --no-build`
+   - If tests fail, read output and fix
+   - Maximum 2 retry attempts on test failures
+3. **Escalation**: If any check fails after 2 retries, present the error to the user with:
+   - The exact error message
+   - What you tried
+   - Your assessment of the root cause

@@ -51,3 +51,4 @@ Example row (commented out):
 | 2026-05-12 | #377 | activity-api-dead-code | 1 | 1 | 0/0/1/0 | testing-conventions.instructions.md | complete | — | — | — | — | — | — |
 | 2026-05-13 | #378 | reporting-api-trivy-failure | 1 | 1 | 0/0/1/0 | csharp-conventions.instructions.md | complete | — | — | — | — | — | — |
 | 2026-05-13 | — | sdd-metrics-measurement | 2 | 2 | 0/0/2/0 | sdd-conventions.instructions.md | complete | APPROVE | 0 | 0.27 | 0 | 4 | 4 |
+| 2026-06-04 | — | feedforward-guide-warnings | 3 | 3 | 0/2/1/0 | copilot-instructions.md, sdd-conventions.instructions.md | complete | APPROVE | 1 | 0.00 | 0 | 4 | 4 |

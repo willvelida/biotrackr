@@ -143,3 +143,21 @@ When reviewing code for DSA improvements:
 2. **Complexity**: Current vs proposed complexity
 3. **Improvement**: Concrete code change with before/after
 4. **Why it matters**: Practical impact at Biotrackr's scale and access patterns
+
+## Verification Protocol
+
+This section applies **only when the invocation produces file modifications** (code-review, algorithm-implementation, or complexity-analysis modes). When operating in teaching mode (explain DSA concepts without editing files), no verification is required.
+
+After modifying C# code, run these deterministic checks before presenting results:
+
+1. **Build check**: Run `dotnet build --no-restore -v:q` in the affected service directory
+   - If build fails, read errors and fix before proceeding
+   - Maximum 2 retry attempts on build failures
+2. **Test check** (when tests are affected): Run `dotnet test --no-build`
+   - If tests fail, read output and fix
+   - Maximum 2 retry attempts on test failures
+3. **Escalation**: If any check fails after 2 retries, present the error to the user with:
+   - The exact error message
+   - What you tried
+   - Your assessment of the root cause
+
