@@ -31,13 +31,13 @@ After generating or modifying Bicep templates, run these deterministic checks be
 1. **Restore check**: Use tool `#runCommands` to run `bicep restore` (required for AVM `br/public:*` modules)
    - If restore fails, read errors via tool `#terminalLastCommand` and fix the offending module reference before proceeding
    - Maximum 2 retry attempts on restore failures
-2. **Build check**: Use tool `#runCommands` to run `bicep build {path to bicep file}.bicep --stdout --no-restore`
+2. **Build check (includes linter)**: Use tool `#runCommands` to run `bicep build {path to bicep file}.bicep --stdout --no-restore`
    - If build fails, read errors via tool `#terminalLastCommand` and fix the template before proceeding
-   - Treat compiler warnings as actionable
+   - The Bicep linter runs as part of `bicep build`; treat compiler and linter warnings as actionable
    - Maximum 2 retry attempts on build failures
-3. **Lint and format checks**: Use tool `#runCommands` to run `bicep lint {path to bicep file}.bicep` and `bicep format {path to bicep file}.bicep`
-   - Treat any analyser warnings as actionable findings
-   - Maximum 2 retry attempts on lint failures
+3. **Format check**: Use tool `#runCommands` to run `bicep format {path to bicep file}.bicep`
+   - Treat any formatting differences as actionable findings
+   - Maximum 2 retry attempts on format failures
 4. **Cleanup**: After a successful `bicep build`, remove any transient ARM JSON files created during testing
 5. **Escalation**: If any check fails after 2 retries, present the error to the user with:
    - The exact error message
