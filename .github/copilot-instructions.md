@@ -586,6 +586,16 @@ Order matters — these execute in sequence:
 - **DSA/Learning (7):** dsa-foundations, dsa-linear-structures, dsa-trees-and-heaps, dsa-graphs, dsa-algorithm-paradigms, dsa-interview-patterns, dsa-system-design
 - **SDD workflow (12):** sdd-1-explore, sdd-2-specify, sdd-2b-prep-issue, sdd-2c-workshop, sdd-3-clarify, sdd-3a-adr, sdd-4-architect, sdd-4a-validate, sdd-4b-didyouknow, sdd-5-implement, sdd-6-review, sdd-7-evolve
 
+### Agent Authoring Conventions
+
+File-modifying agents under `.github/agents/*.agent.md` must carry a `## Verification Protocol` section. The Harness Health Audit's D1.4 check matches the heading by exact regex (`^## Verification Protocol$`) — semantically equivalent headings (e.g. `## Testing & validation`) fail the gate even when the body is appropriate.
+
+The canonical template has 5 structural elements: (1) heading exactly `## Verification Protocol`, (2) imperative preamble, (3) numbered checks (2-5 steps) with domain-appropriate commands (`dotnet build/test` for C# agents, `bicep build/lint` for Bicep agents, report-validation for scanner agents — the template is structural, commands are bespoke), (4) `Maximum 2 retry attempts` wording on each remediable check, (5) explicit Escalation step exposing exact error / what was tried / root-cause assessment.
+
+Two suffix variants are accepted as exemptions for non-file-modifying agents: `## Verification Protocol — Not Applicable` (dispatcher/router agents whose file mods are delegated to phase prompts) and `## Verification Protocol — CI-Validated` (agents whose outputs are validated server-side by GitHub Actions on push). Mixed-mode agents (e.g. teaching + code-edit) use a conditional opening sentence as the first paragraph stating verification applies only when the invocation produced file modifications.
+
+Read-only review agents (descriptions and bodies explicitly state "read-only") are exempt and need no section.
+
 ## Decision Records Reference
 
 Architecture Decision Records are stored in `docs/decision-records/`. Consult these for rationale behind key technical decisions including:
