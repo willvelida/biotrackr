@@ -9,7 +9,7 @@ Two supported paths to a running local stack: the dev container, which is the re
 
 ## Dev container
 
-Open the repository in VS Code with the Dev Containers extension and run **Dev Containers: Reopen in Container**. The container provisions .NET 10.0, the Cosmos DB vNext emulator with a trusted certificate, the Azure and GitHub CLIs, Bicep, Gitleaks, and 30 seeded documents. Then:
+Open the repository in VS Code with the Dev Containers extension and run **Dev Containers: Reopen in Container**. The container provisions .NET 10.0, the Cosmos DB vNext emulator with a trusted certificate, the Azure, GitHub, and GitHub Copilot CLIs, Bicep, Gitleaks, and 30 seeded documents. Then:
 
 ```bash
 bash scripts/start-local.sh

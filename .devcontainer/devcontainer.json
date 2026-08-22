@@ -25,6 +25,7 @@
         "ghcr.io/devcontainers/features/docker-outside-of-docker:1": {},
         "ghcr.io/devcontainers/features/powershell:2": {},
         "ghcr.io/devcontainers/features/github-cli:1": {},
+        "ghcr.io/devcontainers/features/copilot-cli:1": {},
         "ghcr.io/rchaganti/vsc-devcontainer-features/azurebicep:1": {},
         "ghcr.io/jsburckhardt/devcontainer-features/gitleaks:1": {},
         "ghcr.io/stuartleeks/dev-container-features/azure-cli-persistence:0": {}

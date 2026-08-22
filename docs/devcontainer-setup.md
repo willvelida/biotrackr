@@ -18,7 +18,7 @@ The recommended way to develop Biotrackr locally. The dev container provides a f
 The container automatically:
 
 - Starts the Cosmos DB vNext emulator with HTTPS
-- Installs .NET global tools, Azure CLI, PowerShell, GitHub CLI, Bicep, and Gitleaks
+- Installs .NET global tools, Azure CLI, PowerShell, GitHub CLI, GitHub Copilot CLI, Bicep, and Gitleaks
 - Trusts the emulator HTTPS certificate
 - Runs `scripts/init.sh`, which points `core.hooksPath` at the tracked `.githooks/` directory and restores all fourteen services
 - Creates `BiotrackrDB` with `records` and `conversations` containers
@@ -126,7 +126,7 @@ The dev container uses Docker Compose mode with two services:
 ┌─────────────────────────────────────────────┐
 │ app (dotnet:10.0-noble)                     │
 │  .NET 10.0, Azure CLI, PowerShell, Caddy,   │
-│  GitHub CLI, Bicep, Gitleaks                 │
+│  GitHub CLI, Copilot CLI, Bicep, Gitleaks   │
 │                                              │
 │  start-local.sh → Caddy :9000               │
 │                 → Activity API :5272         │
