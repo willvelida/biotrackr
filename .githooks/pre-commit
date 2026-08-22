@@ -30,7 +30,15 @@ else
   echo "pre-commit: gitleaks not installed, secret scan SKIPPED (CI still scans)." >&2
 fi
 
-# 2. Build + unit test the affected services.
+# 2. Dev container consistency. Cheap, and the failure it catches (an unpinned
+#    feature, a stale tooling list) is invisible until someone rebuilds a container.
+bash scripts/check-devcontainer.sh
+if [ $? -ne 0 ]; then
+  echo "  bypass (use sparingly): git commit --no-verify" >&2
+  exit 1
+fi
+
+# 3. Build + unit test the affected services.
 #    Measured worst case is 17.1s (Chat.Api fully cold); ~3s warm for a small
 #    service. 120s is generous headroom, not an expectation. Enforced rather
 #    than described, so a hung build cannot block a commit indefinitely.
