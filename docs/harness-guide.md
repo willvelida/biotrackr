@@ -24,9 +24,10 @@ Editing a file loads the instruction files matching its path. Multiple matches a
 | `*.razor.css` | css-conventions | CSS isolation, `bt-` prefix, Radzen theming |
 | `*.yml` | github-actions-conventions | Action pinning, permissions, OIDC, concurrency |
 | `.devcontainer/**` | devcontainer-conventions | Feature pinning, doc pairing, lifecycle scripts |
+| `scripts/**/*.sh`, `.githooks/*` | shell-conventions | Enforcement script tests, diff reading, portability |
 | SDD plan artifacts | sdd-conventions | Plan, spec, and evolution log structure |
 
-Two files load on every request regardless of path: `AGENTS.md` and `.github/copilot-instructions.md`. They exist separately because different Copilot surfaces read different files, not because one is a copy of the other. There are 10 instruction files.
+Two files load on every request regardless of path: `AGENTS.md` and `.github/copilot-instructions.md`. They exist separately because different Copilot surfaces read different files, not because one is a copy of the other. There are 11 instruction files.
 
 ## Agents
 

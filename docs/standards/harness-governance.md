@@ -133,6 +133,8 @@ Percentage of file types with scoped `.instructions.md` files. Target: every fil
 | `*.cs` (DSA) | dsa-awareness.instructions.md | Covered |
 | `*.yml` | github-actions-conventions.instructions.md | Covered |
 | `*Repository*.cs`, `*Document*.cs` | cosmos-conventions.instructions.md | Covered |
+| `.devcontainer/**` | devcontainer-conventions.instructions.md | Covered |
+| `scripts/**/*.sh`, `.githooks/*` | shell-conventions.instructions.md | Covered |
 
 ### Feedback Sensor Coverage
 
