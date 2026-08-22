@@ -1,6 +1,7 @@
 ---
 name: sdd-2-specify
 description: "Create technology-free feature specification — WHAT and WHY, not HOW. Use when: writing a feature specification after the Explore phase, defining acceptance criteria and complexity scores, documenting goals and non-goals."
+argument-hint: "[slug=...] [dossier=...]"
 ---
 
 # SDD Phase 2: Specify
@@ -11,6 +12,15 @@ Focus on user value. Do NOT include stack, framework, or technology choices in t
 
 * **slug** (Optional): Slug from the Explore phase. Inferred from context if omitted.
 * **dossier** (Optional): Path to research dossier from SDD Phase 1.
+
+## When to Read References
+
+Load only the reference the current problem needs:
+
+* Canonical spec section order and acceptance-criteria authoring rules: `.github/instructions/sdd-conventions.instructions.md`
+* Scoring CS-1 through CS-5: `docs/standards/harness-governance.md`
+* Evidence for goals, non-goals, and affected services: the Phase 1 `research-dossier.md`
+* Which services exist and what each owns: `AGENTS.md`
 
 ## Step 0: Doctrine Resolution
 

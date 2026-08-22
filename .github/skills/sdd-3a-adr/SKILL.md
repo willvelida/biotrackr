@@ -1,6 +1,7 @@
 ---
 name: sdd-3a-adr
 description: "Generate an Architecture Decision Record from SDD spec and clarifications. Use when: a feature requires decisions that outlive the feature itself, such as introducing a new datastore, changing a boundary, or adopting a pattern that becomes precedent."
+argument-hint: "[slug=...] [title=...]"
 ---
 
 # SDD Phase 3a: ADR
@@ -11,6 +12,15 @@ Generate an Architecture Decision Record when a feature requires decisions that 
 
 * **slug** (Optional): Slug from prior phases. Inferred from context if omitted.
 * **title** (Required): Title for the ADR. Provide as the first argument when invoking this skill.
+
+## When to Read References
+
+Load only the reference the current problem needs:
+
+* Existing decisions, precedent, and the house ADR shape: `docs/decision-records/`
+* Options already evaluated for this cycle: the `workshops/` directory in the plan folder
+* Boundaries the decision must not cross: `docs/architecture.md`
+* Infrastructure impact of the decision: `docs/infrastructure.md`
 
 ## Step 0: Doctrine Resolution
 

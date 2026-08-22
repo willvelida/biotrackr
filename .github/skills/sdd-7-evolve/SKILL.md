@@ -1,6 +1,7 @@
 ---
 name: sdd-7-evolve
 description: "Encode learnings from completed SDD cycles into the agent harness. Use when: a review has been approved and learnings need to be extracted, classified, and encoded into instruction files, copilot-instructions, or AGENTS.md."
+argument-hint: "[slug=...] [plan=...]"
 ---
 
 # SDD Phase 7: Evolve
@@ -18,6 +19,15 @@ description: "Encode learnings from completed SDD cycles into the agent harness.
 
 * **slug** (Optional): Short kebab-case identifier from prior phases. Inferred from the most recent SDD plan directory if omitted.
 * **plan** (Optional): Path to the plan file from Phase 4. Auto-detected from `.copilot-tracking/plans/` if omitted.
+
+## When to Read References
+
+Load only the reference the current problem needs:
+
+* Evolution log columns and measurement values: `.github/instructions/sdd-conventions.instructions.md`
+* Which harness artifact type should own a learning: `docs/harness-guide.md`
+* Governance rules for changing the harness: `docs/standards/harness-governance.md`
+* Which instruction file already owns a convention: the matching file under `.github/instructions/`
 
 ## Step 0: Doctrine Resolution
 

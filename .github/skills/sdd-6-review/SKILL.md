@@ -1,6 +1,7 @@
 ---
 name: sdd-6-review
 description: "Quality gate review with structured findings and verdict. Use when: reviewing a completed implementation phase, checking spec compliance, convention adherence, test coverage, and issuing APPROVE or REQUEST_CHANGES verdicts."
+argument-hint: "[slug=...] [plan=...] [phase=1]"
 ---
 
 # SDD Phase 6: Review
@@ -13,6 +14,16 @@ description: "Quality gate review with structured findings and verdict. Use when
 * **slug** (Optional): Slug from prior phases. Inferred from the most recent SDD plan directory if omitted.
 * **plan** (Optional): Path to the plan file.
 * **phase** (Optional, default 1): Phase number to review.
+
+## When to Read References
+
+Load only the reference the current problem needs:
+
+* Verdict rules, fix-loop scope, and measurement fields: `.github/instructions/sdd-conventions.instructions.md`
+* QITE metric definitions and framework alignment: `docs/standards/harness-governance.md`
+* Convention checks for the file types under review: the matching files under `.github/instructions/`
+* Coverage threshold and test tier expectations: `docs/testing.md`
+* Security controls a change must not weaken: `docs/security.md`
 
 ## Step 0: Doctrine Resolution
 

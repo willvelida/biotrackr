@@ -227,8 +227,11 @@ git commit -s -m "docs(decision-records): document service lifetime patterns
 
 ### Multiple Scope Example
 
+A scope is a single lowercase token with dashes. Commas are not valid, so a change
+spanning two areas takes the broader of the two rather than listing both.
+
 ```bash
-git commit -s -m "core(infra,bicep): update Azure Function configurations
+git commit -s -m "core(infra): migrate function config to bicep
 
 - Migrate to Bicep modules structure
 - Add environment-specific parameters
@@ -255,6 +258,10 @@ This automatically adds:
 ```text
 Signed-off-by: Your Name <your.email@example.com>
 ```
+
+**Bot exemption:** commits authored by `github-actions[bot]` or `dependabot[bot]` are
+exempt from the sign-off requirement, and `.githooks/commit-msg` skips the check for them.
+Every other author, human or agent, must sign off.
 
 **Fixing Unsigned Commits:**
 If you forgot to sign a commit, you can amend it:

@@ -1,6 +1,7 @@
 ---
 name: sdd-2c-workshop
 description: "Deep design exploration for Workshop Opportunities identified in a specification. Use when: a spec has Workshop Opportunities that need detailed design analysis before clarification, or when a complex topic needs structured option evaluation."
+argument-hint: "[slug=...] [topic=...]"
 ---
 
 # SDD Phase 2c: Workshop
@@ -11,6 +12,15 @@ Create detailed design documents for complex topics identified in a specificatio
 
 * **slug** (Optional): Slug from prior phases. Inferred from context if omitted.
 * **topic** (Optional): Specific workshop topic to explore. If omitted, present the Workshop Opportunities table for user selection.
+
+## When to Read References
+
+Load only the reference the current problem needs:
+
+* Whether an option was already rejected and on what grounds: `docs/decision-records/`
+* Which spec sections a workshop outcome may revise: `.github/instructions/sdd-conventions.instructions.md`
+* Service boundaries an option must respect: `docs/architecture.md`
+* Security controls an option must not weaken: `docs/security.md`
 
 ## Step 0: Doctrine Resolution
 

@@ -1,6 +1,7 @@
 ---
 name: sdd-4a-validate
 description: "Validate plan readiness before implementation with parallel quality gates. Use when: a plan has been created by the Architect phase and you want to verify completeness, doctrine compliance, and dependency ordering before starting implementation."
+argument-hint: "[slug=...] [plan=...]"
 ---
 
 # SDD Phase 4a: Validate Plan
@@ -14,6 +15,14 @@ Validate that a plan is ready for implementation by running parallel quality gat
 
 * **slug** (Optional): Slug from prior phases. Inferred from context if omitted.
 * **plan** (Optional): Path to the plan file from Phase 4 (Architect).
+
+## When to Read References
+
+Load only the reference the current problem needs:
+
+* Task table format the plan must conform to: `.github/instructions/sdd-conventions.instructions.md`
+* Whether the complexity score is defensible: `docs/standards/harness-governance.md`
+* Whether the plan cites real build and test commands: `AGENTS.md`
 
 ## Step 0: Doctrine Resolution
 

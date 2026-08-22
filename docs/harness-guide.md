@@ -1,247 +1,141 @@
 ---
 title: Harness Guide
-description: Practical guide to using Biotrackr's development harness for AI-assisted coding with GitHub Copilot
-ms.date: 2026-05-08
+description: Inventory of Biotrackr's agents, prompts, skills, and instruction files, plus the doctrine governing how the harness is authored and maintained
+ms.date: 2026-08-21
 ms.topic: how-to
 ---
 
-## What Is the Harness
+The harness is everything wrapping the model to raise the probability of correct output: instruction files that load automatically, agents with verification loops, prompts encoding multi-step workflows, and skills carrying domain knowledge. It activates on its own when you use GitHub Copilot in this repository.
 
-The harness is everything that wraps around the AI model to increase the probability of correct output. It includes convention files that load automatically, agents with built-in verification loops, guided workflows for common tasks, and templates for multi-session work.
+This is the inventory. Build, test, and coverage commands live in `AGENTS.md` and [testing.md](testing.md). Local setup lives in [development.md](development.md).
 
-You do not need to configure anything. The harness activates when you use GitHub Copilot in VS Code on this repository.
+## Automatic context loading
 
-## Getting Started
+Editing a file loads the instruction files matching its path. Multiple matches all apply; there is no shadowing, so a test file in a repository class loads both `**/*.cs` files and the test conventions.
 
-The fastest way to start is with the dev container. It provides .NET 10.0, Cosmos DB vNext emulator, CLI tools, pre-built services, and 30 seed documents — no manual setup required.
-
-1. Open the repo in VS Code with the [Dev Containers extension](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-containers)
-2. Run **Dev Containers: Reopen in Container** (`Ctrl+Shift+P`)
-3. Wait for setup to complete (restores packages, builds services, seeds Cosmos DB)
-4. Start the local stack: `bash scripts/start-local.sh`
-5. Open `http://localhost:5239` for the UI
-
-The dev container eliminates the Boot step from the harness — Cosmos DB Emulator, all services, and seed data are ready when the container opens. See `docs/devcontainer-setup.md` for secrets, ports, and troubleshooting.
-
-For manual setup outside the dev container, see the prerequisites in `AGENTS.md`.
-
-## Automatic Context Loading
-
-When you edit a file, Copilot loads convention guides matched by file type. This happens without any action on your part.
-
-| You edit | Copilot loads | Covers |
-|----------|---------------|--------|
+| You edit | Loads | Covers |
+|----------|-------|--------|
 | `*.cs` | csharp-conventions, dsa-awareness | Naming, DI, error handling, async, data structure selection |
 | `*Tests*/**/*.cs` | testing-conventions | xUnit, AAA pattern, naming, coverage, agent-readable assertions |
+| `*Repository*.cs`, `*Document*.cs`, `*Cosmos*.cs` | cosmos-conventions | Repository pattern, query safety, partition keys, lifetimes |
 | `*.bicep` | bicep-conventions | Three-tier layout, parameter conventions, module naming |
 | `*.razor` | razor-components | Component structure, Radzen patterns, accessibility |
 | `*.razor.css` | css-conventions | CSS isolation, `bt-` prefix, Radzen theming |
 | `*.yml` | github-actions-conventions | Action pinning, permissions, OIDC, concurrency |
-| `*Repository*.cs`, `*Document*.cs` | cosmos-conventions | Repository pattern, query safety, partition keys, lifetimes |
+| SDD plan artifacts | sdd-conventions | Plan, spec, and evolution log structure |
 
-Two files load on every request regardless of file type:
-
-- `copilot-instructions.md` — project architecture, build commands, security controls, boundary rules
-- `AGENTS.md` — universal cross-tool guide with the same content scoped for non-Copilot agents
+Two files load on every request regardless of path: `AGENTS.md` and `.github/copilot-instructions.md`. They exist separately because different Copilot surfaces read different files, not because one is a copy of the other. There are 9 instruction files.
 
 ## Agents
 
-Select an agent from the **chat mode dropdown** at the top of the Copilot Chat panel. Each agent has a specific role and toolset.
+Select an agent from the chat mode dropdown at the top of the Copilot Chat panel. There are 11 custom agent definitions.
 
-### Code Generation Agents
+Four agents generate code and run a verification protocol before returning:
 
-| Agent | When to Use |
-|-------|-------------|
-| **@C# Expert** | .NET implementation, SOLID design, test writing, performance |
-| **@Front-End Designer** | Blazor components, Radzen UI, CSS, accessibility, responsiveness |
-| **@Bicep Specialist** | Azure infrastructure templates, Bicep modules |
-| **@GitHub Actions Expert** | CI/CD workflows, action security, OIDC configuration |
+| Agent | File | Use for |
+|-------|------|---------|
+| C# Expert | `CSharpExpert.agent.md` | .NET implementation, SOLID design, test writing, performance |
+| Front-End Designer | `front-end-designer.agent.md` | Blazor components, Radzen UI, CSS, accessibility, responsiveness |
+| Bicep Specialist | `bicep-implement.agent.md` | Azure infrastructure templates and modules |
+| GitHub Actions Expert | `github-actions-expert.agent.md` | CI/CD workflows, action security, OIDC configuration |
 
-These four agents include **verification protocols** — after generating code, they run `dotnet build` (or equivalent), check for errors, fix issues, and retry up to 2 times before escalating to you.
+Four review and analyse without modifying files:
 
-### Review and Analysis Agents
+| Agent | File | Use for |
+|-------|------|---------|
+| Code Reviewer | `code-reviewer.agent.md` | Pre-push convention check, read-only |
+| Vulnerability Scanner | `vulnerability-scanner.agent.md` | OWASP security audit across the applicable frameworks |
+| DSA Mentor | `dsa-mentor.agent.md` | Data structure and algorithm learning, complexity analysis |
+| Azure Principal Architect | `azure-principal-architect.agent.md` | Azure architecture decisions, Well-Architected evaluation |
 
-| Agent | When to Use |
-|-------|-------------|
-| **@Code Reviewer** | Pre-push convention check (read-only, cannot modify files) |
-| **@Vulnerability Scanner** | OWASP security audit across all applicable frameworks |
-| **@DSA Mentor** | Data structure and algorithm learning, complexity analysis |
-| **@Azure Principal Architect** | Azure architecture decisions, WAF evaluation |
+Three drive workflows:
 
-### Workflow Agents
+| Agent | File | Use for |
+|-------|------|---------|
+| SDD Workflow | `sdd-workflow.agent.md` | Dispatcher that detects which SDD phase runs next from existing artifacts |
+| SDD Review Judge | `sdd-review-judge.agent.md` | SDD quality gate, running the review with an elevated model as judge |
+| Agentic Workflows | `agentic-workflows.agent.md` | GitHub Agentic Workflow authoring and management |
 
-| Agent | When to Use |
-|-------|-------------|
-| **@Agentic Workflows** | GitHub Agentic Workflow authoring and management |
+All definitions live in `.github/agents/`.
 
-### Example: Using the Code Reviewer
-
-Select **Code Reviewer** from the chat mode dropdown, then type:
-
-```text
-Review the files I changed in this branch
-```
-
-The Code Reviewer loads the relevant `.instructions.md` files for the file types you changed, checks each file against those conventions, and produces a findings table:
+The Code Reviewer produces a findings table and a verdict of APPROVE or REQUEST_CHANGES, capped at two review cycles:
 
 | File | Line | Severity | Finding | Fix |
 |------|------|----------|---------|-----|
 | Handlers.cs | 42 | ERROR | Missing parameterized QueryDefinition | Use QueryDefinition with parameters per cosmos-conventions |
 
-Verdict: **APPROVE** or **REQUEST_CHANGES** (max 2 review cycles).
-
 ## Prompts
 
-Invoke a prompt by typing `/` in the chat input and selecting from the list, or attach with `#prompt:name`. Prompts are guided workflows with specific steps.
-
-### Development Prompts
+Invoke a prompt by typing `/` in the chat input, or attach one with `#prompt:name`. There are 12 prompt templates.
 
 | Prompt | Purpose | Agent |
 |--------|---------|-------|
-| `/new-endpoint` | Create API endpoint with build/test gates | C# Expert |
-| `/cross-service-change` | Coordinate changes across multiple services | C# Expert |
+| `/new-endpoint` | Create an API endpoint with build and test gates | C# Expert |
+| `/cross-service-change` | Coordinate a change across several services | C# Expert |
 | `/refactor` | Refactor with baseline capture and regression verification | C# Expert |
-| `/new-component` | Scaffold Blazor component with accessibility | Front-End Designer |
-
-### Audit Prompts
-
-| Prompt | Purpose | Agent |
-|--------|---------|-------|
-| `/harness-health` | Audit the harness infrastructure itself | Default chat |
+| `/new-component` | Scaffold a Blazor component with accessibility built in | Front-End Designer |
+| `/sdd-6-review` | SDD quality gate review, routed to an elevated judge model | SDD Review Judge |
 | `/accessibility-audit` | WCAG 2.2 AA compliance check | Front-End Designer |
 | `/design-review` | UX quality, responsiveness, and performance review | Front-End Designer |
-| `/perf-optimize` | Front-end performance optimization | Front-End Designer |
-
-### DSA Prompts
-
-| Prompt | Purpose | Agent |
-|--------|---------|-------|
+| `/perf-optimize` | Front-end performance optimisation | Front-End Designer |
 | `/dsa-code-review` | Review code for algorithmic anti-patterns | DSA Mentor |
-| `/dsa-concept-explain` | Deep-explain a DSA concept with Biotrackr examples | DSA Mentor |
-| `/dsa-algorithm-design` | Design an algorithm for a given requirement | DSA Mentor |
-| `/dsa-performance-analysis` | Profile time/space complexity and suggest optimizations | DSA Mentor |
+| `/dsa-concept-explain` | Explain a DSA concept using Biotrackr examples | DSA Mentor |
+| `/dsa-algorithm-design` | Design an algorithm for a stated requirement | DSA Mentor |
+| `/dsa-performance-analysis` | Profile time and space complexity, suggest optimisations | DSA Mentor |
 
-### Example: Using the New Endpoint Prompt
+## Skills
 
-```text
-/new-endpoint GET activity summary by week in Activity.Api
-```
+The 37 skills carry domain knowledge and load when the task matches their description. They fall into six groups:
 
-The prompt walks through these steps automatically:
+* OWASP vulnerability knowledge bases, one per framework: agentic, CI/CD, Docker, infrastructure, LLM, MCP, ML, mobile, open source, serverless, and web.
+* Design and UX: accessibility, Blazor design, mobile design, web design.
+* Engineering practice: .NET best practices, front-end performance.
+* Data structures and algorithms: foundations, linear structures, trees and heaps, graphs, algorithm paradigms, interview patterns, system design.
+* SDD workflow: one skill per phase, providing the same slash commands in Copilot CLI.
+* Harness maintenance: `harness-health`, invoked as `/harness-health`, which audits the harness itself and defers every structural finding to `scripts/audit-harness.sh`.
 
-1. Identify the target service, handler file, and repository method
-2. Generate the handler method following minimal API patterns
-3. **Run `dotnet build`** — fix errors before proceeding
-4. Generate unit tests with AAA pattern and proper naming
-5. **Run `dotnet test` with coverage** — verify pass and coverage >= 70%
-6. Fix issues (max 2 retry cycles)
-7. Stop and ask you if retries are exhausted
+## Multi-session work
 
-## Multi-Session Work
+Score complexity before starting, using the CS-1 to CS-5 rubric in [standards/harness-governance.md](standards/harness-governance.md). CS-1 and CS-2 proceed directly on a single service with familiar patterns. CS-3 and above get an execution plan first, because they cross services, change schemas, or introduce new patterns.
 
-For tasks that span multiple conversations or services, use the cross-session state management system.
+Execution plans are copied from `.copilot-tracking/templates/exec-plan-template.md` into `.copilot-tracking/plans/{feature}-plan.md`. The template covers purpose, progress checkboxes, current state, a decision log, validation commands, and affected services. The Current State section is the bridging mechanism: a one or two paragraph briefing the next session reads to restore context. Without it a plan is only a checklist, and a checklist does not carry why a decision was made.
 
-### Complexity Scoring
+Progress files are the lighter option, copied from `.copilot-tracking/templates/progress-template.md` into `.copilot-tracking/tasks/{task-name}.md`. Start by reading the file and finding the next unchecked item, work by checking items off and updating Current State, and end by adding a session log entry. Cap them at 200 lines and archive on completion.
 
-Before starting work, assess complexity using the CS-1 through CS-5 rubric in `docs/standards/harness-governance.md`:
+## SDD workflow
 
-- **CS-1 or CS-2**: Proceed directly. Single service, familiar patterns.
-- **CS-3 and above**: Create an execution plan first. Cross-service, schema changes, or new patterns.
+Spec-Driven Development separates WHAT and WHY from HOW before code is written. The workflow is stack-agnostic and never hardcodes a build or test command; it resolves project conventions from the repository's own rules files at the start of every phase. Each phase is useful standalone.
 
-### Execution Plans
+| Complexity | Approach |
+|------------|----------|
+| CS-1, CS-2 | Optional. Use the direct prompts instead |
+| CS-3, CS-4 | Recommended. Simple mode uses lighter architecture research |
+| CS-5 | Strongly recommended. Use Full mode with subagent research |
 
-For CS-3+ tasks, copy the template and fill it in:
+Seven core phases, with the five optional ones shown indented:
 
-```text
-Source: .copilot-tracking/templates/exec-plan-template.md
-Target: .copilot-tracking/plans/{feature}-plan.md
-```
+1. Explore (`/sdd-1-explore`) researches the codebase read-only and produces a research dossier of landscape, existing patterns, dependencies, and integration points.
+2. Specify (`/sdd-2-specify`) writes a technology-free specification with acceptance criteria, a complexity score, and affected modules. Unknowns are marked `[NEEDS CLARIFICATION]`.
+    * Prep Issue (`/sdd-2b-prep-issue`) turns the spec into copy-paste GitHub Issue text.
+    * Workshop (`/sdd-2c-workshop`) explores a design topic in depth with options and trade-offs.
+3. Clarify (`/sdd-3-clarify`) resolves ambiguities in eight questions or fewer, and sets the workflow mode and testing approach.
+    * ADR (`/sdd-3a-adr`) records a decision that outlives the feature, in the existing `decision-records/` format.
+4. Architect (`/sdd-4-architect`) produces a phased blueprint with task tables, backed by parallel research subagents that gather evidence before analysis.
+    * Validate (`/sdd-4a-validate`) runs parallel validators and issues a READY or NOT READY verdict.
+    * Did You Know (`/sdd-4b-didyouknow`) surfaces non-obvious insights one at a time and updates artifacts as each is discussed.
+5. Implement (`/sdd-5-implement`) executes one phase at a time, delegating to the agent matching the technology being modified, and verifies after each task.
+6. Review (`/sdd-6-review`) checks spec compliance, conventions, coverage, and cross-module consistency, then issues APPROVE or REQUEST_CHANGES. Learning candidates are advisory and do not affect the verdict.
+7. Evolve (`/sdd-7-evolve`) proposes harness updates from the completed cycle. Every change needs human approval.
 
-The template includes sections for purpose, progress checkboxes, current state briefing, decision log, validation commands, and affected services. The **Current State** section is the key bridging mechanism — write a 1-2 paragraph briefing that the next session reads to restore context.
+Phases are skippable. Specify has the most standalone value, because it forces WHAT apart from HOW before coding.
 
-### Progress Files
+The SDD Workflow agent is the alternative entry point: it detects which phase runs next from the artifacts that already exist.
 
-For lighter-weight session bridging, use the progress template:
+### Doctrine resolution
 
-```text
-Source: .copilot-tracking/templates/progress-template.md
-Target: .copilot-tracking/tasks/{task-name}.md
-```
+Every phase begins by resolving project conventions rather than assuming them. It reads the repository rules files, falls back to scanning dependency manifests and build systems when none are found, extracts the build command, test command, coverage threshold, and naming conventions, and turns anything it cannot determine into an explicit TODO. Silent assumptions are the failure this protocol exists to prevent.
 
-Session protocol:
-
-1. **Start**: Read the progress file, find the next unchecked item, verify the build passes
-2. **Work**: Complete tasks, check items off, update the Current State section
-3. **End**: Add a Session Log entry with duration and outcome
-
-Cap progress files at 200 lines. Archive completed tasks.
-
-## SDD Workflow
-
-Spec-Driven Development (SDD) is a structured development workflow for features that benefit from separating WHAT/WHY from HOW before writing code. The workflow is stack-agnostic — the same prompts work in any repository regardless of language, framework, or toolchain. Each phase is independently useful; you can run the full chain or use individual prompts standalone.
-
-### When to Use SDD
-
-| Complexity | Recommended Approach |
-|------------|---------------------|
-| CS-1 / CS-2 | Proceed directly with existing prompts (`/new-endpoint`, `/refactor`, etc.) — SDD is optional |
-| CS-3 / CS-4 | SDD recommended — Simple mode uses lighter architecture research, Full mode uses complete subagent research |
-| CS-5 | SDD strongly recommended — use Full mode (complete subagent research) |
-
-### The Workflow
-
-```mermaid
-flowchart LR
-    E[1. Explore] --> S[2. Specify]
-    S -.-> PI[2b. Prep Issue]
-    S -.-> W[2c. Workshop]
-    S --> C[3. Clarify]
-    C -.-> ADR[3a. ADR]
-    C --> A[4. Architect]
-    A -.-> V[4a. Validate]
-    A -.-> DYK[4b. Did You Know]
-    A --> I[5. Implement]
-    I --> R[6. Review]
-    R -->|REQUEST_CHANGES| I
-    R -->|APPROVE| EV[7. Evolve]
-    EV --> Done((Done))
-```
-
-Dashed lines indicate optional phases. The 7 core phases (solid lines) work standalone.
-
-1. **Explore** (`/sdd-1-explore`) — Research the codebase before writing a spec. Read-only. Produces a research dossier with codebase landscape, existing patterns, dependencies, and integration points. Stops when done.
-2. **Specify** (`/sdd-2-specify`) — Write a technology-free specification. WHAT and WHY only, no HOW. Includes acceptance criteria, complexity scoring, and affected modules. Unknowns are marked with `[NEEDS CLARIFICATION]`.
-2b. **Prep Issue** (`/sdd-2b-prep-issue`) — *(Optional)* Generate structured GitHub Issue text from the spec for external tracking. Produces copy-paste-ready issue text with goals, acceptance criteria, and complexity.
-2c. **Workshop** (`/sdd-2c-workshop`) — *(Optional)* Deep design exploration for topics identified in the spec's Workshop Opportunities table. Produces a design document with options, trade-offs, and recommendations.
-3. **Clarify** (`/sdd-3-clarify`) — Resolve ambiguities through 8 or fewer targeted questions. Decides the workflow mode (Simple or Full) and testing approach (Standard, Lightweight, or None per your project conventions).
-3a. **ADR** (`/sdd-3a-adr`) — *(Optional)* Generate an Architecture Decision Record when a feature requires decisions that outlive the feature itself. Uses the existing `docs/decision-records/` format.
-4. **Architect** (`/sdd-4-architect`) — Generate a phased implementation blueprint. Launches parallel research subagents that gather codebase evidence before analysis. Produces a plan with task tables, discovery findings, and architecture decisions.
-4a. **Validate** (`/sdd-4a-validate`) — *(Optional)* Readiness gate that runs parallel validators (structure, completeness, doctrine, dependencies) and issues a READY or NOT READY verdict before implementation.
-4b. **Did You Know** (`/sdd-4b-didyouknow`) — *(Optional)* Build shared understanding by surfacing non-obvious insights from SDD artifacts. Presents insights one at a time and immediately updates artifacts after each discussion.
-5. **Implement** (`/sdd-5-implement`) — Execute one phase at a time. Delegates to the right agent for the technology being modified. Tracks progress per-task with 4-state checkboxes and verifies build/test after each task.
-6. **Review** (`/sdd-6-review`) — Quality gate. Checks spec compliance, convention adherence, test coverage, and cross-module consistency. Issues APPROVE or REQUEST_CHANGES. Also identifies learning candidates as advisory findings that do not affect the verdict.
-7. **Evolve** (`/sdd-7-evolve`) — Post-cycle learning extraction. Reads discoveries and decisions from the completed cycle, proposes updates to instruction files. Requires human approval for every change.
-
-You can also select **SDD Workflow** from the chat mode dropdown. The dispatcher agent detects which phase to run next based on what artifacts already exist.
-
-### Skipping Phases
-
-Phases can be skipped. For CS-1/2 tasks (Simple mode), you might skip Explore and Clarify entirely. Each prompt is standalone — you do not need to run the entire chain. The Specify phase is the most valuable standalone use because it forces you to separate WHAT from HOW before coding.
-
-### Design Patterns
-
-#### Doctrine Resolution Protocol
-
-Every SDD prompt starts by resolving project conventions automatically:
-
-1. Looks for project rules files (`copilot-instructions.md`, `AGENTS.md`, `CONTRIBUTING.md`)
-2. If nothing found, scans the codebase (dependency manifests, build systems, test frameworks)
-3. Extracts build command, test command, coverage threshold, and naming conventions
-4. Unknown values become explicit TODOs, never silent assumptions
-
-The prompts never hardcode `dotnet build` or `npm test` — they discover the right commands from your project documentation. The same prompts work in a .NET repo, a Node.js repo, a Rust repo, or anything else.
-
-#### Artifact Chain
+### Artifact chain
 
 Each phase produces a specific artifact that the next phase consumes:
 
@@ -260,160 +154,107 @@ Each phase produces a specific artifact that the next phase consumes:
 | 6. Review | `review.md` (APPROVE/REQUEST_CHANGES) | 7. Evolve, or 5. Implement |
 | 7. Evolve | Harness updates + evolution log entry | Instruction files |
 
-Artifacts are stored under `.copilot-tracking/plans/{date}/{slug}/`. This enables cross-session continuity — a different session or agent can pick up where the last one left off by reading the artifacts.
+Artifacts are stored under `.copilot-tracking/plans/{date}/{slug}/`, which is what lets a different session or agent pick the work back up.
 
-#### Technology-Appropriate Delegation
+### Technology-appropriate delegation
 
-During implementation, the workflow detects the technology of each file being modified and checks if a specialized agent exists. If found, it delegates. If not, it proceeds directly. No agent names are hardcoded in the prompts, so the delegation adapts to whatever agents your repository provides.
+During implementation the workflow detects the technology of each file being modified and delegates to a specialist agent when one exists, proceeding directly when none does. No agent names are hardcoded, so delegation adapts to whatever agents a repository provides.
 
-#### Harness Evolution (Double-Loop Learning)
+### Harness evolution
 
-Most AI tools fix individual tasks (single-loop learning). The Evolve phase goes further — it questions and modifies the governing instructions themselves (double-loop learning). Discoveries from implementation become permanent conventions.
+Most AI tooling fixes individual tasks. The Evolve phase modifies the governing instructions themselves, so discoveries from implementation become permanent conventions.
 
-Safety constraints prevent drift:
+Four constraints keep that from drifting into bloat:
 
-* Mandatory human approval for every proposed change
-* Size budgets on instruction files (200 lines for path-scoped). For `copilot-instructions.md`, do not grow the file by more than 20 lines per evolution session
-* De-duplication checks against existing instructions
-* Separate commits for harness changes (distinct from code changes)
+* Human approval on every proposed change.
+* Size budgets on instruction files: 200 lines for path-scoped files, and no more than 20 added lines per evolution session for `copilot-instructions.md`.
+* De-duplication checks against existing instructions.
+* Separate commits for harness changes, distinct from code changes.
 
-The evolution log at `.copilot-tracking/harness-evolution-log.md` tracks every change with provenance: which plan generated the learning, what evidence supports it, and which files were modified. This file is committed to source control so the team can see how the harness improves over time.
+The evolution log at `.copilot-tracking/harness-evolution-log.md` records which plan produced each learning, what evidence supports it, and which files changed. It is committed, so the improvement history is visible.
 
-### SDD Quick Reference
+### SDD file locations
 
-| I want to...                | Do this                                              |
-|-----------------------------|------------------------------------------------------|
-| Research before building    | `/sdd-1-explore`                                     |
-| Write a feature spec        | `/sdd-2-specify`                                     |
-| Generate a GitHub Issue     | `/sdd-2b-prep-issue`                                 |
-| Explore a design topic      | `/sdd-2c-workshop`                                   |
-| Resolve ambiguities         | `/sdd-3-clarify`                                     |
-| Document an architecture decision | `/sdd-3a-adr`                                  |
-| Plan implementation phases  | `/sdd-4-architect`                                   |
-| Validate plan readiness     | `/sdd-4a-validate`                                   |
-| Build shared understanding  | `/sdd-4b-didyouknow`                                 |
-| Implement a plan phase      | `/sdd-5-implement`                                   |
-| Review before merging       | `/sdd-6-review`                                      |
-| Encode lessons learned      | `/sdd-7-evolve`                                      |
-| See what phase is next      | Select **SDD Workflow** from chat mode dropdown       |
-
-### Related Files
-
-* SDD prompts: `.github/prompts/`
-* SDD skills (Copilot CLI): `.github/skills/sdd-*/`
+* SDD skills, providing the slash commands in Copilot CLI: `.github/skills/sdd-*/`
 * Design template: `.copilot-tracking/templates/sdd-design-template.md`
 * Evolution log: `.copilot-tracking/harness-evolution-log.md`
 * Dispatcher agent: `.github/agents/sdd-workflow.agent.md`
 
-## The Verification Protocol
+## The verification protocol
 
-Every code-generation agent follows the same pattern, modeled on the Bicep Specialist:
+Code-generating agents follow the same loop: generate, build, fix and retry on failure, then test, then present the result. A maximum of two retry cycles applies at each gate.
 
-```text
-Agent generates code
-       │
-       ▼
-   dotnet build ──── fail ──→ agent reads errors, fixes (retry 1)
-       │                              │
-      pass                       dotnet build ── fail ──→ agent fixes (retry 2)
-       │                              │                          │
-       ▼                            pass                    fail → STOP
-   dotnet test                        │                    ask user
-       │                              ▼
-      pass + coverage ≥ 70%     continue...
-       │
-       ▼
-   Present result
-```
+When the second retry fails the agent stops and reports the exact error, what it tried, and its root cause assessment. It does not try a third time. Unbounded retry loops burn tokens and converge on nothing, which is why the bound is part of the protocol rather than a suggestion.
 
-**Bounded iteration**: Maximum 2 retry cycles on any failure. If the agent cannot fix the issue in 2 tries, it stops and presents the error with what it tried and its root cause assessment. This prevents infinite token-burning loops.
+The commands behind each gate are in `AGENTS.md` and [testing.md](testing.md), not here. Duplicating them was how four copies of the coverage command came to exist.
 
-## The Steering Loop
+### What the check actually matches
 
-When something keeps going wrong across sessions, strengthen the harness rather than repeatedly fixing the same issue:
+File-modifying agents under `.github/agents/*.agent.md` must carry a `## Verification Protocol` section. The `harness-health` skill matches that heading by **exact regex** (`^## Verification Protocol$`), so a semantically equivalent heading such as `## Testing & validation` fails the gate even when the body is correct.
 
-1. **Convention violation recurs** → Add a rule to the relevant `.instructions.md` file
-2. **Agent ignores a pattern** → Add an example to the instruction file or create a structural test with an `AGENT FIX:` assertion message
-3. **Complex workflow fails** → Create a new prompt that encodes the correct sequence
-4. **Review catches the same issue** → Promote it from the Code Reviewer to a CI check
+Five structural elements are expected: the exact heading; an imperative preamble; two to five numbered checks using domain-appropriate commands (`dotnet build` and `dotnet test` for C# agents, `bicep build` for Bicep agents, since the linter runs inside `bicep build` and no separate lint command exists); the wording `Maximum 2 retry attempts` on each remediable check; and an explicit escalation step exposing the exact error, what was tried, and a root-cause assessment.
 
-This is the "encode, don't document" principle: every recurring difficulty becomes an infrastructure fix (a convention rule, a test, a prompt), not a note in a wiki.
+Two suffix variants are accepted for agents that do not modify files: `## Verification Protocol — Not Applicable` for dispatchers and routers whose edits are delegated, and `## Verification Protocol — CI-Validated` for agents whose output is checked server-side. Mixed-mode agents open with a conditional sentence stating that verification applies only when the invocation produced file modifications. Read-only agents whose description and body both say "read-only" are exempt entirely.
 
-## Boot-Interact-Observe Protocol
+## The steering loop
 
-When validating any change, follow this sequence from `docs/standards/harness-governance.md`:
+When the same problem recurs across sessions, strengthen the harness instead of fixing it again:
 
-**Dev Container (recommended):**
+1. A convention violation recurs, so add a rule to the relevant instruction file.
+2. An agent ignores a pattern, so add an example, or a structural test whose assertion message tells the agent how to fix it.
+3. A complex workflow fails, so write a prompt encoding the correct sequence.
+4. Review catches the same issue repeatedly, so promote it to a CI check.
 
-The Boot step is handled automatically. Cosmos DB Emulator is running, services are pre-built, and seed data is loaded.
+Repeated review feedback should become a mechanical rule, check, or linter rather than another explanation in chat. That promotion is what makes the harness compound instead of accumulate. Encode, do not document.
 
-```bash
-# Boot (already done by dev container)
-bash scripts/start-local.sh          # Start APIs + gateway + UI (if not already running)
+## Authoring rules
 
-# Interact
-cd src/Biotrackr.{Domain}.{Type}
-dotnet test --no-build                                                  # Unit tests
-dotnet test --no-build --filter "FullyQualifiedName~Contract"           # Contract tests
-dotnet test --no-build --filter "FullyQualifiedName~E2E"                # E2E tests
+Four failure modes worth designing against.
 
-# Observe
-dotnet test --no-build --collect:"XPlat Code Coverage" --settings ../coverage.runsettings
-reportgenerator -reports:"./TestResults/**/coverage.cobertura.xml" -targetdir:"./CoverageReport" -reporttypes:TextSummary
-cat ./CoverageReport/Summary.txt
-# Verify line coverage ≥ 70%
-```
+Exclude derivable content by design. Directory listings, file inventories, and architecture overviews go stale immediately and cost reasoning tokens without improving results. Keep pitfalls, rationale, and non-default conventions. Apply the deletion test to every paragraph: if removing it would not change a decision, remove it.
 
-**Manual setup (outside dev container):**
+Byte caps fire silently. Codex concatenates `AGENTS.md` files up to 32,768 bytes and truncates past that without warning. Nothing reports the loss. Keep one-line hooks in the always-loaded files and put the detail in topic documents.
 
-```powershell
-# Boot
-./cosmos-emulator.ps1 start          # Only if E2E tests are needed
-cd src/Biotrackr.{Domain}.{Type}
-dotnet build --no-restore -v:q
+Skill descriptions are capped at roughly 150 characters when listed. Front-load the distinctive trigger language, because whatever falls past the cap is invisible at selection time. Lead with the symptom, not the file name.
 
-# Interact
-dotnet test --no-build                                                  # Unit tests
-dotnet test --no-build --filter "FullyQualifiedName~Contract"           # Contract tests
-dotnet test --no-build --filter "FullyQualifiedName~E2E"                # E2E tests
+Hook trust is all or nothing. An untrusted workspace skips every hook rather than only the suspicious ones, so a post-edit verification hook silently no-ops instead of failing loudly. Never make a hook the only line of defence.
 
-# Observe
-dotnet test --no-build --collect:"XPlat Code Coverage" --settings ../coverage.runsettings
-reportgenerator -reports:"./TestResults/**/coverage.cobertura.xml" -targetdir:"./CoverageReport" -reporttypes:TextSummary
-Get-Content ./CoverageReport/Summary.txt
-# Verify line coverage ≥ 70%
-```
-
-## Periodic Maintenance
-
-Run these periodically to keep the harness healthy:
+## Periodic maintenance
 
 | Task | Frequency | How |
 |------|-----------|-----|
-| Harness health audit | Monthly | `/harness-health` prompt |
-| Convention spot-check | Monthly | Sample 3 recent files against `.instructions.md` rules |
-| Security scan | Per PR (automated) | CodeQL and dependency review in CI |
-| OWASP audit | Quarterly | Select **Vulnerability Scanner** from chat mode dropdown |
+| Deterministic harness audit | Per harness change | `scripts/audit-harness.sh` |
+| Harness health audit | Monthly | `/harness-health` |
+| Convention spot-check | Monthly | Sample three recent files against their instruction files |
+| Simplification pass | Quarterly | Remove a component, re-audit, record in [quality-score.md](quality-score.md) |
+| OWASP audit | Quarterly | Vulnerability Scanner agent |
+| Security scan | Per PR, automated | CodeQL and dependency review in CI |
 
-## Quick Reference
+## Quick reference
 
-| I want to... | Do this |
-|--------------|---------|
+| I want to | Do this |
+|-----------|---------|
 | Write a new endpoint | `/new-endpoint` |
-| Change multiple services | `/cross-service-change` |
+| Change several services | `/cross-service-change` |
 | Refactor safely | `/refactor` |
-| Review before pushing | Select **Code Reviewer** from chat mode dropdown |
 | Build a Blazor component | `/new-component` |
+| Review before pushing | Code Reviewer agent |
 | Check accessibility | `/accessibility-audit` |
 | Audit harness health | `/harness-health` |
+| Research before building | `/sdd-1-explore` |
+| Write a feature spec | `/sdd-2-specify` |
+| Record an architecture decision | `/sdd-3a-adr` |
+| Plan implementation phases | `/sdd-4-architect` |
+| See which SDD phase is next | SDD Workflow agent |
 | Plan a complex feature | Copy `.copilot-tracking/templates/exec-plan-template.md` |
 | Track multi-session work | Copy `.copilot-tracking/templates/progress-template.md` |
-| Plan with SDD workflow | Select **SDD Workflow** from chat mode dropdown |
-| Learn DSA concepts | Select **DSA Mentor** from chat mode dropdown |
-| Run security scan | Select **Vulnerability Scanner** from chat mode dropdown |
+| Learn DSA concepts | DSA Mentor agent |
+| Run a security scan | Vulnerability Scanner agent |
 
-## Related Documents
+## Related documents
 
-- `docs/standards/harness-governance.md` — Governance framework, maturity model, complexity scoring, QITE measurement
-- `.github/copilot-instructions.md` — Full project context (architecture, conventions, security, boundaries)
-- `AGENTS.md` — Universal cross-tool agent guide
+* [standards/harness-governance.md](standards/harness-governance.md) for governance, the maturity model, complexity scoring, and QITE measurement
+* [quality-score.md](quality-score.md) for grade tracking and the Simplification Log
+* [testing.md](testing.md) for test tiers, filters, and coverage
+* [development.md](development.md) for local setup and running the stack
+* `AGENTS.md` for build commands and boundary rules

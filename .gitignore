@@ -400,9 +400,14 @@ FodyWeavers.xsd
 *.sln.iml
 
 docs/plans/*
+!docs/plans/README.md
 docs/blog-post-ideas/*
+!docs/blog-post-ideas/README.md
 
 docs/reports/*
+
+# Scratch working notes — not published
+docs/scratch/
 
 # Chat system prompt — sensitive configuration, stored in Key Vault
 scripts/chat-system-prompt/system-prompt.txt

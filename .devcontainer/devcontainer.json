@@ -71,5 +71,6 @@
     },
     "onCreateCommand": "bash .devcontainer/on-create.sh",
     "postCreateCommand": "bash .devcontainer/post-create.sh",
+    "postStartCommand": "bash scripts/init.sh --no-restore",
     "remoteUser": "vscode"
 }

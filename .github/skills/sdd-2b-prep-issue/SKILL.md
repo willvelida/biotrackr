@@ -1,6 +1,7 @@
 ---
 name: sdd-2b-prep-issue
 description: "Generate structured GitHub Issue text from SDD spec and plan artifacts. Use when: a specification is complete and needs to be represented as a GitHub Issue for external tracking, sprint planning, or team visibility."
+argument-hint: "[slug=...]"
 ---
 
 # SDD Phase 2b: Prep Issue
@@ -10,6 +11,14 @@ Generate structured issue text from a completed specification for external track
 ## Inputs
 
 * **slug** (Optional): Slug from prior phases. Inferred from the most recent SDD plan directory if omitted.
+
+## When to Read References
+
+Load only the reference the current problem needs:
+
+* Spec section names the issue body mirrors: `.github/instructions/sdd-conventions.instructions.md`
+* Restating a complexity score correctly: `docs/standards/harness-governance.md`
+* Service names used for scope labels: `AGENTS.md`
 
 ## Step 0: Doctrine Resolution
 

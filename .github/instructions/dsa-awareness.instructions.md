@@ -1,9 +1,11 @@
 ---
-description: "DSA awareness conventions for Biotrackr C# code. Use when: reviewing C# code for algorithmic efficiency, choosing data structures, or optimizing LINQ operations."
-applyTo: "**/*.cs"
+description: "Algorithmic efficiency conventions for Biotrackr repositories and endpoint handlers. Use when: writing or reviewing code that filters, sorts, groups, or looks up collections."
+applyTo: "**/*Repository.cs,**/*Handlers.cs"
 ---
 
 # DSA Conventions
+
+These conventions apply to the code paths that move collections: repository implementations that query and shape Cosmos DB results, and endpoint handlers that filter, paginate, and project them. Elsewhere in the codebase the general C# conventions are enough.
 
 ## Data Structure Selection
 

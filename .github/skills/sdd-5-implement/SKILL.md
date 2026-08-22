@@ -1,6 +1,7 @@
 ---
 name: sdd-5-implement
 description: "Execute one implementation phase with progress tracking and verification. Use when: implementing tasks from an SDD plan, logging discoveries, updating task tables, and running build/test verification per phase."
+argument-hint: "[slug=...] [phase=1] [plan=...]"
 ---
 
 # SDD Phase 5: Implement
@@ -16,6 +17,15 @@ description: "Execute one implementation phase with progress tracking and verifi
 * **slug** (Optional): Slug from prior phases. Inferred from the most recent SDD plan directory if omitted.
 * **phase** (Optional, default 1): Phase number to implement.
 * **plan** (Optional): Path to the plan file from Phase 4.
+
+## When to Read References
+
+Load only the reference the current problem needs:
+
+* Execution log anchors, discovery categories, and status transitions: `.github/instructions/sdd-conventions.instructions.md`
+* Conventions for the file type being edited: the matching file under `.github/instructions/`
+* Build command, test command, and coverage threshold: `AGENTS.md`
+* Which test tier to run and how to filter it: `docs/testing.md`
 
 ## Step 0: Doctrine Resolution
 

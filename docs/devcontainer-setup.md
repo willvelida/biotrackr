@@ -20,10 +20,15 @@ The container automatically:
 - Starts the Cosmos DB vNext emulator with HTTPS
 - Installs .NET global tools, Azure CLI, PowerShell, GitHub CLI, Bicep, and Gitleaks
 - Trusts the emulator HTTPS certificate
-- Installs a Gitleaks pre-commit hook for secret scanning
-- Restores and builds all 8 in-scope services
+- Runs `scripts/init.sh`, which points `core.hooksPath` at the tracked `.githooks/` directory and restores all fourteen services
 - Creates `BiotrackrDB` with `records` and `conversations` containers
 - Seeds 30 sample documents (7 days of activity, food, sleep, vitals + 2 chat conversations)
+
+Hooks are version-controlled in `.githooks/` rather than generated into `.git/hooks/`, so
+they are identical in the container and on the host, and a change to one is reviewable.
+The Gitleaks secret scan runs from `.githooks/pre-commit`. Gitleaks is installed in the
+container; on a host without it the scan is skipped with a printed install link rather
+than failing the commit.
 
 ### Run the Full Stack
 
