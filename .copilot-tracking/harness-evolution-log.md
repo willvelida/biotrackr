@@ -52,3 +52,4 @@ Example row (commented out):
 | 2026-05-13 | #378 | reporting-api-trivy-failure | 1 | 1 | 0/0/1/0 | csharp-conventions.instructions.md | complete | — | — | — | — | — | — |
 | 2026-05-13 | — | sdd-metrics-measurement | 2 | 2 | 0/0/2/0 | sdd-conventions.instructions.md | complete | APPROVE | 0 | 0.27 | 0 | 4 | 4 |
 | 2026-06-04 | — | feedforward-guide-warnings | 3 | 3 | 0/2/1/0 | copilot-instructions.md, sdd-conventions.instructions.md | complete | APPROVE | 1 | 0.00 | 0 | 4 | 4 |
+| 2026-08-22 | — | devcontainer-copilot-cli | 3 | 2 | 0/1/1/0 | devcontainer-conventions.instructions.md, check-devcontainer.sh, pre-commit, devcontainer-check.yml, harness-guide.md | complete | — | — | — | — | — | — |
