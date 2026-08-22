@@ -53,9 +53,21 @@ if [ ! -f "$CONFIG" ]; then
   exit 0
 fi
 
-# Files changed in the selected scope. Empty in --all mode, which forces the
-# pinning check to run and skips the documentation check.
+# Files changed in the selected scope. Deletions are deliberately included: the
+# worst case this check exists to catch is the lock file being removed, which
+# unpins every feature at once. Empty in --all mode, which forces the pinning
+# check to run and skips the documentation check.
 changed_files() {
+  case "$MODE" in
+    staged) git diff --cached --name-only ;;
+    range)  git diff "$RANGE" --name-only ;;
+    all)    : ;;
+  esac
+}
+
+# Docs that were added or modified. Filtered to ACMR here, unlike changed_files:
+# deleting a tooling doc is not a way of updating it.
+changed_docs() {
   case "$MODE" in
     staged) git diff --cached --name-only --diff-filter=ACMR ;;
     range)  git diff "$RANGE" --name-only --diff-filter=ACMR ;;
@@ -63,19 +75,41 @@ changed_files() {
   esac
 }
 
-# Added lines only, so a reordered or reformatted features block is not mistaken
-# for a new dependency.
-added_feature_lines() {
+feature_diff() {
   case "$MODE" in
     staged) git diff --cached -U0 -- "$CONFIG" ;;
     range)  git diff "$RANGE" -U0 -- "$CONFIG" ;;
     all)    : ;;
-  esac | grep -E '^\+[^+]' | grep -oE '"ghcr\.io/[^"]+"' | tr -d '"' | sort -u
+  esac
+}
+
+feature_ids_on() {
+  grep -E "$1" | grep -oE '"ghcr\.io/[^"]+"' | tr -d '"' | sort -u | grep -v '^$'
+}
+
+# Genuinely new features: ids on added lines minus ids on removed lines. The
+# subtraction is what makes a reorder or reformat a no-op — moving a line emits
+# it as both removed and added, and looking only at additions would report every
+# moved feature as new.
+added_feature_lines() {
+  local diff added removed
+  diff="$(feature_diff)"
+  added="$(printf '%s\n' "$diff" | feature_ids_on '^\+[^+]')"
+  removed="$(printf '%s\n' "$diff" | feature_ids_on '^-[^-]')"
+  comm -23 <(printf '%s\n' "$added") <(printf '%s\n' "$removed")
 }
 
 CHANGED="$(changed_files)"
 
-if [ "$MODE" != "all" ] && ! printf '%s\n' "$CHANGED" | grep -qx "$CONFIG"; then
+# Run whenever either file moves. Gating on devcontainer.json alone would let a
+# commit that only touches, or deletes, the lock file skip the pinning check.
+touches_devcontainer() {
+  printf '%s\n' "$CHANGED" | grep -qx "$CONFIG" && return 0
+  printf '%s\n' "$CHANGED" | grep -qx "$LOCK"   && return 0
+  return 1
+}
+
+if [ "$MODE" != "all" ] && ! touches_devcontainer; then
   exit 0
 fi
 
@@ -110,6 +144,9 @@ if [ -n "$UNPINNED" ]; then
     echo ""
     echo "DEVCONTAINER CHECK FAILED: feature declared without a pinned digest."
     printf '  %s\n' $UNPINNED
+    if [ ! -f "$LOCK" ]; then
+      echo "  note: $LOCK does not exist, so every feature above is unpinned."
+    fi
     echo "  what: the feature resolves through a floating tag, so the container can"
     echo "        change without a reviewable diff."
     echo "  next: add an entry to $LOCK with a 'resolved' digest read from the"
@@ -124,8 +161,9 @@ if [ "$MODE" != "all" ]; then
   ADDED="$(added_feature_lines)"
   if [ -n "$ADDED" ]; then
     DOCS_TOUCHED=0
+    CHANGED_DOCS="$(changed_docs)"
     for d in "${DOCS[@]}"; do
-      if printf '%s\n' "$CHANGED" | grep -qx "$d"; then
+      if printf '%s\n' "$CHANGED_DOCS" | grep -qx "$d"; then
         DOCS_TOUCHED=1
       fi
     done
