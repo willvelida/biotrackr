@@ -10,6 +10,33 @@ applyTo: "**/*.yml"
 - Pin third-party actions to full commit SHA (e.g., `actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11`)
 - Pin internal reusable templates to `@main` (e.g., `.github/workflows/template-build.yml@main`)
 - Never use `@latest` or floating tags on third-party actions
+- The trailing version comment must name the **exact** tag the SHA resolves to, not the
+  major alias. `# v5` on a SHA that is really `v5.0.1` is a `zizmor/ref-version-mismatch`
+  finding. Resolve it before writing the comment:
+
+  ```bash
+  gh api repos/actions/checkout/git/matching-refs/tags/v5
+  ```
+
+## Untrusted Input in `run:` Blocks
+
+- Never interpolate a `${{ }}` expression directly into a `run:` script. GitHub expands it
+  as text before the shell sees it, so any context value an outside contributor controls
+  becomes shell code. This is `zizmor/template-injection`, and it is an error, not a warning.
+- Pass the value through `env:` and dereference it as a shell variable, which keeps it data:
+
+  ```yaml
+  - name: Check something
+    env:
+      BASE_REF: ${{ github.base_ref || 'main' }}
+    run: |
+      base="origin/${BASE_REF}"
+  ```
+
+- Treat `github.base_ref`, `github.head_ref`, branch and tag names, issue and PR titles and
+  bodies, and commit messages as attacker-controlled on `pull_request` triggers.
+- `zizmor` enforces this on every PR touching `.github/workflows/`. Run it locally before
+  pushing rather than discovering it in review: `zizmor .github/workflows/<file>.yml`.
 
 ## Permissions
 
