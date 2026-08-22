@@ -1,16 +1,18 @@
 #!/bin/bash
+# Container-specific setup only. Everything shared with the Windows host —
+# prerequisite checks, git hooks, the harness manifest, and NuGet restore —
+# lives in scripts/init.sh so there is one code path and one place to fix.
 set -e
 
 echo "Running postCreateCommand..."
 
-# Trust Cosmos DB Emulator certificate (vNext with HTTPS)
-echo "Waiting for Cosmos DB Emulator..."
-until curl -f -s http://cosmos-emulator:8080/ready > /dev/null 2>&1; do
-    sleep 2
-done
-echo "Cosmos DB Emulator is ready."
+# Shared bootstrap. --emulator performs a bounded wait on the sibling compose
+# service; COSMOS_EMULATOR_READY_URL tells init.sh not to start its own.
+COSMOS_EMULATOR_READY_URL="http://cosmos-emulator:8080/ready" \
+    bash scripts/init.sh --emulator
 
-# Download and trust the emulator certificate
+# Download and trust the emulator certificate (container-only; the host
+# equivalent needs an elevated PowerShell and init.sh prints it as a manual step)
 curl -k https://cosmos-emulator:8081/_explorer/emulator.pem > /tmp/cosmos-emulator.crt 2>/dev/null || true
 if [ -f /tmp/cosmos-emulator.crt ] && [ -s /tmp/cosmos-emulator.crt ]; then
     sudo cp /tmp/cosmos-emulator.crt /usr/local/share/ca-certificates/cosmos-emulator.crt
@@ -20,61 +22,10 @@ else
     echo "WARNING: Could not download Cosmos DB Emulator certificate."
 fi
 
-# Install Gitleaks pre-commit hook for secret scanning
-echo "Installing Gitleaks pre-commit hook..."
-mkdir -p .git/hooks
-cat > .git/hooks/pre-commit << 'HOOK'
-#!/bin/sh
-gitleaks git --pre-commit --staged --verbose
-HOOK
-chmod +x .git/hooks/pre-commit
-echo "Gitleaks pre-commit hook installed."
-
-# Restore NuGet packages for in-scope services
-echo "Restoring NuGet packages for in-scope services..."
-RESTORE_FAILURES=0
-SERVICES=(
-    "src/Biotrackr.Activity.Api"
-    "src/Biotrackr.Food.Api"
-    "src/Biotrackr.Sleep.Api"
-    "src/Biotrackr.Vitals.Api"
-    "src/Biotrackr.Chat.Api"
-    "src/Biotrackr.Mcp.Server"
-    "src/Biotrackr.Reporting.Api"
-    "src/Biotrackr.UI"
-)
-for svc in "${SERVICES[@]}"; do
-    for sln in "$svc"/*.sln "$svc"/*.slnx; do
-        if [ -f "$sln" ]; then
-            echo "  Restoring $sln..."
-            if ! dotnet restore "$sln"; then
-                echo "  WARNING: Restore failed for $sln"
-                RESTORE_FAILURES=$((RESTORE_FAILURES + 1))
-            fi
-        fi
-    done
-done
-echo "NuGet restore complete."
-
-# Build all in-scope services
-echo "Building all in-scope services..."
-BUILD_FAILURES=0
-for svc in "${SERVICES[@]}"; do
-    for sln in "$svc"/*.sln "$svc"/*.slnx; do
-        if [ -f "$sln" ]; then
-            echo "  Building $sln..."
-            if ! dotnet build "$sln" --no-restore -v:q; then
-                echo "  WARNING: Build failed for $sln"
-                BUILD_FAILURES=$((BUILD_FAILURES + 1))
-            fi
-        fi
-    done
-done
-if [ $RESTORE_FAILURES -gt 0 ] || [ $BUILD_FAILURES -gt 0 ]; then
-    echo "WARNING: $RESTORE_FAILURES restore(s) and $BUILD_FAILURES build(s) failed. Some services may not start correctly."
-else
-    echo "Build complete."
-fi
+# Secret scanning and NuGet restore are handled by scripts/init.sh — the
+# Gitleaks scan now lives in the version-controlled .githooks/pre-commit
+# instead of being written imperatively into untracked .git/hooks/, and
+# init.sh restores all 14 services rather than an in-scope subset of 8.
 
 # Initialize Cosmos DB schema and seed data
 echo "Initializing Cosmos DB with schema and sample data..."

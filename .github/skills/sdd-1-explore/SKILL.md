@@ -1,6 +1,7 @@
 ---
 name: sdd-1-explore
 description: "Deep codebase research before feature specification — read-only exploration. Use when: starting a new SDD cycle, researching a feature or change before specification, gathering evidence about codebase patterns and constraints."
+argument-hint: "topic=... [slug=...]"
 ---
 
 # SDD Phase 1: Explore
@@ -12,6 +13,15 @@ description: "Deep codebase research before feature specification — read-only 
 
 * **topic** (Required): Feature or change to research. Provide as the first argument when invoking this skill.
 * **slug** (Optional): Short kebab-case identifier for the artifact directory. Inferred from topic if omitted.
+
+## When to Read References
+
+Load only the reference the current problem needs:
+
+* Naming the artifact directory or slug: `.github/instructions/sdd-conventions.instructions.md`
+* Build commands, test tiers, and hard boundaries: `AGENTS.md`
+* Service topology, data flow, and module boundaries: `docs/architecture.md`
+* Whether a constraint was already decided and why: `docs/decision-records/`
 
 ## Step 0: Doctrine Resolution
 

@@ -1,6 +1,7 @@
 ---
 name: sdd-3-clarify
 description: "Resolve specification ambiguities through targeted questions. Use when: a specification has NEEDS CLARIFICATION markers, open questions need resolution, or workflow mode and testing approach need to be decided."
+argument-hint: "[slug=...] [spec=...]"
 ---
 
 # SDD Phase 3: Clarify
@@ -11,6 +12,14 @@ Resolve ambiguities and unknowns in the feature specification through a maximum 
 
 * **slug** (Optional): Slug from prior phases. Inferred from context if omitted.
 * **spec** (Optional): Path to the spec file from SDD Phase 2.
+
+## When to Read References
+
+Load only the reference the current problem needs:
+
+* Where clarifications are recorded and how markers resolve: `.github/instructions/sdd-conventions.instructions.md`
+* Framing the testing-approach question against real tiers: `docs/testing.md`
+* Framing the workflow-mode question against complexity: `docs/standards/harness-governance.md`
 
 ## Step 0: Doctrine Resolution
 

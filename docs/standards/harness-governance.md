@@ -117,7 +117,7 @@ Assign a complexity score (CS-1 through CS-5) before starting work on any task. 
 
 ## Harness Health Dimensions
 
-Four dimensions measure the overall health of the development harness. Use the harness-health audit prompt (`.github/prompts/harness-health.prompt.md`) for periodic assessment.
+Four dimensions measure the overall health of the development harness. Use the harness-health skill (`.github/skills/harness-health/SKILL.md`, invoked as `/harness-health`) for periodic assessment.
 
 ### Feedforward Coverage
 

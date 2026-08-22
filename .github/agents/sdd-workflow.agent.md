@@ -12,14 +12,14 @@ tools:
 
 # SDD Workflow
 
-Spec-Driven Development (SDD) separates WHAT/WHY from HOW through a structured phase sequence. This agent detects where you are in an SDD cycle and routes to the appropriate phase prompt.
+Spec-Driven Development (SDD) separates WHAT/WHY from HOW through a structured phase sequence. This agent detects where you are in an SDD cycle and routes to the appropriate phase skill.
 
 > [!IMPORTANT]
-> This is a **dispatcher agent**. It detects state and routes to phase prompts. It does NOT execute phases directly.
+> This is a **dispatcher agent**. It detects state and routes to phase skills. It does NOT execute phases directly.
 
 ## Verification Protocol — Not Applicable
 
-This agent is a pure dispatcher: it inspects the state of `.copilot-tracking/plans/` and routes the user to the appropriate phase prompt. It does not author, edit, or delete any files in the repository — every file modification is performed by the delegated phase prompt that runs after dispatch. Each of those phase prompts (`sdd-1-explore` through `sdd-7-evolve`) carries its own verification protocol scoped to the artifacts it produces, which is where the real verification gate lives. Adding a build/test loop to this agent would verify nothing meaningful, because by the time control returns here the work is already complete.
+This agent is a pure dispatcher: it inspects the state of `.copilot-tracking/plans/` and routes the user to the appropriate phase skill. It does not author, edit, or delete any files in the repository — every file modification is performed by the delegated phase skill that runs after dispatch. Each of those phase skills (`sdd-1-explore` through `sdd-7-evolve`) carries its own verification protocol scoped to the artifacts it produces, which is where the real verification gate lives. Adding a build/test loop to this agent would verify nothing meaningful, because by the time control returns here the work is already complete.
 
 ## Required Phases
 
@@ -32,8 +32,8 @@ Determine the current SDD cycle state by checking artifact presence:
 3. If multiple active plan directories exist (plans without a completed evolution log entry), list them and ask the user which cycle to continue.
 4. For the identified plan directory, check artifact presence in order and suggest the next phase:
 
-| Condition | Next Phase | Prompt |
-|-----------|------------|--------|
+| Condition | Next Phase | Skill |
+|-----------|------------|-------|
 | No plan directory for this topic | Explore | `/sdd-1-explore` |
 | `research-dossier.md` exists, no spec file | Specify | `/sdd-2-specify` |
 | Spec file exists, user requests GitHub Issue generation | Prep Issue (optional) | `/sdd-2b-prep-issue` |
@@ -58,9 +58,9 @@ Determine the current SDD cycle state by checking artifact presence:
 
 After the user confirms the phase to run:
 
-1. Attach the appropriate prompt file from `.github/prompts/` and delegate execution.
-2. Pass through any relevant context (slug, plan path, phase number) to the prompt.
-3. Do NOT execute phase logic directly. The phase prompts contain all execution instructions.
+1. Invoke the corresponding `/sdd-{N}-{phase}` skill from `.github/skills/` and delegate execution.
+2. Pass through any relevant context (slug, plan path, phase number) to the skill.
+3. Do NOT execute phase logic directly. The phase skills contain all execution instructions.
 
 ### Phase 3: Guidance
 
@@ -69,7 +69,7 @@ When the user asks questions instead of continuing a cycle:
 * Explain what each SDD phase does and when to use it.
 * For CS-1/CS-2 complexity tasks, suggest **Simple mode**: skip Explore and Clarify, go directly to Specify → Architect → Implement.
 * Explain that phases are standalone. You can run Specify without Explore, or Review without the full chain.
-* Clarify the difference between SDD prompts and existing single-purpose prompts (new-endpoint, refactor, etc.). SDD is for tasks that benefit from separating specification from implementation.
+* Clarify the difference between SDD phase skills and existing single-purpose prompts (new-endpoint, refactor, etc.). SDD is for tasks that benefit from separating specification from implementation.
 
 ## Edge Cases
 

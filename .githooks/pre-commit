@@ -1,0 +1,67 @@
+#!/usr/bin/env bash
+# Biotrackr pre-commit: secret scan, then build + unit-test the affected services.
+#
+# Blocking by design. Bypass with: git commit --no-verify
+# Disable for a session with: BIOTRACKR_SKIP_HOOKS=1
+
+set -uo pipefail
+
+REPO_ROOT="$(git rev-parse --show-toplevel)"
+cd "$REPO_ROOT" || exit 1
+
+[ "${BIOTRACKR_SKIP_HOOKS:-0}" = "1" ] && exit 0
+
+# 1. Secret scan. Absorbs the hook .devcontainer/post-create.sh used to write
+#    imperatively into untracked .git/hooks/ (container-only, invisible to git).
+if command -v gitleaks >/dev/null 2>&1; then
+  if ! gitleaks git --pre-commit --staged --verbose; then
+    {
+      echo ""
+      echo "PRE-COMMIT FAILED: gitleaks found a potential secret in the staged changes."
+      echo "  what: a credential, API key, or connection string looks staged for commit"
+      echo "  next: unstage the file, remove the secret, and re-stage."
+      echo "        Never commit credentials — see SECURITY.md."
+    } >&2
+    exit 1
+  fi
+else
+  # Deliberately non-fatal, but never silent: a skipped security control that
+  # nobody can see is worse than no control at all. CI still scans.
+  echo "pre-commit: gitleaks not installed, secret scan SKIPPED (CI still scans)." >&2
+fi
+
+# 2. Build + unit test the affected services.
+#    Measured worst case is 17.1s (Chat.Api fully cold); ~3s warm for a small
+#    service. 120s is generous headroom, not an expectation. Enforced rather
+#    than described, so a hung build cannot block a commit indefinitely.
+if command -v timeout >/dev/null 2>&1; then
+  timeout 120 bash scripts/verify.sh --staged
+  rc=$?
+  if [ "$rc" -eq 124 ]; then
+    echo "pre-commit: verify.sh exceeded the 120s budget and was killed." >&2
+    echo "  Run 'bash scripts/verify.sh --staged' directly to see where it hangs." >&2
+    echo "  Set BIOTRACKR_SKIP_HOOKS=1 to bypass if this is blocking urgent work." >&2
+    exit 1
+  fi
+else
+  bash scripts/verify.sh --staged
+  rc=$?
+fi
+
+if [ "$rc" -ne 0 ]; then
+  {
+    echo ""
+    echo "PRE-COMMIT FAILED: verification did not pass (scripts/verify.sh exit $rc)."
+    if [ "$rc" -eq 1 ]; then
+      echo "  note: exit 1 means the verifier could not RUN — that is an environment"
+      echo "        problem, not a code problem. Run: bash scripts/init.sh"
+    else
+      echo "  next: fix the failures reported above, then commit again."
+      echo "        Reproduce with: bash scripts/verify.sh --staged"
+    fi
+    echo "  bypass (use sparingly): git commit --no-verify"
+  } >&2
+  exit 1
+fi
+
+exit 0

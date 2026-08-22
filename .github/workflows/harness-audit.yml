@@ -1,0 +1,53 @@
+name: Harness Audit
+
+on:
+    pull_request:
+        branches:
+            - main
+        paths:
+            - 'AGENTS.md'
+            - '.github/copilot-instructions.md'
+            - '.github/agents/**'
+            - '.github/instructions/**'
+            - '.github/prompts/**'
+            - '.github/skills/**'
+            - 'docs/harness-guide.md'
+            - 'scripts/audit-harness.sh'
+            - '.github/workflows/harness-audit.yml'
+    workflow_dispatch:
+
+permissions:
+    contents: read
+
+concurrency:
+    group: harness-audit-${{ github.ref }}
+    cancel-in-progress: true
+
+jobs:
+    audit:
+        name: Audit Agent Harness
+        runs-on: ubuntu-latest
+        steps:
+            - name: Checkout repository
+              uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
+              with:
+                persist-credentials: false
+
+            # Advisory while the audit builds a green history. Promote it to a hard
+            # gate by deleting continue-on-error, not by editing the script.
+            - name: Run harness audit
+              continue-on-error: true
+              run: |
+                set -o pipefail
+                bash scripts/audit-harness.sh | tee audit.log
+
+            - name: Publish audit summary
+              if: always()
+              run: |
+                {
+                  echo '## Harness audit'
+                  echo ''
+                  echo '```text'
+                  cat audit.log 2>/dev/null || echo 'The audit produced no output.'
+                  echo '```'
+                } >> "$GITHUB_STEP_SUMMARY"

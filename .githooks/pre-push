@@ -1,0 +1,55 @@
+#!/usr/bin/env bash
+# Biotrackr pre-push: build, unit tests, and contract tests across the push range.
+#
+# Blocking by design. Bypass with: git push --no-verify
+# Disable for a session with: BIOTRACKR_SKIP_HOOKS=1
+#
+# git supplies "<local ref> <local sha> <remote ref> <remote sha>" lines on stdin.
+
+set -uo pipefail
+
+REPO_ROOT="$(git rev-parse --show-toplevel)"
+cd "$REPO_ROOT" || exit 1
+
+[ "${BIOTRACKR_SKIP_HOOKS:-0}" = "1" ] && exit 0
+
+ZERO="0000000000000000000000000000000000000000"
+STATUS=0
+SAW_REF=0
+
+while read -r _local_ref local_sha _remote_ref remote_sha; do
+  [ -z "${local_sha:-}" ] && continue
+  [ "$local_sha" = "$ZERO" ] && continue   # branch deletion — nothing to verify
+  SAW_REF=1
+
+  if [ "$remote_sha" = "$ZERO" ]; then
+    # New branch on the remote: compare against the default branch when we can.
+    if git rev-parse --verify --quiet origin/main >/dev/null 2>&1; then
+      range="origin/main..$local_sha"
+    else
+      range="$local_sha~1..$local_sha"
+    fi
+  else
+    range="$remote_sha..$local_sha"
+  fi
+
+  bash scripts/verify.sh --range "$range" --contract || STATUS=1
+done
+
+# Direct invocation (no stdin from git) — fall back to the working tree.
+if [ "$SAW_REF" -eq 0 ]; then
+  bash scripts/verify.sh --contract || STATUS=1
+fi
+
+if [ "$STATUS" -ne 0 ]; then
+  {
+    echo ""
+    echo "PRE-PUSH FAILED: fix the failures above before pushing."
+    echo "  next: reproduce with  bash scripts/verify.sh --contract"
+    echo "  note: CI additionally enforces a 70% coverage threshold on top of this."
+    echo "  bypass (use sparingly): git push --no-verify"
+  } >&2
+  exit 1
+fi
+
+exit 0

@@ -1,6 +1,7 @@
 ---
 name: sdd-4-architect
 description: "Generate phased implementation blueprint with parallel research subagents. Use when: a clarified specification is ready for architecture planning, creating task tables, scoring complexity, and defining implementation phases."
+argument-hint: "[slug=...] [spec=...] [dossier=...]"
 ---
 
 # SDD Phase 4: Architect
@@ -13,6 +14,16 @@ description: "Generate phased implementation blueprint with parallel research su
 * **slug** (Optional): Slug from prior phases. Inferred from the most recent SDD plan directory if omitted.
 * **spec** (Optional): Path to the specification file from Phase 2/3.
 * **dossier** (Optional): Path to the research dossier from Phase 1.
+
+## When to Read References
+
+Load only the reference the current problem needs:
+
+* Task table columns, checkbox states, and plan layout: `.github/instructions/sdd-conventions.instructions.md`
+* Plan file skeleton to write into: `.copilot-tracking/templates/sdd-design-template.md`
+* Scoring CS-1 through CS-5: `docs/standards/harness-governance.md`
+* Build command, test command, and coverage threshold for the Validation section: `AGENTS.md`
+* Which services a phase touches and how they couple: `docs/architecture.md`
 
 ## Step 0: Doctrine Resolution
 

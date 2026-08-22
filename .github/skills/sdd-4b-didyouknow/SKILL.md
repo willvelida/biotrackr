@@ -1,6 +1,7 @@
 ---
 name: sdd-4b-didyouknow
 description: "Build shared understanding by surfacing non-obvious insights from SDD artifacts. Use when: before complex implementation, after creating a spec or plan, when feeling uncertain about assumptions, or between the Architect and Implement phases."
+argument-hint: "[slug=...] [artifact=spec|plan|tasks]"
 ---
 
 # SDD Phase 4b: Did You Know?
@@ -11,6 +12,15 @@ Surface non-obvious insights from SDD artifacts to build shared understanding be
 
 * **slug** (Optional): Slug from prior phases. Inferred from context if omitted.
 * **artifact** (Optional): Which artifact to analyze: `spec`, `plan`, or `tasks`. If omitted, auto-detect the most recent relevant artifact.
+
+## When to Read References
+
+Load only the reference the current problem needs:
+
+* Conventions the plan may have silently violated: the matching file under `.github/instructions/`
+* Architectural coupling the plan treats as independent: `docs/architecture.md`
+* Ground already covered by an earlier decision: `docs/decision-records/`
+* Security controls the plan assumes but never states: `docs/security.md`
 
 ## Step 0: Doctrine Resolution
 

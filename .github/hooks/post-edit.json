@@ -1,0 +1,21 @@
+{
+  "version": 1,
+  "hooks": {
+    "PostToolUse": [
+      {
+        "type": "command",
+        "command": "bash scripts/agent-post-edit.sh",
+        "windows": "bash scripts/agent-post-edit.sh",
+        "timeout": 30
+      }
+    ],
+    "postToolUse": [
+      {
+        "type": "command",
+        "bash": "bash scripts/agent-post-edit.sh",
+        "powershell": "bash scripts/agent-post-edit.sh",
+        "timeoutSec": 30
+      }
+    ]
+  }
+}

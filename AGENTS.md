@@ -1,358 +1,99 @@
 <!-- markdownlint-disable-file -->
-# AGENTS.md
+<!-- Surface: Codex, Claude Code, Copilot CLI, and VS Code agent mode. The Copilot
+     surfaces that cannot read this file are served by .github/copilot-instructions.md.
+     Both load on every turn, so keep them disjoint. Overlap is paid for twice. -->
 
-Universal guide for AI coding agents working on the Biotrackr repository. Follows the open [agents.md](https://agents.md) specification. For comprehensive Copilot-specific guidance, see `.github/copilot-instructions.md`.
+Biotrackr ingests Fitbit and Withings data across activity, sleep, nutrition, and vitals, then answers questions about it through an AI agent. Fourteen .NET services deploy independently to Azure Container Apps.
 
-## Project Overview
-
-Biotrackr is a personal health and fitness tracking platform that integrates with Fitbit and Withings devices to collect activity, sleep, nutrition, and vitals data. The platform is built as a microservices architecture deployed on Azure Container Apps, with an AI conversational agent powered by Claude (Anthropic) via the Microsoft Agent Framework for natural language health data querying and report generation.
-
-### Architecture
-
-The system comprises 14 independently-deployable services:
-
-| Service | Type | Purpose |
-|---------|------|---------|
-| `Biotrackr.Activity.Api` | Domain API | Activity data queries |
-| `Biotrackr.Activity.Svc` | Domain Service | Fitbit activity data ingestion |
-| `Biotrackr.Auth.Svc` | Domain Service | Fitbit and Withings OAuth token management |
-| `Biotrackr.Chat.Api` | AI Component | Conversational AI agent (Claude via MAF) |
-| `Biotrackr.Food.Api` | Domain API | Nutrition data queries |
-| `Biotrackr.Food.Svc` | Domain Service | Fitbit food data ingestion |
-| `Biotrackr.Mcp.Server` | AI Component | Model Context Protocol tool server |
-| `Biotrackr.Reporting.Api` | AI Component | AI-generated health reports with A2A protocol support |
-| `Biotrackr.Reporting.Svc` | Domain Service | Scheduled summary cadence and email notifications; calls into Reporting.Api |
-| `Biotrackr.Sleep.Api` | Domain API | Sleep data queries |
-| `Biotrackr.Sleep.Svc` | Domain Service | Fitbit sleep data ingestion |
-| `Biotrackr.UI` | Frontend | Blazor Server dashboard |
-| `Biotrackr.Vitals.Api` | Domain API | Vitals data queries (weight, body composition) |
-| `Biotrackr.Vitals.Svc` | Domain Service | Withings vitals data ingestion |
-
-### Tech Stack
-
-- **.NET 10.0** / **C# 14** / **ASP.NET Core**
-- **Blazor Server** with **Radzen UI** component library
-- **Azure Container Apps** (hosting)
-- **Azure Cosmos DB** (serverless, NoSQL)
-- **Azure API Management** (gateway, JWT validation)
-- **Azure App Configuration** (centralized config)
-- **Bicep** (Infrastructure as Code)
-
-Each service has its own solution file (`.sln` or `.slnx`), Dockerfile, test projects, and CI workflow. There is no root solution file — each service builds independently.
-
-## Repository Structure
-
-```text
-├── AGENTS.md                          # This file
-├── CLAUDE.md                          # @AGENTS.md import for Claude Code
-├── .github/
-│   ├── copilot-instructions.md        # Comprehensive Copilot guide (15 sections)
-│   ├── instructions/                  # Path-scoped .instructions.md files
-│   ├── agents/                        # 11 custom agent definitions
-│   ├── aw/                            # Agentic workflow runtime artifacts
-│   ├── mcp.json                       # MCP server configuration for Copilot
-│   ├── prompts/                       # 24 prompt templates
-│   ├── skills/                        # 37 skills (OWASP, accessibility, DSA, SDD workflow, etc.)
-│   └── workflows/                     # 31 workflows + 10 reusable templates + 20 agentic workflows
-├── docs/
-│   ├── standards/                     # Commit standards, conventions
-│   └── decision-records/              # Architecture Decision Records
-├── infra/
-│   ├── core/main.bicep                # Shared infrastructure
-│   ├── apps/{service}/main.bicep      # Per-service infrastructure
-│   └── modules/{domain}/              # 19 reusable Bicep modules
-├── scripts/                           # System prompt upload, identity scripts
-└── src/
-    └── Biotrackr.{Domain}.{Type}/     # 14 service directories
-        ├── Biotrackr.{Domain}.{Type}/ # Application project
-        ├── *.UnitTests/               # Unit tests
-        ├── *.IntegrationTests/        # Integration tests (optional)
-        ├── Dockerfile                 # Container image definition
-        └── *.sln or *.slnx           # Solution file
-```
-
-## Dev Environment Setup
-
-### Recommended: Dev Container
-
-The fastest way to get started. Provides .NET 10.0, Cosmos DB vNext emulator, CLI tools, pre-built services, and 30 seed documents — no manual setup required.
-
-1. Open the repo in VS Code with the [Dev Containers extension](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-containers)
-2. Run **Dev Containers: Reopen in Container** (`Ctrl+Shift+P`)
-3. After setup completes: `bash scripts/start-local.sh`
-4. Open `http://localhost:5239`
-
-See [docs/devcontainer-setup.md](docs/devcontainer-setup.md) for secrets, ports, seed data, and troubleshooting.
-
-### Alternative: Manual Setup
-
-### Prerequisites
-
-- **.NET 10.0 SDK**
-- **Docker Desktop** (for Cosmos DB Emulator and container builds)
-- **Azure CLI** (for infrastructure deployments)
-- **PowerShell 7+** (for helper scripts)
-- **Azure subscription** with App Configuration and Cosmos DB (for integration/E2E tests)
-
-### Local Cosmos DB Emulator
+## Bootstrap
 
 ```bash
-# Start Cosmos DB Emulator (Docker)
-./cosmos-emulator.ps1 start
-
-# Check emulator status
-./cosmos-emulator.ps1 status
-
-# Trust emulator certificate (required for HTTPS)
-./cosmos-emulator.ps1 cert
-
-# Stop emulator
-./cosmos-emulator.ps1 stop
+bash scripts/init.sh
 ```
 
-Docker Compose alternative:
+Installs the git hooks, checks the harness manifest, and restores every service. Run once per clone.
 
-```bash
-docker compose -f docker-compose.cosmos.yml up -d
-```
+## Build and test
 
-### Configuration
-
-Each service connects to Azure App Configuration via the `azureappconfigendpoint` environment variable. The managed identity client ID is configured via the `managedidentityclientid` environment variable. For local development, configure both environment variables to point to your Azure App Configuration instance and identity.
-
-## Build & Test Commands
-
-### Per-Service Build Pattern
+There is no root solution. Each service builds from its own directory.
 
 ```bash
 cd src/Biotrackr.{Domain}.{Type}
-dotnet restore
 dotnet build --no-restore
-dotnet test --no-build --collect:"XPlat Code Coverage" --settings ../coverage.runsettings
-```
-
-### Iterative Build (skip restore when packages haven't changed)
-
-```bash
-dotnet build --no-restore -v:q
-```
-
-### Single-Project Build (skip dependencies)
-
-```bash
-dotnet build --no-restore --no-dependencies -v:q
-```
-
-### Service Reference
-
-| Service | Directory | Solution | Unit Tests | Integration Tests |
-|---------|-----------|----------|------------|-------------------|
-| Activity API | `src/Biotrackr.Activity.Api` | `.sln` | Yes | Yes (E2E + Contract) |
-| Activity Svc | `src/Biotrackr.Activity.Svc` | `.sln` | Yes | Yes (E2E + Contract) |
-| Auth Svc | `src/Biotrackr.Auth.Svc` | `.sln` | Yes | Yes (E2E + Contract) |
-| Chat API | `src/Biotrackr.Chat.Api` | `.slnx` | Yes | Yes (E2E + Contract + Evaluation) |
-| Food API | `src/Biotrackr.Food.Api` | `.sln` | Yes | Yes (E2E + Contract) |
-| Food Svc | `src/Biotrackr.Food.Svc` | `.sln` | Yes | Yes (E2E + Contract) |
-| MCP Server | `src/Biotrackr.Mcp.Server` | `.slnx` | Yes | Yes (E2E + Contract) |
-| Reporting API | `src/Biotrackr.Reporting.Api` | `.slnx` | Yes | Yes (E2E + Contract) |
-| Reporting Svc | `src/Biotrackr.Reporting.Svc` | `.slnx` | Yes | Yes (Contract) |
-| Sleep API | `src/Biotrackr.Sleep.Api` | `.sln` | Yes | Yes (E2E + Contract) |
-| Sleep Svc | `src/Biotrackr.Sleep.Svc` | `.sln` | Yes | Yes (E2E + Contract) |
-| UI | `src/Biotrackr.UI` | `.slnx` | Yes | No |
-| Vitals API | `src/Biotrackr.Vitals.Api` | `.sln` | Yes | Yes (E2E + Contract) |
-| Vitals Svc | `src/Biotrackr.Vitals.Svc` | `.sln` | Yes | Yes (E2E + Contract) |
-
-### Test Tiers
-
-```bash
-# Unit tests only (default — no filter needed)
 dotnet test --no-build
-
-# Contract tests only
-dotnet test --no-build --filter "FullyQualifiedName~Contract"
-
-# E2E tests only (requires Cosmos DB Emulator running)
-dotnet test --no-build --filter "FullyQualifiedName~E2E"
 ```
 
-### Coverage
-
-70% minimum threshold enforced in CI. Coverage settings are defined in `coverage.runsettings` per service.
-
-**Pre-push verification — run before every push to catch coverage regressions locally:**
+Verify only the services a change touched:
 
 ```bash
-cd src/Biotrackr.{Domain}.{Type}
-dotnet test --no-build --collect:"XPlat Code Coverage" --settings ../coverage.runsettings --results-directory ./TestResults
-
-# Generate human-readable coverage report (install once: dotnet tool install -g dotnet-reportgenerator-globaltool)
-reportgenerator -reports:"./TestResults/**/coverage.cobertura.xml" -targetdir:"./CoverageReport" -reporttypes:TextSummary
-Get-Content ./CoverageReport/Summary.txt
+bash scripts/verify.sh Biotrackr.Activity.Api
 ```
 
-If line coverage falls below 70%, add tests for uncovered paths before pushing. CI will reject PRs below this threshold.
-
-### Docker Build (per service)
+Coverage runs from the service directory against that service's own settings file:
 
 ```bash
-cd src/Biotrackr.{Domain}.{Type}
-docker build -t biotrackr-{domain}-{type}:local .
+dotnet test --no-build --collect:"XPlat Code Coverage" --settings coverage.runsettings
 ```
 
-## Code Style & Conventions
+`../coverage.runsettings` points at a file that does not exist. The run still succeeds and still reports a number, but the number is wrong. See [docs/testing.md](docs/testing.md).
 
-### Naming
+Commit format, sign-off, and branch naming are enforced by `.githooks/commit-msg`. Read [docs/standards/commit-standards.md](docs/standards/commit-standards.md) when the hook rejects a message, not before.
 
-- **Private fields:** `_camelCase`
-- **Blazor parameters:** PascalCase with `[Parameter]` attribute
-- **CSS classes:** kebab-case with `bt-` prefix (component CSS isolation)
-- **Razor components:** PascalCase file names matching component name
-- **Test classes:** `{ClassUnderTest}Should`
-- **Test methods:** `{Method}_Should{Behavior}_When{Condition}`
+## Review feedback promotion
 
-### Error Handling
+When the same review feedback lands twice, encode it as a mechanical check: an instruction file rule, a test, or a hook. Do not explain it in chat a third time.
 
-- Use `ArgumentNullException.ThrowIfNull(x)` — never throw base `Exception`
-- Use precise exception types only
-- Validate at system boundaries, not internal methods
+## Routing map
 
-### Service Lifetimes
+| Path | Topics |
+|---|---|
+| [docs/README.md](docs/README.md) | Documentation index and scope rules |
+| [docs/product.md](docs/product.md) | Purpose, users, data domains, device integrations |
+| [docs/architecture.md](docs/architecture.md) | Service topology, service types, APIM routing, storage |
+| [docs/ai-architecture.md](docs/ai-architecture.md) | Agent, MCP server, reporting pipeline, middleware order |
+| [docs/security.md](docs/security.md) | Agentic controls, identity, gateway enforcement, secrets |
+| [docs/testing.md](docs/testing.md) | Test tiers, fixtures, coverage policy and commands |
+| [docs/development.md](docs/development.md) | Local setup, emulator, running the stack, failure modes |
+| [docs/infrastructure.md](docs/infrastructure.md) | Bicep layout, module domains, deployment pipeline |
+| [docs/harness-guide.md](docs/harness-guide.md) | Agent, prompt, skill, and instruction inventories |
+| [docs/quality-score.md](docs/quality-score.md) | Grade tracking and the Simplification Log |
+| [docs/standards/commit-standards.md](docs/standards/commit-standards.md) | Commit format, scopes, sign-off, AI trailers |
+| [docs/standards/harness-governance.md](docs/standards/harness-governance.md) | Complexity rubric, size budgets, measurement |
+| [docs/decision-records/](docs/decision-records/) | Architecture Decision Records, append-only |
 
-- **Singleton:** stateless services, HTTP client factories, Cosmos DB clients
-- **Scoped:** request-bound services, repository implementations
-- **Transient:** lightweight, disposable services
+## Startup workflow
 
-### API Patterns
+1. Read this file. Read nothing else until the task is scoped.
+2. Changing code inside a service: read [docs/architecture.md](docs/architecture.md).
+3. Touching the agent, MCP server, or reporting pipeline: read [docs/ai-architecture.md](docs/ai-architecture.md).
+4. Writing or changing tests: read [docs/testing.md](docs/testing.md).
+5. Touching auth, secrets, tool policy, or anything an agent can invoke: read [docs/security.md](docs/security.md).
+6. Working in `infra/`: read [docs/infrastructure.md](docs/infrastructure.md).
+7. Local setup failing: read [docs/development.md](docs/development.md).
+8. Scoring complexity or planning multi-session work: read [docs/standards/harness-governance.md](docs/standards/harness-governance.md).
+9. Making a decision that outlives the change: read [docs/decision-records/](docs/decision-records/), then add one.
 
-- Root-mounted paths: `/`, `/{date}`, `/range/{startDate}/{endDate}`
-- APIM adds domain prefix (e.g., `/activity/`, `/food/`)
-- All list endpoints return `PaginationResponse<T>`
-- Date format: `yyyy-MM-dd`
+Edit-time conventions live in `.github/instructions/`. VS Code loads them on its own when a matching file is opened, so do not read them ahead of time there. Codex and Cursor do not implement `applyTo` and never load them, so on those surfaces read the file matching what you are editing.
 
-### Formatting
+## Boundary rules
 
-- No formatting tool currently enforced
-- CSharpier recommended for consistent formatting (not yet adopted)
-- For CSS and Blazor conventions, see `.github/instructions/css-conventions.instructions.md` and `.github/instructions/razor-components.instructions.md`
+### Never
 
-## Commit Standards
+* Commit secrets, credentials, or connection strings. (why: unrecoverable once pushed, and the rotation cost is external; the gitleaks pre-commit scan is a net, not a guarantee. remove when: never)
+* Push to `main`, force-push a shared branch, or merge a pull request yourself. (why: CI is the only thing proving all fourteen services still build, and a human owns the merge. remove when: branch protection enforces it server-side)
+* Weaken, disable, or remove an ASI01 to ASI10 control. (source: [docs/security.md](docs/security.md). why: each maps to a demonstrated agentic attack and fails silently. remove when: replaced by a stronger control in that same document)
+* Modify Key Vault references, managed identity configuration, or the prompts under `scripts/`. (why: those prompts are Key Vault backed and constrain agent behaviour, so changing them is a security review rather than a code change. remove when: never)
+* Change a Cosmos DB partition key or container structure. (why: not reversible in place, and existing documents become unreachable rather than erroring. remove when: a migration path exists and is recorded as an ADR)
+* Delete files or data without explicit confirmation. (why: an agent cannot tell in-progress work from dead code. remove when: never)
 
-### Conventional Commits Format
+### Ask first
 
-```text
-{type}[optional scope]: {description}
+* Refactors spanning more than one service. (why: each service ships on its own pipeline, so one shared change can break fourteen builds at once. remove when: a single command builds and tests all fourteen in CI on every PR)
+* New NuGet dependencies. (why: licensing and supply chain risk are owner decisions. remove when: an automated licence and CVE gate runs on restore)
+* Middleware order in the Chat API. (source: [docs/ai-architecture.md](docs/ai-architecture.md). why: the order is load-bearing and reordering it fails at runtime, not at build. remove when: a contract test asserts the order)
+* MCP tool schema changes. (why: every consuming agent binds to the schema, and breakage surfaces as wrong answers rather than errors. remove when: the schema is versioned and a contract test covers each tool)
+* API route changes. (why: APIM configuration deploys separately and drifts out of sync. remove when: routes and APIM policy deploy from one source)
+* Anything under `.github/workflows/` or `infra/`. (why: both deploy on merge, so a mistake reaches a live environment before review catches it. remove when: never, while merge triggers deployment)
+* Cosmos DB document schema changes. (why: documents already written are never migrated. remove when: a migration path exists and is recorded as an ADR)
+* Adding or removing a service. (why: fourteen is a load-bearing number across CI, infrastructure, and the docs. remove when: the count is derived at build time rather than hand-maintained)
 
-[optional body]
-
-[optional footer(s)]
-```
-
-### Commit Types
-
-| Type | Purpose |
-|------|---------|
-| `feat` | New feature or capability |
-| `fix` | Bug fix or defect resolution |
-| `core` | Infrastructure or tooling changes |
-| `docs` | Documentation updates |
-| `refactor` | Code restructuring without behavior change |
-| `test` | Test additions or modifications |
-
-### Rules
-
-- **Subject:** max 50 characters, imperative mood, lowercase after colon, no period
-- **Body:** max 72 characters per line
-- **Scopes:** lowercase, alphanumeric with dashes (e.g., `activity-api`, `infra`, `bicep`)
-- **DCO sign-off required:** use `-s` flag on all commits
-
-### Branch Naming
-
-```text
-^(feat|fix|core|docs|refactor|test)/[a-z0-9][a-z0-9-]*$
-```
-
-### AI Contribution Trailers
-
-When AI coding agents contribute to a commit, all three trailers must be present together — if any trailer is included, all three are required:
-
-```bash
-git commit -s -m "feat(vitals-api): add blood pressure validation" \
-  --trailer "agent: github-copilot" \
-  --trailer "model: Claude Sonnet 4.6" \
-  --trailer "contribution: code-generation"
-```
-
-**Agent names:** `github-copilot`, `cursor`, `claude-code`, `codeium`, `tabnine`, `cline`
-
-**Contribution types:** `code-generation`, `refactoring`, `documentation`, `test-generation`
-
-Full standard: `docs/standards/commit-standards.md`
-
-## Security Overview
-
-### Key Security Controls
-
-- **Managed Identity:** user-assigned managed identity (`uai-biotrackr-dev`) for all services
-- **Agent Identity:** Chat API acquires agent identity token for inter-service authentication (ASI03/ASI07)
-- **API Management:** JWT validation on all external endpoints, subscription keys required
-- **Tool Policies:** maximum 20 tool calls per session, tool whitelisting enforced
-- **Conversation Limits:** max 50 hydrated messages, 10K character limit, 100 message cap (ASI06)
-- **Code Validation:** Python script scanning for dangerous patterns before execution (ASI05)
-- **Report Review:** independent reviewer agent validates reports against source data (ASI09)
-- **Prompt Injection Detection:** blocklist patterns on report generation requests (ASI01)
-- **Prompts in Key Vault:** system prompts stored in Azure Key Vault, not committed to git
-
-Full OWASP Agentic Security (ASI01-ASI10) details are in `.github/copilot-instructions.md`.
-
-## Boundary Rules
-
-### NEVER
-
-- Commit secrets, credentials, API keys, or connection strings to the repository
-- Push code without running unit tests first — always `dotnet test` the affected service before pushing, especially when adding or modifying tests
-- Push directly to `main` — all changes go through pull requests
-- Force push (`--force`) to any shared branch
-- Auto-merge pull requests — wait for CI/CD pipeline completion and user approval
-- Modify system prompts in `scripts/` directories (stored in Key Vault; changes need security review)
-- Weaken or disable any ASI01-ASI10 security control
-- Modify Key Vault secret references or managed identity configuration
-- Change Cosmos DB partition keys or container structure
-- Delete files or data without explicit user confirmation
-- Use base `Exception` class — use precise exception types
-- Skip DCO sign-off on commits — bot accounts (`github-actions[bot]`, `dependabot[bot]`) are exempt as their provenance is established through GitHub App identity
-
-### ASK FIRST
-
-- Cross-cutting refactors affecting multiple services
-- New NuGet package dependencies (assess compatibility and licensing)
-- Changes to middleware pipeline order in Chat API (ToolPolicy → ConversationPersistence → GracefulDegradation)
-- MCP tool schema changes (affects all consuming agents)
-- API endpoint changes (affects APIM configuration)
-- GitHub Actions workflow modifications
-- Infrastructure/Bicep changes (deployment configs require review)
-- Schema or data model changes affecting Cosmos DB documents
-- Changes to the AI agent architecture (MAF, AGUI, MCP patterns)
-- Adding or removing services from the architecture
-
-## Execution Plans and Progress Files
-
-For complex features spanning multiple sessions or services, use execution plans and progress files to bridge context across sessions.
-
-### Execution Plans
-
-Create execution plans at `.copilot-tracking/plans/{feature}-plan.md` using the template at `.copilot-tracking/templates/exec-plan-template.md`. Use for CS-3+ complexity tasks (cross-service, schema changes, new services).
-
-### Progress Files
-
-Create progress files at `.copilot-tracking/tasks/{task-name}.md` using the template at `.copilot-tracking/templates/progress-template.md`. Session startup protocol: read progress → parse next unchecked item → read Current State → verify build passes → continue.
-
-### Complexity Scoring
-
-Assign a complexity score (CS-1 through CS-5) before starting work. CS-1/2: proceed directly. CS-3+: create an execution plan first. See `docs/standards/harness-governance.md` for the full rubric.
-
-## Additional Resources
-
-For comprehensive Copilot-specific guidance including testing conventions, PR guidelines, infrastructure details, full OWASP Agentic Security (ASI01-ASI10), AI/agent architecture, and agent configuration inventory, see `.github/copilot-instructions.md`.
-
-* `AI-TRANSPARENCY.md` — AI Transparency statement
-* `SECURITY.md` — Security policy and reporting
