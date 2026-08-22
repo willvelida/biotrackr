@@ -27,14 +27,19 @@ jobs:
             # Full history: the check compares the PR head against the base, so a
             # shallow clone would leave the merge base unreachable.
             - name: Checkout repository
-              uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
+              uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5.0.1
               with:
                 fetch-depth: 0
                 persist-credentials: false
 
+            # BASE_REF goes through env rather than a ${{ }} expansion inside the
+            # script: interpolating a ref name straight into a shell command is a
+            # code-injection vector (zizmor template-injection).
             - name: Check dev container consistency
+              env:
+                BASE_REF: ${{ github.base_ref || 'main' }}
               run: |
-                base="origin/${{ github.base_ref || 'main' }}"
+                base="origin/${BASE_REF}"
                 if git rev-parse --verify --quiet "$base" >/dev/null; then
                   bash scripts/check-devcontainer.sh --range "$base...HEAD"
                 else
