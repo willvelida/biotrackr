@@ -43,7 +43,7 @@ report() {
 }
 
 # --- 1. Conventional Commits shape -------------------------------------------
-if ! printf '%s' "$SUBJECT" | grep -qE '^(feat|fix|core|docs|refactor|test)(\([a-z0-9._-]+\))?: .+'; then
+if ! printf '%s' "$SUBJECT" | grep -qE '^(feat|fix|core|docs|refactor|test)(\([a-z0-9-]+\))?: .+'; then
   report "the subject is not a valid Conventional Commit." \
     "got:      $SUBJECT" \
     "expected: <type>[(scope)]: <description>" \

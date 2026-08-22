@@ -67,7 +67,10 @@ changed_paths() {
   case "$MODE" in
     staged)  git diff --cached --name-only --diff-filter=ACMR ;;
     range)   git diff --name-only --diff-filter=ACMR "$RANGE" ;;
-    working) git diff --name-only --diff-filter=ACMR HEAD ;;
+    # A brand-new file is untracked, so git diff cannot see it. Without the
+    # second command a new service class reports "nothing to verify".
+    working) git diff --name-only --diff-filter=ACMR HEAD
+             git ls-files --others --exclude-standard ;;
   esac
 }
 

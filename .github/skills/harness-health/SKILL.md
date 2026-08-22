@@ -31,7 +31,7 @@ Work through each dimension sequentially. For every check, read the relevant fil
 
 Evaluate the quality and currency of the context files that guide agent behaviour.
 
-1. Ambient context accuracy: read `.github/copilot-instructions.md` and verify the Architecture table lists all 14 services with correct types and purposes. Confirm build and test commands match the actual project structure.
+1. Ambient context accuracy: read [docs/architecture.md](../../../docs/architecture.md) and verify the Services table lists all 14 services with correct types and purposes. Confirm the build and test commands in `AGENTS.md` match the actual project structure.
 2. Instruction file coverage: verify every file under `.github/instructions/` has an `applyTo` glob that matches real paths in the repository, and that each glob still describes the concern the file covers.
 3. Skill currency: spot-check three skills from `.github/skills/` and verify they reference current framework versions and OWASP revision dates.
 4. Agent verification steps: check each agent under `.github/agents/` for a `## Verification Protocol` section. Flag agents that modify files without one.

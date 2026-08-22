@@ -11,11 +11,12 @@ This is the inventory. Build, test, and coverage commands live in `AGENTS.md` an
 
 ## Automatic context loading
 
-Editing a file loads the instruction files matching its path. Multiple matches all apply; there is no shadowing, so a test file in a repository class loads both `**/*.cs` files and the test conventions.
+Editing a file loads the instruction files matching its path. Multiple matches all apply; there is no shadowing. A repository class inside a test project matches three globs at once and loads 201 lines before the agent reads the file itself, which is why `scripts/audit-harness.sh` check C4 budgets the worst-case stack rather than only comparing glob strings.
 
 | You edit | Loads | Covers |
 |----------|-------|--------|
-| `*.cs` | csharp-conventions, dsa-awareness | Naming, DI, error handling, async, data structure selection |
+| `*.cs` | csharp-conventions | Naming, DI, error handling, async |
+| `*Repository.cs`, `*Handlers.cs` | dsa-awareness | Data structure selection, LINQ complexity |
 | `*Tests*/**/*.cs` | testing-conventions | xUnit, AAA pattern, naming, coverage, agent-readable assertions |
 | `*Repository*.cs`, `*Document*.cs`, `*Cosmos*.cs` | cosmos-conventions | Repository pattern, query safety, partition keys, lifetimes |
 | `*.bicep` | bicep-conventions | Three-tier layout, parameter conventions, module naming |
