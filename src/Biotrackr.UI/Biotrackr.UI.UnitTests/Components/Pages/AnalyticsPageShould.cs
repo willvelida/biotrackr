@@ -31,16 +31,20 @@ namespace Biotrackr.UI.UnitTests.Components.Pages
         [Fact]
         public void RenderPageTitle()
         {
+            // Act
             var cut = Render<Analytics>();
 
+            // Assert
             cut.Markup.Should().Contain("Analytics");
         }
 
         [Fact]
         public void RenderDateRangeControls()
         {
+            // Act
             var cut = Render<Analytics>();
 
+            // Assert
             cut.Markup.Should().Contain("Start Date");
             cut.Markup.Should().Contain("End Date");
         }
@@ -48,16 +52,20 @@ namespace Biotrackr.UI.UnitTests.Components.Pages
         [Fact]
         public void RenderCorrelationDropdown()
         {
+            // Act
             var cut = Render<Analytics>();
 
+            // Assert
             cut.Markup.Should().Contain("Correlation");
         }
 
         [Fact]
         public void RenderEmptyState_WhenNoDataLoaded()
         {
+            // Act
             var cut = Render<Analytics>();
 
+            // Assert
             cut.Markup.Should().NotContain("No correlated data points found");
             cut.Markup.Should().NotContain("rz-chart");
         }
@@ -65,6 +73,7 @@ namespace Biotrackr.UI.UnitTests.Components.Pages
         [Fact]
         public void RenderErrorMessage_WhenApiThrows()
         {
+            // Arrange
             _mockApiService.Setup(s => s.GetActivitiesByDateRangeAsync(
                     It.IsAny<string>(), It.IsAny<string>(), It.IsAny<int>(), It.IsAny<int>()))
                 .ThrowsAsync(new HttpRequestException("API error"));
@@ -72,24 +81,29 @@ namespace Biotrackr.UI.UnitTests.Components.Pages
                     It.IsAny<string>(), It.IsAny<string>(), It.IsAny<int>(), It.IsAny<int>()))
                 .ThrowsAsync(new HttpRequestException("API error"));
 
+            // Act
             var cut = Render<Analytics>();
             cut.Find("button[aria-label='Load correlation data']").Click();
 
+            // Assert
             cut.Markup.Should().Contain("Failed to load analytics data");
         }
 
         [Fact]
         public void RenderEmptyMessage_WhenNoMatchingDataPoints()
         {
+            // Act
             var cut = Render<Analytics>();
             cut.Find("button[aria-label='Load correlation data']").Click();
 
+            // Assert
             cut.Markup.Should().Contain("No correlated data points found");
         }
 
         [Fact]
         public void RenderScatterChart_WhenStepsVsSleepDataLoaded()
         {
+            // Arrange
             _mockApiService.Setup(s => s.GetActivitiesByDateRangeAsync(
                     It.IsAny<string>(), It.IsAny<string>(), It.IsAny<int>(), It.IsAny<int>()))
                 .ReturnsAsync(new PaginatedResponse<ActivityItem>
@@ -123,15 +137,18 @@ namespace Biotrackr.UI.UnitTests.Components.Pages
                     ]
                 });
 
+            // Act
             var cut = Render<Analytics>();
             cut.Find("button[aria-label='Load correlation data']").Click();
 
+            // Assert
             cut.Markup.Should().Contain("Steps vs Sleep Duration");
         }
 
         [Fact]
         public void RenderScatterChart_WhenCaloriesVsWeightDataLoaded()
         {
+            // Arrange
             _mockApiService.Setup(s => s.GetFoodLogsByDateRangeAsync(
                     It.IsAny<string>(), It.IsAny<string>(), It.IsAny<int>(), It.IsAny<int>()))
                 .ReturnsAsync(new PaginatedResponse<FoodItem>
@@ -162,9 +179,11 @@ namespace Biotrackr.UI.UnitTests.Components.Pages
                     ]
                 });
 
+            // Act
             var cut = Render<Analytics>();
             cut.Find("button[aria-label='Load correlation data']").Click();
 
+            // Assert
             // Default correlation is StepsVsSleep, so verify the APIs are being called
             _mockApiService.Verify(s => s.GetActivitiesByDateRangeAsync(
                 It.IsAny<string>(), It.IsAny<string>(), It.IsAny<int>(), It.IsAny<int>()), Times.Once);
@@ -173,6 +192,7 @@ namespace Biotrackr.UI.UnitTests.Components.Pages
         [Fact]
         public void RenderLoadingSpinner_WhenLoadingData()
         {
+            // Arrange
             _mockApiService.Setup(s => s.GetActivitiesByDateRangeAsync(
                     It.IsAny<string>(), It.IsAny<string>(), It.IsAny<int>(), It.IsAny<int>()))
                 .Returns(new TaskCompletionSource<PaginatedResponse<ActivityItem>>().Task);
@@ -180,15 +200,18 @@ namespace Biotrackr.UI.UnitTests.Components.Pages
                     It.IsAny<string>(), It.IsAny<string>(), It.IsAny<int>(), It.IsAny<int>()))
                 .Returns(new TaskCompletionSource<PaginatedResponse<SleepItem>>().Task);
 
+            // Act
             var cut = Render<Analytics>();
             cut.Find("button[aria-label='Load correlation data']").Click();
 
+            // Assert
             cut.Markup.Should().Contain("Loading analytics data");
         }
 
         [Fact]
         public void NotRenderChart_WhenNoMatchingDatesExist()
         {
+            // Arrange
             _mockApiService.Setup(s => s.GetActivitiesByDateRangeAsync(
                     It.IsAny<string>(), It.IsAny<string>(), It.IsAny<int>(), It.IsAny<int>()))
                 .ReturnsAsync(new PaginatedResponse<ActivityItem>
@@ -222,9 +245,11 @@ namespace Biotrackr.UI.UnitTests.Components.Pages
                     ]
                 });
 
+            // Act
             var cut = Render<Analytics>();
             cut.Find("button[aria-label='Load correlation data']").Click();
 
+            // Assert
             cut.Markup.Should().Contain("No correlated data points found");
         }
 

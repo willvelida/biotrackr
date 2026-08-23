@@ -30,16 +30,20 @@ namespace Biotrackr.UI.UnitTests.Components.Pages
         [Fact]
         public void RenderDashboardTitle()
         {
+            // Arrange
             SetupEmptyApiResponses();
 
+            // Act
             var cut = Render<Home>();
 
+            // Assert
             cut.Markup.Should().Contain("Dashboard");
         }
 
         [Fact]
         public void RenderSummaryCards_WhenAllDataLoaded()
         {
+            // Arrange
             _mockApiService.Setup(s => s.GetActivityByDateAsync(It.IsAny<string>()))
                 .ReturnsAsync(new ActivityItem
                 {
@@ -56,8 +60,10 @@ namespace Biotrackr.UI.UnitTests.Components.Pages
             _mockApiService.Setup(s => s.GetVitalsByDateAsync(It.IsAny<string>()))
                 .ReturnsAsync(new VitalsItem { Weight = new VitalsData { Weight = 80.5, Bmi = 24.5 } });
 
+            // Act
             var cut = Render<Home>();
 
+            // Assert
             cut.Markup.Should().Contain("12,000"); // steps
             cut.Markup.Should().Contain("2,800");  // calories burned
             cut.Markup.Should().Contain("2,100");  // calories consumed
@@ -68,6 +74,7 @@ namespace Biotrackr.UI.UnitTests.Components.Pages
         [Fact]
         public void RenderDefaultValues_WhenDataIsNull()
         {
+            // Arrange
             _mockApiService.Setup(s => s.GetActivityByDateAsync(It.IsAny<string>()))
                 .ReturnsAsync((ActivityItem?)null);
             _mockApiService.Setup(s => s.GetFoodLogByDateAsync(It.IsAny<string>()))
@@ -77,8 +84,10 @@ namespace Biotrackr.UI.UnitTests.Components.Pages
             _mockApiService.Setup(s => s.GetVitalsByDateAsync(It.IsAny<string>()))
                 .ReturnsAsync((VitalsItem?)null);
 
+            // Act
             var cut = Render<Home>();
 
+            // Assert
             // Should show per-section empty state alerts
             cut.Markup.Should().Contain("No activity data available");
             cut.Markup.Should().Contain("No sleep data available");
@@ -89,6 +98,7 @@ namespace Biotrackr.UI.UnitTests.Components.Pages
         [Fact]
         public void RenderEmptyStates_WhenApiThrows()
         {
+            // Arrange
             _mockApiService.Setup(s => s.GetActivityByDateAsync(It.IsAny<string>()))
                 .ThrowsAsync(new HttpRequestException("API error"));
             _mockApiService.Setup(s => s.GetFoodLogByDateAsync(It.IsAny<string>()))
@@ -98,8 +108,10 @@ namespace Biotrackr.UI.UnitTests.Components.Pages
             _mockApiService.Setup(s => s.GetVitalsByDateAsync(It.IsAny<string>()))
                 .ThrowsAsync(new HttpRequestException("API error"));
 
+            // Act
             var cut = Render<Home>();
 
+            // Assert
             // Per-section loading handles errors — shows error alert messages
             cut.Markup.Should().Contain("Failed to load activity data. Please try again later.");
             cut.Markup.Should().Contain("Failed to load sleep data. Please try again later.");
@@ -110,6 +122,7 @@ namespace Biotrackr.UI.UnitTests.Components.Pages
         [Fact]
         public void RenderGoalText_WhenGoalsExist()
         {
+            // Arrange
             _mockApiService.Setup(s => s.GetActivityByDateAsync(It.IsAny<string>()))
                 .ReturnsAsync(new ActivityItem
                 {
@@ -126,14 +139,17 @@ namespace Biotrackr.UI.UnitTests.Components.Pages
             _mockApiService.Setup(s => s.GetVitalsByDateAsync(It.IsAny<string>()))
                 .ReturnsAsync(new VitalsItem());
 
+            // Act
             var cut = Render<Home>();
 
+            // Assert
             cut.Markup.Should().Contain("Goal: 2,500");
         }
 
         [Fact]
         public void RenderBmiText_WhenWeightHasBmi()
         {
+            // Arrange
             _mockApiService.Setup(s => s.GetActivityByDateAsync(It.IsAny<string>()))
                 .ReturnsAsync(new ActivityItem());
             _mockApiService.Setup(s => s.GetFoodLogByDateAsync(It.IsAny<string>()))
@@ -143,8 +159,10 @@ namespace Biotrackr.UI.UnitTests.Components.Pages
             _mockApiService.Setup(s => s.GetVitalsByDateAsync(It.IsAny<string>()))
                 .ReturnsAsync(new VitalsItem { Weight = new VitalsData { Weight = 75, Bmi = 23.1 } });
 
+            // Act
             var cut = Render<Home>();
 
+            // Assert
             cut.Markup.Should().Contain("BMI");
             cut.Markup.Should().Contain("23.1");
         }
@@ -152,11 +170,14 @@ namespace Biotrackr.UI.UnitTests.Components.Pages
         [Fact]
         public void RenderDomainSections_WhenAllDataLoaded()
         {
+            // Arrange
             SetupEmptyApiResponses();
             SetupEmptyRangeResponses();
 
+            // Act
             var cut = Render<Home>();
 
+            // Assert
             cut.Markup.Should().Contain("Activity");
             cut.Markup.Should().Contain("Sleep");
             cut.Markup.Should().Contain("Weight");
@@ -166,6 +187,7 @@ namespace Biotrackr.UI.UnitTests.Components.Pages
         [Fact]
         public void RenderSummaryCards_WithSparklines_WhenRangeDataAvailable()
         {
+            // Arrange
             SetupEmptyApiResponses();
             _mockApiService.Setup(s => s.GetActivitiesByDateRangeAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<int>(), It.IsAny<int>()))
                 .ReturnsAsync(new PaginatedResponse<ActivityItem>
@@ -179,8 +201,10 @@ namespace Biotrackr.UI.UnitTests.Components.Pages
                 });
             SetupEmptyRangeResponses(skipActivity: true);
 
+            // Act
             var cut = Render<Home>();
 
+            // Assert
             // SummaryCard renders sparklines via RadzenSparkline (which extends RadzenChart)
             cut.Markup.Should().Contain("rz-chart");
         }
@@ -188,6 +212,7 @@ namespace Biotrackr.UI.UnitTests.Components.Pages
         [Fact]
         public void RenderDefaultValues_WhenDomainApiFailsSilently()
         {
+            // Arrange
             // Single-day data loads normally
             _mockApiService.Setup(s => s.GetActivityByDateAsync(It.IsAny<string>()))
                 .ReturnsAsync(new ActivityItem
@@ -210,8 +235,10 @@ namespace Biotrackr.UI.UnitTests.Components.Pages
                 .ThrowsAsync(new HttpRequestException("API error"));
             SetupEmptyRangeResponses(skipActivity: true);
 
+            // Act
             var cut = Render<Home>();
 
+            // Assert
             // Dashboard still renders with single-day data
             cut.Markup.Should().Contain("5,000");
             cut.Markup.Should().Contain("Activity");
@@ -220,11 +247,14 @@ namespace Biotrackr.UI.UnitTests.Components.Pages
         [Fact]
         public void FetchSevenDayRangeData_OnLoad()
         {
+            // Arrange
             SetupEmptyApiResponses();
             SetupEmptyRangeResponses();
 
+            // Act
             var cut = Render<Home>();
 
+            // Assert
             _mockApiService.Verify(s => s.GetActivitiesByDateRangeAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<int>(), It.IsAny<int>()), Times.Once);
             _mockApiService.Verify(s => s.GetSleepByDateRangeAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<int>(), It.IsAny<int>()), Times.Once);
             _mockApiService.Verify(s => s.GetVitalsByDateRangeAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<int>(), It.IsAny<int>()), Times.Once);

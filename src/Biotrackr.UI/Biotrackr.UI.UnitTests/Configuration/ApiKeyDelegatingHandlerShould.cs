@@ -12,6 +12,7 @@ namespace Biotrackr.UI.UnitTests.Configuration
         [Fact]
         public async Task SendAsync_ShouldAddSubscriptionKeyHeader_WhenKeyIsConfigured()
         {
+            // Arrange
             var settings = new BiotrackrApiSettings { SubscriptionKey = "test-key-123" };
             var optionsMock = new Mock<IOptions<BiotrackrApiSettings>>();
             optionsMock.Setup(o => o.Value).Returns(settings);
@@ -23,8 +24,10 @@ namespace Biotrackr.UI.UnitTests.Configuration
             };
             var client = new HttpClient(handler) { BaseAddress = new Uri("https://test.api.com") };
 
+            // Act
             await client.GetAsync("/test");
 
+            // Assert
             innerHandler.LastRequest!.Headers.GetValues("Ocp-Apim-Subscription-Key")
                 .Should().ContainSingle().Which.Should().Be("test-key-123");
         }
@@ -32,6 +35,7 @@ namespace Biotrackr.UI.UnitTests.Configuration
         [Fact]
         public async Task SendAsync_ShouldNotAddHeader_WhenKeyIsNull()
         {
+            // Arrange
             var settings = new BiotrackrApiSettings { SubscriptionKey = null };
             var optionsMock = new Mock<IOptions<BiotrackrApiSettings>>();
             optionsMock.Setup(o => o.Value).Returns(settings);
@@ -43,14 +47,17 @@ namespace Biotrackr.UI.UnitTests.Configuration
             };
             var client = new HttpClient(handler) { BaseAddress = new Uri("https://test.api.com") };
 
+            // Act
             await client.GetAsync("/test");
 
+            // Assert
             innerHandler.LastRequest!.Headers.Contains("Ocp-Apim-Subscription-Key").Should().BeFalse();
         }
 
         [Fact]
         public async Task SendAsync_ShouldNotAddHeader_WhenKeyIsEmpty()
         {
+            // Arrange
             var settings = new BiotrackrApiSettings { SubscriptionKey = "" };
             var optionsMock = new Mock<IOptions<BiotrackrApiSettings>>();
             optionsMock.Setup(o => o.Value).Returns(settings);
@@ -62,8 +69,10 @@ namespace Biotrackr.UI.UnitTests.Configuration
             };
             var client = new HttpClient(handler) { BaseAddress = new Uri("https://test.api.com") };
 
+            // Act
             await client.GetAsync("/test");
 
+            // Assert
             innerHandler.LastRequest!.Headers.Contains("Ocp-Apim-Subscription-Key").Should().BeFalse();
         }
     }

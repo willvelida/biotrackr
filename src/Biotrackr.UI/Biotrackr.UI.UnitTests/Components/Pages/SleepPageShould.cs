@@ -27,24 +27,30 @@ namespace Biotrackr.UI.UnitTests.Components.Pages
         [Fact]
         public void RenderPageTitle()
         {
+            // Arrange
             _mockApiService.Setup(s => s.GetSleepByDateAsync(It.IsAny<string>()))
                 .ReturnsAsync((SleepItem?)null);
 
+            // Act
             var cut = Render<Sleep>();
 
+            // Assert
             cut.Markup.Should().Contain("Sleep");
         }
 
         [Fact]
         public void RenderSummaryCards_WhenDataLoaded()
         {
+            // Arrange
             var sleepItem = CreateSleepItem(minutesAsleep: 450, timeInBed: 500, records: 1);
 
             _mockApiService.Setup(s => s.GetSleepByDateAsync(It.IsAny<string>()))
                 .ReturnsAsync(sleepItem);
 
+            // Act
             var cut = Render<Sleep>();
 
+            // Assert
             cut.Markup.Should().Contain("7h 30m"); // 450 minutes
             cut.Markup.Should().Contain("8h 20m"); // 500 minutes
         }
@@ -52,6 +58,7 @@ namespace Biotrackr.UI.UnitTests.Components.Pages
         [Fact]
         public void RenderSleepStages_WhenStagesExist()
         {
+            // Arrange
             var sleepItem = CreateSleepItem(minutesAsleep: 420, timeInBed: 480, records: 1);
             sleepItem.Sleep.Summary.Stages = new SleepStages
             {
@@ -64,8 +71,10 @@ namespace Biotrackr.UI.UnitTests.Components.Pages
             _mockApiService.Setup(s => s.GetSleepByDateAsync(It.IsAny<string>()))
                 .ReturnsAsync(sleepItem);
 
+            // Act
             var cut = Render<Sleep>();
 
+            // Assert
             cut.Markup.Should().Contain("Sleep Stages");
             cut.Markup.Should().Contain("Deep");
             cut.Markup.Should().Contain("1h 30m"); // 90 minutes deep
@@ -74,6 +83,7 @@ namespace Biotrackr.UI.UnitTests.Components.Pages
         [Fact]
         public void RenderSleepLogs_WhenRecordsExist()
         {
+            // Arrange
             var sleepItem = CreateSleepItem(minutesAsleep: 420, timeInBed: 480, records: 1);
             sleepItem.Sleep.Sleep.Add(new SleepRecord
             {
@@ -89,8 +99,10 @@ namespace Biotrackr.UI.UnitTests.Components.Pages
             _mockApiService.Setup(s => s.GetSleepByDateAsync(It.IsAny<string>()))
                 .ReturnsAsync(sleepItem);
 
+            // Act
             var cut = Render<Sleep>();
 
+            // Assert
             cut.Markup.Should().Contain("Sleep Logs");
             cut.Markup.Should().Contain("88%");
             cut.Markup.Should().Contain("Main");
@@ -99,28 +111,35 @@ namespace Biotrackr.UI.UnitTests.Components.Pages
         [Fact]
         public void RenderNoDataMessage_WhenNullReturned()
         {
+            // Arrange
             _mockApiService.Setup(s => s.GetSleepByDateAsync(It.IsAny<string>()))
                 .ReturnsAsync((SleepItem?)null);
 
+            // Act
             var cut = Render<Sleep>();
 
+            // Assert
             cut.Markup.Should().Contain("No sleep data found");
         }
 
         [Fact]
         public void RenderErrorMessage_WhenApiThrows()
         {
+            // Arrange
             _mockApiService.Setup(s => s.GetSleepByDateAsync(It.IsAny<string>()))
                 .ThrowsAsync(new HttpRequestException("API error"));
 
+            // Act
             var cut = Render<Sleep>();
 
+            // Assert
             cut.Markup.Should().Contain("Failed to load sleep data");
         }
 
         [Fact]
         public void RenderEfficiency_WhenMainSleepExists()
         {
+            // Arrange
             var sleepItem = CreateSleepItem(minutesAsleep: 420, timeInBed: 480, records: 1);
             sleepItem.Sleep.Sleep.Add(new SleepRecord
             {
@@ -133,14 +152,17 @@ namespace Biotrackr.UI.UnitTests.Components.Pages
             _mockApiService.Setup(s => s.GetSleepByDateAsync(It.IsAny<string>()))
                 .ReturnsAsync(sleepItem);
 
+            // Act
             var cut = Render<Sleep>();
 
+            // Assert
             cut.Markup.Should().Contain("92%");
         }
 
         [Fact]
         public void RenderRangeTable_WhenRangeDataLoaded()
         {
+            // Arrange
             var rangeResponse = new PaginatedResponse<SleepItem>
             {
                 Items = [CreateSleepItem(minutesAsleep: 400, timeInBed: 450, records: 1)],
@@ -156,8 +178,10 @@ namespace Biotrackr.UI.UnitTests.Components.Pages
             _mockApiService.Setup(s => s.GetSleepByDateRangeAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<int>(), It.IsAny<int>()))
                 .ReturnsAsync(rangeResponse);
 
+            // Act
             var cut = Render<Sleep>();
 
+            // Assert
             // Range mode uses RadzenSelectBar which cannot be interacted with via bUnit selectors.
             // Verify that the component renders without errors when data is available.
             cut.Markup.Should().NotBeEmpty();
@@ -166,6 +190,7 @@ namespace Biotrackr.UI.UnitTests.Components.Pages
         [Fact]
         public void RenderCharts_WhenSingleDateDataLoaded()
         {
+            // Arrange
             var sleepItem = CreateSleepItem(minutesAsleep: 420, timeInBed: 480, records: 1);
             sleepItem.Sleep.Summary.Stages = new SleepStages
             {
@@ -185,8 +210,10 @@ namespace Biotrackr.UI.UnitTests.Components.Pages
             _mockApiService.Setup(s => s.GetSleepByDateAsync(It.IsAny<string>()))
                 .ReturnsAsync(sleepItem);
 
+            // Act
             var cut = Render<Sleep>();
 
+            // Assert
             // Donut chart for sleep stages and arc gauge for efficiency
             cut.Markup.Should().Contain("Sleep Stages");
             cut.Markup.Should().Contain("rz-progressbar");
@@ -195,6 +222,7 @@ namespace Biotrackr.UI.UnitTests.Components.Pages
         [Fact]
         public void RenderTrendCharts_WhenRangeDateDataLoaded()
         {
+            // Arrange
             var rangeResponse = new PaginatedResponse<SleepItem>
             {
                 Items =
@@ -216,8 +244,10 @@ namespace Biotrackr.UI.UnitTests.Components.Pages
             _mockApiService.Setup(s => s.GetSleepByDateRangeAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<int>(), It.IsAny<int>()))
                 .ReturnsAsync(rangeResponse);
 
+            // Act
             var cut = Render<Sleep>();
 
+            // Assert
             // The component renders without errors when range data is available
             cut.Markup.Should().NotBeEmpty();
         }
@@ -225,6 +255,7 @@ namespace Biotrackr.UI.UnitTests.Components.Pages
         [Fact]
         public void RenderChartsAndDataGrid_InRangeMode()
         {
+            // Arrange
             var rangeResponse = new PaginatedResponse<SleepItem>
             {
                 Items = [CreateSleepItem(minutesAsleep: 400, timeInBed: 450, records: 1)],
@@ -240,8 +271,10 @@ namespace Biotrackr.UI.UnitTests.Components.Pages
             _mockApiService.Setup(s => s.GetSleepByDateRangeAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<int>(), It.IsAny<int>()))
                 .ReturnsAsync(rangeResponse);
 
+            // Act
             var cut = Render<Sleep>();
 
+            // Assert
             cut.Markup.Should().Contain("Sleep");
             cut.Markup.Should().NotBeEmpty();
         }

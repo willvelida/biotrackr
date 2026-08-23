@@ -27,28 +27,35 @@ namespace Biotrackr.UI.UnitTests.Components.Pages
         [Fact]
         public void RenderPageTitle()
         {
+            // Arrange
             _mockApiService.Setup(s => s.GetActivityByDateAsync(It.IsAny<string>()))
                 .ReturnsAsync((ActivityItem?)null);
 
+            // Act
             var cut = Render<Activity>();
 
+            // Assert
             cut.Markup.Should().Contain("Activity");
         }
 
         [Fact]
         public void RenderLoadingSpinner_Initially()
         {
+            // Arrange
             _mockApiService.Setup(s => s.GetActivityByDateAsync(It.IsAny<string>()))
                 .Returns(new TaskCompletionSource<ActivityItem?>().Task);
 
+            // Act
             var cut = Render<Activity>();
 
+            // Assert
             cut.Markup.Should().Contain("rz-progressbar-circular");
         }
 
         [Fact]
         public void RenderSummaryCards_WhenDataLoaded()
         {
+            // Arrange
             var activityItem = CreateActivityItem(steps: 10000, calories: 2500, floors: 10,
                 fairlyActive: 15, veryActive: 30, activeMinGoal: 30, stepsGoal: 10000,
                 caloriesGoal: 2500, floorsGoal: 10);
@@ -56,8 +63,10 @@ namespace Biotrackr.UI.UnitTests.Components.Pages
             _mockApiService.Setup(s => s.GetActivityByDateAsync(It.IsAny<string>()))
                 .ReturnsAsync(activityItem);
 
+            // Act
             var cut = Render<Activity>();
 
+            // Assert
             cut.Markup.Should().Contain("10,000"); // steps
             cut.Markup.Should().Contain("2,500");  // calories
         }
@@ -65,28 +74,35 @@ namespace Biotrackr.UI.UnitTests.Components.Pages
         [Fact]
         public void RenderNoDataMessage_WhenNullReturned()
         {
+            // Arrange
             _mockApiService.Setup(s => s.GetActivityByDateAsync(It.IsAny<string>()))
                 .ReturnsAsync((ActivityItem?)null);
 
+            // Act
             var cut = Render<Activity>();
 
+            // Assert
             cut.Markup.Should().Contain("No activity data found");
         }
 
         [Fact]
         public void RenderErrorMessage_WhenApiThrows()
         {
+            // Arrange
             _mockApiService.Setup(s => s.GetActivityByDateAsync(It.IsAny<string>()))
                 .ThrowsAsync(new HttpRequestException("API error"));
 
+            // Act
             var cut = Render<Activity>();
 
+            // Assert
             cut.Markup.Should().Contain("Failed to load activity data");
         }
 
         [Fact]
         public void RenderHeartRateZonesTable_WhenZonesExist()
         {
+            // Arrange
             var activityItem = CreateActivityItem();
             activityItem.Activity.Summary.HeartRateZones.Add(new HeartRateZone
             {
@@ -100,8 +116,10 @@ namespace Biotrackr.UI.UnitTests.Components.Pages
             _mockApiService.Setup(s => s.GetActivityByDateAsync(It.IsAny<string>()))
                 .ReturnsAsync(activityItem);
 
+            // Act
             var cut = Render<Activity>();
 
+            // Assert
             cut.Markup.Should().Contain("Heart Rate Zones");
             cut.Markup.Should().Contain("Cardio");
         }
@@ -109,6 +127,7 @@ namespace Biotrackr.UI.UnitTests.Components.Pages
         [Fact]
         public void RenderActivitiesTable_WhenActivitiesExist()
         {
+            // Arrange
             var activityItem = CreateActivityItem();
             activityItem.Activity.Activities.Add(new ActivityLog
             {
@@ -123,8 +142,10 @@ namespace Biotrackr.UI.UnitTests.Components.Pages
             _mockApiService.Setup(s => s.GetActivityByDateAsync(It.IsAny<string>()))
                 .ReturnsAsync(activityItem);
 
+            // Act
             var cut = Render<Activity>();
 
+            // Assert
             cut.Markup.Should().Contain("Running");
             cut.Markup.Should().Contain("350");
         }
@@ -132,6 +153,7 @@ namespace Biotrackr.UI.UnitTests.Components.Pages
         [Fact]
         public void RenderDistancesTable_WhenDistancesExist()
         {
+            // Arrange
             var activityItem = CreateActivityItem();
             activityItem.Activity.Summary.Distances.Add(new DistanceData
             {
@@ -142,8 +164,10 @@ namespace Biotrackr.UI.UnitTests.Components.Pages
             _mockApiService.Setup(s => s.GetActivityByDateAsync(It.IsAny<string>()))
                 .ReturnsAsync(activityItem);
 
+            // Act
             var cut = Render<Activity>();
 
+            // Assert
             cut.Markup.Should().Contain("Distances");
             cut.Markup.Should().Contain("Walking");
             cut.Markup.Should().Contain("3.45");
@@ -152,6 +176,7 @@ namespace Biotrackr.UI.UnitTests.Components.Pages
         [Fact]
         public void RenderRangeTable_WhenRangeDataLoaded()
         {
+            // Arrange
             var rangeResponse = new PaginatedResponse<ActivityItem>
             {
                 Items = [CreateActivityItem(steps: 8000, calories: 2200)],
@@ -167,8 +192,10 @@ namespace Biotrackr.UI.UnitTests.Components.Pages
             _mockApiService.Setup(s => s.GetActivitiesByDateRangeAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<int>(), It.IsAny<int>()))
                 .ReturnsAsync(rangeResponse);
 
+            // Act
             var cut = Render<Activity>();
 
+            // Assert
             // Range mode uses RadzenSelectBar which cannot be interacted with via bUnit selectors.
             // Verify that the component renders without errors when data is available.
             cut.Markup.Should().NotBeEmpty();
@@ -177,6 +204,7 @@ namespace Biotrackr.UI.UnitTests.Components.Pages
         [Fact]
         public void RenderCharts_WhenSingleDateDataLoaded()
         {
+            // Arrange
             var activityItem = CreateActivityItem(steps: 10000, calories: 2500, floors: 10,
                 fairlyActive: 15, veryActive: 30, activeMinGoal: 30, stepsGoal: 10000,
                 caloriesGoal: 2500, floorsGoal: 10);
@@ -192,8 +220,10 @@ namespace Biotrackr.UI.UnitTests.Components.Pages
             _mockApiService.Setup(s => s.GetActivityByDateAsync(It.IsAny<string>()))
                 .ReturnsAsync(activityItem);
 
+            // Act
             var cut = Render<Activity>();
 
+            // Assert
             // Arc gauges for steps and calories, bar charts for HR zones and active minutes
             cut.Markup.Should().Contain("rz-progressbar");
             cut.Markup.Should().Contain("Steps");
@@ -203,6 +233,7 @@ namespace Biotrackr.UI.UnitTests.Components.Pages
         [Fact]
         public void RenderTrendCharts_WhenRangeDateDataLoaded()
         {
+            // Arrange
             var rangeResponse = new PaginatedResponse<ActivityItem>
             {
                 Items =
@@ -224,8 +255,10 @@ namespace Biotrackr.UI.UnitTests.Components.Pages
             _mockApiService.Setup(s => s.GetActivitiesByDateRangeAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<int>(), It.IsAny<int>()))
                 .ReturnsAsync(rangeResponse);
 
+            // Act
             var cut = Render<Activity>();
 
+            // Assert
             // The component renders without errors when range data is available
             cut.Markup.Should().NotBeEmpty();
         }
@@ -233,6 +266,7 @@ namespace Biotrackr.UI.UnitTests.Components.Pages
         [Fact]
         public void RenderChartsAndDataGrid_InRangeMode()
         {
+            // Arrange
             var rangeResponse = new PaginatedResponse<ActivityItem>
             {
                 Items = [CreateActivityItem(steps: 8000, calories: 2200)],
@@ -248,8 +282,10 @@ namespace Biotrackr.UI.UnitTests.Components.Pages
             _mockApiService.Setup(s => s.GetActivitiesByDateRangeAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<int>(), It.IsAny<int>()))
                 .ReturnsAsync(rangeResponse);
 
+            // Act
             var cut = Render<Activity>();
 
+            // Assert
             // Verify component renders with range data including charts and grid elements
             cut.Markup.Should().Contain("Activity");
             cut.Markup.Should().NotBeEmpty();

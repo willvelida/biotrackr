@@ -26,56 +26,72 @@ namespace Biotrackr.UI.UnitTests.Components.Pages
         [Fact]
         public void RenderChatPageTitle()
         {
+            // Arrange
             SetupEmptyConversations();
 
+            // Act
             var cut = Render<Chat>();
 
+            // Assert
             cut.Markup.Should().Contain("Conversations");
         }
 
         [Fact]
         public void RenderDisclaimer()
         {
+            // Arrange
             SetupEmptyConversations();
 
+            // Act
             var cut = Render<Chat>();
 
+            // Assert
             cut.Markup.Should().Contain("not medical advice");
         }
 
         [Fact]
         public void RenderEmptyState_WhenNoMessages()
         {
+            // Arrange
             SetupEmptyConversations();
 
+            // Act
             var cut = Render<Chat>();
 
+            // Assert
             cut.Markup.Should().Contain("Ask about your health data");
         }
 
         [Fact]
         public void RenderNoConversationsMessage_WhenEmpty()
         {
+            // Arrange
             SetupEmptyConversations();
 
+            // Act
             var cut = Render<Chat>();
 
+            // Assert
             cut.Markup.Should().Contain("No conversations yet");
         }
 
         [Fact]
         public void RenderNewChatButton()
         {
+            // Arrange
             SetupEmptyConversations();
 
+            // Act
             var cut = Render<Chat>();
 
+            // Assert
             cut.Markup.Should().Contain("+ New Chat");
         }
 
         [Fact]
         public void RenderConversationList_WhenConversationsExist()
         {
+            // Arrange
             var conversations = new PaginatedResponse<ChatConversationSummary>
             {
                 Items =
@@ -103,8 +119,10 @@ namespace Biotrackr.UI.UnitTests.Components.Pages
             _mockChatService.Setup(s => s.GetConversationsAsync(It.IsAny<int>(), It.IsAny<int>()))
                 .ReturnsAsync(conversations);
 
+            // Act
             var cut = Render<Chat>();
 
+            // Assert
             cut.Markup.Should().Contain("My first chat");
             cut.Markup.Should().Contain("Steps question");
         }
@@ -112,6 +130,7 @@ namespace Biotrackr.UI.UnitTests.Components.Pages
         [Fact]
         public void RenderLoadMoreButton_WhenMoreConversationsAvailable()
         {
+            // Arrange
             var conversations = new PaginatedResponse<ChatConversationSummary>
             {
                 Items =
@@ -133,14 +152,17 @@ namespace Biotrackr.UI.UnitTests.Components.Pages
             _mockChatService.Setup(s => s.GetConversationsAsync(It.IsAny<int>(), It.IsAny<int>()))
                 .ReturnsAsync(conversations);
 
+            // Act
             var cut = Render<Chat>();
 
+            // Assert
             cut.Markup.Should().Contain("Load more");
         }
 
         [Fact]
         public void NotRenderLoadMoreButton_WhenNoMoreConversations()
         {
+            // Arrange
             var conversations = new PaginatedResponse<ChatConversationSummary>
             {
                 Items =
@@ -162,34 +184,43 @@ namespace Biotrackr.UI.UnitTests.Components.Pages
             _mockChatService.Setup(s => s.GetConversationsAsync(It.IsAny<int>(), It.IsAny<int>()))
                 .ReturnsAsync(conversations);
 
+            // Act
             var cut = Render<Chat>();
 
+            // Assert
             cut.Markup.Should().NotContain("Load more");
         }
 
         [Fact]
         public void RenderSendButton()
         {
+            // Arrange
             SetupEmptyConversations();
 
+            // Act
             var cut = Render<Chat>();
 
+            // Assert
             cut.Markup.Should().Contain("Send");
         }
 
         [Fact]
         public void RenderInputPlaceholder()
         {
+            // Arrange
             SetupEmptyConversations();
 
+            // Act
             var cut = Render<Chat>();
 
+            // Assert
             cut.Markup.Should().Contain("Type a message...");
         }
 
         [Fact]
         public void RenderConversationDeleteButton()
         {
+            // Arrange
             var conversations = new PaginatedResponse<ChatConversationSummary>
             {
                 Items =
@@ -211,18 +242,23 @@ namespace Biotrackr.UI.UnitTests.Components.Pages
             _mockChatService.Setup(s => s.GetConversationsAsync(It.IsAny<int>(), It.IsAny<int>()))
                 .ReturnsAsync(conversations);
 
+            // Act
             var cut = Render<Chat>();
 
+            // Assert
             cut.Find(".chat-sidebar-item-delete").Should().NotBeNull();
         }
 
         [Fact]
         public void RenderChatContainer()
         {
+            // Arrange
             SetupEmptyConversations();
 
+            // Act
             var cut = Render<Chat>();
 
+            // Assert
             cut.Find(".chat-container").Should().NotBeNull();
             cut.Find(".chat-sidebar-panel").Should().NotBeNull();
             cut.Find(".chat-main").Should().NotBeNull();
@@ -231,6 +267,7 @@ namespace Biotrackr.UI.UnitTests.Components.Pages
         [Fact]
         public void RenderMessageBubbles_WhenMessagesExist()
         {
+            // Arrange
             var conversation = new ChatConversationDocument
             {
                 SessionId = "session-1",
@@ -244,10 +281,12 @@ namespace Biotrackr.UI.UnitTests.Components.Pages
 
             SetupConversationsWithLoad("session-1", conversation);
 
+            // Act
             var cut = Render<Chat>();
 
             cut.Find(".chat-sidebar-item-button").Click();
 
+            // Assert
             cut.Markup.Should().Contain("How many steps?");
             cut.Markup.Should().Contain("You took 10,000 steps.");
         }
@@ -255,6 +294,7 @@ namespace Biotrackr.UI.UnitTests.Components.Pages
         [Fact]
         public void RenderToolCallBadges_WhenAssistantHasToolCalls()
         {
+            // Arrange
             var conversation = new ChatConversationDocument
             {
                 SessionId = "session-1",
@@ -274,10 +314,12 @@ namespace Biotrackr.UI.UnitTests.Components.Pages
 
             SetupConversationsWithLoad("session-1", conversation);
 
+            // Act
             var cut = Render<Chat>();
 
             cut.Find(".chat-sidebar-item-button").Click();
 
+            // Assert
             cut.Markup.Should().Contain("GetActivity");
             cut.Markup.Should().Contain("GetSteps");
         }
@@ -285,6 +327,7 @@ namespace Biotrackr.UI.UnitTests.Components.Pages
         [Fact]
         public void RenderUserAndAgentMessageStyles()
         {
+            // Arrange
             var conversation = new ChatConversationDocument
             {
                 SessionId = "session-1",
@@ -298,10 +341,12 @@ namespace Biotrackr.UI.UnitTests.Components.Pages
 
             SetupConversationsWithLoad("session-1", conversation);
 
+            // Act
             var cut = Render<Chat>();
 
             cut.Find(".chat-sidebar-item-button").Click();
 
+            // Assert
             cut.Find(".message-user").Should().NotBeNull();
             cut.Find(".message-agent").Should().NotBeNull();
         }
@@ -309,6 +354,7 @@ namespace Biotrackr.UI.UnitTests.Components.Pages
         [Fact]
         public void RenderMessageTimestamps()
         {
+            // Arrange
             var timestamp = new DateTime(2026, 3, 9, 14, 30, 0);
             var conversation = new ChatConversationDocument
             {
@@ -322,10 +368,12 @@ namespace Biotrackr.UI.UnitTests.Components.Pages
 
             SetupConversationsWithLoad("session-1", conversation);
 
+            // Act
             var cut = Render<Chat>();
 
             cut.Find(".chat-sidebar-item-button").Click();
 
+            // Assert
             cut.Find(".message-timestamp").Should().NotBeNull();
             cut.Markup.Should().Contain("14:30");
         }
@@ -333,10 +381,13 @@ namespace Biotrackr.UI.UnitTests.Components.Pages
         [Fact]
         public void NotRenderReportProgressIndicator_WhenNotStreaming()
         {
+            // Arrange
             SetupEmptyConversations();
 
+            // Act
             var cut = Render<Chat>();
 
+            // Assert
             cut.Markup.Should().NotContain("report-progress");
             cut.Markup.Should().NotContain("Generating report...");
         }

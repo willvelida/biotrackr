@@ -27,24 +27,30 @@ namespace Biotrackr.UI.UnitTests.Components.Pages
         [Fact]
         public void RenderPageTitle()
         {
+            // Arrange
             _mockApiService.Setup(s => s.GetFoodLogByDateAsync(It.IsAny<string>()))
                 .ReturnsAsync((FoodItem?)null);
 
+            // Act
             var cut = Render<Food>();
 
+            // Assert
             cut.Markup.Should().Contain("Food");
         }
 
         [Fact]
         public void RenderSummaryCards_WhenDataLoaded()
         {
+            // Arrange
             var foodItem = CreateFoodItem(calories: 2500, protein: 120, carbs: 300, fat: 80, fiber: 25, water: 2000);
 
             _mockApiService.Setup(s => s.GetFoodLogByDateAsync(It.IsAny<string>()))
                 .ReturnsAsync(foodItem);
 
+            // Act
             var cut = Render<Food>();
 
+            // Assert
             cut.Markup.Should().Contain("2,500");  // calories
             cut.Markup.Should().Contain("120.0g"); // protein
             cut.Markup.Should().Contain("300.0g"); // carbs
@@ -54,6 +60,7 @@ namespace Biotrackr.UI.UnitTests.Components.Pages
         [Fact]
         public void RenderFoodLog_WhenFoodsExist()
         {
+            // Arrange
             var foodItem = CreateFoodItem();
             foodItem.Food.Foods.Add(new FoodEntry
             {
@@ -76,8 +83,10 @@ namespace Biotrackr.UI.UnitTests.Components.Pages
             _mockApiService.Setup(s => s.GetFoodLogByDateAsync(It.IsAny<string>()))
                 .ReturnsAsync(foodItem);
 
+            // Act
             var cut = Render<Food>();
 
+            // Assert
             cut.Markup.Should().Contain("Food Log");
             cut.Markup.Should().Contain("Chicken Breast");
         }
@@ -85,42 +94,52 @@ namespace Biotrackr.UI.UnitTests.Components.Pages
         [Fact]
         public void RenderNoDataMessage_WhenNullReturned()
         {
+            // Arrange
             _mockApiService.Setup(s => s.GetFoodLogByDateAsync(It.IsAny<string>()))
                 .ReturnsAsync((FoodItem?)null);
 
+            // Act
             var cut = Render<Food>();
 
+            // Assert
             cut.Markup.Should().Contain("No food data found");
         }
 
         [Fact]
         public void RenderErrorMessage_WhenApiThrows()
         {
+            // Arrange
             _mockApiService.Setup(s => s.GetFoodLogByDateAsync(It.IsAny<string>()))
                 .ThrowsAsync(new HttpRequestException("API error"));
 
+            // Act
             var cut = Render<Food>();
 
+            // Assert
             cut.Markup.Should().Contain("Failed to load food data");
         }
 
         [Fact]
         public void RenderCalorieGoalText_WhenGoalSet()
         {
+            // Arrange
             var foodItem = CreateFoodItem(calories: 2000);
             foodItem.Food.Goals = new FoodGoals { Calories = 2500 };
 
             _mockApiService.Setup(s => s.GetFoodLogByDateAsync(It.IsAny<string>()))
                 .ReturnsAsync(foodItem);
 
+            // Act
             var cut = Render<Food>();
 
+            // Assert
             cut.Markup.Should().Contain("goal");
         }
 
         [Fact]
         public void RenderRangeTable_WhenRangeDataLoaded()
         {
+            // Arrange
             var rangeResponse = new PaginatedResponse<FoodItem>
             {
                 Items = [CreateFoodItem(calories: 1800, protein: 90, carbs: 200, fat: 60, fiber: 20)],
@@ -136,8 +155,10 @@ namespace Biotrackr.UI.UnitTests.Components.Pages
             _mockApiService.Setup(s => s.GetFoodLogsByDateRangeAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<int>(), It.IsAny<int>()))
                 .ReturnsAsync(rangeResponse);
 
+            // Act
             var cut = Render<Food>();
 
+            // Assert
             // Range mode uses RadzenSelectBar which cannot be interacted with via bUnit selectors.
             // Verify that the component renders without errors when data is available.
             cut.Markup.Should().NotBeEmpty();
@@ -146,14 +167,17 @@ namespace Biotrackr.UI.UnitTests.Components.Pages
         [Fact]
         public void RenderCharts_WhenSingleDateDataLoaded()
         {
+            // Arrange
             var foodItem = CreateFoodItem(calories: 2500, protein: 120, carbs: 300, fat: 80, fiber: 25, water: 2000);
             foodItem.Food.Goals = new FoodGoals { Calories = 3000 };
 
             _mockApiService.Setup(s => s.GetFoodLogByDateAsync(It.IsAny<string>()))
                 .ReturnsAsync(foodItem);
 
+            // Act
             var cut = Render<Food>();
 
+            // Assert
             // Donut chart for macros and arc gauge for calorie goal
             cut.Markup.Should().Contain("2,500");
             cut.Markup.Should().Contain("rz-progressbar");
@@ -162,6 +186,7 @@ namespace Biotrackr.UI.UnitTests.Components.Pages
         [Fact]
         public void RenderTrendCharts_WhenRangeDateDataLoaded()
         {
+            // Arrange
             var rangeResponse = new PaginatedResponse<FoodItem>
             {
                 Items =
@@ -183,8 +208,10 @@ namespace Biotrackr.UI.UnitTests.Components.Pages
             _mockApiService.Setup(s => s.GetFoodLogsByDateRangeAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<int>(), It.IsAny<int>()))
                 .ReturnsAsync(rangeResponse);
 
+            // Act
             var cut = Render<Food>();
 
+            // Assert
             // The component renders without errors when range data is available
             cut.Markup.Should().NotBeEmpty();
         }
@@ -192,6 +219,7 @@ namespace Biotrackr.UI.UnitTests.Components.Pages
         [Fact]
         public void RenderChartsAndDataGrid_InRangeMode()
         {
+            // Arrange
             var rangeResponse = new PaginatedResponse<FoodItem>
             {
                 Items = [CreateFoodItem(calories: 1800, protein: 90, carbs: 200, fat: 60, fiber: 20)],
@@ -207,8 +235,10 @@ namespace Biotrackr.UI.UnitTests.Components.Pages
             _mockApiService.Setup(s => s.GetFoodLogsByDateRangeAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<int>(), It.IsAny<int>()))
                 .ReturnsAsync(rangeResponse);
 
+            // Act
             var cut = Render<Food>();
 
+            // Assert
             cut.Markup.Should().Contain("Food");
             cut.Markup.Should().NotBeEmpty();
         }

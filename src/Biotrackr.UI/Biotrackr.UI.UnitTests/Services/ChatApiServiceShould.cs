@@ -59,6 +59,7 @@ namespace Biotrackr.UI.UnitTests.Services
         [Fact]
         public async Task GetConversationsAsync_ReturnsConversations_WhenApiReturnsSuccess()
         {
+            // Arrange
             var expected = new PaginatedResponse<ChatConversationSummary>
             {
                 Items = [new ChatConversationSummary { SessionId = "abc", Title = "Test convo" }],
@@ -68,8 +69,10 @@ namespace Biotrackr.UI.UnitTests.Services
             };
             var sut = CreateSut(CreateSuccessResponse(expected));
 
+            // Act
             var result = await sut.GetConversationsAsync();
 
+            // Assert
             result.Items.Should().HaveCount(1);
             result.Items[0].SessionId.Should().Be("abc");
             result.Items[0].Title.Should().Be("Test convo");
@@ -78,33 +81,42 @@ namespace Biotrackr.UI.UnitTests.Services
         [Fact]
         public async Task GetConversationsAsync_ReturnsEmptyResponse_WhenApiReturnsError()
         {
+            // Arrange
             var sut = CreateSut(new HttpResponseMessage(HttpStatusCode.InternalServerError));
 
+            // Act
             var result = await sut.GetConversationsAsync();
 
+            // Assert
             result.Items.Should().BeEmpty();
         }
 
         [Fact]
         public async Task GetConversationsAsync_ReturnsEmptyResponse_WhenNetworkError()
         {
+            // Arrange
             var sut = CreateSut(new HttpRequestException("Connection refused"));
 
+            // Act
             var result = await sut.GetConversationsAsync();
 
+            // Assert
             result.Items.Should().BeEmpty();
         }
 
         [Fact]
         public async Task GetConversationsAsync_ClampsPaginationParameters()
         {
+            // Arrange
             var expected = new PaginatedResponse<ChatConversationSummary> { Items = [], TotalCount = 0 };
             var handler = new MockHttpMessageHandler(CreateSuccessResponse(expected));
             var httpClient = new HttpClient(handler) { BaseAddress = new Uri("https://test.api.com/chat/") };
             var sut = new ChatApiService(httpClient, _loggerMock.Object);
 
+            // Act
             await sut.GetConversationsAsync(pageNumber: 0, pageSize: 200);
 
+            // Assert
             handler.LastRequest!.RequestUri!.ToString().Should().Contain("pageNumber=1");
             handler.LastRequest.RequestUri.ToString().Should().Contain("pageSize=100");
         }
@@ -113,6 +125,7 @@ namespace Biotrackr.UI.UnitTests.Services
         [Fact]
         public async Task GetConversationAsync_ReturnsConversation_WhenFound()
         {
+            // Arrange
             var expected = new ChatConversationDocument
             {
                 Id = "abc",
@@ -126,8 +139,10 @@ namespace Biotrackr.UI.UnitTests.Services
             };
             var sut = CreateSut(CreateSuccessResponse(expected));
 
+            // Act
             var result = await sut.GetConversationAsync("abc");
 
+            // Assert
             result.Should().NotBeNull();
             result!.SessionId.Should().Be("abc");
             result.Messages.Should().HaveCount(2);
@@ -137,20 +152,26 @@ namespace Biotrackr.UI.UnitTests.Services
         [Fact]
         public async Task GetConversationAsync_ReturnsNull_WhenNotFound()
         {
+            // Arrange
             var sut = CreateSut(CreateNotFoundResponse());
 
+            // Act
             var result = await sut.GetConversationAsync("nonexistent");
 
+            // Assert
             result.Should().BeNull();
         }
 
         [Fact]
         public async Task GetConversationAsync_ReturnsNull_WhenNetworkError()
         {
+            // Arrange
             var sut = CreateSut(new HttpRequestException("Connection refused"));
 
+            // Act
             var result = await sut.GetConversationAsync("abc");
 
+            // Assert
             result.Should().BeNull();
         }
 
@@ -158,20 +179,26 @@ namespace Biotrackr.UI.UnitTests.Services
         [Fact]
         public async Task DeleteConversationAsync_CompletesSuccessfully()
         {
+            // Arrange
             var sut = CreateSut(new HttpResponseMessage(HttpStatusCode.NoContent));
 
+            // Act
             var act = () => sut.DeleteConversationAsync("abc");
 
+            // Assert
             await act.Should().NotThrowAsync();
         }
 
         [Fact]
         public async Task DeleteConversationAsync_LogsWarning_WhenApiReturnsError()
         {
+            // Arrange
             var sut = CreateSut(new HttpResponseMessage(HttpStatusCode.InternalServerError));
 
+            // Act
             await sut.DeleteConversationAsync("abc");
 
+            // Assert
             _loggerMock.Verify(
                 x => x.Log(
                     LogLevel.Warning,
@@ -185,10 +212,13 @@ namespace Biotrackr.UI.UnitTests.Services
         [Fact]
         public async Task DeleteConversationAsync_HandlesNetworkError()
         {
+            // Arrange
             var sut = CreateSut(new HttpRequestException("Connection refused"));
 
+            // Act
             var act = () => sut.DeleteConversationAsync("abc");
 
+            // Assert
             await act.Should().NotThrowAsync();
         }
 
@@ -196,6 +226,7 @@ namespace Biotrackr.UI.UnitTests.Services
         [Fact]
         public async Task SendMessageAsync_YieldsEvents_WhenApiStreamsSSE()
         {
+            // Arrange
             var events = new[]
             {
                 JsonSerializer.Serialize(new { type = "RUN_STARTED", runId = "r1", threadId = "t1" }),
@@ -208,11 +239,14 @@ namespace Biotrackr.UI.UnitTests.Services
             var sut = CreateSut(CreateSseResponse(events));
 
             var results = new List<AGUIEvent>();
+
+            // Act
             await foreach (var evt in sut.SendMessageAsync(null, "Hi"))
             {
                 results.Add(evt);
             }
 
+            // Assert
             results.Should().HaveCount(6);
             results[0].Type.Should().Be("RUN_STARTED");
             results[0].ThreadId.Should().Be("t1");
@@ -225,34 +259,43 @@ namespace Biotrackr.UI.UnitTests.Services
         [Fact]
         public async Task SendMessageAsync_YieldsNoEvents_WhenStreamEmpty()
         {
+            // Arrange
             var sut = CreateSut(CreateSseResponse());
 
             var results = new List<AGUIEvent>();
+
+            // Act
             await foreach (var evt in sut.SendMessageAsync(null, "Hi"))
             {
                 results.Add(evt);
             }
 
+            // Assert
             results.Should().BeEmpty();
         }
 
         [Fact]
         public async Task SendMessageAsync_HandlesNetworkError()
         {
+            // Arrange
             var sut = CreateSut(new HttpRequestException("Connection refused"));
 
             var results = new List<AGUIEvent>();
+
+            // Act
             await foreach (var evt in sut.SendMessageAsync(null, "Hi"))
             {
                 results.Add(evt);
             }
 
+            // Assert
             results.Should().BeEmpty();
         }
 
         [Fact]
         public async Task SendMessageAsync_SkipsInvalidJsonLines()
         {
+            // Arrange
             var sseContent = "data: {\"type\":\"RUN_STARTED\"}\n\ndata: not-valid-json\n\ndata: {\"type\":\"RUN_FINISHED\"}\n\n";
             var response = new HttpResponseMessage(HttpStatusCode.OK)
             {
@@ -261,11 +304,14 @@ namespace Biotrackr.UI.UnitTests.Services
             var sut = CreateSut(response);
 
             var results = new List<AGUIEvent>();
+
+            // Act
             await foreach (var evt in sut.SendMessageAsync(null, "Hi"))
             {
                 results.Add(evt);
             }
 
+            // Assert
             results.Should().HaveCount(2);
             results[0].Type.Should().Be("RUN_STARTED");
             results[1].Type.Should().Be("RUN_FINISHED");
@@ -274,12 +320,15 @@ namespace Biotrackr.UI.UnitTests.Services
         [Fact]
         public async Task SendMessageAsync_IncludesConversationId_InRequest()
         {
+            // Arrange
             var handler = new MockHttpMessageHandler(CreateSseResponse());
             var httpClient = new HttpClient(handler) { BaseAddress = new Uri("https://test.api.com/chat/") };
             var sut = new ChatApiService(httpClient, _loggerMock.Object);
 
+            // Act
             await foreach (var _ in sut.SendMessageAsync("session-123", "Hello")) { }
 
+            // Assert
             handler.LastRequest.Should().NotBeNull();
             handler.LastRequest!.Method.Should().Be(HttpMethod.Post);
             var body = await handler.LastRequest.Content!.ReadAsStringAsync();
@@ -290,18 +339,23 @@ namespace Biotrackr.UI.UnitTests.Services
         [Fact]
         public void Constructor_ShouldThrow_WhenHttpClientIsNull()
         {
+            // Act
             var act = () => new ChatApiService(null!, _loggerMock.Object);
 
+            // Assert
             act.Should().Throw<ArgumentNullException>().WithParameterName("httpClient");
         }
 
         [Fact]
         public void Constructor_ShouldThrow_WhenLoggerIsNull()
         {
+            // Arrange
             var httpClient = new HttpClient { BaseAddress = new Uri("https://test.api.com/chat/") };
 
+            // Act
             var act = () => new ChatApiService(httpClient, null!);
 
+            // Assert
             act.Should().Throw<ArgumentNullException>().WithParameterName("logger");
         }
     }
