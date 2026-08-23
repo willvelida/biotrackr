@@ -135,12 +135,13 @@ namespace Biotrackr.Chat.Api.UnitTests.Middleware
                 new HttpRequestException("Bad Request", null, HttpStatusCode.BadRequest));
             var messages = CreateMessages("Show me my activity");
 
-            // Act & Assert
+            // Act
             var act = async () =>
             {
                 await foreach (var _ in _sut.HandleAsync(messages, null, null, agent, CancellationToken.None)) { }
             };
 
+            // Assert
             await act.Should().ThrowAsync<HttpRequestException>();
         }
 
@@ -151,12 +152,13 @@ namespace Biotrackr.Chat.Api.UnitTests.Middleware
             var agent = new ThrowingAgent(new TaskCanceledException("Cancelled"));
             var messages = CreateMessages("Show me my activity");
 
-            // Act & Assert
+            // Act
             var act = async () =>
             {
                 await foreach (var _ in _sut.HandleAsync(messages, null, null, agent, CancellationToken.None)) { }
             };
 
+            // Assert
             await act.Should().ThrowAsync<TaskCanceledException>();
         }
 
