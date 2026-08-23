@@ -81,7 +81,7 @@ namespace Biotrackr.Activity.Svc.UnitTests.WorkerTests
         }
 
         [Fact]
-        public async Task ExecuteAsync_ShouldUseYesterdaysDate()
+        public async Task ExecuteAsync_ShouldRequestYesterdaysDate_WhenInvoked()
         {
             // Arrange
             var expectedDate = DateTime.Now.AddDays(-1).ToString("yyyy-MM-dd");
@@ -101,7 +101,7 @@ namespace Biotrackr.Activity.Svc.UnitTests.WorkerTests
         }
 
         [Fact]
-        public async Task ExecuteAsync_ShouldCallServicesInCorrectOrder()
+        public async Task ExecuteAsync_ShouldCallServicesInCorrectOrder_WhenSuccessful()
         {
             // Arrange
             var expectedDate = DateTime.Now.AddDays(-1).ToString("yyyy-MM-dd");
@@ -196,7 +196,7 @@ namespace Biotrackr.Activity.Svc.UnitTests.WorkerTests
         [InlineData(typeof(TimeoutException), "Request timeout")]
         [InlineData(typeof(ArgumentException), "Invalid argument")]
         [InlineData(typeof(InvalidOperationException), "Invalid operation")]
-        public async Task ExecuteAsync_ShouldHandleDifferentExceptionTypes(Type exceptionType, string message)
+        public async Task ExecuteAsync_ShouldReturn1AndLogError_WhenExceptionTypeIsThrown(Type exceptionType, string message)
         {
             // Arrange
             var expectedDate = DateTime.Now.AddDays(-1).ToString("yyyy-MM-dd");
@@ -219,7 +219,7 @@ namespace Biotrackr.Activity.Svc.UnitTests.WorkerTests
         #region Edge Cases and Null Handling Tests
 
         [Fact]
-        public async Task ExecuteAsync_ShouldHandleNullActivityResponse()
+        public async Task ExecuteAsync_ShouldReturn0_WhenActivityResponseIsNull()
         {
             // Arrange
             var expectedDate = DateTime.Now.AddDays(-1).ToString("yyyy-MM-dd");
@@ -241,7 +241,7 @@ namespace Biotrackr.Activity.Svc.UnitTests.WorkerTests
         [InlineData(2024, 3, 1)]  // Day after leap day - Mar 1st to Feb 29th
         [InlineData(2024, 1, 1)]  // New Year's Day - Jan 1st to Dec 31st
         [InlineData(2024, 12, 31)] // New Year's Eve - Dec 31st to Dec 30th
-        public async Task ExecuteAsync_ShouldHandleDateEdgeCases(int year, int month, int day)
+        public async Task ExecuteAsync_ShouldComplete_WhenDateIsAnEdgeCase(int year, int month, int day)
         {
             // Arrange
             var testDate = new DateTime(year, month, day);
@@ -269,7 +269,7 @@ namespace Biotrackr.Activity.Svc.UnitTests.WorkerTests
         #region Cancellation Token Tests
 
         [Fact]
-        public async Task ExecuteAsync_ShouldStopApplication_EvenWhenCancellationRequested()
+        public async Task ExecuteAsync_ShouldStopApplication_WhenCancellationIsRequested()
         {
             // Arrange
             var cts = new CancellationTokenSource();
@@ -298,7 +298,7 @@ namespace Biotrackr.Activity.Svc.UnitTests.WorkerTests
         #region Performance Tests
 
         [Fact]
-        public async Task ExecuteAsync_ShouldCompleteWithinReasonableTime()
+        public async Task ExecuteAsync_ShouldCompleteWithinReasonableTime_WhenSuccessful()
         {
             // Arrange
             var expectedDate = DateTime.Now.AddDays(-1).ToString("yyyy-MM-dd");
@@ -320,7 +320,7 @@ namespace Biotrackr.Activity.Svc.UnitTests.WorkerTests
         }
 
         [Fact]
-        public async Task ExecuteAsync_ShouldHandleSlowFitbitService()
+        public async Task ExecuteAsync_ShouldReturn0_WhenFitbitServiceIsSlow()
         {
             // Arrange
             var expectedDate = DateTime.Now.AddDays(-1).ToString("yyyy-MM-dd");
@@ -349,7 +349,7 @@ namespace Biotrackr.Activity.Svc.UnitTests.WorkerTests
         #region Application Lifetime Tests
 
         [Fact]
-        public async Task ExecuteAsync_ShouldAlwaysStopApplication_RegardlessOfOutcome()
+        public async Task ExecuteAsync_ShouldStopApplication_WhenExceptionIsThrown()
         {
             // Arrange
             var expectedDate = DateTime.Now.AddDays(-1).ToString("yyyy-MM-dd");
@@ -364,7 +364,7 @@ namespace Biotrackr.Activity.Svc.UnitTests.WorkerTests
         }
 
         [Fact]
-        public async Task ExecuteAsync_ShouldStopApplication_OnSuccess()
+        public async Task ExecuteAsync_ShouldStopApplication_WhenSuccessful()
         {
             // Arrange
             var expectedDate = DateTime.Now.AddDays(-1).ToString("yyyy-MM-dd");
@@ -387,7 +387,7 @@ namespace Biotrackr.Activity.Svc.UnitTests.WorkerTests
         #region Mock Verification Tests
 
         [Fact]
-        public async Task ExecuteAsync_ShouldPassCorrectParametersToServices()
+        public async Task ExecuteAsync_ShouldPassCorrectParametersToServices_WhenSuccessful()
         {
             // Arrange
             var expectedDate = DateTime.Now.AddDays(-1).ToString("yyyy-MM-dd");
@@ -411,7 +411,7 @@ namespace Biotrackr.Activity.Svc.UnitTests.WorkerTests
         }
 
         [Fact]
-        public async Task ExecuteAsync_ShouldNotMakeAdditionalServiceCalls_OnSuccess()
+        public async Task ExecuteAsync_ShouldNotMakeAdditionalServiceCalls_WhenSuccessful()
         {
             // Arrange
             var expectedDate = DateTime.Now.AddDays(-1).ToString("yyyy-MM-dd");

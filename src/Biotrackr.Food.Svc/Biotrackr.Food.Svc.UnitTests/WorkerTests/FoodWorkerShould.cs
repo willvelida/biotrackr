@@ -39,56 +39,82 @@ namespace Biotrackr.Food.Svc.UnitTests.WorkerTests
         #region Constructor Tests
 
         [Fact]
-        public void Constructor_WithValidParameters_ShouldCreateInstance()
+        public void Constructor_ShouldCreateInstance_WhenParametersAreValid()
         {
+            // Arrange
+            var fitbitService = _fitbitServiceMock.Object;
+            var foodService = _foodServiceMock.Object;
+            var logger = _loggerMock.Object;
+            var appLifetime = _appLifetimeMock.Object;
+
             // Act
-            var worker = new FoodWorker(
-                _fitbitServiceMock.Object,
-                _foodServiceMock.Object,
-                _loggerMock.Object,
-                _appLifetimeMock.Object);
+            var worker = new FoodWorker(fitbitService, foodService, logger, appLifetime);
 
             // Assert
             worker.Should().NotBeNull();
         }
 
         [Fact]
-        public void Constructor_WithNullFitbitService_ShouldThrowArgumentNullException()
+        public void Constructor_ShouldThrowArgumentNullException_WhenFitbitServiceIsNull()
         {
-            // Act & Assert
-            var exception = Assert.Throws<ArgumentNullException>(() =>
-                new FoodWorker(null!, _foodServiceMock.Object, _loggerMock.Object, _appLifetimeMock.Object));
+            // Arrange
+            var foodService = _foodServiceMock.Object;
+            var logger = _loggerMock.Object;
+            var appLifetime = _appLifetimeMock.Object;
 
+            // Act
+            var exception = Assert.Throws<ArgumentNullException>(() =>
+                new FoodWorker(null!, foodService, logger, appLifetime));
+
+            // Assert
             exception.ParamName.Should().Be("fitbitService");
         }
 
         [Fact]
-        public void Constructor_WithNullFoodService_ShouldThrowArgumentNullException()
+        public void Constructor_ShouldThrowArgumentNullException_WhenFoodServiceIsNull()
         {
-            // Act & Assert
-            var exception = Assert.Throws<ArgumentNullException>(() =>
-                new FoodWorker(_fitbitServiceMock.Object, null!, _loggerMock.Object, _appLifetimeMock.Object));
+            // Arrange
+            var fitbitService = _fitbitServiceMock.Object;
+            var logger = _loggerMock.Object;
+            var appLifetime = _appLifetimeMock.Object;
 
+            // Act
+            var exception = Assert.Throws<ArgumentNullException>(() =>
+                new FoodWorker(fitbitService, null!, logger, appLifetime));
+
+            // Assert
             exception.ParamName.Should().Be("foodService");
         }
 
         [Fact]
-        public void Constructor_WithNullLogger_ShouldThrowArgumentNullException()
+        public void Constructor_ShouldThrowArgumentNullException_WhenLoggerIsNull()
         {
-            // Act & Assert
-            var exception = Assert.Throws<ArgumentNullException>(() =>
-                new FoodWorker(_fitbitServiceMock.Object, _foodServiceMock.Object, null!, _appLifetimeMock.Object));
+            // Arrange
+            var fitbitService = _fitbitServiceMock.Object;
+            var foodService = _foodServiceMock.Object;
+            var appLifetime = _appLifetimeMock.Object;
 
+            // Act
+            var exception = Assert.Throws<ArgumentNullException>(() =>
+                new FoodWorker(fitbitService, foodService, null!, appLifetime));
+
+            // Assert
             exception.ParamName.Should().Be("logger");
         }
 
         [Fact]
-        public void Constructor_WithNullAppLifetime_ShouldThrowArgumentNullException()
+        public void Constructor_ShouldThrowArgumentNullException_WhenAppLifetimeIsNull()
         {
-            // Act & Assert
-            var exception = Assert.Throws<ArgumentNullException>(() =>
-                new FoodWorker(_fitbitServiceMock.Object, _foodServiceMock.Object, _loggerMock.Object, null!));
+            // Arrange
+            var fitbitService = _fitbitServiceMock.Object;
+            var foodService = _foodServiceMock.Object;
+            var logger = _loggerMock.Object;
 
+            // Act
+            var exception = Assert.Throws<ArgumentNullException>(() =>
+                new FoodWorker(fitbitService, foodService, logger, null!));
+
+            // Assert
             exception.ParamName.Should().Be("appLifetime");
         }
 
@@ -140,7 +166,7 @@ namespace Biotrackr.Food.Svc.UnitTests.WorkerTests
         }
 
         [Fact]
-        public async Task ExecuteAsync_ShouldUseYesterdaysDate()
+        public async Task ExecuteAsync_ShouldRequestYesterdaysDate_WhenInvoked()
         {
             // Arrange
             var expectedDate = DateTime.Now.AddDays(-1).ToString("yyyy-MM-dd");
@@ -160,7 +186,7 @@ namespace Biotrackr.Food.Svc.UnitTests.WorkerTests
         }
 
         [Fact]
-        public async Task ExecuteAsync_ShouldCallServicesInCorrectOrder()
+        public async Task ExecuteAsync_ShouldCallServicesInCorrectOrder_WhenSuccessful()
         {
             // Arrange
             var expectedDate = DateTime.Now.AddDays(-1).ToString("yyyy-MM-dd");
@@ -255,7 +281,7 @@ namespace Biotrackr.Food.Svc.UnitTests.WorkerTests
         [InlineData(typeof(TimeoutException), "Request timeout")]
         [InlineData(typeof(ArgumentException), "Invalid argument")]
         [InlineData(typeof(InvalidOperationException), "Invalid operation")]
-        public async Task ExecuteAsync_ShouldHandleDifferentExceptionTypes(Type exceptionType, string message)
+        public async Task ExecuteAsync_ShouldReturn1AndLogError_WhenExceptionTypeIsThrown(Type exceptionType, string message)
         {
             // Arrange
             var expectedDate = DateTime.Now.AddDays(-1).ToString("yyyy-MM-dd");
@@ -278,7 +304,7 @@ namespace Biotrackr.Food.Svc.UnitTests.WorkerTests
         #region Edge Cases and Null Handling Tests
 
         [Fact]
-        public async Task ExecuteAsync_ShouldHandleNullFoodResponse()
+        public async Task ExecuteAsync_ShouldReturn0_WhenFoodResponseIsNull()
         {
             // Arrange
             var expectedDate = DateTime.Now.AddDays(-1).ToString("yyyy-MM-dd");
@@ -300,7 +326,7 @@ namespace Biotrackr.Food.Svc.UnitTests.WorkerTests
         [InlineData(2024, 3, 1)]  // Day after leap day - Mar 1st to Feb 29th
         [InlineData(2024, 1, 1)]  // New Year's Day - Jan 1st to Dec 31st
         [InlineData(2024, 12, 31)] // New Year's Eve - Dec 31st to Dec 30th
-        public async Task ExecuteAsync_ShouldHandleDateEdgeCases(int year, int month, int day)
+        public async Task ExecuteAsync_ShouldComplete_WhenDateIsAnEdgeCase(int year, int month, int day)
         {
             // Arrange
             var testDate = new DateTime(year, month, day);
@@ -328,7 +354,7 @@ namespace Biotrackr.Food.Svc.UnitTests.WorkerTests
         #region Cancellation Token Tests
 
         [Fact]
-        public async Task ExecuteAsync_ShouldStopApplication_EvenWhenCancellationRequested()
+        public async Task ExecuteAsync_ShouldStopApplication_WhenCancellationIsRequested()
         {
             // Arrange
             var cts = new CancellationTokenSource();
@@ -358,7 +384,7 @@ namespace Biotrackr.Food.Svc.UnitTests.WorkerTests
         #region Performance Tests
 
         [Fact]
-        public async Task ExecuteAsync_ShouldCompleteWithinReasonableTime()
+        public async Task ExecuteAsync_ShouldCompleteWithinReasonableTime_WhenSuccessful()
         {
             // Arrange
             var expectedDate = DateTime.Now.AddDays(-1).ToString("yyyy-MM-dd");
@@ -380,7 +406,7 @@ namespace Biotrackr.Food.Svc.UnitTests.WorkerTests
         }
 
         [Fact]
-        public async Task ExecuteAsync_ShouldHandleSlowFitbitService()
+        public async Task ExecuteAsync_ShouldReturn0_WhenFitbitServiceIsSlow()
         {
             // Arrange
             var expectedDate = DateTime.Now.AddDays(-1).ToString("yyyy-MM-dd");
@@ -410,7 +436,7 @@ namespace Biotrackr.Food.Svc.UnitTests.WorkerTests
         #region Application Lifetime Tests
 
         [Fact]
-        public async Task ExecuteAsync_ShouldAlwaysStopApplication_RegardlessOfOutcome()
+        public async Task ExecuteAsync_ShouldStopApplication_WhenExceptionIsThrown()
         {
             // Arrange
             var expectedDate = DateTime.Now.AddDays(-1).ToString("yyyy-MM-dd");
@@ -425,7 +451,7 @@ namespace Biotrackr.Food.Svc.UnitTests.WorkerTests
         }
 
         [Fact]
-        public async Task ExecuteAsync_ShouldStopApplication_OnSuccess()
+        public async Task ExecuteAsync_ShouldStopApplication_WhenSuccessful()
         {
             // Arrange
             var expectedDate = DateTime.Now.AddDays(-1).ToString("yyyy-MM-dd");
@@ -448,7 +474,7 @@ namespace Biotrackr.Food.Svc.UnitTests.WorkerTests
         #region Mock Verification Tests
 
         [Fact]
-        public async Task ExecuteAsync_ShouldPassCorrectParametersToServices()
+        public async Task ExecuteAsync_ShouldPassCorrectParametersToServices_WhenSuccessful()
         {
             // Arrange
             var expectedDate = DateTime.Now.AddDays(-1).ToString("yyyy-MM-dd");
@@ -468,7 +494,7 @@ namespace Biotrackr.Food.Svc.UnitTests.WorkerTests
         }
 
         [Fact]
-        public async Task ExecuteAsync_ShouldNotMakeAdditionalServiceCalls_OnSuccess()
+        public async Task ExecuteAsync_ShouldNotMakeAdditionalServiceCalls_WhenSuccessful()
         {
             // Arrange
             var expectedDate = DateTime.Now.AddDays(-1).ToString("yyyy-MM-dd");

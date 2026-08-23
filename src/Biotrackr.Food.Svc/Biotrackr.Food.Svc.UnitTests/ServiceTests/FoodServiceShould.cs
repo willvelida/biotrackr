@@ -20,37 +20,49 @@ namespace Biotrackr.Food.Svc.UnitTests.ServiceTests
         }
 
         [Fact]
-        public void Constructor_WithValidParameters_ShouldCreateInstance()
+        public void Constructor_ShouldCreateInstance_WhenParametersAreValid()
         {
+            // Arrange
+            var cosmosRepository = _mockCosmosRepository.Object;
+            var logger = _mockLogger.Object;
+
             // Act
-            var service = new FoodService(_mockCosmosRepository.Object, _mockLogger.Object);
+            var service = new FoodService(cosmosRepository, logger);
 
             // Assert
             service.Should().NotBeNull();
         }
 
         [Fact]
-        public void Constructor_WithNullCosmosRepository_ShouldThrowArgumentNullException()
+        public void Constructor_ShouldThrowArgumentNullException_WhenCosmosRepositoryIsNull()
         {
-            // Act & Assert
-            var exception = Assert.Throws<ArgumentNullException>(() =>
-                new FoodService(null!, _mockLogger.Object));
+            // Arrange
+            var logger = _mockLogger.Object;
 
+            // Act
+            var exception = Assert.Throws<ArgumentNullException>(() =>
+                new FoodService(null!, logger));
+
+            // Assert
             exception.ParamName.Should().Be("cosmosRepository");
         }
 
         [Fact]
-        public void Constructor_WithNullLogger_ShouldThrowArgumentNullException()
+        public void Constructor_ShouldThrowArgumentNullException_WhenLoggerIsNull()
         {
-            // Act & Assert
-            var exception = Assert.Throws<ArgumentNullException>(() =>
-                new FoodService(_mockCosmosRepository.Object, null!));
+            // Arrange
+            var cosmosRepository = _mockCosmosRepository.Object;
 
+            // Act
+            var exception = Assert.Throws<ArgumentNullException>(() =>
+                new FoodService(cosmosRepository, null!));
+
+            // Assert
             exception.ParamName.Should().Be("logger");
         }
 
         [Fact]
-        public async Task MapAndSaveDocument_ShouldMapAndSaveDocument()
+        public async Task MapAndSaveDocument_ShouldSaveMappedDocument_WhenResponseIsValid()
         {
             // Arrange
             var date = "2023-10-01";
@@ -69,7 +81,7 @@ namespace Biotrackr.Food.Svc.UnitTests.ServiceTests
         }
 
         [Fact]
-        public async Task MapAndSaveDocument_ShouldCreateCorrectFoodDocument()
+        public async Task MapAndSaveDocument_ShouldCreateCorrectFoodDocument_WhenResponseIsValid()
         {
             // Arrange
             var date = "2023-10-01";
@@ -95,7 +107,7 @@ namespace Biotrackr.Food.Svc.UnitTests.ServiceTests
         }
 
         [Fact]
-        public async Task MapAndSaveDocument_ShouldThrowExceptionWhenFails()
+        public async Task MapAndSaveDocument_ShouldThrowAndLogError_WhenCreateDocumentFails()
         {
             // Arrange
             var date = "2023-10-01";
@@ -138,7 +150,7 @@ namespace Biotrackr.Food.Svc.UnitTests.ServiceTests
         [InlineData(typeof(TimeoutException), "Request timeout")]
         [InlineData(typeof(ArgumentException), "Invalid argument")]
         [InlineData(typeof(InvalidOperationException), "Invalid operation")]
-        public async Task MapAndSaveDocument_ShouldHandleDifferentExceptionTypes(Type exceptionType, string message)
+        public async Task MapAndSaveDocument_ShouldLogErrorAndRethrow_WhenExceptionTypeIsThrown(Type exceptionType, string message)
         {
             // Arrange
             var date = "2023-10-01";
@@ -148,10 +160,11 @@ namespace Biotrackr.Food.Svc.UnitTests.ServiceTests
             _mockCosmosRepository.Setup(x => x.CreateFoodDocument(It.IsAny<FoodDocument>()))
                 .ThrowsAsync(exception!);
 
-            // Act & Assert
+            // Act
             var thrownException = await Assert.ThrowsAsync(exceptionType, () =>
                 _foodService.MapAndSaveDocument(date, foodResponse));
 
+            // Assert
             thrownException.Message.Should().Be(message);
             _mockLogger.VerifyLog(logger => logger.LogError($"Exception thrown in MapAndSaveDocument: {message}"), Times.Once);
         }
@@ -179,7 +192,7 @@ namespace Biotrackr.Food.Svc.UnitTests.ServiceTests
         [InlineData("2023-12-31")]
         [InlineData("1900-01-01")]
         [InlineData("2099-12-31")]
-        public async Task MapAndSaveDocument_ShouldHandleDifferentDateFormats(string date)
+        public async Task MapAndSaveDocument_ShouldPersistSuppliedDate_WhenDateFormatVaries(string date)
         {
             // Arrange
             var foodResponse = new FoodResponse();
@@ -198,7 +211,7 @@ namespace Biotrackr.Food.Svc.UnitTests.ServiceTests
         }
 
         [Fact]
-        public async Task MapAndSaveDocument_ShouldGenerateUniqueIdsForMultipleCalls()
+        public async Task MapAndSaveDocument_ShouldGenerateUniqueIds_WhenCalledMultipleTimes()
         {
             // Arrange
             var date = "2023-10-01";
@@ -221,7 +234,7 @@ namespace Biotrackr.Food.Svc.UnitTests.ServiceTests
         }
 
         [Fact]
-        public async Task MapAndSaveDocument_WithNullFoodResponse_ShouldStillCreateDocument()
+        public async Task MapAndSaveDocument_ShouldStillCreateDocument_WhenFoodResponseIsNull()
         {
             // Arrange
             var date = "2023-10-01";
@@ -246,7 +259,7 @@ namespace Biotrackr.Food.Svc.UnitTests.ServiceTests
         [InlineData("")]
         [InlineData("   ")]
         [InlineData(null)]
-        public async Task MapAndSaveDocument_WithInvalidDate_ShouldStillCreateDocument(string? date)
+        public async Task MapAndSaveDocument_ShouldStillCreateDocument_WhenDateIsInvalid(string? date)
         {
             // Arrange
             var foodResponse = new FoodResponse();
@@ -266,7 +279,7 @@ namespace Biotrackr.Food.Svc.UnitTests.ServiceTests
         }
 
         [Fact]
-        public async Task MapAndSaveDocument_ShouldHandleCosmosExceptions()
+        public async Task MapAndSaveDocument_ShouldLogErrorAndRethrow_WhenCosmosExceptionIsThrown()
         {
             // Arrange
             var date = "2023-10-01";
@@ -276,10 +289,11 @@ namespace Biotrackr.Food.Svc.UnitTests.ServiceTests
             _mockCosmosRepository.Setup(x => x.CreateFoodDocument(It.IsAny<FoodDocument>()))
                 .ThrowsAsync(cosmosException);
 
-            // Act & Assert
+            // Act
             var exception = await Assert.ThrowsAsync<CosmosException>(() =>
                 _foodService.MapAndSaveDocument(date, foodResponse));
 
+            // Assert
             exception.Should().Be(cosmosException);
             _mockLogger.VerifyLog(logger => logger.LogError("Exception thrown in MapAndSaveDocument: Cosmos error"), Times.Once);
         }
