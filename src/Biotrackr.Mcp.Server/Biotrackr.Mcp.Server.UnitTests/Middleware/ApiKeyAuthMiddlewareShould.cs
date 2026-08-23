@@ -98,7 +98,7 @@ namespace Biotrackr.Mcp.Server.UnitTests.Middleware
         }
 
         [Fact]
-        public async Task InvokeAsync_ShouldBypassAuth_ForHealthCheckEndpoint()
+        public async Task InvokeAsync_ShouldBypassAuth_WhenRequestIsForHealthCheckEndpoint()
         {
             // Arrange
             var nextCalled = false;

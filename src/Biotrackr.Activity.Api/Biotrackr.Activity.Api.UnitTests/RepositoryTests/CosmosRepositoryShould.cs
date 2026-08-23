@@ -37,7 +37,7 @@ namespace Biotrackr.Activity.Api.UnitTests.RepositoryTests
         }
 
         [Fact]
-        public async Task GetActivitySummaryByDate_ShouldReturnActivityDocument()
+        public async Task GetActivitySummaryByDate_ShouldReturnActivityDocument_WhenActivityExists()
         {
             // Arrange
             var date = "2022-01-01";
@@ -102,7 +102,7 @@ namespace Biotrackr.Activity.Api.UnitTests.RepositoryTests
         }
 
         [Fact]
-        public async Task GetAllActivitySummariesPaginated_ShouldReturnPaginatedResults()
+        public async Task GetAllActivitySummariesPaginated_ShouldReturnPaginatedResults_WhenDocumentsExist()
         {
             // Arrange
             var fixture = new Fixture();
@@ -153,7 +153,7 @@ namespace Biotrackr.Activity.Api.UnitTests.RepositoryTests
         }
 
         [Fact]
-        public async Task GetAllActivitySummariesPaginated_ShouldReturnCorrectPaginationMetadata_ForFirstPage()
+        public async Task GetAllActivitySummariesPaginated_ShouldReturnCorrectPaginationMetadata_WhenOnFirstPage()
         {
             // Arrange
             var fixture = new Fixture();
@@ -176,7 +176,7 @@ namespace Biotrackr.Activity.Api.UnitTests.RepositoryTests
         }
 
         [Fact]
-        public async Task GetAllActivitySummariesPaginated_ShouldReturnCorrectPaginationMetadata_ForLastPage()
+        public async Task GetAllActivitySummariesPaginated_ShouldReturnCorrectPaginationMetadata_WhenOnLastPage()
         {
             // Arrange
             var fixture = new Fixture();
@@ -199,7 +199,7 @@ namespace Biotrackr.Activity.Api.UnitTests.RepositoryTests
         }
 
         [Fact]
-        public async Task GetAllActivitySummariesPaginated_ShouldUseCorrectOffsetAndLimit()
+        public async Task GetAllActivitySummariesPaginated_ShouldUseCorrectOffsetAndLimit_WhenPaginationIsRequested()
         {
             // Arrange
             var fixture = new Fixture();
@@ -220,7 +220,7 @@ namespace Biotrackr.Activity.Api.UnitTests.RepositoryTests
         }
 
         [Fact]
-        public async Task GetAllActivitySummariesPaginated_ShouldHandleEmptyResults()
+        public async Task GetAllActivitySummariesPaginated_ShouldReturnEmptyResults_WhenNoDocumentsExist()
         {
             // Arrange
             var request = new PaginationRequest { PageNumber = 1, PageSize = 20 };
@@ -402,7 +402,7 @@ namespace Biotrackr.Activity.Api.UnitTests.RepositoryTests
         }
 
         [Fact]
-        public async Task GetActivitiesByDateRange_ShouldUseCorrectPartitionKey()
+        public async Task GetActivitiesByDateRange_ShouldUseCorrectPartitionKey_WhenQueryingDateRange()
         {
             // Arrange
             var fixture = new Fixture();
@@ -431,7 +431,7 @@ namespace Biotrackr.Activity.Api.UnitTests.RepositoryTests
         }
 
         [Fact]
-        public async Task GetActivitiesByDateRange_ShouldUseCorrectQueryParameters()
+        public async Task GetActivitiesByDateRange_ShouldUseCorrectQueryParameters_WhenQueryingDateRange()
         {
             // Arrange
             var fixture = new Fixture();
@@ -466,7 +466,7 @@ namespace Biotrackr.Activity.Api.UnitTests.RepositoryTests
         }
 
         [Fact]
-        public async Task GetActivitiesByDateRange_ShouldReturnCorrectPaginationMetadata_ForMiddlePage()
+        public async Task GetActivitiesByDateRange_ShouldReturnCorrectPaginationMetadata_WhenOnMiddlePage()
         {
             // Arrange
             var fixture = new Fixture();
@@ -512,7 +512,7 @@ namespace Biotrackr.Activity.Api.UnitTests.RepositoryTests
         }
 
         [Fact]
-        public async Task GetActivitiesByDateRange_ShouldLogCorrectInformation()
+        public async Task GetActivitiesByDateRange_ShouldLogFetchAndResultCounts_WhenQueryingDateRange()
         {
             // Arrange
             var fixture = new Fixture();
@@ -535,7 +535,7 @@ namespace Biotrackr.Activity.Api.UnitTests.RepositoryTests
         }
 
         [Fact]
-        public async Task GetActivitiesByDateRange_ShouldHandleException_AndLogError()
+        public async Task GetActivitiesByDateRange_ShouldLogErrorAndThrowException_WhenExceptionOccurs()
         {
             // Arrange
             var startDate = "2023-01-01";
@@ -575,7 +575,7 @@ namespace Biotrackr.Activity.Api.UnitTests.RepositoryTests
         }
 
         [Fact]
-        public async Task GetActivitiesByDateRange_ShouldReturnCorrectResults_ForSameDayRange()
+        public async Task GetActivitiesByDateRange_ShouldReturnCorrectResults_WhenStartAndEndDateAreTheSame()
         {
             // Arrange
             var fixture = new Fixture();
