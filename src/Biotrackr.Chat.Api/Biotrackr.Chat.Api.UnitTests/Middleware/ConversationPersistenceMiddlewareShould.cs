@@ -109,7 +109,7 @@ namespace Biotrackr.Chat.Api.UnitTests.Middleware
         }
 
         [Fact]
-        public void MaskSensitiveFields_ShouldReturnNull_WhenArgumentsAreNull()
+        public void MaskSensitiveFields_ShouldReturnNullLiteral_WhenArgumentsAreNull()
         {
             // Arrange
             object? arguments = null;

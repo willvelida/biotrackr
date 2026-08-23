@@ -12,8 +12,7 @@
     <PackageReference Include="Azure.Storage.Blobs" Version="12.24.0" />
     <PackageReference Include="Microsoft.Agents.AI.A2A" Version="1.0.0-preview.260402.1" />
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.3" />
-    <!-- Pinned to override the vulnerable 2.0.0 pulled in transitively by
-         Microsoft.AspNetCore.OpenApi 10.0.3 (CVE-2026-49451, HIGH). -->
+    <!-- CVE-2026-49451: pin until Microsoft.AspNetCore.OpenApi brings in Microsoft.OpenApi >= 2.7.5 transitively. -->
     <PackageReference Include="Microsoft.OpenApi" Version="2.7.5" />
     <PackageReference Include="Microsoft.Agents.AI" Version="1.0.0-rc4" />
     <PackageReference Include="Microsoft.Agents.AI.Anthropic" Version="1.0.0-rc4" />
