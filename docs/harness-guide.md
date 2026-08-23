@@ -222,11 +222,22 @@ Skill descriptions are capped at roughly 150 characters when listed. Front-load 
 
 Hook trust is all or nothing. An untrusted workspace skips every hook rather than only the suspicious ones, so a post-edit verification hook silently no-ops instead of failing loudly. Never make a hook the only line of defence.
 
+## Runtime observability
+
+The harness records its own verification events, so that "the gate passed" and "the gate never ran" stop looking identical after the fact.
+
+`scripts/observability.sh` is a sourced library exposing `emit_event`. The three git hooks, the agent post-edit handler, and `scripts/verify.sh` all call it. Each event carries an outcome from `pass fail error skip degraded timeout` — the wider vocabulary exists because a bypassed, degraded, or timed-out check is invisible once collapsed into pass/fail.
+
+Storage is two-tier. Raw records go to `.copilot-tracking/observability/`, which is gitignored, rotates on size, and never deletes. The push gate distils them into `.copilot-tracking/harness-evolution-metrics.md`, which is committed and holds one row per ref per promotion. The gate reports what it appended; committing that file is a deliberate step, because a hook that commits on your behalf during a push would fabricate history. Raw records are not committed because the pre-commit hook writes them during the very commit that would carry them.
+
+Emission is off unless `BIOTRACKR_OBS_ENABLED=1`. `scripts/audit-harness.sh` reports recent outcomes alongside its structural checks and flags records left unpromoted for more than seven days, which is what a repeatedly bypassed push gate looks like. Signal definitions and their QITE mapping live in [harness-governance.md](standards/harness-governance.md).
+
 ## Periodic maintenance
 
 | Task | Frequency | How |
 |------|-----------|-----|
 | Deterministic harness audit | Per harness change | `scripts/audit-harness.sh` |
+| Enforcement script self-tests | Per change to a gate | `scripts/audit-harness.test.sh`, `scripts/observability.test.sh`, `scripts/check-devcontainer.test.sh` |
 | Harness health audit | Monthly | `/harness-health` |
 | Convention spot-check | Monthly | Sample three recent files against their instruction files |
 | Simplification pass | Quarterly | Remove a component, re-audit, record in [quality-score.md](quality-score.md) |

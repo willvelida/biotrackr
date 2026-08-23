@@ -422,6 +422,13 @@ scripts/chat-system-prompt/reviewer-prompt.txt
 .copilot-tracking/*
 !.copilot-tracking/templates/
 !.copilot-tracking/harness-evolution-log.md
+!.copilot-tracking/harness-evolution-metrics.md
+
+# Harness audit artifacts. The CI job writes these to the workspace root and
+# uploads them; audit.log is already covered by *.log, the JSON is not. Local
+# runs default to .copilot-tracking/observability/audit/ instead, which the
+# rule above already ignores.
+audit-results.json
 
 # Presentation notes — working files, not published
 docs/presentation-notes/*

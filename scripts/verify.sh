@@ -23,6 +23,15 @@ set -uo pipefail
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$REPO_ROOT" || exit 1
 
+# Observability is optional and off by default. If the library is missing or
+# fails to load, the shims below make every call a no-op so this script behaves
+# exactly as it did before instrumentation.
+BIOTRACKR_OBS_ROOT="$REPO_ROOT"
+# shellcheck source=/dev/null
+. "$REPO_ROOT/scripts/observability.sh" 2>/dev/null || true
+type -t emit_event  >/dev/null 2>&1 || emit_event()  { :; }
+type -t obs_now_ms  >/dev/null 2>&1 || obs_now_ms()  { _OBS_NOW_MS=0; }
+
 MODE="working"
 RANGE=""
 BUILD_ONLY="${VERIFY_BUILD_ONLY:-0}"
@@ -54,6 +63,10 @@ while [ $# -gt 0 ]; do
 done
 
 fail_env() {
+  # Exit 1 is "could not run", an environment problem rather than broken code.
+  # Recording it as `error` keeps that distinction, which is the whole point of
+  # the three-valued exit contract.
+  emit_event verify environment "${MODE:-unknown}" error 0 "cannot-run" || true
   echo "VERIFY CANNOT RUN: $1" >&2
   exit 1
 }
@@ -124,6 +137,8 @@ for svc in "${SERVICES[@]}"; do
 
   echo "verify: $svc"
 
+  obs_now_ms; svc_start="$_OBS_NOW_MS"
+
   build_log="$(mktemp)"
   if ! dotnet build "$sln" --no-restore -v:q --nologo >"$build_log" 2>&1; then
     # Packages may have changed since the last restore; retry once with restore
@@ -141,12 +156,16 @@ for svc in "${SERVICES[@]}"; do
       } >&2
       FAILED+=("$svc:build")
       rm -f "$build_log"
+      obs_now_ms
+      emit_event verify build "$svc" fail $((_OBS_NOW_MS - svc_start)) "compile-error" || true
       continue
     fi
   fi
   rm -f "$build_log"
 
   if [ "$BUILD_ONLY" = "1" ]; then
+    obs_now_ms
+    emit_event verify build "$svc" pass $((_OBS_NOW_MS - svc_start)) || true
     continue
   fi
 
@@ -168,6 +187,8 @@ for svc in "${SERVICES[@]}"; do
         echo "           bash scripts/verify.sh $svc"
       } >&2
       FAILED+=("$svc:unit")
+      obs_now_ms
+      emit_event verify unit "$svc" fail $((_OBS_NOW_MS - svc_start)) "test-failure" || true
     fi
     rm -f "$test_log"
   fi
@@ -191,10 +212,22 @@ for svc in "${SERVICES[@]}"; do
           echo "           bash scripts/verify.sh --contract $svc"
         } >&2
         FAILED+=("$svc:contract")
+        obs_now_ms
+        emit_event verify contract "$svc" fail $((_OBS_NOW_MS - svc_start)) "contract-failure" || true
       fi
       rm -f "$test_log"
     fi
   fi
+
+  # One record per service summarising the whole verification, emitted only when
+  # nothing above already recorded a failure for it.
+  case " ${FAILED[*]:-} " in
+    *" $svc:"*) ;;
+    *)
+      obs_now_ms
+      emit_event verify service "$svc" pass $((_OBS_NOW_MS - svc_start)) || true
+      ;;
+  esac
 done
 
 if [ ${#FAILED[@]} -gt 0 ]; then
