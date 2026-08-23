@@ -81,3 +81,10 @@ applyTo: "**/*.yml"
 - Use `dev` and `prod` environments
 - Require reviewers on `prod` environment deployments
 - Deploy to `dev` automatically on PR merge to `main`
+
+## Workflow Artifacts
+
+- Naming an artifact in a workflow creates a file in the workspace root. Add a
+  matching `.gitignore` rule in the same change: CI discards the runner so the
+  symptom never appears there, but locally it is untracked noise that invites
+  being committed.

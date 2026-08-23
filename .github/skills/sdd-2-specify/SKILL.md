@@ -63,6 +63,11 @@ Explicitly scoped-out items. Prevents scope creep by naming what this feature do
 
 Numbered, testable scenarios that define "done." Each criterion follows the pattern: "Given [context], when [action], then [outcome]."
 
+Two criteria that cannot be satisfied before review, and must not gate it:
+
+* A criterion depending on the review's own output — verdict, fix cycles, finding density — belongs to a post-verdict step. Gating approval on it deadlocks the cycle: the value is unknown until review finishes, and review cannot approve without it.
+* A criterion using a vague quantifier ("recent", "reports it", "promptly") needs a testable bound at Specify time. Left open, it becomes a disagreement about wording during review rather than a finding about the implementation.
+
 ### Complexity Score
 
 Assign CS-1 through CS-5 using the project's complexity rubric from doctrine. Apply the 6-factor scoring model (Surface Area, Integration, Data/State, Novelty, NFR, Testing) if the rubric is documented. If no rubric is found in doctrine, use this default mapping:

@@ -142,6 +142,8 @@ Each phase uses the 6-column task table format with 4-state checkboxes:
 
 Task status legend: `[ ]` pending, `[~]` in-progress, `[x]` completed, `[!]` blocked.
 
+Tasks that modify the same file are serialised regardless of logical independence. List the files each task touches, and where two share one, order them explicitly. Declaring such tasks parallel produces a plan that cannot be executed as written.
+
 ### Validation Section
 
 Reference the project's build command, test command, and coverage threshold from doctrine. Do not hardcode tool-specific commands. Use the format:
