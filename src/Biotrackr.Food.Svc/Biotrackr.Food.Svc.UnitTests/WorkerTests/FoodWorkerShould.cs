@@ -3,6 +3,7 @@ using Biotrackr.Food.Svc.Services.Interfaces;
 using Biotrackr.Food.Svc.Workers;
 using Microsoft.Extensions.Hosting;
 using System.Diagnostics;
+using System.Globalization;
 using System.Reflection;
 
 namespace Biotrackr.Food.Svc.UnitTests.WorkerTests
@@ -23,16 +24,37 @@ namespace Biotrackr.Food.Svc.UnitTests.WorkerTests
             _loggerMock = new Mock<ILogger<FoodWorker>>();
             _appLifetimeMock = new Mock<IHostApplicationLifetime>();
 
-            _sut = new FoodWorker(_fitbitServiceMock.Object, _foodServiceMock.Object, _loggerMock.Object, _appLifetimeMock.Object);
+            _sut = new FoodWorker(_fitbitServiceMock.Object, _foodServiceMock.Object, _loggerMock.Object, _appLifetimeMock.Object, TimeProvider.System);
+        }
+
+        /// <summary>
+        /// A TimeProvider fixed at a chosen instant in a chosen time zone, so date
+        /// arithmetic in the worker becomes deterministic and testable.
+        /// </summary>
+        private sealed class FixedTimeProvider : TimeProvider
+        {
+            private readonly DateTimeOffset _utcNow;
+            private readonly TimeZoneInfo _localTimeZone;
+
+            public FixedTimeProvider(DateTimeOffset utcNow, TimeSpan localOffset)
+            {
+                _utcNow = utcNow;
+                var id = $"Fixed offset {localOffset}";
+                _localTimeZone = TimeZoneInfo.CreateCustomTimeZone(id, localOffset, id, id);
+            }
+
+            public override DateTimeOffset GetUtcNow() => _utcNow;
+
+            public override TimeZoneInfo LocalTimeZone => _localTimeZone;
         }
 
         /// <summary>
         /// Helper method to properly invoke the protected ExecuteAsync method
         /// </summary>
-        private async Task<int> InvokeExecuteAsync(CancellationToken cancellationToken = default)
+        private async Task<int> InvokeExecuteAsync(CancellationToken cancellationToken = default, FoodWorker? worker = null)
         {
             var executeMethod = typeof(FoodWorker).GetMethod("ExecuteAsync", BindingFlags.NonPublic | BindingFlags.Instance);
-            var task = (Task<int>)executeMethod!.Invoke(_sut, new object[] { cancellationToken })!;
+            var task = (Task<int>)executeMethod!.Invoke(worker ?? _sut, new object[] { cancellationToken })!;
             return await task;
         }
 
@@ -46,9 +68,10 @@ namespace Biotrackr.Food.Svc.UnitTests.WorkerTests
             var foodService = _foodServiceMock.Object;
             var logger = _loggerMock.Object;
             var appLifetime = _appLifetimeMock.Object;
+            var timeProvider = TimeProvider.System;
 
             // Act
-            var worker = new FoodWorker(fitbitService, foodService, logger, appLifetime);
+            var worker = new FoodWorker(fitbitService, foodService, logger, appLifetime, timeProvider);
 
             // Assert
             worker.Should().NotBeNull();
@@ -61,10 +84,11 @@ namespace Biotrackr.Food.Svc.UnitTests.WorkerTests
             var foodService = _foodServiceMock.Object;
             var logger = _loggerMock.Object;
             var appLifetime = _appLifetimeMock.Object;
+            var timeProvider = TimeProvider.System;
 
             // Act
             var exception = Assert.Throws<ArgumentNullException>(() =>
-                new FoodWorker(null!, foodService, logger, appLifetime));
+                new FoodWorker(null!, foodService, logger, appLifetime, timeProvider));
 
             // Assert
             exception.ParamName.Should().Be("fitbitService");
@@ -77,10 +101,11 @@ namespace Biotrackr.Food.Svc.UnitTests.WorkerTests
             var fitbitService = _fitbitServiceMock.Object;
             var logger = _loggerMock.Object;
             var appLifetime = _appLifetimeMock.Object;
+            var timeProvider = TimeProvider.System;
 
             // Act
             var exception = Assert.Throws<ArgumentNullException>(() =>
-                new FoodWorker(fitbitService, null!, logger, appLifetime));
+                new FoodWorker(fitbitService, null!, logger, appLifetime, timeProvider));
 
             // Assert
             exception.ParamName.Should().Be("foodService");
@@ -93,10 +118,11 @@ namespace Biotrackr.Food.Svc.UnitTests.WorkerTests
             var fitbitService = _fitbitServiceMock.Object;
             var foodService = _foodServiceMock.Object;
             var appLifetime = _appLifetimeMock.Object;
+            var timeProvider = TimeProvider.System;
 
             // Act
             var exception = Assert.Throws<ArgumentNullException>(() =>
-                new FoodWorker(fitbitService, foodService, null!, appLifetime));
+                new FoodWorker(fitbitService, foodService, null!, appLifetime, timeProvider));
 
             // Assert
             exception.ParamName.Should().Be("logger");
@@ -109,13 +135,31 @@ namespace Biotrackr.Food.Svc.UnitTests.WorkerTests
             var fitbitService = _fitbitServiceMock.Object;
             var foodService = _foodServiceMock.Object;
             var logger = _loggerMock.Object;
+            var timeProvider = TimeProvider.System;
 
             // Act
             var exception = Assert.Throws<ArgumentNullException>(() =>
-                new FoodWorker(fitbitService, foodService, logger, null!));
+                new FoodWorker(fitbitService, foodService, logger, null!, timeProvider));
 
             // Assert
             exception.ParamName.Should().Be("appLifetime");
+        }
+
+        [Fact]
+        public void Constructor_ShouldThrowArgumentNullException_WhenTimeProviderIsNull()
+        {
+            // Arrange
+            var fitbitService = _fitbitServiceMock.Object;
+            var foodService = _foodServiceMock.Object;
+            var logger = _loggerMock.Object;
+            var appLifetime = _appLifetimeMock.Object;
+
+            // Act
+            var exception = Assert.Throws<ArgumentNullException>(() =>
+                new FoodWorker(fitbitService, foodService, logger, appLifetime, null!));
+
+            // Assert
+            exception.ParamName.Should().Be("timeProvider");
         }
 
         #endregion
@@ -322,15 +366,17 @@ namespace Biotrackr.Food.Svc.UnitTests.WorkerTests
         }
 
         [Theory]
-        [InlineData(2024, 2, 29)] // Leap year - Feb 29th to Feb 28th
-        [InlineData(2024, 3, 1)]  // Day after leap day - Mar 1st to Feb 29th
-        [InlineData(2024, 1, 1)]  // New Year's Day - Jan 1st to Dec 31st
-        [InlineData(2024, 12, 31)] // New Year's Eve - Dec 31st to Dec 30th
-        public async Task ExecuteAsync_ShouldComplete_WhenDateIsAnEdgeCase(int year, int month, int day)
+        [InlineData("2024-02-29T13:00:00Z", 13, "2024-02-29")]  // Local date is already Mar 1st while UTC is still Feb 29th
+        [InlineData("2024-01-01T02:00:00Z", -8, "2023-12-30")]  // Local day is still behind UTC, in the previous year
+        [InlineData("2024-03-01T12:00:00Z", 0, "2024-02-29")]   // Leap year - Mar 1st to Feb 29th
+        [InlineData("2024-12-31T12:00:00Z", 0, "2024-12-30")]   // New Year's Eve - Dec 31st to Dec 30th
+        public async Task ExecuteAsync_ShouldRequestPreviousLocalDate_WhenClockIsAtADateBoundary(string utcNow, int localOffsetHours, string expectedPreviousDate)
         {
             // Arrange
-            var testDate = new DateTime(year, month, day);
-            var expectedPreviousDate = testDate.AddDays(-1).ToString("yyyy-MM-dd");
+            var timeProvider = new FixedTimeProvider(
+                DateTimeOffset.Parse(utcNow, CultureInfo.InvariantCulture, DateTimeStyles.AssumeUniversal | DateTimeStyles.AdjustToUniversal),
+                TimeSpan.FromHours(localOffsetHours));
+            var worker = new FoodWorker(_fitbitServiceMock.Object, _foodServiceMock.Object, _loggerMock.Object, _appLifetimeMock.Object, timeProvider);
             var foodResponse = new FoodResponse();
 
             _fitbitServiceMock.Setup(x => x.GetFoodResponse(expectedPreviousDate))
@@ -338,15 +384,16 @@ namespace Biotrackr.Food.Svc.UnitTests.WorkerTests
             _foodServiceMock.Setup(x => x.MapAndSaveDocument(expectedPreviousDate, foodResponse))
                 .Returns(Task.CompletedTask);
 
-            // Note: This test assumes DateTime.Now returns our test date
-            // In a real implementation, you would inject an IDateTimeProvider
-
             // Act
-            var result = await InvokeExecuteAsync();
+            var result = await InvokeExecuteAsync(worker: worker);
 
-            // Assert - Verifies that date calculation logic works for edge cases
-            // The actual assertion depends on when the test runs, but ensures no exceptions
-            result.Should().BeOneOf(0, 1); // Should complete successfully or fail gracefully
+            // Assert
+            result.Should().Be(0);
+            _fitbitServiceMock.Verify(x => x.GetFoodResponse(expectedPreviousDate), Times.Once,
+                $"AGENT FIX: FoodWorker must request the day before the current LOCAL date ({expectedPreviousDate}) "
+                + $"for a clock at {utcNow} in a UTC{localOffsetHours:+00;-00} zone. "
+                + "Using DateTime.UtcNow instead of local time breaks this.");
+            _foodServiceMock.Verify(x => x.MapAndSaveDocument(expectedPreviousDate, foodResponse), Times.Once);
         }
 
         #endregion
