@@ -192,7 +192,7 @@ namespace Biotrackr.Food.Svc.UnitTests.ServiceTests
         [InlineData("2023-12-31")]
         [InlineData("1900-01-01")]
         [InlineData("2099-12-31")]
-        public async Task MapAndSaveDocument_ShouldPersistSuppliedDate_WhenDateFormatVaries(string date)
+        public async Task MapAndSaveDocument_ShouldPersistSuppliedDate_WhenDateValueVaries(string date)
         {
             // Arrange
             var foodResponse = new FoodResponse();
