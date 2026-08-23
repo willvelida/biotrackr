@@ -21,7 +21,24 @@
 set -euo pipefail
 export LC_ALL=C
 
-REPO="${1:-.}"
+# ── Arguments ────────────────────────────────────────────────────────────────
+# --json writes a machine-readable copy of every check result to a file. It
+# never touches stdout: the human report is consumed verbatim by another
+# workflow, so it has to stay byte-identical whether or not --json is passed.
+JSON_MODE=0
+JSON_OUT=""
+POSITIONAL=()
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --json)     JSON_MODE=1 ;;
+    --json-out) JSON_OUT="${2:-}"; shift ;;
+    --)         shift; break ;;
+    *)          POSITIONAL+=("$1") ;;
+  esac
+  shift
+done
+
+REPO="${POSITIONAL[0]:-.}"
 REPO="${REPO%/}"
 
 # ── Budgets (override via environment) ───────────────────────────────────────
@@ -31,6 +48,11 @@ BUDGET_ALWAYS_LOADED="${BUDGET_ALWAYS_LOADED:-240}"        # total lines, C1 (ac
 BUDGET_INSTRUCTION_FILE="${BUDGET_INSTRUCTION_FILE:-100}"  # lines per file, C2 (achieved 96)
 BUDGET_DUPLICATE_PCT="${BUDGET_DUPLICATE_PCT:-10}"         # max % overlap, C3 (achieved 6)
 BUDGET_INSTRUCTION_STACK="${BUDGET_INSTRUCTION_STACK:-220}" # lines loaded for any one file, C4
+# A ratchet on existing debt rather than a budget: 30 of 37 skill descriptions
+# already exceed the documented ~150-char listing cap (harness-guide.md). The
+# figure is pinned at the current count so the debt cannot grow while it is
+# driven down. It is not zero because fixing 30 descriptions is its own cycle.
+BUDGET_SKILL_DESC_OVERLONG="${BUDGET_SKILL_DESC_OVERLONG:-30}" # count over cap, C10 (achieved 30)
 
 # ── Output helpers ── PORTED (MIT, walkinglabs) ──────────────────────────────
 if [[ -t 1 ]]; then
@@ -43,11 +65,81 @@ fi
 pass()   { printf '  %s[PASS]%s %s\n' "$GREEN" "$RESET" "$1"; }
 fail()   { printf '  %s[FAIL]%s %s\n' "$RED" "$RESET" "$1"; }
 warn()   { printf '  %s[WARN]%s %s\n' "$YELLOW" "$RESET" "$1"; }
-header() { printf '\n%s%s%s\n' "$CYAN$BOLD" "$1" "$RESET"; }
+
+# The leading token of each section heading ("C1", "C7", ...) is the stable
+# check identifier for machine-readable output. The human heading is unchanged.
+CURRENT_CHECK=""
+header() {
+  CURRENT_CHECK="${1%%:*}"
+  printf '\n%s%s%s\n' "$CYAN$BOLD" "$1" "$RESET"
+}
 
 CRITICAL_PASS=0; CRITICAL_FAIL=0
 RECOMMENDED_PASS=0; RECOMMENDED_FAIL=0
 RECS=()
+
+# Parallel accumulator for --json. Populated for EVERY check, pass or fail,
+# because a consumer trending results needs the passes too. Mirrors the RECS
+# pattern rather than inventing a second mechanism.
+JSON_RECS=()
+
+# jq is unavailable on the Windows host and the container python has no json
+# module, so escaping is done here with parameter expansion only.
+json_escape() {
+  local s="${1:-}"
+  s="${s//\\/\\\\}"
+  s="${s//\"/\\\"}"
+  s="${s//$'\t'/ }"
+  s="${s//$'\r'/}"
+  s="${s//$'\n'/ }"
+  printf '%s' "$s"
+}
+
+json_record() {
+  local id="$1" sev="$2" result="$3" desc="$4" why="${5:-}" how="${6:-}"
+  JSON_RECS+=("$(printf '{"check":"%s","severity":"%s","result":"%s","what":"%s","why":"%s","how":"%s"}' \
+    "$(json_escape "$id")" "$(json_escape "$sev")" "$(json_escape "$result")" \
+    "$(json_escape "$desc")" "$(json_escape "$why")" "$(json_escape "$how")")")
+}
+
+# Written from the EXIT trap rather than inline, so results survive an early
+# exit. That matters in both directions: the audit exits 1 on a CRITICAL
+# failure, which is exactly when a consumer most wants the machine-readable
+# detail, and `set -e` can abort a run part-way when the repo is incomplete.
+JSON_WRITTEN=0
+write_json_output() {
+  [[ $JSON_MODE -eq 1 ]] || return 0
+  [[ $JSON_WRITTEN -eq 0 ]] || return 0
+  JSON_WRITTEN=1
+
+  if [[ -z "$JSON_OUT" ]]; then
+    local _ts _dir
+    _ts="$(date -u +%Y%m%dT%H%M%SZ 2>/dev/null || echo unknown)"
+    _dir="${BIOTRACKR_AUDIT_JSON_DIR:-$REPO/.copilot-tracking/observability/audit}"
+    mkdir -p "$_dir" 2>/dev/null || true
+    JSON_OUT="$_dir/audit-${_ts}.json"
+  else
+    mkdir -p "$(dirname "$JSON_OUT")" 2>/dev/null || true
+  fi
+
+  {
+    printf '{\n'
+    printf '  "generated": "%s",\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ 2>/dev/null || echo unknown)"
+    printf '  "critical": {"pass": %d, "fail": %d},\n' "$CRITICAL_PASS" "$CRITICAL_FAIL"
+    printf '  "recommended": {"pass": %d, "fail": %d},\n' "$RECOMMENDED_PASS" "$RECOMMENDED_FAIL"
+    printf '  "checks": [\n'
+    local _n=${#JSON_RECS[@]} _i=0 _rec
+    for _rec in ${JSON_RECS[@]+"${JSON_RECS[@]}"}; do
+      _i=$((_i + 1))
+      if [[ $_i -lt $_n ]]; then printf '    %s,\n' "$_rec"; else printf '    %s\n' "$_rec"; fi
+    done
+    printf '  ]\n'
+    printf '}\n'
+  } > "$JSON_OUT" 2>/dev/null || true
+
+  # stderr, never stdout: the human report must stay byte-identical.
+  printf 'audit: machine-readable results written to %s\n' "$JSON_OUT" >&2
+}
 
 # ── Agent-oriented failure recorder ── BIOTRACKR-ORIGINAL ────────────────────
 # A failure an agent can act on must state WHAT broke, WHY the rule exists,
@@ -61,9 +153,11 @@ check_critical() {
   local desc="$1" result="$2" why="${3:-}" how="${4:-}"
   if [[ "$result" == "pass" ]]; then
     pass "[CRITICAL] $desc"; CRITICAL_PASS=$((CRITICAL_PASS + 1))
+    json_record "$CURRENT_CHECK" "CRITICAL" "pass" "$desc" "" ""
   else
     fail "[CRITICAL] $desc"; CRITICAL_FAIL=$((CRITICAL_FAIL + 1))
     [[ -n "$how" ]] && record_fix "CRITICAL" "$desc" "$why" "$how"
+    json_record "$CURRENT_CHECK" "CRITICAL" "fail" "$desc" "$why" "$how"
   fi
   return 0
 }
@@ -72,16 +166,18 @@ check_recommended() {
   local desc="$1" result="$2" why="${3:-}" how="${4:-}"
   if [[ "$result" == "pass" ]]; then
     pass "[RECOMMENDED] $desc"; RECOMMENDED_PASS=$((RECOMMENDED_PASS + 1))
+    json_record "$CURRENT_CHECK" "RECOMMENDED" "pass" "$desc" "" ""
   else
     warn "[RECOMMENDED] $desc"; RECOMMENDED_FAIL=$((RECOMMENDED_FAIL + 1))
     [[ -n "$how" ]] && record_fix "RECOMMENDED" "$desc" "$why" "$how"
+    json_record "$CURRENT_CHECK" "RECOMMENDED" "fail" "$desc" "$why" "$how"
   fi
   return 0
 }
 
 # ── Portable primitives ── BIOTRACKR-ORIGINAL ────────────────────────────────
 TMPDIR_AUDIT="$(mktemp -d)"
-trap 'rm -rf "$TMPDIR_AUDIT"' EXIT
+trap 'write_json_output; rm -rf "$TMPDIR_AUDIT"' EXIT
 
 # Safe glob probe. compgen -G avoids spawning ls on an attacker-controlled
 # path, closing the CWE-78 hole patched upstream.
@@ -472,6 +568,272 @@ check_recommended "Hand-maintained inventory counts match the filesystem" \
 # ═════════════════════════════════════════════════════════════════════════════
 # Summary  ── PORTED layout (MIT, walkinglabs)
 # ═════════════════════════════════════════════════════════════════════════════
+# ── C7: Measurement record schema ── BIOTRACKR-ORIGINAL ──────────────────────
+# The evolution log's column list is restated in prose across six files with no
+# shared definition. Nothing detects a divergence, and the failure is silent:
+# a consumer reads the wrong column and reports a wrong number rather than an
+# error. This is the one mechanical guard on that schema.
+header "C7: Measurement Record Schema"
+
+EVO_LOG="$REPO/.copilot-tracking/harness-evolution-log.md"
+EVO_METRICS="$REPO/.copilot-tracking/harness-evolution-metrics.md"
+
+# The authoritative column lists live here, in the check, so that a divergence
+# anywhere else is what fails rather than what wins.
+EXPECTED_EVO_COLS="Date | PR | Plan | Proposed | Accepted | Severity (C/H/M/L) | Files Modified | Status | Verdict | FixCycles | FindDensity | CycleTime | SpecClarity | FlowState"
+EXPECTED_METRICS_COLS="Date | Cycle | Sessions | Events | Pass | Fail | Error | Skip | Degraded | Timeout | TotalMs"
+
+check_table_header() {  # <file> <expected-cols> <label>
+  local file="$1" expected="$2" label="$3" actual=""
+  if [[ ! -f "$file" ]]; then
+    echo "notfound"; return 0
+  fi
+  actual="$(grep -m1 -E '^\|[[:space:]]*Date[[:space:]]*\|' "$file" 2>/dev/null || true)"
+  if [[ -z "$actual" ]]; then
+    echo "noheader"; return 0
+  fi
+  # Normalise the outer pipes and collapse runs of spaces so the comparison is
+  # about columns, not about how the table happens to be padded.
+  actual="${actual#|}"; actual="${actual%|}"
+  actual="$(printf '%s' "$actual" | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//' -e 's/[[:space:]]*|[[:space:]]*/ | /g')"
+  if [[ "$actual" == "$expected" ]]; then echo "pass"; else echo "$actual"; fi
+}
+
+EVO_RESULT="$(check_table_header "$EVO_LOG" "$EXPECTED_EVO_COLS" "evolution log")"
+if [[ "$EVO_RESULT" == "pass" ]]; then
+  EVO_COUNT="$(awk -F'|' '/^\|[[:space:]]*Date[[:space:]]*\|/{print NF-2; exit}' "$EVO_LOG" 2>/dev/null || echo 0)"
+  check_critical "Evolution log header matches the declared 14-column schema (found $EVO_COUNT)" "pass"
+else
+  check_critical "Evolution log header matches the declared 14-column schema" "fail" \
+    "Four consumers restate this column list in prose — the metrics collector, the evolve reminder, the health skill, and the SDD conventions. A divergence is never reported as an error; a consumer simply reads the wrong column and publishes a wrong number." \
+    "Restore the header in .copilot-tracking/harness-evolution-log.md to exactly: | ${EXPECTED_EVO_COLS} |  (found: ${EVO_RESULT})"
+fi
+
+# The companion file does not exist until the promotion tier is built. Its
+# schema is declared here anyway, so the guard and its test do not depend on
+# the order the two land in.
+if [[ -f "$EVO_METRICS" ]]; then
+  MET_RESULT="$(check_table_header "$EVO_METRICS" "$EXPECTED_METRICS_COLS" "metrics companion")"
+  if [[ "$MET_RESULT" == "pass" ]]; then
+    check_critical "Metrics companion header matches its declared schema" "pass"
+  else
+    check_critical "Metrics companion header matches its declared schema" "fail" \
+      "The companion file is the only committed record of runtime outcomes. A drifted header silently misaligns every column a consumer reads." \
+      "Restore the header in .copilot-tracking/harness-evolution-metrics.md to exactly: | ${EXPECTED_METRICS_COLS} |  (found: ${MET_RESULT})"
+  fi
+else
+  printf '         %-6s %s\n' "SKIP" "metrics companion not present yet (created with the promotion tier)"
+fi
+
+# ── C8: Measurement liveness ── BIOTRACKR-ORIGINAL ───────────────────────────
+# The health skill warns when the five most recent rows are all unmeasured, and
+# that window slides: every unmeasured cycle pushes the measured ones closer to
+# falling out of it. Because unmeasured rows are never backfilled, once the
+# window is empty it stays empty. This check makes that state fail loudly
+# instead of degrading quietly into a dead trend surface.
+header "C8: Measurement Liveness"
+
+if [[ -f "$EVO_LOG" ]]; then
+  LIVENESS="$(awk -F'|' '
+    /^\|[[:space:]]*20[0-9][0-9]-/ {
+      v = $10; gsub(/[[:space:]]/, "", v)
+      rows[++n] = v
+    }
+    END {
+      start = (n > 5) ? n - 4 : 1
+      c = 0
+      for (i = start; i <= n; i++)
+        if (rows[i] == "APPROVE" || rows[i] == "REQUEST_CHANGES") c++
+      printf "%d %d %d", c, (n > 5 ? 5 : n), n
+    }' "$EVO_LOG" 2>/dev/null || echo "0 0 0")"
+
+  MEASURED_RECENT="${LIVENESS%% *}"
+  WINDOW="$(printf '%s' "$LIVENESS" | cut -d' ' -f2)"
+  TOTAL_ROWS="$(printf '%s' "$LIVENESS" | cut -d' ' -f3)"
+
+  if [[ "$TOTAL_ROWS" -eq 0 ]]; then
+    check_recommended "Measurement window contains at least one measured cycle" "pass"
+    printf '         %-6s %s\n' "NOTE" "no cycles logged yet"
+  elif [[ "$MEASURED_RECENT" -gt 0 ]]; then
+    check_critical "Measurement window contains at least one measured cycle ($MEASURED_RECENT of the last $WINDOW)" "pass"
+  else
+    check_critical "Measurement window contains at least one measured cycle" "fail" \
+      "All $WINDOW most recent cycles are unmeasured, so the trend surface has no data to work from. Unmeasured rows are never backfilled by policy, which means this state does not recover on its own — it persists until a measured cycle is added." \
+      "Complete a review for the current cycle and record its verdict, fix cycles, finding density, cycle time, and self-reported scores in .copilot-tracking/harness-evolution-log.md. Do not invent values for past cycles."
+  fi
+fi
+
+# ── C9: Lifecycle subsystem coverage ── BIOTRACKR-ORIGINAL ───────────────────
+# Every check above measures documents. This one measures the layer that
+# actually runs: the hooks, the sensor, and the two registration files that
+# decide whether an agent edit triggers verification at all. A missing
+# registration is invisible — the hook simply never fires.
+header "C9: Lifecycle Subsystem"
+
+LIFECYCLE_MISSING=()
+lifecycle_require() {  # <path> <role>
+  if [[ -f "$REPO/$1" ]]; then
+    printf '         %-6s %-34s %s\n' "OK" "$1" "$2"
+  else
+    LIFECYCLE_MISSING+=("$1")
+    printf '         %-6s %-34s %s\n' "MISSING" "$1" "$2"
+  fi
+}
+
+lifecycle_require ".githooks/pre-commit"            "secret scan, devcontainer, verify"
+lifecycle_require ".githooks/pre-push"              "verify across the push range"
+lifecycle_require ".githooks/commit-msg"            "commit standard enforcement"
+lifecycle_require "scripts/verify.sh"               "shared affected-service sensor"
+lifecycle_require "scripts/agent-post-edit.sh"      "agent post-edit handler"
+lifecycle_require ".github/hooks/post-edit.json"    "VS Code Copilot registration"
+lifecycle_require ".claude/settings.json"           "Claude Code registration"
+
+if [[ ${#LIFECYCLE_MISSING[@]} -eq 0 ]]; then
+  check_recommended "Lifecycle subsystem complete (7 components)" "pass"
+else
+  check_recommended "Lifecycle subsystem complete (7 components)" "fail" \
+    "A missing hook or registration file does not raise an error — the hook simply never fires, and verification silently stops happening for every agent edit or commit that would have triggered it." \
+    "Restore the missing component(s): ${LIFECYCLE_MISSING[*]}. Run bash scripts/init.sh to reinstall hooks and reset core.hooksPath."
+fi
+
+# ── C10: Skill authoring validation ── BIOTRACKR-ORIGINAL ────────────────────
+# A skill whose `name` does not match its directory loads as nothing, with no
+# error anywhere. The skill is simply never available, and the only symptom is
+# an agent that does not do what the skill would have made it do.
+header "C10: Skill Authoring"
+
+SKILL_NAME_BAD=()
+SKILL_DESC_LONG=()
+SKILL_DESC_MAX=150
+
+for skill_file in "$REPO"/.github/skills/*/SKILL.md; do
+  [[ -f "$skill_file" ]] || continue
+  skill_dir="$(basename "$(dirname "$skill_file")")"
+
+  # Frontmatter only: a later body line could otherwise be mistaken for a field.
+  fm_name="$(awk 'NR==1 && $0=="---"{inside=1; next} inside && $0=="---"{exit} inside && /^name:/{sub(/^name:[[:space:]]*/,""); gsub(/^["'"'"']|["'"'"']$/,""); print; exit}' "$skill_file" 2>/dev/null || true)"
+  fm_desc="$(awk 'NR==1 && $0=="---"{inside=1; next} inside && $0=="---"{exit} inside && /^description:/{sub(/^description:[[:space:]]*/,""); print; exit}' "$skill_file" 2>/dev/null || true)"
+
+  if [[ -n "$fm_name" && "$fm_name" != "$skill_dir" ]]; then
+    SKILL_NAME_BAD+=("$skill_dir (declares '$fm_name')")
+  fi
+  if [[ ${#fm_desc} -gt $SKILL_DESC_MAX ]]; then
+    SKILL_DESC_LONG+=("$skill_dir (${#fm_desc} chars)")
+  fi
+done
+
+if [[ ${#SKILL_NAME_BAD[@]} -eq 0 ]]; then
+  check_critical "Every skill's declared name matches its directory" "pass"
+else
+  for bad in "${SKILL_NAME_BAD[@]}"; do
+    printf '         %-6s %s\n' "BAD" "$bad"
+  done
+  check_critical "Every skill's declared name matches its directory" "fail" \
+    "Skill discovery is name-matched at load time. A mismatch does not warn — the skill loads as nothing and is silently unavailable, so the only symptom is an agent that never uses it." \
+    "Set the frontmatter 'name:' to the parent directory name for: ${SKILL_NAME_BAD[*]}"
+fi
+
+if [[ ${#SKILL_DESC_LONG[@]} -le $BUDGET_SKILL_DESC_OVERLONG ]]; then
+  check_recommended "Skill descriptions past the ${SKILL_DESC_MAX}-char cap within ratchet (${#SKILL_DESC_LONG[@]} / $BUDGET_SKILL_DESC_OVERLONG)" "pass"
+  if [[ ${#SKILL_DESC_LONG[@]} -gt 0 ]]; then
+    printf '         %-6s %s\n' "DEBT" "${#SKILL_DESC_LONG[@]} skill(s) exceed the cap; longest: ${SKILL_DESC_LONG[0]}"
+    printf '         %-6s %s\n' "" "pre-existing, tracked as DR-04. Ratchet down; do not let it grow."
+  fi
+else
+  for long in "${SKILL_DESC_LONG[@]}"; do
+    printf '         %-6s %s\n' "LONG" "$long"
+  done
+  check_recommended "Skill descriptions past the ${SKILL_DESC_MAX}-char cap within ratchet" "fail" \
+    "Selection is description-matched and the listing truncates at roughly ${SKILL_DESC_MAX} characters, so anything past it is invisible when the agent chooses a skill. The count grew beyond the agreed ratchet of $BUDGET_SKILL_DESC_OVERLONG." \
+    "Front-load the distinctive trigger language and shorten: ${SKILL_DESC_LONG[*]}. Then lower BUDGET_SKILL_DESC_OVERLONG to the new figure."
+fi
+
+# ── Recent verification outcomes ── BIOTRACKR-ORIGINAL ───────────────────────
+# The checks above describe the harness's structure. This describes what it has
+# actually been doing, so one command answers "is the harness sound" and "is it
+# working" together. Reporting only: the raw store is local and optional, and a
+# developer who has never enabled emission must not see a failure because of it.
+header "Recent Verification Outcomes"
+
+OBS_DIR="$REPO/.copilot-tracking/observability"
+OBS_FILES=()
+while IFS= read -r _f; do
+  [[ -n "$_f" ]] && OBS_FILES+=("$_f")
+done < <(ls -1 "$OBS_DIR"/events*.log 2>/dev/null || true)
+
+if [[ ${#OBS_FILES[@]} -eq 0 ]]; then
+  printf '         %-6s %s\n' "NONE" "no raw records (emission is off by default; enable with BIOTRACKR_OBS_ENABLED=1)"
+else
+  OBS_SUMMARY="$(cat "${OBS_FILES[@]}" 2>/dev/null \
+    | awk -F'|' '
+        !/^#schema/ && NF == 9 {
+          total++
+          outcome[$6]++
+          session[$2] = 1
+          if ($7 ~ /^[0-9]+$/) ms += $7
+        }
+        END {
+          n = 0
+          for (s in session) n++
+          printf "%d %d %d", total, n, ms
+        }' || true)"
+
+  OBS_TOTAL="${OBS_SUMMARY%% *}"
+  OBS_SESSIONS="$(printf '%s' "$OBS_SUMMARY" | cut -d' ' -f2)"
+  OBS_MS="$(printf '%s' "$OBS_SUMMARY" | cut -d' ' -f3)"
+
+  printf '         %-6s %s\n' "" "$OBS_TOTAL record(s) across $OBS_SESSIONS session(s), ${OBS_MS}ms of verification"
+
+  for _o in pass fail error skip degraded timeout; do
+    _c="$(cat "${OBS_FILES[@]}" 2>/dev/null | awk -F'|' -v o="$_o" '!/^#schema/ && NF==9 && $6==o {n++} END{print n+0}' || echo 0)"
+    [[ "$_c" -gt 0 ]] && printf '         %-10s %s\n' "$_o" "$_c"
+  done
+
+  # A malformed record is the failure mode the fixed-arity format exists to make
+  # visible, so surface it here rather than letting a consumer trip over it.
+  OBS_BAD="$(cat "${OBS_FILES[@]}" 2>/dev/null | awk -F'|' '!/^#schema/ && NF != 9 {n++} END{print n+0}' || echo 0)"
+  if [[ "$OBS_BAD" -gt 0 ]]; then
+    check_recommended "All raw records have the expected field count" "fail" \
+      "A record with the wrong field count means a value contained the delimiter or a write interleaved. Every positional consumer of the store silently reads the wrong column from that line onward." \
+      "Inspect $OBS_DIR/events*.log for the $OBS_BAD malformed line(s) and check the sanitisation path in scripts/observability.sh."
+  else
+    check_recommended "All raw records have the expected field count ($OBS_TOTAL checked)" "pass"
+  fi
+
+  # Promotion staleness. Promotion runs from the push gate, and that gate can be
+  # bypassed with --no-verify or BIOTRACKR_SKIP_HOOKS. When it is, records pile
+  # up locally and never reach the committed tier — silently, because nothing
+  # else looks. The health skill also reports this, but it only runs when an
+  # agent invokes it, so the check lives here too where the audit already runs.
+  OBS_WM=""
+  if [[ -r "$OBS_DIR/promoted" ]]; then
+    read -r OBS_WM < "$OBS_DIR/promoted" 2>/dev/null || OBS_WM=""
+  fi
+
+  OBS_UNPROMOTED="$(cat "${OBS_FILES[@]}" 2>/dev/null \
+    | awk -F'|' -v wm="${OBS_WM:-}" '!/^#schema/ && NF==9 && ($1 "") > (wm "") {n++} END{print n+0}' || echo 0)"
+
+  # Age, not volume, is the signal: unpromoted records are normal mid-session
+  # and only meaningful once they have sat there across several days of work.
+  STALE_CUTOFF=""
+  printf -v STALE_CUTOFF '%(%Y-%m-%d)T' $(( ${EPOCHSECONDS:-0} - 604800 )) 2>/dev/null || STALE_CUTOFF=""
+
+  OBS_STALE=0
+  if [[ -n "$STALE_CUTOFF" ]]; then
+    OBS_STALE="$(cat "${OBS_FILES[@]}" 2>/dev/null \
+      | awk -F'|' -v wm="${OBS_WM:-}" -v cut="$STALE_CUTOFF" \
+          '!/^#schema/ && NF==9 && ($1 "") > (wm "") && ($1 "") < (cut "") {n++} END{print n+0}' || echo 0)"
+  fi
+
+  if [[ "$OBS_STALE" -gt 0 ]]; then
+    check_recommended "Raw records have been promoted to the committed rollup" "fail" \
+      "$OBS_STALE record(s) older than seven days have never been promoted. Promotion runs from the push gate, so this is what a repeatedly bypassed gate looks like: the raw store keeps growing while .copilot-tracking/harness-evolution-metrics.md stays frozen, and no trend anyone reads reflects the work that has actually happened." \
+      "Run a push without --no-verify or BIOTRACKR_SKIP_HOOKS to promote them, or call promote_observability directly after sourcing scripts/observability.sh."
+  else
+    check_recommended "Raw records have been promoted to the committed rollup ($OBS_UNPROMOTED pending)" "pass"
+  fi
+fi
+
 TOTAL_PASS=$((CRITICAL_PASS + RECOMMENDED_PASS))
 TOTAL=$((CRITICAL_PASS + CRITICAL_FAIL + RECOMMENDED_PASS + RECOMMENDED_FAIL))
 

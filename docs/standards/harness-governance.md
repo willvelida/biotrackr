@@ -54,13 +54,15 @@ dotnet test --no-build --filter "FullyQualifiedName~E2E"                  (E2E t
 Collect evidence that the change is correct.
 
 ```text
-dotnet test --collect:"XPlat Code Coverage" --settings ../coverage.runsettings
+dotnet test --collect:"XPlat Code Coverage" --settings coverage.runsettings
 reportgenerator -reports:"./TestResults/**/coverage.cobertura.xml" -targetdir:"./CoverageReport" -reporttypes:TextSummary
 Get-Content ./CoverageReport/Summary.txt
 ```
 
+- Run from the service directory. A leading `../` on that settings path resolves to a file that does not exist, and the run then reports a wrong number instead of failing.
 - 70% minimum line coverage is enforced in CI. Verify locally before pushing.
 - Review the coverage summary for uncovered paths introduced by the change.
+- The above observes the *service*. To observe the *harness* — whether its own gates ran, passed, or were bypassed — run `bash scripts/audit-harness.sh`, which reports structural state, measurement coverage, and recent verification outcomes together. Add `--json` for a machine-readable copy.
 
 ### Validate
 
@@ -196,6 +198,41 @@ References: SPACE (Forsgren et al., ACM Queue 2021), Accelerate/DORA (Forsgren, 
 - **Human intervention rate**: Percentage of agent-generated changes that require human correction before merge.
 - **Acceptance criteria fulfillment rate**: Percentage of spec acceptance criteria satisfied at review time.
 - **Learning acceptance rate**: Ratio of accepted to proposed learnings in the Evolve phase (from evolution log).
+
+### Runtime Signals
+
+The metrics above describe what a cycle *decided*. Runtime signals describe what the harness *did* while the cycle ran — whether each verification actually executed, what it concluded, and how long it took. They map onto the same four dimensions; no fifth dimension is introduced.
+
+A verification event carries one of six outcomes. The distinctions are load-bearing, because a check that was bypassed and a check that passed are indistinguishable once collapsed into a boolean:
+
+| Outcome | Meaning |
+|---------|---------|
+| `pass` | The check ran and the subject was sound. |
+| `fail` | The check ran and the subject was broken. |
+| `error` | The check could not run. An environment problem, not a code problem. |
+| `skip` | The check was bypassed, or its tooling was unavailable. |
+| `degraded` | The check ran in a reduced mode, such as without its timeout bound enforced. |
+| `timeout` | The check was killed by its own budget. |
+
+| QITE Dimension | Runtime Signal | Derivation |
+|---------------|----------------|------------|
+| Quality | Verification success rate | `pass ÷ (pass + fail)` |
+| Iteration | Rework and friction | `fail + error` |
+| Time | Verification cost | Summed elapsed milliseconds |
+| Efficiency | Weakened-gate rate | `(skip + degraded + timeout) ÷ total` |
+
+The Efficiency signal is the one this layer exists for. A bypassed or degraded gate leaves no trace anywhere else — it looks exactly like a gate that passed — so counting it is the only way "the check did not really run" becomes visible.
+
+### Runtime Signal Storage
+
+Two tiers, deliberately separated:
+
+- **Raw tier** — `.copilot-tracking/observability/`, gitignored. One delimited record per event, appended by the git hooks, the per-edit handler, and the affected-service sensor. High-volume and disposable. It is not committed because the pre-commit hook writes into it during the very commit that would carry it, which would either lag by one commit or silently mutate the commit being made.
+- **Committed tier** — `.copilot-tracking/harness-evolution-metrics.md`. One row per SDD cycle, distilled from the raw tier by the push gate. Small, reviewable, and the only tier any automation reads.
+
+The two are kept apart from `harness-evolution-log.md` rather than widening it, because that file's column list is restated in prose across six files with no shared definition. Both headers are guarded mechanically by check C7 in `scripts/audit-harness.sh`, which holds the authoritative column lists.
+
+Emission is opt-in via `BIOTRACKR_OBS_ENABLED=1`, following the existing `BIOTRACKR_*` hook-control convention. Disabled is the default and costs nothing: the emit path returns before touching the filesystem. Promotion runs from the push gate so it cannot be forgotten, and the audit reports unpromoted records older than seven days — the signature of a gate that is being bypassed repeatedly.
 
 ### SDD Cycle Metrics
 

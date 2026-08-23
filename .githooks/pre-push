@@ -11,7 +11,16 @@ set -uo pipefail
 REPO_ROOT="$(git rev-parse --show-toplevel)"
 cd "$REPO_ROOT" || exit 1
 
-[ "${BIOTRACKR_SKIP_HOOKS:-0}" = "1" ] && exit 0
+BIOTRACKR_OBS_ROOT="$REPO_ROOT"
+# shellcheck source=/dev/null
+. "$REPO_ROOT/scripts/observability.sh" 2>/dev/null || true
+type -t emit_event >/dev/null 2>&1 || emit_event() { :; }
+type -t obs_now_ms >/dev/null 2>&1 || obs_now_ms() { _OBS_NOW_MS=0; }
+
+if [ "${BIOTRACKR_SKIP_HOOKS:-0}" = "1" ]; then
+  emit_event pre-push gate range skip 0 "hooks-disabled" || true
+  exit 0
+fi
 
 ZERO="0000000000000000000000000000000000000000"
 STATUS=0
@@ -33,15 +42,38 @@ while read -r _local_ref local_sha _remote_ref remote_sha; do
     range="$remote_sha..$local_sha"
   fi
 
-  bash scripts/verify.sh --range "$range" --contract || STATUS=1
+  obs_now_ms; _range_start="$_OBS_NOW_MS"
+  if bash scripts/verify.sh --range "$range" --contract; then
+    obs_now_ms
+    emit_event pre-push verify-range "$range" pass $((_OBS_NOW_MS - _range_start)) || true
+  else
+    _rc=$?
+    obs_now_ms
+    if [ "$_rc" -eq 1 ]; then
+      emit_event pre-push verify-range "$range" error $((_OBS_NOW_MS - _range_start)) "cannot-run" || true
+    else
+      emit_event pre-push verify-range "$range" fail $((_OBS_NOW_MS - _range_start)) "verify-rc-$_rc" || true
+    fi
+    STATUS=1
+  fi
 done
 
 # Direct invocation (no stdin from git) — fall back to the working tree.
 if [ "$SAW_REF" -eq 0 ]; then
-  bash scripts/verify.sh --contract || STATUS=1
+  obs_now_ms; _wt_start="$_OBS_NOW_MS"
+  if bash scripts/verify.sh --contract; then
+    obs_now_ms
+    emit_event pre-push verify-worktree working pass $((_OBS_NOW_MS - _wt_start)) || true
+  else
+    _rc=$?
+    obs_now_ms
+    emit_event pre-push verify-worktree working fail $((_OBS_NOW_MS - _wt_start)) "verify-rc-$_rc" || true
+    STATUS=1
+  fi
 fi
 
 if [ "$STATUS" -ne 0 ]; then
+  emit_event pre-push gate range fail 0 || true
   {
     echo ""
     echo "PRE-PUSH FAILED: fix the failures above before pushing."
@@ -50,6 +82,16 @@ if [ "$STATUS" -ne 0 ]; then
     echo "  bypass (use sparingly): git push --no-verify"
   } >&2
   exit 1
+fi
+
+emit_event pre-push gate range pass 0 || true
+
+# Promotion runs here, on the success path, so raw records reach the committed
+# rollup without anyone having to remember. It must never block a push: a
+# failure to record measurements is not a reason to stop work, and the gate's
+# 0/1 contract belongs to verification, not to telemetry.
+if type -t promote_observability >/dev/null 2>&1; then
+  promote_observability || echo "pre-push: promotion of observability records failed (push continues)." >&2
 fi
 
 exit 0

@@ -82,13 +82,13 @@ The review report ends with a `## Cycle Measurement Summary` section after `## N
 
 `.copilot-tracking/harness-evolution-log.md` uses a 14-column table: Date, PR, Plan, Proposed, Accepted, Severity (C/H/M/L), Files Modified, Status, Verdict, FixCycles, FindDensity, CycleTime, SpecClarity, FlowState.
 
-Status is `complete`, `partial`, or `skipped`. FixCycles counts REQUEST_CHANGES loops before APPROVE. FindDensity is findings per task. CycleTime runs from the plan directory date to review completion. Use `—` where data is unavailable. Check for an existing row by PR number before adding one.
+Status is `complete`, `partial`, or `skipped`. FixCycles counts REQUEST_CHANGES loops before APPROVE. FindDensity is findings per task. CycleTime runs from the plan directory date to review completion. Use `—` where data is unavailable, which means permanently unmeasured rather than pending; never backfill it. Before adding a row, check whether the cycle is already logged by plan slug containment, not by PR number — one cycle may produce several rows, and the PR column is `—` whenever the evolution ran before a PR existed.
 
 ## New Phase Checklist
 
 - Create `.github/skills/sdd-{slug}/SKILL.md` with `name` matching the directory
 - Add a routing entry to the `.github/agents/sdd-workflow.agent.md` state detection table
-- Update the Skills table and count in `.github/copilot-instructions.md`
+- Update the skills count and table in `docs/harness-guide.md`, which is where the inventory lives
 - Update the counts in `AGENTS.md` and the diagram, phase descriptions, and quick reference in `docs/harness-guide.md`
 
 ## Design Decision Alignment

@@ -14,6 +14,23 @@ on:
             - 'docs/harness-guide.md'
             - 'scripts/audit-harness.sh'
             - '.github/workflows/harness-audit.yml'
+            # The runtime layer. Until these were listed, a change to a git hook,
+            # a hook registration, or the shared sensor could not trigger the
+            # audit at all — the checks that cover them never ran on the PR that
+            # broke them.
+            - '.githooks/**'
+            - '.github/hooks/**'
+            - '.claude/settings.json'
+            - 'scripts/verify.sh'
+            - 'scripts/init.sh'
+            - 'scripts/agent-post-edit.sh'
+            - 'scripts/observability.sh'
+            - 'scripts/observability.test.sh'
+            - 'scripts/audit-harness.test.sh'
+            # Checks C7 and C8 read these, so a schema or measurement change
+            # should be audited by the PR that makes it.
+            - '.copilot-tracking/harness-evolution-log.md'
+            - '.copilot-tracking/harness-evolution-metrics.md'
     workflow_dispatch:
 
 permissions:
@@ -39,7 +56,7 @@ jobs:
               continue-on-error: true
               run: |
                 set -o pipefail
-                bash scripts/audit-harness.sh | tee audit.log
+                bash scripts/audit-harness.sh --json --json-out audit-results.json | tee audit.log
 
             - name: Publish audit summary
               if: always()
@@ -51,3 +68,19 @@ jobs:
                   cat audit.log 2>/dev/null || echo 'The audit produced no output.'
                   echo '```'
                 } >> "$GITHUB_STEP_SUMMARY"
+
+            # The step summary is ephemeral and cannot be compared between runs.
+            # Retaining both forms makes drift observable over time: the log for
+            # a human reading one run, the JSON for anything trending several.
+            # The JSON is written from the audit's exit trap, so it exists even
+            # when a CRITICAL check fails the run.
+            - name: Upload audit results
+              if: always()
+              uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+              with:
+                name: harness-audit-${{ github.run_id }}
+                path: |
+                  audit.log
+                  audit-results.json
+                if-no-files-found: warn
+                retention-days: 90

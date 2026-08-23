@@ -16,7 +16,18 @@ set -uo pipefail
 
 MSG_FILE="${1:?commit-msg hook requires the message file path}"
 
-[ "${BIOTRACKR_SKIP_HOOKS:-0}" = "1" ] && exit 0
+REPO_ROOT="$(git rev-parse --show-toplevel 2>/dev/null)" || REPO_ROOT=""
+if [ -n "$REPO_ROOT" ]; then
+  BIOTRACKR_OBS_ROOT="$REPO_ROOT"
+  # shellcheck source=/dev/null
+  . "$REPO_ROOT/scripts/observability.sh" 2>/dev/null || true
+fi
+type -t emit_event >/dev/null 2>&1 || emit_event() { :; }
+
+if [ "${BIOTRACKR_SKIP_HOOKS:-0}" = "1" ]; then
+  emit_event commit-msg gate message skip 0 "hooks-disabled" || true
+  exit 0
+fi
 
 STANDARD="docs/standards/commit-standards.md"
 
@@ -137,6 +148,7 @@ if [ "$TRAILER_COUNT" -gt 0 ] && [ "$TRAILER_COUNT" -lt 3 ]; then
 fi
 
 if [ "$FAILURES" -gt 0 ]; then
+  emit_event commit-msg gate message fail 0 "$FAILURES-rule-violations" || true
   {
     echo ""
     echo "COMMIT-MSG: $FAILURES rule(s) violated. The commit was not created."
@@ -146,4 +158,5 @@ if [ "$FAILURES" -gt 0 ]; then
   exit 1
 fi
 
+emit_event commit-msg gate message pass 0 || true
 exit 0

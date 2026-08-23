@@ -47,3 +47,48 @@ passes while proving nothing.
 
 A failure message names what broke, why it matters, and the next action. An
 assertion an agent cannot act on is a defect.
+
+## Observability
+
+Verification events are recorded through `scripts/observability.sh`, a sourced
+library. Load it, never execute it, and always behind shims:
+
+```bash
+BIOTRACKR_OBS_ROOT="$REPO_ROOT"
+. "$REPO_ROOT/scripts/observability.sh" 2>/dev/null || true
+type -t emit_event >/dev/null 2>&1 || emit_event() { :; }
+type -t obs_now_ms >/dev/null 2>&1 || obs_now_ms() { _OBS_NOW_MS=0; }
+
+emit_event <component> <action> <subject> <outcome> <ms> [detail] || true
+```
+
+- Off unless `BIOTRACKR_OBS_ENABLED=1`, following the `BIOTRACKR_*` hook-control
+  convention. The shims mean deleting the library changes nothing.
+- `outcome` is one of `pass fail error skip degraded timeout`. Record what
+  actually happened: a bypassed gate and a passing gate must not both read
+  `pass`, and a script with three-valued exit codes must not collapse them.
+- Guard every call with `|| true`, and never emit to stdout. Both agent
+  surfaces discard successful hook stdout, and hooks reserve stderr for
+  failures.
+- A sourced library must not run `set -` or `exit`: options leak into the
+  calling hook, and an exit terminates it rather than the function.
+- The emit path is measured against a 50ms budget on the Windows host, where
+  file I/O rather than forking dominates. Re-run the benchmark before adding
+  another read to it.
+
+## Recording and verifying
+
+- Sanitise every field written to a delimited record, including ones the script
+  generates. "This value cannot contain the delimiter" is an assumption: a git
+  branch may contain `|`, and one unsanitised field silently shifts every column
+  after it.
+- A hook that writes a tracked file has not committed it. `pre-push` runs after
+  the commits exist, so anything it writes lands outside the push. Claiming
+  automatic persistence needs a trace showing how the write reaches a commit.
+- `git check-ignore` proves ignore status, not tracking; with a negation it exits
+  0 on a file that is *not* ignored. Use `git ls-files --error-unmatch`.
+- Timestamps are not uniqueness mechanisms. Filenames and watermarks keyed on
+  time need a tie-breaker, or two events in the same tick collide.
+- Prove an enforcement test can fail. Break the thing it guards, confirm it goes
+  red, restore. A suite that has only ever passed is indistinguishable from one
+  whose assertions never run.

@@ -9,7 +9,7 @@ Each row records one SDD cycle's learning-encoding session.
 
 Columns:
   Date            — YYYY-MM-DD of the evolution session
-  PR              — PR number (if known), used for idempotency checking via grep
+  PR              — PR number when one exists, otherwise — (em dash)
   Plan            — SDD plan slug (matches .copilot-tracking/plans/{date}/{slug}/)
   Proposed        — Number of learnings proposed by the agent
   Accepted        — Number of learnings approved by the user
@@ -23,10 +23,17 @@ Columns:
   SpecClarity     — Self-reported spec clarity score (1-5) | — (if unavailable)
   FlowState       — Self-reported flow state score (1-5) | — (if unavailable)
 
-Idempotency: Before posting an evolve reminder, check this log.
-The PR column uses #NNN format when a PR exists (e.g., #375), or — (em dash) when
-the evolution occurs before a PR is created. Grep for the plan slug to check:
+Idempotency: this is a CONTAINMENT check, not a uniqueness check. One cycle may
+legitimately produce several rows — each row is one learning-encoding session —
+so neither Plan nor PR is a unique key. Ask only "has anything been logged for
+this cycle yet?"
+
+Key by plan slug, never by PR:
   grep -q "| {slug} |" .copilot-tracking/harness-evolution-log.md
+
+The PR column is em dash whenever the evolution ran before a PR existed, which is
+common, so a PR-keyed check silently misses those cycles and re-prompts work that
+was already done. Slug is present on every row.
 
 Metrics derived from this table:
   Evolution frequency    = row count per time period
@@ -37,6 +44,21 @@ Metrics derived from this table:
   Avg fix cycles         = mean(FixCycles) — lower is better
   Avg cycle time         = mean(CycleTime) — track directional trend
   Satisfaction trend     = mean(SpecClarity), mean(FlowState) over time
+
+Unmeasured rows: an em dash in the six measurement columns (Verdict through
+FlowState) means PERMANENTLY UNMEASURED, not pending. Those cycles ran before the
+measurement layer existed, or closed without a review report, so the values were
+never observed. They are deliberately never backfilled — a reconstructed number
+would be indistinguishable from a measured one and would corrupt every trend
+computed from this table. Treat such rows as absent from the sample, not as zero.
+
+Excluded from metrics on those grounds: the six 2026-05-12 and 2026-05-13 rows
+predating the measurement layer, and the three 2026-08-22 devcontainer-copilot-cli
+rows, which closed without a review report.
+
+Measurement liveness: metrics need measured rows, so every completed cycle must
+add one. If the five most recent rows are ever all unmeasured, the trend surface
+is dead — the structural audit fails on that condition.
 
 Example row (commented out):
   | 2026-05-12 | #375 | mcp-server-redesign | 6 | 4 | 0/2/3/1 | csharp-conventions, testing-conventions | complete | APPROVE | 0 | 0.5 | 3 | 4 | 4 |
@@ -55,3 +77,4 @@ Example row (commented out):
 | 2026-08-22 | — | devcontainer-copilot-cli | 3 | 2 | 0/1/1/0 | devcontainer-conventions.instructions.md, check-devcontainer.sh, pre-commit, devcontainer-check.yml, harness-guide.md | complete | — | — | — | — | — | — |
 | 2026-08-22 | #525 | devcontainer-copilot-cli | 2 | 2 | 1/1/0/0 | github-actions-conventions.instructions.md | complete | — | — | — | — | — | — |
 | 2026-08-22 | #525 | devcontainer-copilot-cli | 5 | 5 | 0/3/1/1 | shell-conventions.instructions.md, harness-guide.md, harness-governance.md | complete | — | — | — | — | — | — |
+| 2026-08-23 | — | harness-observability | 9 | 9 | 0/5/4/0 | shell-conventions.instructions.md, github-actions-conventions.instructions.md, sdd-2-specify/SKILL.md, sdd-4-architect/SKILL.md | complete | REQUEST_CHANGES | 0 | 0.60 | 1 | 3 | 3 |
