@@ -88,19 +88,26 @@ namespace Biotrackr.Auth.Svc.IntegrationTests.Contract
         }
 
         [Fact]
-        public void GetService_ShouldResolveRefreshTokenService_WhenHttpClientResilienceHandlerIsRegistered()
+        public void CreateHandler_ShouldIncludeResilienceHandlerInPipeline_WhenRefreshTokenClientIsBuilt()
         {
             // Arrange
-            var serviceProvider = _fixture.ServiceProvider;
+            const string ResilienceHandlerTypeName = "Microsoft.Extensions.Http.Resilience.ResilienceHandler";
+            var handlerFactory = _fixture.ServiceProvider.GetRequiredService<IHttpMessageHandlerFactory>();
 
             // Act
-            // The service is registered with AddHttpClient().AddStandardResilienceHandler(), so
-            // resolving it proves the HttpClient factory pipeline is configured correctly.
-            // The actual resilience handler behaviour is tested in E2E tests.
-            var refreshTokenService = serviceProvider.GetService<IRefreshTokenService>();
+            var pipeline = new List<string>();
+            HttpMessageHandler? handler = handlerFactory.CreateHandler(nameof(IRefreshTokenService));
+            while (handler is not null)
+            {
+                pipeline.Add(handler.GetType().FullName!);
+                handler = (handler as DelegatingHandler)?.InnerHandler;
+            }
 
             // Assert
-            refreshTokenService.Should().NotBeNull("IRefreshTokenService should be registered");
+            pipeline.Should().Contain(ResilienceHandlerTypeName,
+                "AGENT FIX: the IRefreshTokenService HttpClient must be registered with "
+                + ".AddStandardResilienceHandler() so Fitbit token refreshes retry on transient failure. "
+                + $"Handler pipeline was: {string.Join(" -> ", pipeline)}.");
         }
     }
 }
