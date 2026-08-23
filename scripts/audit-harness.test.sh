@@ -150,6 +150,16 @@ assert_changed "$SK" "C10 fails when a skill name does not match its directory" 
   assert_check C10 fail "C10 fails when a skill name does not match its directory"
 }
 
+# A missing `name:` fails discovery exactly as a mismatched one does. Guarding
+# the comparison on `-n` treated the worst case — no name at all — as a pass.
+setup
+SK="$R/.github/skills/harness-health/SKILL.md"
+assert_changed "$SK" "C10 fails when a skill declares no name" && {
+  sed -i '/^name: harness-health$/d' "$SK"
+  run_audit
+  assert_check C10 fail "C10 fails when a skill declares no name"
+}
+
 # The description ratchet is pinned at the current count, so tightening it by
 # one must trip the check.
 setup

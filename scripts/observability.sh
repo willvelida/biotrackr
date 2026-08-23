@@ -115,7 +115,11 @@ _obs_ref() {
   # HEAD cannot move within a single short-lived process, so resolve once and
   # reuse. Matters for callers that emit several times, such as the
   # affected-service sensor emitting per service.
-  if [ -n "${_OBS_REF:-}" ]; then
+  #
+  # The flag, rather than a non-empty _OBS_REF, is what marks the cache valid.
+  # These are plain globals in a library sourced into git hooks, so an inherited
+  # _OBS_REF would otherwise be trusted verbatim and skip sanitisation entirely.
+  if [ -n "${_OBS_REF_RESOLVED:-}" ]; then
     return 0
   fi
 
@@ -147,7 +151,15 @@ _obs_ref() {
     sha="$(git -C "$_OBS_ROOT" rev-parse --short HEAD 2>/dev/null)" || sha=""
   fi
 
-  _OBS_REF="${branch:-unknown}@${sha:0:7}"
+  # Sanitised like any other field. A branch name may legally contain the
+  # delimiter — git forbids space, `~`, `^`, `:`, `?`, `*`, `[` and `\`, but not
+  # `|` — so an unsanitised ref is the one generated field that can silently
+  # widen a record and shift every column after it.
+  _obs_clean "${branch:-unknown}"; branch="${_OBS_CLEAN:-unknown}"
+  _obs_clean "${sha:0:7}";         sha="$_OBS_CLEAN"
+
+  _OBS_REF="${branch}@${sha}"
+  _OBS_REF_RESOLVED=1
   return 0
 }
 
@@ -210,11 +222,26 @@ _obs_rotate() {
   [ "${_OBS_BYTES:-0}" -ge "$_OBS_MAX_BYTES" ] || return 0
   [ -f "$_OBS_LOG" ] || return 0
 
-  local stamp
+  local stamp target n
   stamp="${_OBS_TS//:/-}"
   stamp="${stamp//./-}"
 
-  if mv -f "$_OBS_LOG" "$_OBS_DIR/events-${stamp}.log" 2>/dev/null; then
+  # The timestamp resolves to milliseconds, so it is not on its own a unique
+  # filename. `mv -f` onto an existing archive would destroy records that may
+  # not have been promoted yet — the one thing rotation promises never to do.
+  # The pid disambiguates concurrent hooks; the counter disambiguates the rest.
+  target="$_OBS_DIR/events-${stamp}-$$.log"
+  n=0
+  while [ -e "$target" ] && [ "$n" -lt 100 ]; do
+    n=$((n + 1))
+    target="$_OBS_DIR/events-${stamp}-$$-${n}.log"
+  done
+
+  # Still taken after 100 tries: leave the live log alone and let it grow. An
+  # oversized log is recoverable; an overwritten archive is not.
+  [ -e "$target" ] && return 0
+
+  if mv "$_OBS_LOG" "$target" 2>/dev/null; then
     _OBS_BYTES=0
   fi
   return 0
@@ -284,7 +311,25 @@ emit_event() {
   _obs_clean "$subject";   subject="$_OBS_CLEAN"
   _obs_clean "$outcome";   outcome="$_OBS_CLEAN"
   _obs_clean "$ms";        ms="$_OBS_CLEAN"
-  _obs_clean "$detail";    detail="${_OBS_CLEAN:0:$_OBS_DETAIL_MAX}"
+  _obs_clean "$detail";    detail="$_OBS_CLEAN"
+
+  # The outcome vocabulary is closed, because the committed rollup has exactly
+  # one column per value. An unrecognised outcome would still be counted in the
+  # Events total while incrementing no column, so the row would quietly stop
+  # adding up — a corrupted measurement that still looks like a measurement.
+  #
+  # Coerce rather than drop. A producer emitting outside the vocabulary is
+  # itself broken, which is what `error` denotes, and the original value is kept
+  # in detail so the defect stays diagnosable instead of merely disappearing.
+  case "$outcome" in
+    pass|fail|error|skip|degraded|timeout) ;;
+    *)
+      detail="bad-outcome:${outcome:-empty}${detail:+ }${detail}"
+      outcome="error"
+      ;;
+  esac
+
+  detail="${detail:0:$_OBS_DETAIL_MAX}"
 
   line="${_OBS_TS}|${_OBS_SESSION}|${component}|${action}|${subject}|${outcome}|${ms}|${detail}|${_OBS_REF}"
 
@@ -313,55 +358,108 @@ emit_event() {
 # archives, since rotation means a cycle's records can span several files.
 # Never deletes anything: the watermark advances, the records stay.
 #
+# Writes one row per ref present in the batch, not one row overall, so a batch
+# spanning two branches is not silently attributed to whichever one happens to
+# be checked out when the push runs.
+#
+# The watermark file holds "<timestamp> <count>": the count is how many records
+# carry that exact millisecond and have already been promoted, without which
+# records sharing the boundary millisecond are skipped forever. A watermark
+# written by an earlier version has no count, which re-promotes at most the
+# handful of records on that millisecond. Deliberate: a duplicated row is
+# visible in the rollup, a dropped one is not.
+#
 # Safe to call unconditionally. Returns 0 always, including when there is
 # nothing to promote, when the store is absent, and when emission was never
-# enabled.
+# enabled. Sets _OBS_PROMOTED to the number of rows appended.
 # ---------------------------------------------------------------------------
 promote_observability() {
+  # Always defined, so a caller under `set -u` can read it after any exit path.
+  _OBS_PROMOTED=0
+
   [ -n "${_OBS_ROOT:-}" ] || return 0
   [ -d "$_OBS_DIR" ] || return 0
   [ -f "$_OBS_METRICS" ] || return 0
 
-  local watermark="" summary total sessions p f e s d t ms maxts cycle today
+  local watermark="" wmn="" summary today rows=0
+  local kind ref total sessions p f e s d t ms maxts="" maxn=0
   if [ -r "$_OBS_WATERMARK" ]; then
-    read -r watermark < "$_OBS_WATERMARK" 2>/dev/null || watermark=""
+    read -r watermark wmn < "$_OBS_WATERMARK" 2>/dev/null || true
   fi
+  watermark="${watermark:-}"
+  wmn="${wmn:-0}"
 
-  summary="$(cat "$_OBS_DIR"/events*.log 2>/dev/null | awk -F'|' -v wm="${watermark:-}" '
-    !/^#schema/ && NF == 9 && ($1 "") > (wm "") {
-      total++
-      o[$6]++
-      sess[$2] = 1
-      if ($7 ~ /^[0-9]+$/) ms += $7
-      if (($1 "") > (maxts "")) maxts = $1
+  summary="$(cat "$_OBS_DIR"/events*.log 2>/dev/null | awk -F'|' \
+    -v wm="${watermark:-}" -v wmn="${wmn:-0}" '
+    !/^#schema/ && NF == 9 {
+      ts = $1 ""
+
+      # Records sharing the watermark timestamp are the reason this is not a
+      # plain `>` comparison. Timestamps resolve to milliseconds, so several
+      # records can carry the same one and only some were promoted last time.
+      # A strict `>` skipped every one of them, permanently and silently. The
+      # count stored beside the watermark says how many were already taken, and
+      # append order makes "the first n" well defined.
+      if (ts == wm) { atwm++; if (atwm <= wmn) next }
+      else if (ts < wm) next
+
+      # Attribute each record to the ref it was recorded under. Labelling the
+      # whole batch with whatever ref happens to be checked out at promotion
+      # time silently reassigns work from one branch to another whenever a
+      # batch spans more than one.
+      r = $9
+      sub(/@.*/, "", r)
+      if (r == "") r = "unknown"
+
+      rtotal[r]++
+      rout[r, $6]++
+      sess[r, $2] = 1
+      if ($7 ~ /^[0-9]+$/) rms[r] += $7
+
+      if (ts > maxts) { maxts = ts; maxn = 1 }
+      else if (ts == maxts) maxn++
     }
     END {
-      n = 0
-      for (k in sess) n++
-      printf "%d %d %d %d %d %d %d %d %d %s",
-        total + 0, n, o["pass"] + 0, o["fail"] + 0, o["error"] + 0,
-        o["skip"] + 0, o["degraded"] + 0, o["timeout"] + 0, ms + 0, maxts
+      for (r in rtotal) {
+        n = 0
+        for (k in sess) { split(k, kp, SUBSEP); if (kp[1] == r) n++ }
+        printf "R %s %d %d %d %d %d %d %d %d %d\n", r, rtotal[r], n,
+          rout[r, "pass"] + 0, rout[r, "fail"] + 0, rout[r, "error"] + 0,
+          rout[r, "skip"] + 0, rout[r, "degraded"] + 0, rout[r, "timeout"] + 0,
+          rms[r] + 0
+      }
+      # Carry the running count forward when this batch did not advance past
+      # the watermark millisecond.
+      if (maxts != "") printf "W %s %d\n", maxts, (maxts == wm ? wmn + maxn : maxn)
     }' 2>/dev/null)" || return 0
+
+  printf -v today '%(%Y-%m-%d)T' -1 2>/dev/null || today="unknown"
 
   # Parsed with `read` rather than `set --`: the self-test asserts this library
   # contains no `set -` at all, and keeping that assertion blunt is worth more
   # than the convenience. `set --` would only touch this function's positional
   # parameters, but a safety check that needs a caveat is a weaker check.
-  read -r total sessions p f e s d t ms maxts <<< "$summary"
-  total="${total:-0}"; sessions="${sessions:-0}"; p="${p:-0}"; f="${f:-0}"; e="${e:-0}"
-  s="${s:-0}"; d="${d:-0}"; t="${t:-0}"; ms="${ms:-0}"; maxts="${maxts:-}"
+  while read -r kind ref total sessions p f e s d t ms; do
+    case "$kind" in
+      R)
+        [ "${total:-0}" -gt 0 ] || continue
+        printf '| %s | %s | %s | %s | %s | %s | %s | %s | %s | %s | %s |\n' \
+          "$today" "$ref" "$sessions" "$total" "$p" "$f" "$e" "$s" "$d" "$t" "$ms" \
+          >> "$_OBS_METRICS" 2>/dev/null || return 0
+        rows=$((rows + 1))
+        ;;
+      W)
+        # On a W line the ref and total columns carry the watermark pair.
+        maxts="$ref"
+        maxn="$total"
+        ;;
+    esac
+  done <<< "$summary"
 
   # Nothing new since the last promotion. Not an error, and not worth a row.
-  [ "$total" -gt 0 ] || return 0
+  [ "$rows" -gt 0 ] || return 0
 
-  _obs_ref
-  cycle="${_OBS_REF%@*}"
-  printf -v today '%(%Y-%m-%d)T' -1 2>/dev/null || today="unknown"
-
-  printf '| %s | %s | %s | %s | %s | %s | %s | %s | %s | %s | %s |\n' \
-    "$today" "$cycle" "$sessions" "$total" "$p" "$f" "$e" "$s" "$d" "$t" "$ms" \
-    >> "$_OBS_METRICS" 2>/dev/null || return 0
-
-  printf '%s\n' "$maxts" > "$_OBS_WATERMARK" 2>/dev/null || true
+  printf '%s %s\n' "$maxts" "${maxn:-0}" > "$_OBS_WATERMARK" 2>/dev/null || true
+  _OBS_PROMOTED="$rows"
   return 0
 }

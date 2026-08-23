@@ -13,14 +13,19 @@ costs nothing by comparison, and it is the split anticipated by follow-up
 action 4 of the SDD Workflow Success Measurement Framework decision record.
 
 Rows are appended by the promotion step, which distils the raw event store at
-.copilot-tracking/observability/ into one row per SDD cycle. The raw store is
-gitignored, high-volume and disposable; this file is committed, small and
-reviewable. Raw records are never committed, because the pre-commit hook writes
-them during the very commit that would carry them.
+.copilot-tracking/observability/ into one row per ref per promotion. A batch
+spanning two branches therefore produces two rows rather than one row labelled
+with whichever branch happened to be checked out. The raw store is gitignored,
+high-volume and disposable; this file is committed, small and reviewable. Raw
+records are never committed, because the pre-commit hook writes them during the
+very commit that would carry them.
 
 Columns:
   Date      — YYYY-MM-DD the row was promoted
-  Cycle     — SDD plan slug, matching .copilot-tracking/plans/{date}/{slug}/
+  Cycle     — the branch the records were recorded on. Mapping this to the SDD
+              plan slug is an open question: a branch is what the runtime can
+              observe, a slug is what the evolution log is keyed by, and the
+              two coincide only by convention.
   Sessions  — distinct correlation ids observed in the promoted window
   Events    — total records promoted
   Pass      — records with outcome=pass

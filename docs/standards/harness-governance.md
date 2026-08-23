@@ -228,7 +228,7 @@ The Efficiency signal is the one this layer exists for. A bypassed or degraded g
 Two tiers, deliberately separated:
 
 - **Raw tier** — `.copilot-tracking/observability/`, gitignored. One delimited record per event, appended by the git hooks, the per-edit handler, and the affected-service sensor. High-volume and disposable. It is not committed because the pre-commit hook writes into it during the very commit that would carry it, which would either lag by one commit or silently mutate the commit being made.
-- **Committed tier** — `.copilot-tracking/harness-evolution-metrics.md`. One row per SDD cycle, distilled from the raw tier by the push gate. Small, reviewable, and the only tier any automation reads.
+- **Committed tier** — `.copilot-tracking/harness-evolution-metrics.md`. One row per ref per promotion, distilled from the raw tier by the push gate. Small, reviewable, and the only tier that outlives a clone.
 
 The two are kept apart from `harness-evolution-log.md` rather than widening it, because that file's column list is restated in prose across six files with no shared definition. Both headers are guarded mechanically by check C7 in `scripts/audit-harness.sh`, which holds the authoritative column lists.
 

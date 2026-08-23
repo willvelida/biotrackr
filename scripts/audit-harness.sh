@@ -117,7 +117,7 @@ write_json_output() {
     _ts="$(date -u +%Y%m%dT%H%M%SZ 2>/dev/null || echo unknown)"
     _dir="${BIOTRACKR_AUDIT_JSON_DIR:-$REPO/.copilot-tracking/observability/audit}"
     mkdir -p "$_dir" 2>/dev/null || true
-    JSON_OUT="$_dir/audit-${_ts}.json"
+    JSON_OUT="$_dir/audit-${_ts}-$$.json"
   else
     mkdir -p "$(dirname "$JSON_OUT")" 2>/dev/null || true
   fi
@@ -714,7 +714,12 @@ for skill_file in "$REPO"/.github/skills/*/SKILL.md; do
   fm_name="$(awk 'NR==1 && $0=="---"{inside=1; next} inside && $0=="---"{exit} inside && /^name:/{sub(/^name:[[:space:]]*/,""); gsub(/^["'"'"']|["'"'"']$/,""); print; exit}' "$skill_file" 2>/dev/null || true)"
   fm_desc="$(awk 'NR==1 && $0=="---"{inside=1; next} inside && $0=="---"{exit} inside && /^description:/{sub(/^description:[[:space:]]*/,""); print; exit}' "$skill_file" 2>/dev/null || true)"
 
-  if [[ -n "$fm_name" && "$fm_name" != "$skill_dir" ]]; then
+  # A missing `name:` fails discovery exactly as a mismatched one does, so it
+  # belongs in the same bucket. Guarding on `-n` treated the worst case — no
+  # name at all — as a pass.
+  if [[ -z "$fm_name" ]]; then
+    SKILL_NAME_BAD+=("$skill_dir (no 'name:' in frontmatter)")
+  elif [[ "$fm_name" != "$skill_dir" ]]; then
     SKILL_NAME_BAD+=("$skill_dir (declares '$fm_name')")
   fi
   if [[ ${#fm_desc} -gt $SKILL_DESC_MAX ]]; then

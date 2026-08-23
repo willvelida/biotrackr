@@ -67,7 +67,14 @@ if [ "$SAW_REF" -eq 0 ]; then
   else
     _rc=$?
     obs_now_ms
-    emit_event pre-push verify-worktree working fail $((_OBS_NOW_MS - _wt_start)) "verify-rc-$_rc" || true
+    # Same 1-vs-rest split as the ranged path above. Exit 1 means verify could
+    # not run at all, which is a broken toolchain, not a broken change; folding
+    # it into `fail` would report work that never happened as work that failed.
+    if [ "$_rc" -eq 1 ]; then
+      emit_event pre-push verify-worktree working error $((_OBS_NOW_MS - _wt_start)) "cannot-run" || true
+    else
+      emit_event pre-push verify-worktree working fail $((_OBS_NOW_MS - _wt_start)) "verify-rc-$_rc" || true
+    fi
     STATUS=1
   fi
 fi
@@ -91,7 +98,17 @@ emit_event pre-push gate range pass 0 || true
 # failure to record measurements is not a reason to stop work, and the gate's
 # 0/1 contract belongs to verification, not to telemetry.
 if type -t promote_observability >/dev/null 2>&1; then
-  promote_observability || echo "pre-push: promotion of observability records failed (push continues)." >&2
+  if promote_observability; then
+    # Promotion appends to a committed file, and nothing here commits it. Doing
+    # so would fabricate a commit after the push range was already computed, so
+    # it would not travel with this push anyway. Say so instead, rather than
+    # letting the rollup drift silently out of the history it summarises.
+    if [ "${_OBS_PROMOTED:-0}" -gt 0 ]; then
+      echo "pre-push: promoted ${_OBS_PROMOTED} observability row(s) into .copilot-tracking/harness-evolution-metrics.md — commit it to publish them." >&2
+    fi
+  else
+    echo "pre-push: promotion of observability records failed (push continues)." >&2
+  fi
 fi
 
 exit 0

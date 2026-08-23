@@ -130,10 +130,21 @@ if OUT="$(bash scripts/verify.sh "${ARGS[@]}" "$SVC" 2>&1)"; then
   obs_now_ms
   emit_event post-edit build "$SVC" pass $((_OBS_NOW_MS - _edit_start)) || true
   exit 0
+else
+  _rc=$?
 fi
 
 obs_now_ms
-emit_event post-edit build "$SVC" fail $((_OBS_NOW_MS - _edit_start)) "verify-failed" || true
+
+# Exit 1 is verify reporting it could not run at all — missing SDK, unreadable
+# tree — not the edit being wrong. Recording that as `fail` makes a broken
+# toolchain indistinguishable from broken code in the rollup, which is the one
+# distinction the outcome vocabulary exists to preserve.
+if [ "$_rc" -eq 1 ]; then
+  emit_event post-edit build "$SVC" error $((_OBS_NOW_MS - _edit_start)) "cannot-run" || true
+else
+  emit_event post-edit build "$SVC" fail $((_OBS_NOW_MS - _edit_start)) "verify-rc-$_rc" || true
+fi
 
 # Exit 2 is the only code both harnesses route back to the model.
 printf '%s\n' "$OUT" | head -40 >&2

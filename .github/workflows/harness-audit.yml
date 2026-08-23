@@ -50,6 +50,19 @@ jobs:
               with:
                 persist-credentials: false
 
+            # The audit's checks are only as trustworthy as the suites that
+            # prove them. Listing the suites under `paths:` triggered this
+            # workflow but never ran them, so a broken suite would have reached
+            # main behind a green check — precisely the "a check that never runs
+            # is indistinguishable from one that passes" failure this layer
+            # exists to make visible. Not advisory: these are deterministic
+            # self-tests, so a failure is a defect, not a ratchet.
+            - name: Run harness self-tests
+              run: |
+                set -o pipefail
+                bash scripts/observability.test.sh
+                bash scripts/audit-harness.test.sh
+
             # Advisory while the audit builds a green history. Promote it to a hard
             # gate by deleting continue-on-error, not by editing the script.
             - name: Run harness audit

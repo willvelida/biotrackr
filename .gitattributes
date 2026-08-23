@@ -3,7 +3,8 @@
 
 # Force specific file types
 *.cs text eol=lf
-*.csproj text eol=lf*.sln text eol=lf
+*.csproj text eol=lf
+*.sln text eol=lf
 *.slnx text eol=lf
 *.md text eol=lf
 *.json text eol=lf
