@@ -31,7 +31,9 @@ Two files load on every request regardless of path: `AGENTS.md` and `.github/cop
 
 ## Agents
 
-Select an agent from the chat mode dropdown at the top of the Copilot Chat panel. There are 11 custom agent definitions.
+Select an agent from the chat mode dropdown at the top of the Copilot Chat panel, or in Copilot CLI pass `--agent`. There are 12 custom agent definitions.
+
+The CLI resolves an agent by its `name:` frontmatter value or by the filename without `.agent.md`, both case-sensitively — `copilot --agent code-reviewer` and `copilot --agent "Code Reviewer"` are equivalent, while `copilot --agent "code reviewer"` is not a match.
 
 Four agents generate code and run a verification protocol before returning:
 
@@ -51,13 +53,14 @@ Four review and analyse without modifying files:
 | DSA Mentor | `dsa-mentor.agent.md` | Data structure and algorithm learning, complexity analysis |
 | Azure Principal Architect | `azure-principal-architect.agent.md` | Azure architecture decisions, Well-Architected evaluation |
 
-Three drive workflows:
+Four drive workflows:
 
 | Agent | File | Use for |
 |-------|------|---------|
 | SDD Workflow | `sdd-workflow.agent.md` | Dispatcher that detects which SDD phase runs next from existing artifacts |
 | SDD Review Judge | `sdd-review-judge.agent.md` | SDD quality gate, running the review with an elevated model as judge |
 | Agentic Workflows | `agentic-workflows.agent.md` | GitHub Agentic Workflow authoring and management |
+| Swarm Orchestrator | `swarm-orchestrator.agent.md` | Fan an audit or convention rollout out to parallel workers in isolated worktrees |
 
 All definitions live in `.github/agents/`.
 
@@ -69,13 +72,14 @@ The Code Reviewer produces a findings table and a verdict of APPROVE or REQUEST_
 
 ## Prompts
 
-Invoke a prompt by typing `/` in the chat input, or attach one with `#prompt:name`. There are 13 prompt templates.
+Invoke a prompt by typing `/` in the chat input, or attach one with `#prompt:name`. There are 12 prompt templates.
+
+Prompts are a VS Code feature. Copilot CLI does not load `.github/prompts/`, so a workflow that has to drive CLI workers belongs in `.github/agents/` instead — that is why the swarm orchestrator is an agent.
 
 | Prompt | Purpose | Agent |
 |--------|---------|-------|
 | `/new-endpoint` | Create an API endpoint with build and test gates | C# Expert |
 | `/cross-service-change` | Coordinate a change across several services, serially in one context | C# Expert |
-| `/swarm-orchestration` | Coordinate parallel worker agents across isolated service worktrees | — |
 | `/refactor` | Refactor with baseline capture and regression verification | C# Expert |
 | `/new-component` | Scaffold a Blazor component with accessibility built in | Front-End Designer |
 | `/sdd-6-review` | SDD quality gate review, routed to an elevated judge model | SDD Review Judge |

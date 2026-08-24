@@ -6,7 +6,7 @@ argument-hint: "Change description and affected services (e.g., 'Add TTL field t
 
 Coordinate a change that spans multiple Biotrackr services, validating each service independently before moving to the next.
 
-This prompt loops serially in a single context, which is the right shape when one service depends on another. To fan the work out to parallel worker agents in isolated worktrees instead, use [swarm-orchestration](swarm-orchestration.prompt.md).
+This prompt loops serially in a single context, which is the right shape when one service depends on another. To fan the work out to parallel worker agents in isolated worktrees instead, use the [Swarm Orchestrator](../agents/swarm-orchestrator.agent.md) agent.
 
 ## Workflow
 
