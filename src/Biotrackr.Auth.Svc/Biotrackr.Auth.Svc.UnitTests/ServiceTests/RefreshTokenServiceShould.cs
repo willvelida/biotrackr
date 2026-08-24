@@ -34,9 +34,9 @@ namespace Biotrackr.Auth.Svc.UnitTests.ServiceTests
         }
 
         [Fact]
-        public async Task RefreshTokensSuccessfullyWhenValidSecretsAndHttpResponseProvided()
+        public async Task RefreshTokens_ShouldReturnTokens_WhenSecretsAndHttpResponseAreValid()
         {
-            // ARRANGE
+            // Arrange
             var fixture = new Fixture();
             var mockRefreshTokenResponse = fixture.Create<RefreshTokenResponse>();
             var mockFitbitRefreshToken = "testFitbitRefreshToken";
@@ -45,10 +45,10 @@ namespace Biotrackr.Auth.Svc.UnitTests.ServiceTests
             SetupSecretClientMocks(mockFitbitRefreshToken, mockFitbitCredential);
             SetupHttpMessageHandlerMock(mockRefreshTokenResponse);
 
-            // ACT
+            // Act
             var result = await _sut.RefreshTokens();
 
-            // ASSERT
+            // Assert
             result.AccessToken.Should().Be(mockRefreshTokenResponse.AccessToken);
             result.RefreshToken.Should().Be(mockRefreshTokenResponse.RefreshToken);
             result.ExpiresIn.Should().Be(mockRefreshTokenResponse.ExpiresIn);
@@ -58,9 +58,9 @@ namespace Biotrackr.Auth.Svc.UnitTests.ServiceTests
         }
 
         [Fact]
-        public async Task MakeCorrectHttpRequestWhenRefreshTokensIsCalled()
+        public async Task RefreshTokens_ShouldSendPostRequestToFitbitTokenEndpoint_WhenCalled()
         {
-            // ARRANGE
+            // Arrange
             var fixture = new Fixture();
             var mockRefreshTokenResponse = fixture.Create<RefreshTokenResponse>();
             var mockFitbitRefreshToken = "testFitbitRefreshToken";
@@ -78,10 +78,10 @@ namespace Biotrackr.Auth.Svc.UnitTests.ServiceTests
                     Content = new StringContent(JsonSerializer.Serialize(mockRefreshTokenResponse))
                 });
 
-            // ACT
+            // Act
             await _sut.RefreshTokens();
 
-            // ASSERT
+            // Assert
             capturedRequest.Should().NotBeNull();
             capturedRequest!.Method.Should().Be(HttpMethod.Post);
             capturedRequest.RequestUri.Should().NotBeNull();
@@ -95,45 +95,45 @@ namespace Biotrackr.Auth.Svc.UnitTests.ServiceTests
         }
 
         [Fact]
-        public async Task SaveBothTokensWhenSaveTokensIsCalled()
+        public async Task SaveTokens_ShouldSaveRefreshAndAccessTokens_WhenCalled()
         {
-            // ARRANGE
+            // Arrange
             var fixture = new Fixture();
             var mockTokenResponse = fixture.Create<RefreshTokenResponse>();
 
             _mockSecretClient.Setup(x => x.SetSecretAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(new Mock<Response<KeyVaultSecret>>().Object);
 
-            // ACT
+            // Act
             await _sut.SaveTokens(mockTokenResponse);
 
-            // ASSERT
+            // Assert
             _mockSecretClient.Verify(x => x.SetSecretAsync(RefreshTokenSecretName, mockTokenResponse.RefreshToken, It.IsAny<CancellationToken>()), Times.Once);
             _mockSecretClient.Verify(x => x.SetSecretAsync(AccessTokenSecretName, mockTokenResponse.AccessToken, It.IsAny<CancellationToken>()), Times.Once);
         }
 
         [Fact]
-        public async Task LogInformationMessagesWhenSaveTokensIsSuccessful()
+        public async Task SaveTokens_ShouldLogStartAndCompletionMessages_WhenSaveSucceeds()
         {
-            // ARRANGE
+            // Arrange
             var fixture = new Fixture();
             var mockTokenResponse = fixture.Create<RefreshTokenResponse>();
 
             _mockSecretClient.Setup(x => x.SetSecretAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(new Mock<Response<KeyVaultSecret>>().Object);
 
-            // ACT
+            // Act
             await _sut.SaveTokens(mockTokenResponse);
 
-            // ASSERT
+            // Assert
             _mockLogger.VerifyLog(l => l.LogInformation("Attempting to save tokens to secret store"), Times.Once);
             _mockLogger.VerifyLog(l => l.LogInformation("Tokens saved to secret store"), Times.Once);
         }
 
         [Fact]
-        public async Task LogInformationWhenHttpRequestIsSuccessful()
+        public async Task RefreshTokens_ShouldLogSuccessMessage_WhenFitbitApiCallSucceeds()
         {
-            // ARRANGE
+            // Arrange
             var fixture = new Fixture();
             var mockRefreshTokenResponse = fixture.Create<RefreshTokenResponse>();
             var mockFitbitRefreshToken = "testFitbitRefreshToken";
@@ -142,32 +142,32 @@ namespace Biotrackr.Auth.Svc.UnitTests.ServiceTests
             SetupSecretClientMocks(mockFitbitRefreshToken, mockFitbitCredential);
             SetupHttpMessageHandlerMock(mockRefreshTokenResponse);
 
-            // ACT
+            // Act
             await _sut.RefreshTokens();
 
-            // ASSERT
+            // Assert
             _mockLogger.VerifyLog(l => l.LogInformation("Fitbit API called successfully. Parsing response"), Times.Once);
         }
 
         [Fact]
-        public async Task ThrowExceptionAndLogErrorWhenRefreshTokenSecretNotFound()
+        public async Task RefreshTokens_ShouldThrowAndLogError_WhenRefreshTokenSecretIsNotFound()
         {
-            // ARRANGE
+            // Arrange
             _mockSecretClient.Setup(x => x.GetSecretAsync(RefreshTokenSecretName, null, It.IsAny<CancellationToken>()))
                 .ReturnsAsync(Response.FromValue<KeyVaultSecret>(null!, new Mock<Response>().Object));
 
-            // ACT
+            // Act
             Func<Task> refreshTokenAction = async () => await _sut.RefreshTokens();
 
-            // ASSERT
+            // Assert
             await refreshTokenAction.Should().ThrowAsync<NullReferenceException>();
             _mockLogger.VerifyLog(l => l.LogError(It.IsAny<Exception>(), $"Exception thrown in {nameof(RefreshTokenService.RefreshTokens)}"), Times.Once);
         }
 
         [Fact]
-        public async Task ThrowExceptionAndLogErrorWhenFitbitCredentialsSecretNotFound()
+        public async Task RefreshTokens_ShouldThrowAndLogError_WhenFitbitCredentialsSecretIsNotFound()
         {
-            // ARRANGE
+            // Arrange
             var mockFitbitRefreshToken = "testFitbitRefreshToken";
 
             _mockSecretClient.Setup(x => x.GetSecretAsync(RefreshTokenSecretName, null, It.IsAny<CancellationToken>()))
@@ -175,18 +175,18 @@ namespace Biotrackr.Auth.Svc.UnitTests.ServiceTests
             _mockSecretClient.Setup(x => x.GetSecretAsync(FitbitCredentialsSecretName, null, It.IsAny<CancellationToken>()))
                 .ReturnsAsync(Response.FromValue<KeyVaultSecret>(null!, new Mock<Response>().Object));
 
-            // ACT
+            // Act
             Func<Task> refreshTokenAction = async () => await _sut.RefreshTokens();
 
-            // ASSERT
+            // Assert
             await refreshTokenAction.Should().ThrowAsync<NullReferenceException>();
             _mockLogger.VerifyLog(l => l.LogError(It.IsAny<Exception>(), $"Exception thrown in {nameof(RefreshTokenService.RefreshTokens)}"), Times.Once);
         }
 
         [Fact]
-        public async Task ThrowHttpRequestExceptionAndLogErrorWhenHttpRequestFails()
+        public async Task RefreshTokens_ShouldThrowHttpRequestExceptionAndLogError_WhenFitbitApiReturnsUnauthorized()
         {
-            // ARRANGE
+            // Arrange
             var mockFitbitRefreshToken = "testFitbitRefreshToken";
             var mockFitbitCredential = "testFitbitCredential";
 
@@ -200,18 +200,18 @@ namespace Biotrackr.Auth.Svc.UnitTests.ServiceTests
                     Content = new StringContent("Unauthorized")
                 });
 
-            // ACT
+            // Act
             Func<Task> refreshTokenAction = async () => await _sut.RefreshTokens();
 
-            // ASSERT
+            // Assert
             await refreshTokenAction.Should().ThrowAsync<HttpRequestException>();
             _mockLogger.VerifyLog(l => l.LogError(It.IsAny<Exception>(), $"Exception thrown in {nameof(RefreshTokenService.RefreshTokens)}"), Times.Once);
         }
 
         [Fact]
-        public async Task ThrowExceptionAndLogErrorWhenSaveTokensFails()
+        public async Task SaveTokens_ShouldThrowAndLogError_WhenSecretClientThrows()
         {
-            // ARRANGE
+            // Arrange
             var fixture = new Fixture();
             var mockTokenResponse = fixture.Create<RefreshTokenResponse>();
             var testException = new Exception("Key Vault error");
@@ -219,18 +219,18 @@ namespace Biotrackr.Auth.Svc.UnitTests.ServiceTests
             _mockSecretClient.Setup(x => x.SetSecretAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
                 .ThrowsAsync(testException);
 
-            // ACT
+            // Act
             Func<Task> saveTokenAction = async () => await _sut.SaveTokens(mockTokenResponse);
 
-            // ASSERT
+            // Assert
             await saveTokenAction.Should().ThrowAsync<Exception>().WithMessage("Key Vault error");
             _mockLogger.VerifyLog(l => l.LogError(testException, $"Exception thrown in {nameof(RefreshTokenService.SaveTokens)}"), Times.Once);
         }
 
         [Fact]
-        public async Task ThrowJsonExceptionWhenInvalidJsonResponseReceived()
+        public async Task RefreshTokens_ShouldThrowJsonException_WhenResponseContainsInvalidJson()
         {
-            // ARRANGE
+            // Arrange
             var mockFitbitRefreshToken = "testFitbitRefreshToken";
             var mockFitbitCredential = "testFitbitCredential";
 
@@ -244,18 +244,18 @@ namespace Biotrackr.Auth.Svc.UnitTests.ServiceTests
                     Content = new StringContent("{ invalid json }")
                 });
 
-            // ACT
+            // Act
             Func<Task> refreshTokenAction = async () => await _sut.RefreshTokens();
 
-            // ASSERT
+            // Assert
             await refreshTokenAction.Should().ThrowAsync<JsonException>();
             _mockLogger.VerifyLog(l => l.LogError(It.IsAny<Exception>(), $"Exception thrown in {nameof(RefreshTokenService.RefreshTokens)}"), Times.Once);
         }
 
         [Fact]
-        public async Task HandleEmptyResponseFromFitbitApi()
+        public async Task RefreshTokens_ShouldThrowJsonException_WhenFitbitApiReturnsEmptyBody()
         {
-            // ARRANGE
+            // Arrange
             var mockFitbitRefreshToken = "testFitbitRefreshToken";
             var mockFitbitCredential = "testFitbitCredential";
 
@@ -269,17 +269,17 @@ namespace Biotrackr.Auth.Svc.UnitTests.ServiceTests
                     Content = new StringContent("")
                 });
 
-            // ACT
+            // Act
             Func<Task> refreshTokenAction = async () => await _sut.RefreshTokens();
 
-            // ASSERT
+            // Assert
             await refreshTokenAction.Should().ThrowAsync<JsonException>();
         }
 
         [Fact]
-        public async Task ThrowHttpRequestExceptionWhen429TooManyRequests()
+        public async Task RefreshTokens_ShouldThrowHttpRequestException_WhenFitbitApiReturnsTooManyRequests()
         {
-            // ARRANGE
+            // Arrange
             var mockFitbitRefreshToken = "testFitbitRefreshToken";
             var mockFitbitCredential = "testFitbitCredential";
 
@@ -293,18 +293,18 @@ namespace Biotrackr.Auth.Svc.UnitTests.ServiceTests
                     Content = new StringContent("Too Many Requests")
                 });
 
-            // ACT
+            // Act
             Func<Task> refreshTokenAction = async () => await _sut.RefreshTokens();
 
-            // ASSERT
+            // Assert
             await refreshTokenAction.Should().ThrowAsync<HttpRequestException>();
             _mockLogger.VerifyLog(l => l.LogError(It.IsAny<Exception>(), $"Exception thrown in {nameof(RefreshTokenService.RefreshTokens)}"), Times.Once);
         }
 
         [Fact]
-        public async Task ThrowTaskCanceledExceptionWhenNetworkTimeout()
+        public async Task RefreshTokens_ShouldThrowTaskCanceledException_WhenHttpRequestTimesOut()
         {
-            // ARRANGE
+            // Arrange
             var mockFitbitRefreshToken = "testFitbitRefreshToken";
             var mockFitbitCredential = "testFitbitCredential";
 
@@ -314,10 +314,10 @@ namespace Biotrackr.Auth.Svc.UnitTests.ServiceTests
                 .Setup<Task<HttpResponseMessage>>("SendAsync", ItExpr.IsAny<HttpRequestMessage>(), ItExpr.IsAny<CancellationToken>())
                 .ThrowsAsync(new TaskCanceledException("The request was canceled due to the configured HttpClient.Timeout"));
 
-            // ACT
+            // Act
             Func<Task> refreshTokenAction = async () => await _sut.RefreshTokens();
 
-            // ASSERT
+            // Assert
             await refreshTokenAction.Should().ThrowAsync<TaskCanceledException>();
             _mockLogger.VerifyLog(l => l.LogError(It.IsAny<Exception>(), $"Exception thrown in {nameof(RefreshTokenService.RefreshTokens)}"), Times.Once);
         }

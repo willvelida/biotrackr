@@ -35,17 +35,17 @@ namespace Biotrackr.Auth.Svc.UnitTests.ServiceTests
         }
 
         [Fact]
-        public async Task RefreshTokensSuccessfullyWhenValidSecretsAndHttpResponseProvided()
+        public async Task RefreshTokens_ShouldReturnTokens_WhenSecretsAndHttpResponseAreValid()
         {
-            // ARRANGE
+            // Arrange
             var mockWithingsResponse = CreateSuccessfulWithingsResponse();
             SetupSecretClientMocks("testRefreshToken", "testClientId", "testClientSecret");
             SetupHttpMessageHandlerMock(mockWithingsResponse);
 
-            // ACT
+            // Act
             var result = await _sut.RefreshTokens();
 
-            // ASSERT
+            // Assert
             result.Status.Should().Be(0);
             result.Body.Should().NotBeNull();
             result.Body!.AccessToken.Should().Be(mockWithingsResponse.Body!.AccessToken);
@@ -56,9 +56,9 @@ namespace Biotrackr.Auth.Svc.UnitTests.ServiceTests
         }
 
         [Fact]
-        public async Task MakeCorrectHttpRequestWhenRefreshTokensIsCalled()
+        public async Task RefreshTokens_ShouldPostFormEncodedRequestToWithingsEndpoint_WhenCalled()
         {
-            // ARRANGE
+            // Arrange
             var mockWithingsResponse = CreateSuccessfulWithingsResponse();
             var mockRefreshToken = "testRefreshToken";
             var mockClientId = "testClientId";
@@ -81,10 +81,10 @@ namespace Biotrackr.Auth.Svc.UnitTests.ServiceTests
                     Content = new StringContent(JsonSerializer.Serialize(mockWithingsResponse))
                 });
 
-            // ACT
+            // Act
             await _sut.RefreshTokens();
 
-            // ASSERT
+            // Assert
             capturedRequest.Should().NotBeNull();
             capturedRequest!.Method.Should().Be(HttpMethod.Post);
             capturedRequest.RequestUri.Should().NotBeNull();
@@ -98,90 +98,90 @@ namespace Biotrackr.Auth.Svc.UnitTests.ServiceTests
         }
 
         [Fact]
-        public async Task SaveBothTokensWhenSaveTokensIsCalled()
+        public async Task SaveTokens_ShouldSaveAccessAndRefreshTokens_WhenCalled()
         {
-            // ARRANGE
+            // Arrange
             var mockWithingsResponse = CreateSuccessfulWithingsResponse();
 
             _mockSecretClient.Setup(x => x.SetSecretAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(new Mock<Response<KeyVaultSecret>>().Object);
 
-            // ACT
+            // Act
             await _sut.SaveTokens(mockWithingsResponse);
 
-            // ASSERT
+            // Assert
             _mockSecretClient.Verify(x => x.SetSecretAsync(WithingsAccessTokenSecretName, mockWithingsResponse.Body!.AccessToken, It.IsAny<CancellationToken>()), Times.Once);
             _mockSecretClient.Verify(x => x.SetSecretAsync(WithingsRefreshTokenSecretName, mockWithingsResponse.Body.RefreshToken, It.IsAny<CancellationToken>()), Times.Once);
         }
 
         [Fact]
-        public async Task LogInformationMessagesWhenSaveTokensIsSuccessful()
+        public async Task SaveTokens_ShouldLogStartAndCompletionMessages_WhenSaveSucceeds()
         {
-            // ARRANGE
+            // Arrange
             var mockWithingsResponse = CreateSuccessfulWithingsResponse();
 
             _mockSecretClient.Setup(x => x.SetSecretAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(new Mock<Response<KeyVaultSecret>>().Object);
 
-            // ACT
+            // Act
             await _sut.SaveTokens(mockWithingsResponse);
 
-            // ASSERT
+            // Assert
             _mockLogger.VerifyLog(l => l.LogInformation("Attempting to save Withings tokens to secret store"), Times.Once);
             _mockLogger.VerifyLog(l => l.LogInformation("Withings tokens saved to secret store"), Times.Once);
         }
 
         [Fact]
-        public async Task LogInformationWhenHttpRequestIsSuccessful()
+        public async Task RefreshTokens_ShouldLogSuccessMessage_WhenWithingsApiCallSucceeds()
         {
-            // ARRANGE
+            // Arrange
             var mockWithingsResponse = CreateSuccessfulWithingsResponse();
             SetupSecretClientMocks("testRefreshToken", "testClientId", "testClientSecret");
             SetupHttpMessageHandlerMock(mockWithingsResponse);
 
-            // ACT
+            // Act
             await _sut.RefreshTokens();
 
-            // ASSERT
+            // Assert
             _mockLogger.VerifyLog(l => l.LogInformation("Withings API called successfully. Parsing response"), Times.Once);
         }
 
         [Fact]
-        public async Task ThrowExceptionAndLogErrorWhenRefreshTokenSecretNotFound()
+        public async Task RefreshTokens_ShouldThrowAndLogError_WhenRefreshTokenSecretIsNotFound()
         {
-            // ARRANGE
+            // Arrange
             _mockSecretClient.Setup(x => x.GetSecretAsync(WithingsRefreshTokenSecretName, null, It.IsAny<CancellationToken>()))
                 .ReturnsAsync(Response.FromValue<KeyVaultSecret>(null!, new Mock<Response>().Object));
 
-            // ACT
+            // Act
             Func<Task> refreshTokenAction = async () => await _sut.RefreshTokens();
 
-            // ASSERT
+            // Assert
             await refreshTokenAction.Should().ThrowAsync<NullReferenceException>();
             _mockLogger.VerifyLog(l => l.LogError(It.IsAny<Exception>(), $"Exception thrown in {nameof(WithingsRefreshTokenService.RefreshTokens)}"), Times.Once);
         }
 
         [Fact]
-        public async Task ThrowExceptionAndLogErrorWhenClientIdSecretNotFound()
+        public async Task RefreshTokens_ShouldThrowAndLogError_WhenClientIdSecretIsNotFound()
         {
-            // ARRANGE
+            // Arrange
             _mockSecretClient.Setup(x => x.GetSecretAsync(WithingsRefreshTokenSecretName, null, It.IsAny<CancellationToken>()))
                 .ReturnsAsync(Response.FromValue(new KeyVaultSecret(WithingsRefreshTokenSecretName, "testToken"), new Mock<Response>().Object));
             _mockSecretClient.Setup(x => x.GetSecretAsync(WithingsClientIdSecretName, null, It.IsAny<CancellationToken>()))
                 .ReturnsAsync(Response.FromValue<KeyVaultSecret>(null!, new Mock<Response>().Object));
 
-            // ACT
+            // Act
             Func<Task> refreshTokenAction = async () => await _sut.RefreshTokens();
 
-            // ASSERT
+            // Assert
             await refreshTokenAction.Should().ThrowAsync<NullReferenceException>();
             _mockLogger.VerifyLog(l => l.LogError(It.IsAny<Exception>(), $"Exception thrown in {nameof(WithingsRefreshTokenService.RefreshTokens)}"), Times.Once);
         }
 
         [Fact]
-        public async Task ThrowExceptionAndLogErrorWhenClientSecretSecretNotFound()
+        public async Task RefreshTokens_ShouldThrowAndLogError_WhenClientSecretIsNotFound()
         {
-            // ARRANGE
+            // Arrange
             _mockSecretClient.Setup(x => x.GetSecretAsync(WithingsRefreshTokenSecretName, null, It.IsAny<CancellationToken>()))
                 .ReturnsAsync(Response.FromValue(new KeyVaultSecret(WithingsRefreshTokenSecretName, "testToken"), new Mock<Response>().Object));
             _mockSecretClient.Setup(x => x.GetSecretAsync(WithingsClientIdSecretName, null, It.IsAny<CancellationToken>()))
@@ -189,18 +189,18 @@ namespace Biotrackr.Auth.Svc.UnitTests.ServiceTests
             _mockSecretClient.Setup(x => x.GetSecretAsync(WithingsClientSecretSecretName, null, It.IsAny<CancellationToken>()))
                 .ReturnsAsync(Response.FromValue<KeyVaultSecret>(null!, new Mock<Response>().Object));
 
-            // ACT
+            // Act
             Func<Task> refreshTokenAction = async () => await _sut.RefreshTokens();
 
-            // ASSERT
+            // Assert
             await refreshTokenAction.Should().ThrowAsync<NullReferenceException>();
             _mockLogger.VerifyLog(l => l.LogError(It.IsAny<Exception>(), $"Exception thrown in {nameof(WithingsRefreshTokenService.RefreshTokens)}"), Times.Once);
         }
 
         [Fact]
-        public async Task ThrowHttpRequestExceptionAndLogErrorWhenHttpRequestFails()
+        public async Task RefreshTokens_ShouldThrowHttpRequestExceptionAndLogError_WhenWithingsApiReturnsUnauthorized()
         {
-            // ARRANGE
+            // Arrange
             SetupSecretClientMocks("testRefreshToken", "testClientId", "testClientSecret");
 
             _mockHttpMessageHandler.Protected()
@@ -211,36 +211,36 @@ namespace Biotrackr.Auth.Svc.UnitTests.ServiceTests
                     Content = new StringContent("Unauthorized")
                 });
 
-            // ACT
+            // Act
             Func<Task> refreshTokenAction = async () => await _sut.RefreshTokens();
 
-            // ASSERT
+            // Assert
             await refreshTokenAction.Should().ThrowAsync<HttpRequestException>();
             _mockLogger.VerifyLog(l => l.LogError(It.IsAny<Exception>(), $"Exception thrown in {nameof(WithingsRefreshTokenService.RefreshTokens)}"), Times.Once);
         }
 
         [Fact]
-        public async Task ThrowExceptionAndLogErrorWhenSaveTokensFails()
+        public async Task SaveTokens_ShouldThrowAndLogError_WhenSecretClientThrows()
         {
-            // ARRANGE
+            // Arrange
             var mockWithingsResponse = CreateSuccessfulWithingsResponse();
             var testException = new Exception("Key Vault error");
 
             _mockSecretClient.Setup(x => x.SetSecretAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
                 .ThrowsAsync(testException);
 
-            // ACT
+            // Act
             Func<Task> saveTokenAction = async () => await _sut.SaveTokens(mockWithingsResponse);
 
-            // ASSERT
+            // Assert
             await saveTokenAction.Should().ThrowAsync<Exception>().WithMessage("Key Vault error");
             _mockLogger.VerifyLog(l => l.LogError(testException, $"Exception thrown in {nameof(WithingsRefreshTokenService.SaveTokens)}"), Times.Once);
         }
 
         [Fact]
-        public async Task ThrowInvalidOperationExceptionWhenWithingsStatusIsNonZero()
+        public async Task RefreshTokens_ShouldThrowInvalidOperationException_WhenWithingsStatusIsNonZero()
         {
-            // ARRANGE
+            // Arrange
             var errorResponse = new WithingsTokenResponse { Status = 601, Body = null };
             SetupSecretClientMocks("testRefreshToken", "testClientId", "testClientSecret");
 
@@ -252,19 +252,19 @@ namespace Biotrackr.Auth.Svc.UnitTests.ServiceTests
                     Content = new StringContent(JsonSerializer.Serialize(errorResponse))
                 });
 
-            // ACT
+            // Act
             Func<Task> refreshTokenAction = async () => await _sut.RefreshTokens();
 
-            // ASSERT
+            // Assert
             await refreshTokenAction.Should().ThrowAsync<InvalidOperationException>()
                 .WithMessage("*Status: 601*");
             _mockLogger.VerifyLog(l => l.LogError(It.IsAny<Exception>(), $"Exception thrown in {nameof(WithingsRefreshTokenService.RefreshTokens)}"), Times.Once);
         }
 
         [Fact]
-        public async Task ThrowJsonExceptionWhenInvalidJsonResponseReceived()
+        public async Task RefreshTokens_ShouldThrowJsonException_WhenResponseContainsInvalidJson()
         {
-            // ARRANGE
+            // Arrange
             SetupSecretClientMocks("testRefreshToken", "testClientId", "testClientSecret");
 
             _mockHttpMessageHandler.Protected()
@@ -275,28 +275,28 @@ namespace Biotrackr.Auth.Svc.UnitTests.ServiceTests
                     Content = new StringContent("{ invalid json }")
                 });
 
-            // ACT
+            // Act
             Func<Task> refreshTokenAction = async () => await _sut.RefreshTokens();
 
-            // ASSERT
+            // Assert
             await refreshTokenAction.Should().ThrowAsync<JsonException>();
             _mockLogger.VerifyLog(l => l.LogError(It.IsAny<Exception>(), $"Exception thrown in {nameof(WithingsRefreshTokenService.RefreshTokens)}"), Times.Once);
         }
 
         [Fact]
-        public async Task ThrowTaskCanceledExceptionWhenNetworkTimeout()
+        public async Task RefreshTokens_ShouldThrowTaskCanceledException_WhenHttpRequestTimesOut()
         {
-            // ARRANGE
+            // Arrange
             SetupSecretClientMocks("testRefreshToken", "testClientId", "testClientSecret");
 
             _mockHttpMessageHandler.Protected()
                 .Setup<Task<HttpResponseMessage>>("SendAsync", ItExpr.IsAny<HttpRequestMessage>(), ItExpr.IsAny<CancellationToken>())
                 .ThrowsAsync(new TaskCanceledException("The request was canceled due to the configured HttpClient.Timeout"));
 
-            // ACT
+            // Act
             Func<Task> refreshTokenAction = async () => await _sut.RefreshTokens();
 
-            // ASSERT
+            // Assert
             await refreshTokenAction.Should().ThrowAsync<TaskCanceledException>();
             _mockLogger.VerifyLog(l => l.LogError(It.IsAny<Exception>(), $"Exception thrown in {nameof(WithingsRefreshTokenService.RefreshTokens)}"), Times.Once);
         }

@@ -7,9 +7,9 @@ namespace Biotrackr.Auth.Svc.UnitTests.ModelTests
     public class WithingsTokenResponseShould
     {
         [Fact]
-        public void DeserializeCorrectlyFromWithingsApiResponse()
+        public void Deserialize_ShouldMapAllProperties_WhenWithingsApiResponseIsValid()
         {
-            // ARRANGE
+            // Arrange
             var jsonResponse = """
             {
                 "status": 0,
@@ -24,10 +24,10 @@ namespace Biotrackr.Auth.Svc.UnitTests.ModelTests
             }
             """;
 
-            // ACT
+            // Act
             var result = JsonSerializer.Deserialize<WithingsTokenResponse>(jsonResponse);
 
-            // ASSERT
+            // Assert
             result.Should().NotBeNull();
             result!.Status.Should().Be(0);
             result.Body.Should().NotBeNull();
@@ -39,28 +39,29 @@ namespace Biotrackr.Auth.Svc.UnitTests.ModelTests
         }
 
         [Fact]
-        public void DeserializeStatusFieldCorrectlyForErrorResponse()
+        public void Deserialize_ShouldMapStatusAndLeaveBodyNull_WhenWithingsApiReturnsErrorResponse()
         {
-            // ARRANGE
+            // Arrange
             var jsonResponse = """
             {
                 "status": 601
             }
             """;
 
-            // ACT
+            // Act
             var result = JsonSerializer.Deserialize<WithingsTokenResponse>(jsonResponse);
 
-            // ASSERT
+            // Assert
             result.Should().NotBeNull();
             result!.Status.Should().Be(601);
             result.Body.Should().BeNull();
         }
 
         [Fact]
-        public void DeserializeUserIdAsJsonElement()
+        public void Deserialize_ShouldPopulateBody_WhenUserIdIsNumericOrString()
         {
-            // ARRANGE — Withings returns userid as either string or number
+            // Arrange
+            // Withings returns userid as either string or number
             var jsonResponseNumeric = """
             {
                 "status": 0,
@@ -89,11 +90,11 @@ namespace Biotrackr.Auth.Svc.UnitTests.ModelTests
             }
             """;
 
-            // ACT
+            // Act
             var resultNumeric = JsonSerializer.Deserialize<WithingsTokenResponse>(jsonResponseNumeric);
             var resultString = JsonSerializer.Deserialize<WithingsTokenResponse>(jsonResponseString);
 
-            // ASSERT
+            // Assert
             resultNumeric.Should().NotBeNull();
             resultNumeric!.Body.Should().NotBeNull();
             resultString.Should().NotBeNull();

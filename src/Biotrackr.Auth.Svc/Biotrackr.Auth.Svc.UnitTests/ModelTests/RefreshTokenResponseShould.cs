@@ -7,9 +7,9 @@ namespace Biotrackr.Auth.Svc.UnitTests.ModelTests
     public class RefreshTokenResponseShould
     {
         [Fact]
-        public void DeserializeCorrectlyFromFitbitApiResponse()
+        public void Deserialize_ShouldMapAllProperties_WhenFitbitApiResponseIsValid()
         {
-            // ARRANGE
+            // Arrange
             var jsonResponse = """
             {
                 "access_token": "test_access_token",
@@ -21,10 +21,10 @@ namespace Biotrackr.Auth.Svc.UnitTests.ModelTests
             }
             """;
 
-            // ACT
+            // Act
             var result = JsonSerializer.Deserialize<RefreshTokenResponse>(jsonResponse);
 
-            // ASSERT
+            // Assert
             result.Should().NotBeNull();
             result.AccessToken.Should().Be("test_access_token");
             result.ExpiresIn.Should().Be(3600);

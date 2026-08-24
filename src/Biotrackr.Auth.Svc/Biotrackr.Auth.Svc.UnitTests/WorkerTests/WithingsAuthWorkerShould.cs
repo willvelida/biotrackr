@@ -1,6 +1,7 @@
 using AutoFixture;
 using Biotrackr.Auth.Svc.Models;
 using Biotrackr.Auth.Svc.Services.Interfaces;
+using FluentAssertions;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Moq;
@@ -23,7 +24,7 @@ namespace Biotrackr.Auth.Svc.UnitTests.WorkerTests
         }
 
         [Fact]
-        public async Task RefreshAndSaveTokensSuccessfullyWhenExecuteAsyncIsCalled()
+        public async Task ExecuteAsync_ShouldRefreshAndSaveTokens_WhenRefreshTokenServiceSucceeds()
         {
             // Arrange
             var mockWithingsTokenResponse = CreateSuccessfulWithingsResponse();
@@ -52,7 +53,7 @@ namespace Biotrackr.Auth.Svc.UnitTests.WorkerTests
         }
 
         [Fact]
-        public async Task LogErrorAndStopApplicationWhenRefreshTokensThrowsException()
+        public async Task ExecuteAsync_ShouldLogErrorAndStopApplication_WhenRefreshTokensThrows()
         {
             // Arrange
             var completionSource = new TaskCompletionSource<bool>();
@@ -75,7 +76,7 @@ namespace Biotrackr.Auth.Svc.UnitTests.WorkerTests
         }
 
         [Fact]
-        public async Task LogErrorAndStopApplicationWhenSaveTokensThrowsException()
+        public async Task ExecuteAsync_ShouldLogErrorAndStopApplication_WhenSaveTokensThrows()
         {
             // Arrange
             var mockWithingsTokenResponse = CreateSuccessfulWithingsResponse();
@@ -101,11 +102,20 @@ namespace Biotrackr.Auth.Svc.UnitTests.WorkerTests
         }
 
         [Fact]
-        public async Task LogInformationMessagesInCorrectOrder()
+        public async Task ExecuteAsync_ShouldLogInformationMessagesInOrder_WhenWorkflowSucceeds()
         {
             // Arrange
             var mockWithingsTokenResponse = CreateSuccessfulWithingsResponse();
             var completionSource = new TaskCompletionSource<bool>();
+            var informationMessages = new List<string>();
+
+            _mockLogger.Setup(l => l.Log(
+                    LogLevel.Information,
+                    It.IsAny<EventId>(),
+                    It.IsAny<It.IsAnyType>(),
+                    It.IsAny<Exception>(),
+                    It.IsAny<Func<It.IsAnyType, Exception?, string>>()))
+                .Callback(new InvocationAction(invocation => informationMessages.Add(invocation.Arguments[2].ToString()!)));
 
             _mockWithingsRefreshTokenService.Setup(s => s.RefreshTokens())
                 .ReturnsAsync(mockWithingsTokenResponse);
@@ -120,9 +130,15 @@ namespace Biotrackr.Auth.Svc.UnitTests.WorkerTests
             await _sut.StopAsync(CancellationToken.None);
 
             // Assert
-            _mockLogger.VerifyLog(l => l.LogInformation(It.Is<string>(s => s.Contains("Attempting to refresh Withings Tokens"))), Times.Once);
-            _mockLogger.VerifyLog(l => l.LogInformation(It.Is<string>(s => s.Contains("Withings Tokens refresh successful"))), Times.Once);
-            _mockLogger.VerifyLog(l => l.LogInformation(It.Is<string>(s => s.Contains("Withings Tokens saved successfully"))), Times.Once);
+            informationMessages.Should().HaveCount(3,
+                "AGENT FIX: WithingsAuthWorker.ExecuteAsync must log exactly three information messages "
+                + "(refresh attempt, refresh success, save success) on the happy path.");
+            informationMessages[0].Should().Contain("Attempting to refresh Withings Tokens",
+                "AGENT FIX: the first information log must announce the refresh attempt.");
+            informationMessages[1].Should().Contain("Withings Tokens refresh successful",
+                "AGENT FIX: the second information log must follow the refresh and precede the save.");
+            informationMessages[2].Should().Contain("Withings Tokens saved successfully",
+                "AGENT FIX: the third information log must confirm the save completed last.");
         }
 
         private static WithingsTokenResponse CreateSuccessfulWithingsResponse()

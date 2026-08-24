@@ -23,12 +23,15 @@ namespace Biotrackr.Auth.Svc.IntegrationTests.Contract
         }
 
         [Fact]
-        public void AllRequiredServicesCanBeResolvedFromDI()
+        public void ServiceProvider_ShouldResolveAllRequiredServices_WhenHostIsBuilt()
         {
-            // Arrange & Act
-            var secretClient = _fixture.ServiceProvider.GetService<SecretClient>();
-            var refreshTokenService = _fixture.ServiceProvider.GetService<IRefreshTokenService>();
-            var authWorker = _fixture.ServiceProvider.GetServices<IHostedService>().OfType<AuthWorker>().FirstOrDefault();
+            // Arrange
+            var serviceProvider = _fixture.ServiceProvider;
+
+            // Act
+            var secretClient = serviceProvider.GetService<SecretClient>();
+            var refreshTokenService = serviceProvider.GetService<IRefreshTokenService>();
+            var authWorker = serviceProvider.GetServices<IHostedService>().OfType<AuthWorker>().FirstOrDefault();
 
             // Assert
             secretClient.Should().NotBeNull("SecretClient should be registered");
@@ -37,11 +40,14 @@ namespace Biotrackr.Auth.Svc.IntegrationTests.Contract
         }
 
         [Fact]
-        public void SingletonServicesReturnSameInstanceAcrossResolutions()
+        public void GetService_ShouldReturnSameSecretClientInstance_WhenResolvedMultipleTimes()
         {
-            // Arrange & Act
-            var secretClient1 = _fixture.ServiceProvider.GetService<SecretClient>();
-            var secretClient2 = _fixture.ServiceProvider.GetService<SecretClient>();
+            // Arrange
+            var serviceProvider = _fixture.ServiceProvider;
+
+            // Act
+            var secretClient1 = serviceProvider.GetService<SecretClient>();
+            var secretClient2 = serviceProvider.GetService<SecretClient>();
 
             // Assert
             secretClient1.Should().NotBeNull();
@@ -50,12 +56,15 @@ namespace Biotrackr.Auth.Svc.IntegrationTests.Contract
         }
 
         [Fact]
-        public void HttpClientBasedServicesReturnDifferentInstances()
+        public void GetService_ShouldReturnDifferentRefreshTokenServiceInstances_WhenResolvedMultipleTimes()
         {
-            // Arrange & Act
+            // Arrange
             // Services registered with AddHttpClient are Transient by default
-            var refreshTokenService1 = _fixture.ServiceProvider.GetService<IRefreshTokenService>();
-            var refreshTokenService2 = _fixture.ServiceProvider.GetService<IRefreshTokenService>();
+            var serviceProvider = _fixture.ServiceProvider;
+
+            // Act
+            var refreshTokenService1 = serviceProvider.GetService<IRefreshTokenService>();
+            var refreshTokenService2 = serviceProvider.GetService<IRefreshTokenService>();
 
             // Assert
             refreshTokenService1.Should().NotBeNull();
@@ -65,10 +74,13 @@ namespace Biotrackr.Auth.Svc.IntegrationTests.Contract
         }
 
         [Fact]
-        public void RefreshTokenServiceHasOnlyOneRegistration()
+        public void GetServices_ShouldReturnSingleRefreshTokenServiceRegistration_WhenResolved()
         {
-            // Arrange & Act
-            var registrations = _fixture.ServiceProvider.GetServices<IRefreshTokenService>().ToList();
+            // Arrange
+            var serviceProvider = _fixture.ServiceProvider;
+
+            // Act
+            var registrations = serviceProvider.GetServices<IRefreshTokenService>().ToList();
 
             // Assert
             registrations.Should().HaveCount(1, 
@@ -76,17 +88,26 @@ namespace Biotrackr.Auth.Svc.IntegrationTests.Contract
         }
 
         [Fact]
-        public void RefreshTokenServiceHttpClientHasResilienceHandler()
+        public void CreateHandler_ShouldIncludeResilienceHandlerInPipeline_WhenRefreshTokenClientIsBuilt()
         {
-            // Arrange & Act
-            var refreshTokenService = _fixture.ServiceProvider.GetService<IRefreshTokenService>();
+            // Arrange
+            const string ResilienceHandlerTypeName = "Microsoft.Extensions.Http.Resilience.ResilienceHandler";
+            var handlerFactory = _fixture.ServiceProvider.GetRequiredService<IHttpMessageHandlerFactory>();
+
+            // Act
+            var pipeline = new List<string>();
+            HttpMessageHandler? handler = handlerFactory.CreateHandler(nameof(IRefreshTokenService));
+            while (handler is not null)
+            {
+                pipeline.Add(handler.GetType().FullName!);
+                handler = (handler as DelegatingHandler)?.InnerHandler;
+            }
 
             // Assert
-            refreshTokenService.Should().NotBeNull("IRefreshTokenService should be registered");
-            
-            // The service is registered with AddHttpClient().AddStandardResilienceHandler()
-            // We verify it can be resolved, which means HttpClient factory is configured correctly
-            // The actual resilience handler behavior is tested in E2E tests
+            pipeline.Should().Contain(ResilienceHandlerTypeName,
+                "AGENT FIX: the IRefreshTokenService HttpClient must be registered with "
+                + ".AddStandardResilienceHandler() so Fitbit token refreshes retry on transient failure. "
+                + $"Handler pipeline was: {string.Join(" -> ", pipeline)}.");
         }
     }
 }

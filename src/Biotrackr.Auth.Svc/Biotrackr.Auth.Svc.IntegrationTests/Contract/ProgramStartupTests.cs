@@ -19,11 +19,14 @@ namespace Biotrackr.Auth.Svc.IntegrationTests.Contract
         }
 
         [Fact]
-        public void HostBuildsSuccessfullyWithInMemoryConfiguration()
+        public void Host_ShouldBuildSuccessfully_WhenInMemoryConfigurationIsProvided()
         {
-            // Arrange & Act
-            var serviceProvider = _fixture.ServiceProvider;
-            var configuration = _fixture.Configuration;
+            // Arrange
+            var contractFixture = _fixture;
+
+            // Act
+            var serviceProvider = contractFixture.ServiceProvider;
+            var configuration = contractFixture.Configuration;
 
             // Assert
             serviceProvider.Should().NotBeNull("the service provider should be successfully created");
@@ -31,7 +34,7 @@ namespace Biotrackr.Auth.Svc.IntegrationTests.Contract
         }
 
         [Fact]
-        public void ConfigurationValuesAreAccessibleFromServiceProvider()
+        public void Configuration_ShouldExposeExpectedValues_WhenResolvedFromServiceProvider()
         {
             // Arrange
             var configuration = _fixture.Configuration;

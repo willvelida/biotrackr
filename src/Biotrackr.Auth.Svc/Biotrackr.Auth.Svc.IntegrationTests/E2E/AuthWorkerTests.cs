@@ -26,7 +26,7 @@ public class AuthWorkerTests
     }
 
     [Fact]
-    public async Task ExecutesCompleteWorkflowEndToEndWithMockedDependencies()
+    public async Task ExecuteAsync_ShouldSaveRefreshedTokens_WhenWorkerRunsEndToEnd()
     {
         // Arrange
         var expectedResponse = TestDataGenerator.CreateRefreshTokenResponse();
@@ -64,7 +64,8 @@ public class AuthWorkerTests
 
         var worker = _fixture.ServiceProvider.GetRequiredService<IHostedService>();
 
-        // Act - Start worker and let it run briefly
+        // Act
+        // Start worker and let it run briefly
         using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(3));
         await worker.StartAsync(CancellationToken.None);
         
@@ -82,23 +83,26 @@ public class AuthWorkerTests
             await worker.StopAsync(CancellationToken.None);
         }
 
-        // Assert - Verify the workflow executed (secrets were saved)
+        // Assert
+        // Verify the workflow executed (secrets were saved)
         _fixture.MockSecretClient.Verify(
             x => x.SetSecretAsync("AccessToken", expectedResponse.AccessToken, It.IsAny<CancellationToken>()),
             Times.AtLeastOnce());
     }
 
     [Fact]
-    public async Task HandlesServiceErrorsGracefullyInE2EWorkflow()
+    public async Task ExecuteAsync_ShouldStopGracefully_WhenSecretClientThrows()
     {
-        // Arrange - Setup SecretClient to throw exception
+        // Arrange
+        // Setup SecretClient to throw exception
         _fixture.MockSecretClient
             .Setup(x => x.GetSecretAsync("RefreshToken", null, It.IsAny<CancellationToken>()))
             .ThrowsAsync(new RequestFailedException(500, "Key Vault unavailable"));
 
         var worker = _fixture.ServiceProvider.GetRequiredService<IHostedService>();
 
-        // Act - Start worker and verify it handles errors gracefully
+        // Act
+        // Start worker and verify it handles errors gracefully
         await worker.StartAsync(CancellationToken.None);
         
         // Give worker time to attempt execution and handle error
@@ -107,7 +111,8 @@ public class AuthWorkerTests
         // Stop worker
         var stopAction = async () => await worker.StopAsync(CancellationToken.None);
 
-        // Assert - Worker should stop gracefully without unhandled exceptions
+        // Assert
+        // Worker should stop gracefully without unhandled exceptions
         await stopAction.Should().NotThrowAsync("Worker should handle service errors gracefully");
     }
 }

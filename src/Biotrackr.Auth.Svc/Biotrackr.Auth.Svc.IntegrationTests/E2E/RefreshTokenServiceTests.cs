@@ -29,9 +29,10 @@ public class RefreshTokenServiceTests
     }
 
     [Fact]
-    public async Task RefreshesTokensEndToEndWithMockedDependencies()
+    public async Task RefreshTokens_ShouldReturnTokens_WhenResolvedFromServiceProvider()
     {
-        // Arrange - Configure mocked dependencies
+        // Arrange
+        // Configure mocked dependencies
         var expectedResponse = TestDataGenerator.CreateRefreshTokenResponse();
         var refreshToken = TestDataGenerator.CreateRefreshToken();
         var fitbitCredentials = TestDataGenerator.CreateFitbitCredentials();
@@ -67,7 +68,7 @@ public class RefreshTokenServiceTests
     }
 
     [Fact]
-    public async Task SavesTokensEndToEndWithMockedSecretClient()
+    public async Task SaveTokens_ShouldPersistBothSecrets_WhenResolvedFromServiceProvider()
     {
         // Arrange
         var tokens = TestDataGenerator.CreateRefreshTokenResponse();
@@ -85,7 +86,8 @@ public class RefreshTokenServiceTests
         // Act
         await service.SaveTokens(tokens);
 
-        // Assert - Verify secrets were saved
+        // Assert
+        // Verify secrets were saved
         _fixture.MockSecretClient.Verify(
             x => x.SetSecretAsync("AccessToken", tokens.AccessToken, It.IsAny<CancellationToken>()),
             Times.Once);
@@ -96,7 +98,7 @@ public class RefreshTokenServiceTests
     }
 
     [Fact]
-    public async Task ThrowsExceptionWhenSecretNotFoundInE2EWorkflow()
+    public async Task RefreshTokens_ShouldThrowRequestFailedException_WhenSecretIsNotFound()
     {
         // Arrange
         _fixture.MockSecretClient
@@ -105,12 +107,15 @@ public class RefreshTokenServiceTests
 
         var service = _fixture.ServiceProvider.GetRequiredService<IRefreshTokenService>();
 
-        // Act & Assert
-        await Assert.ThrowsAsync<RequestFailedException>(async () => await service.RefreshTokens());
+        // Act
+        Func<Task> refreshTokensAction = async () => await service.RefreshTokens();
+
+        // Assert
+        await refreshTokensAction.Should().ThrowAsync<RequestFailedException>();
     }
 
     [Fact]
-    public async Task ThrowsExceptionWhenFitbitAPIReturnsErrorInE2EWorkflow()
+    public async Task RefreshTokens_ShouldThrowHttpRequestException_WhenFitbitApiReturnsUnauthorized()
     {
         // Arrange
         var refreshToken = TestDataGenerator.CreateRefreshToken();
@@ -134,12 +139,15 @@ public class RefreshTokenServiceTests
 
         var service = _fixture.ServiceProvider.GetRequiredService<IRefreshTokenService>();
 
-        // Act & Assert
-        await Assert.ThrowsAsync<HttpRequestException>(async () => await service.RefreshTokens());
+        // Act
+        Func<Task> refreshTokensAction = async () => await service.RefreshTokens();
+
+        // Assert
+        await refreshTokensAction.Should().ThrowAsync<HttpRequestException>();
     }
 
     [Fact]
-    public async Task HandlesRateLimitingGracefullyInE2EWorkflow()
+    public async Task RefreshTokens_ShouldThrowHttpRequestExceptionWithTooManyRequests_WhenFitbitApiRateLimits()
     {
         // Arrange
         var refreshToken = TestDataGenerator.CreateRefreshToken();
@@ -163,8 +171,11 @@ public class RefreshTokenServiceTests
 
         var service = _fixture.ServiceProvider.GetRequiredService<IRefreshTokenService>();
 
-        // Act & Assert
-        var exception = await Assert.ThrowsAsync<HttpRequestException>(async () => await service.RefreshTokens());
-        exception.StatusCode.Should().Be(HttpStatusCode.TooManyRequests);
+        // Act
+        Func<Task> refreshTokensAction = async () => await service.RefreshTokens();
+
+        // Assert
+        var exception = await refreshTokensAction.Should().ThrowAsync<HttpRequestException>();
+        exception.Which.StatusCode.Should().Be(HttpStatusCode.TooManyRequests);
     }
 }

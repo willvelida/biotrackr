@@ -26,7 +26,7 @@ public class WithingsRefreshTokenServiceTests
     }
 
     [Fact]
-    public async Task RefreshesWithingsTokensEndToEndWithMockedDependencies()
+    public async Task RefreshTokens_ShouldReturnTokens_WhenResolvedFromServiceProvider()
     {
         // Arrange
         var expectedResponse = TestDataGenerator.CreateWithingsTokenResponse();
@@ -68,7 +68,7 @@ public class WithingsRefreshTokenServiceTests
     }
 
     [Fact]
-    public async Task SavesWithingsTokensEndToEndWithMockedSecretClient()
+    public async Task SaveTokens_ShouldPersistBothSecrets_WhenResolvedFromServiceProvider()
     {
         // Arrange
         var tokens = TestDataGenerator.CreateWithingsTokenResponse();
@@ -97,7 +97,7 @@ public class WithingsRefreshTokenServiceTests
     }
 
     [Fact]
-    public async Task ThrowsExceptionWhenWithingsSecretNotFound()
+    public async Task RefreshTokens_ShouldThrowRequestFailedException_WhenSecretIsNotFound()
     {
         // Arrange
         _fixture.MockSecretClient
@@ -106,12 +106,15 @@ public class WithingsRefreshTokenServiceTests
 
         var service = _fixture.ServiceProvider.GetRequiredService<IWithingsRefreshTokenService>();
 
-        // Act & Assert
-        await Assert.ThrowsAsync<RequestFailedException>(async () => await service.RefreshTokens());
+        // Act
+        Func<Task> refreshTokensAction = async () => await service.RefreshTokens();
+
+        // Assert
+        await refreshTokensAction.Should().ThrowAsync<RequestFailedException>();
     }
 
     [Fact]
-    public async Task ThrowsExceptionWhenWithingsAPIReturnsError()
+    public async Task RefreshTokens_ShouldThrowHttpRequestException_WhenWithingsApiReturnsUnauthorized()
     {
         // Arrange
         var refreshToken = TestDataGenerator.CreateWithingsRefreshToken();
@@ -140,12 +143,15 @@ public class WithingsRefreshTokenServiceTests
 
         var service = _fixture.ServiceProvider.GetRequiredService<IWithingsRefreshTokenService>();
 
-        // Act & Assert
-        await Assert.ThrowsAsync<HttpRequestException>(async () => await service.RefreshTokens());
+        // Act
+        Func<Task> refreshTokensAction = async () => await service.RefreshTokens();
+
+        // Assert
+        await refreshTokensAction.Should().ThrowAsync<HttpRequestException>();
     }
 
     [Fact]
-    public async Task ThrowsExceptionWhenWithingsAPIReturnsNonZeroStatus()
+    public async Task RefreshTokens_ShouldThrowInvalidOperationException_WhenWithingsStatusIsNonZero()
     {
         // Arrange
         var refreshToken = TestDataGenerator.CreateWithingsRefreshToken();
@@ -175,7 +181,11 @@ public class WithingsRefreshTokenServiceTests
 
         var service = _fixture.ServiceProvider.GetRequiredService<IWithingsRefreshTokenService>();
 
-        // Act & Assert
-        await Assert.ThrowsAsync<InvalidOperationException>(async () => await service.RefreshTokens());
+        // Act
+        Func<Task> refreshTokensAction = async () => await service.RefreshTokens();
+
+        // Assert
+        await refreshTokensAction.Should().ThrowAsync<InvalidOperationException>()
+            .WithMessage("*Status: 601*");
     }
 }
