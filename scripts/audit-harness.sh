@@ -851,7 +851,44 @@ else
     "Use 'coverage.runsettings' when the working directory is the service, or '../coverage.runsettings' when it is the test project, in: ${COVERAGE_MISMATCH[*]}"
 fi
 
-# ── Recent verification outcomes ── BIOTRACKR-ORIGINAL ───────────────────────
+# ── Coverage runs need a working directory ────────────────────────────────────
+# C12 catches the wrong settings path. This catches the other half: the right
+# path in a block that never arrives in the service directory. Prose above a
+# fence saying "run in the service directory" is not enough, because an agent
+# copies the fence, not the sentence — and the surrounding prompts explicitly
+# put the shell at the repository root for the build step.
+header "C13: Coverage Block Working Directory"
+
+COVERAGE_NO_CD=()
+while IFS= read -r hit; do
+  [[ -n "$hit" ]] && COVERAGE_NO_CD+=("$hit")
+done < <(find "$REPO/.github/prompts" "$REPO/.github/agents" \
+           -type f -name '*.md' 2>/dev/null \
+  | while IFS= read -r f; do
+      awk -v rel="${f#"$REPO"/}" '
+        /^[[:space:]]*```/ {
+          if (infence) { if (hit && !cd) print rel ":" hitline; infence = 0 }
+          else { infence = 1; hit = 0; cd = 0 }
+          next
+        }
+        !infence { next }
+        /^[[:space:]]*cd[[:space:]]/ { cd = 1 }
+        /--settings[[:space:]]+coverage\.runsettings/ { hit = 1; hitline = NR }
+      ' "$f"
+    done)
+
+if [[ ${#COVERAGE_NO_CD[@]} -eq 0 ]]; then
+  check_recommended "Coverage blocks enter the service directory" "pass"
+else
+  for bad in "${COVERAGE_NO_CD[@]}"; do
+    printf '         %sCWD%s    %s\n' "$YELLOW" "$RESET" "$bad"
+  done
+  check_recommended "Coverage blocks enter the service directory" "fail" \
+    "'coverage.runsettings' is resolved against the working directory, and only src/<Service>/ has one. Run the block from anywhere else and dotnet fails outright, or picks up a different service's settings." \
+    "Add a 'cd src/Biotrackr.{Domain}.{Type}' line inside the fenced block, above the dotnet command, in: ${COVERAGE_NO_CD[*]}"
+fi
+
+
 # The checks above describe the harness's structure. This describes what it has
 # actually been doing, so one command answers "is the harness sound" and "is it
 # working" together. Reporting only: the raw store is local and optional, and a

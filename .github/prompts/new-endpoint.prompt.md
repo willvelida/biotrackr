@@ -46,6 +46,7 @@ Create unit tests following project conventions:
 Run in the service directory:
 
 ```bash
+cd src/Biotrackr.{Domain}.{Type}
 # audit-exempt: not-a-gate — reports the coverage percentage against the 70% floor
 dotnet test --no-build --collect:"XPlat Code Coverage" --settings coverage.runsettings
 ```

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Regression cases for audit-harness.sh, covering checks C7-C12 and the raw
+# Regression cases for audit-harness.sh, covering checks C7-C13 and the raw
 # record arity report.
 #
 # Each case builds a throwaway copy of the harness, breaks exactly one thing,
@@ -234,6 +234,7 @@ setup
 run_audit
 assert_check C11 pass "baseline: C11 prompts and agents gate through verify.sh"
 assert_check C12 pass "baseline: C12 no bad coverage settings path"
+assert_check C13 pass "baseline: C13 coverage blocks enter the service directory"
 
 setup
 printf '%s\n' '---' 'description: "fixture"' '---' '' 'Run in the service directory:' '' '```bash' 'dotnet build --no-restore -v:q' '```' \
@@ -304,6 +305,40 @@ printf '%s\n' '---' 'description: "fixture"' '---' '' 'Run in the service direct
   > "$R/.github/prompts/fixture-cov-doc.prompt.md"
 run_audit
 assert_check C12 pass "C12 ignores prose documenting the ../coverage.runsettings trap"
+
+# --- C13: coverage block working directory --------------------------------
+
+# The defect this check exists for: prose above the fence names the service
+# directory, but the fence itself never gets there, and an agent copies the
+# fence.
+setup
+printf '%s\n' '---' 'description: "fixture"' '---' '' 'Run in the service directory:' '' '```bash' 'dotnet test --no-build --collect:"XPlat Code Coverage" --settings coverage.runsettings  # audit-exempt: not-a-gate' '```' \
+  > "$R/.github/prompts/fixture-cov-nocd.prompt.md"
+run_audit
+assert_check C13 fail "C13 fails when a coverage block never enters the service directory"
+
+# The fix must actually clear it, or the check is unsatisfiable.
+setup
+printf '%s\n' '---' 'description: "fixture"' '---' '' '```bash' 'cd src/Biotrackr.Activity.Api' 'dotnet test --no-build --collect:"XPlat Code Coverage" --settings coverage.runsettings  # audit-exempt: not-a-gate' '```' \
+  > "$R/.github/prompts/fixture-cov-cd.prompt.md"
+run_audit
+assert_check C13 pass "C13 passes when the block cds into the service directory"
+
+# The cd must be inside the same fence. A cd in an earlier block does not carry
+# over, because the reader copies one block at a time.
+setup
+printf '%s\n' '---' 'description: "fixture"' '---' '' '```bash' 'cd src/Biotrackr.Activity.Api' '```' '' 'Then:' '' '```bash' 'dotnet test --no-build --collect:"XPlat Code Coverage" --settings coverage.runsettings  # audit-exempt: not-a-gate' '```' \
+  > "$R/.github/prompts/fixture-cov-splitcd.prompt.md"
+run_audit
+assert_check C13 fail "C13 does not credit a cd from a different fenced block"
+
+# The ../ form belongs to the test project directory and is C12's business.
+# C13 must not double-report it.
+setup
+printf '%s\n' '---' 'description: "fixture"' '---' '' 'Run in the test project directory:' '' '```bash' 'dotnet test --settings ../coverage.runsettings  # audit-exempt: not-a-gate' '```' \
+  > "$R/.github/prompts/fixture-cov-parent.prompt.md"
+run_audit
+assert_check C13 pass "C13 ignores the ../coverage.runsettings form"
 
 echo ""
 echo "passed=$PASS failed=$FAIL"
