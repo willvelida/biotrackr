@@ -34,27 +34,33 @@ namespace Biotrackr.UI.UnitTests.Components.Layout
         [Fact]
         public void RenderBiotrackrTitle()
         {
+            // Act
             var cut = Render<MainLayout>(parameters => parameters
                 .Add(p => p.Body, builder => builder.AddContent(0, "Test content")));
 
+            // Assert
             cut.Markup.Should().Contain("Biotrackr");
         }
 
         [Fact]
         public void RenderUserDisplayName()
         {
+            // Act
             var cut = Render<MainLayout>(parameters => parameters
                 .Add(p => p.Body, builder => builder.AddContent(0, "Test content")));
 
+            // Assert
             cut.Markup.Should().Contain("Test User");
         }
 
         [Fact]
         public void RenderProfileMenu()
         {
+            // Act
             var cut = Render<MainLayout>(parameters => parameters
                 .Add(p => p.Body, builder => builder.AddContent(0, "Test content")));
 
+            // Assert
             cut.Markup.Should().Contain("Sign Out");
             cut.Markup.Should().Contain("Profile");
         }
@@ -62,18 +68,22 @@ namespace Biotrackr.UI.UnitTests.Components.Layout
         [Fact]
         public void CallUserInfoService_OnInitialized()
         {
+            // Act
             var cut = Render<MainLayout>(parameters => parameters
                 .Add(p => p.Body, builder => builder.AddContent(0, "Test content")));
 
+            // Assert
             _mockUserInfoService.Verify(x => x.GetUserInfo(It.IsAny<HttpContext>()), Times.Once);
         }
 
         [Fact]
         public void RenderBodyContent()
         {
+            // Act
             var cut = Render<MainLayout>(parameters => parameters
                 .Add(p => p.Body, builder => builder.AddContent(0, "Hello from body")));
 
+            // Assert
             cut.Markup.Should().Contain("Hello from body");
         }
     }

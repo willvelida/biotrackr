@@ -13,6 +13,7 @@ namespace Biotrackr.UI.UnitTests.Helpers
         [InlineData(150, "2h 30m")]
         public void FormatMinutesCorrectly(int minutes, string expected)
         {
+            // Act & Assert
             FormattingHelpers.FormatMinutes(minutes).Should().Be(expected);
         }
 
@@ -23,6 +24,7 @@ namespace Biotrackr.UI.UnitTests.Helpers
         [InlineData(10000, "10,000")]
         public void FormatNumberCorrectly(int? value, string expected)
         {
+            // Act & Assert
             FormattingHelpers.FormatNumber(value).Should().Be(expected);
         }
 
@@ -33,6 +35,7 @@ namespace Biotrackr.UI.UnitTests.Helpers
         [InlineData(5400000, "1h 30m")]
         public void FormatDurationCorrectly(long milliseconds, string expected)
         {
+            // Act & Assert
             FormattingHelpers.FormatDuration(milliseconds).Should().Be(expected);
         }
 
@@ -47,6 +50,7 @@ namespace Biotrackr.UI.UnitTests.Helpers
         [InlineData(600, "10:00")]
         public void FormatElapsedTimeCorrectly(int totalSeconds, string expected)
         {
+            // Act & Assert
             FormattingHelpers.FormatElapsedTime(totalSeconds).Should().Be(expected);
         }
     }

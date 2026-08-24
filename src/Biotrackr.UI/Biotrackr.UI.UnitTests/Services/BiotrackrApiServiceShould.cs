@@ -47,6 +47,7 @@ namespace Biotrackr.UI.UnitTests.Services
         [Fact]
         public async Task GetActivitiesAsync_ShouldReturnPaginatedResponse_WhenApiReturnsData()
         {
+            // Arrange
             var expected = new PaginatedResponse<ActivityItem>
             {
                 Items = [new ActivityItem { Date = "2025-01-15" }],
@@ -56,8 +57,10 @@ namespace Biotrackr.UI.UnitTests.Services
             };
             var sut = CreateSut(CreateSuccessResponse(expected));
 
+            // Act
             var result = await sut.GetActivitiesAsync();
 
+            // Assert
             result.Items.Should().HaveCount(1);
             result.Items[0].Date.Should().Be("2025-01-15");
         }
@@ -65,11 +68,14 @@ namespace Biotrackr.UI.UnitTests.Services
         [Fact]
         public async Task GetActivityByDateAsync_ShouldReturnItem_WhenDateExists()
         {
+            // Arrange
             var expected = new ActivityItem { Date = "2025-01-15" };
             var sut = CreateSut(CreateSuccessResponse(expected));
 
+            // Act
             var result = await sut.GetActivityByDateAsync("2025-01-15");
 
+            // Assert
             result.Should().NotBeNull();
             result!.Date.Should().Be("2025-01-15");
         }
@@ -77,16 +83,20 @@ namespace Biotrackr.UI.UnitTests.Services
         [Fact]
         public async Task GetActivityByDateAsync_ShouldReturnNull_WhenNotFound()
         {
+            // Arrange
             var sut = CreateSut(CreateNotFoundResponse());
 
+            // Act
             var result = await sut.GetActivityByDateAsync("2025-01-15");
 
+            // Assert
             result.Should().BeNull();
         }
 
         [Fact]
         public async Task GetActivitiesByDateRangeAsync_ShouldReturnPaginatedResponse_WhenApiReturnsData()
         {
+            // Arrange
             var expected = new PaginatedResponse<ActivityItem>
             {
                 Items = [new ActivityItem { Date = "2025-01-15" }, new ActivityItem { Date = "2025-01-16" }],
@@ -96,8 +106,10 @@ namespace Biotrackr.UI.UnitTests.Services
             };
             var sut = CreateSut(CreateSuccessResponse(expected));
 
+            // Act
             var result = await sut.GetActivitiesByDateRangeAsync("2025-01-15", "2025-01-16");
 
+            // Assert
             result.Items.Should().HaveCount(2);
         }
 
@@ -105,6 +117,7 @@ namespace Biotrackr.UI.UnitTests.Services
         [Fact]
         public async Task GetFoodLogsAsync_ShouldReturnPaginatedResponse_WhenApiReturnsData()
         {
+            // Arrange
             var expected = new PaginatedResponse<FoodItem>
             {
                 Items = [new FoodItem { Date = "2025-01-15" }],
@@ -114,19 +127,24 @@ namespace Biotrackr.UI.UnitTests.Services
             };
             var sut = CreateSut(CreateSuccessResponse(expected));
 
+            // Act
             var result = await sut.GetFoodLogsAsync();
 
+            // Assert
             result.Items.Should().HaveCount(1);
         }
 
         [Fact]
         public async Task GetFoodLogByDateAsync_ShouldReturnItem_WhenDateExists()
         {
+            // Arrange
             var expected = new FoodItem { Date = "2025-01-15" };
             var sut = CreateSut(CreateSuccessResponse(expected));
 
+            // Act
             var result = await sut.GetFoodLogByDateAsync("2025-01-15");
 
+            // Assert
             result.Should().NotBeNull();
             result!.Date.Should().Be("2025-01-15");
         }
@@ -134,16 +152,20 @@ namespace Biotrackr.UI.UnitTests.Services
         [Fact]
         public async Task GetFoodLogByDateAsync_ShouldReturnNull_WhenNotFound()
         {
+            // Arrange
             var sut = CreateSut(CreateNotFoundResponse());
 
+            // Act
             var result = await sut.GetFoodLogByDateAsync("2025-01-15");
 
+            // Assert
             result.Should().BeNull();
         }
 
         [Fact]
         public async Task GetFoodLogsByDateRangeAsync_ShouldReturnPaginatedResponse_WhenApiReturnsData()
         {
+            // Arrange
             var expected = new PaginatedResponse<FoodItem>
             {
                 Items = [new FoodItem { Date = "2025-01-15" }],
@@ -153,8 +175,10 @@ namespace Biotrackr.UI.UnitTests.Services
             };
             var sut = CreateSut(CreateSuccessResponse(expected));
 
+            // Act
             var result = await sut.GetFoodLogsByDateRangeAsync("2025-01-15", "2025-01-16");
 
+            // Assert
             result.Items.Should().HaveCount(1);
         }
 
@@ -162,6 +186,7 @@ namespace Biotrackr.UI.UnitTests.Services
         [Fact]
         public async Task GetSleepRecordsAsync_ShouldReturnPaginatedResponse_WhenApiReturnsData()
         {
+            // Arrange
             var expected = new PaginatedResponse<SleepItem>
             {
                 Items = [new SleepItem { Date = "2025-01-15" }],
@@ -171,19 +196,24 @@ namespace Biotrackr.UI.UnitTests.Services
             };
             var sut = CreateSut(CreateSuccessResponse(expected));
 
+            // Act
             var result = await sut.GetSleepRecordsAsync();
 
+            // Assert
             result.Items.Should().HaveCount(1);
         }
 
         [Fact]
         public async Task GetSleepByDateAsync_ShouldReturnItem_WhenDateExists()
         {
+            // Arrange
             var expected = new SleepItem { Date = "2025-01-15" };
             var sut = CreateSut(CreateSuccessResponse(expected));
 
+            // Act
             var result = await sut.GetSleepByDateAsync("2025-01-15");
 
+            // Assert
             result.Should().NotBeNull();
             result!.Date.Should().Be("2025-01-15");
         }
@@ -191,16 +221,20 @@ namespace Biotrackr.UI.UnitTests.Services
         [Fact]
         public async Task GetSleepByDateAsync_ShouldReturnNull_WhenNotFound()
         {
+            // Arrange
             var sut = CreateSut(CreateNotFoundResponse());
 
+            // Act
             var result = await sut.GetSleepByDateAsync("2025-01-15");
 
+            // Assert
             result.Should().BeNull();
         }
 
         [Fact]
         public async Task GetSleepByDateRangeAsync_ShouldReturnPaginatedResponse_WhenApiReturnsData()
         {
+            // Arrange
             var expected = new PaginatedResponse<SleepItem>
             {
                 Items = [new SleepItem { Date = "2025-01-15" }],
@@ -210,8 +244,10 @@ namespace Biotrackr.UI.UnitTests.Services
             };
             var sut = CreateSut(CreateSuccessResponse(expected));
 
+            // Act
             var result = await sut.GetSleepByDateRangeAsync("2025-01-15", "2025-01-16");
 
+            // Assert
             result.Items.Should().HaveCount(1);
         }
 
@@ -219,6 +255,7 @@ namespace Biotrackr.UI.UnitTests.Services
         [Fact]
         public async Task GetVitalsRecordsAsync_ShouldReturnPaginatedResponse_WhenApiReturnsData()
         {
+            // Arrange
             var expected = new PaginatedResponse<VitalsItem>
             {
                 Items = [new VitalsItem { Date = "2025-01-15" }],
@@ -228,19 +265,24 @@ namespace Biotrackr.UI.UnitTests.Services
             };
             var sut = CreateSut(CreateSuccessResponse(expected));
 
+            // Act
             var result = await sut.GetVitalsRecordsAsync();
 
+            // Assert
             result.Items.Should().HaveCount(1);
         }
 
         [Fact]
         public async Task GetVitalsByDateAsync_ShouldReturnItem_WhenDateExists()
         {
+            // Arrange
             var expected = new VitalsItem { Date = "2025-01-15" };
             var sut = CreateSut(CreateSuccessResponse(expected));
 
+            // Act
             var result = await sut.GetVitalsByDateAsync("2025-01-15");
 
+            // Assert
             result.Should().NotBeNull();
             result!.Date.Should().Be("2025-01-15");
         }
@@ -248,16 +290,20 @@ namespace Biotrackr.UI.UnitTests.Services
         [Fact]
         public async Task GetVitalsByDateAsync_ShouldReturnNull_WhenNotFound()
         {
+            // Arrange
             var sut = CreateSut(CreateNotFoundResponse());
 
+            // Act
             var result = await sut.GetVitalsByDateAsync("2025-01-15");
 
+            // Assert
             result.Should().BeNull();
         }
 
         [Fact]
         public async Task GetVitalsByDateRangeAsync_ShouldReturnPaginatedResponse_WhenApiReturnsData()
         {
+            // Arrange
             var expected = new PaginatedResponse<VitalsItem>
             {
                 Items = [new VitalsItem { Date = "2025-01-15" }],
@@ -267,8 +313,10 @@ namespace Biotrackr.UI.UnitTests.Services
             };
             var sut = CreateSut(CreateSuccessResponse(expected));
 
+            // Act
             var result = await sut.GetVitalsByDateRangeAsync("2025-01-15", "2025-01-16");
 
+            // Assert
             result.Items.Should().HaveCount(1);
         }
 
@@ -276,34 +324,43 @@ namespace Biotrackr.UI.UnitTests.Services
         [Fact]
         public async Task GetActivitiesAsync_ShouldReturnEmptyResponse_WhenNetworkError()
         {
+            // Arrange
             var sut = CreateSut(new HttpRequestException("Connection refused"));
 
+            // Act
             var result = await sut.GetActivitiesAsync();
 
+            // Assert
             result.Items.Should().BeEmpty();
         }
 
         [Fact]
         public async Task GetActivityByDateAsync_ShouldReturnNull_WhenTimeout()
         {
+            // Arrange
             var sut = CreateSut(new TaskCanceledException("Request timed out"));
 
+            // Act
             var result = await sut.GetActivityByDateAsync("2025-01-15");
 
+            // Assert
             result.Should().BeNull();
         }
 
         [Fact]
         public async Task GetActivitiesAsync_ShouldReturnEmptyResponse_WhenInvalidJson()
         {
+            // Arrange
             var response = new HttpResponseMessage(HttpStatusCode.OK)
             {
                 Content = new StringContent("not valid json")
             };
             var sut = CreateSut(response);
 
+            // Act
             var result = await sut.GetActivitiesAsync();
 
+            // Assert
             result.Items.Should().BeEmpty();
         }
 
@@ -311,26 +368,32 @@ namespace Biotrackr.UI.UnitTests.Services
         [Fact]
         public async Task GetActivitiesAsync_ShouldClampPageSize_WhenExceedsMax()
         {
+            // Arrange
             var expected = new PaginatedResponse<ActivityItem> { Items = [], TotalCount = 0 };
             var handler = new MockHttpMessageHandler(CreateSuccessResponse(expected));
             var httpClient = new HttpClient(handler) { BaseAddress = new Uri("https://test.api.com") };
             var sut = new BiotrackrApiService(httpClient, _loggerMock.Object);
 
+            // Act
             await sut.GetActivitiesAsync(pageNumber: 1, pageSize: 200);
 
+            // Assert
             handler.LastRequest!.RequestUri!.ToString().Should().Contain("pageSize=100");
         }
 
         [Fact]
         public async Task GetActivitiesAsync_ShouldDefaultPageNumber_WhenLessThanOne()
         {
+            // Arrange
             var expected = new PaginatedResponse<ActivityItem> { Items = [], TotalCount = 0 };
             var handler = new MockHttpMessageHandler(CreateSuccessResponse(expected));
             var httpClient = new HttpClient(handler) { BaseAddress = new Uri("https://test.api.com") };
             var sut = new BiotrackrApiService(httpClient, _loggerMock.Object);
 
+            // Act
             await sut.GetActivitiesAsync(pageNumber: 0, pageSize: 20);
 
+            // Assert
             handler.LastRequest!.RequestUri!.ToString().Should().Contain("pageNumber=1");
         }
 
@@ -338,18 +401,23 @@ namespace Biotrackr.UI.UnitTests.Services
         [Fact]
         public void Constructor_ShouldThrow_WhenHttpClientIsNull()
         {
+            // Act
             var act = () => new BiotrackrApiService(null!, _loggerMock.Object);
 
+            // Assert
             act.Should().Throw<ArgumentNullException>().WithParameterName("httpClient");
         }
 
         [Fact]
         public void Constructor_ShouldThrow_WhenLoggerIsNull()
         {
+            // Arrange
             var httpClient = new HttpClient { BaseAddress = new Uri("https://test.api.com") };
 
+            // Act
             var act = () => new BiotrackrApiService(httpClient, null!);
 
+            // Assert
             act.Should().Throw<ArgumentNullException>().WithParameterName("logger");
         }
     }

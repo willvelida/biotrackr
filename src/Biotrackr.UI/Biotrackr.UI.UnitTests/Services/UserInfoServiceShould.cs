@@ -43,14 +43,17 @@ namespace Biotrackr.UI.UnitTests.Services
         [Fact]
         public void GetUserInfo_ShouldReturnDisplayNameAndEmail_WhenClientPrincipalHeaderPresent()
         {
+            // Arrange
             var sut = CreateSut();
             var context = new DefaultHttpContext();
             context.Request.Headers["X-MS-CLIENT-PRINCIPAL"] = CreateBase64Principal(
                 name: "Will Velida",
                 email: "will@example.com");
 
+            // Act
             var result = sut.GetUserInfo(context);
 
+            // Assert
             result.DisplayName.Should().Be("Will Velida");
             result.Email.Should().Be("will@example.com");
         }
@@ -58,24 +61,30 @@ namespace Biotrackr.UI.UnitTests.Services
         [Fact]
         public void GetUserInfo_ShouldFallbackToClientPrincipalName_WhenFullHeaderInvalid()
         {
+            // Arrange
             var sut = CreateSut();
             var context = new DefaultHttpContext();
             context.Request.Headers["X-MS-CLIENT-PRINCIPAL"] = "not-valid-base64!!!";
             context.Request.Headers["X-MS-CLIENT-PRINCIPAL-NAME"] = "Fallback User";
 
+            // Act
             var result = sut.GetUserInfo(context);
 
+            // Assert
             result.DisplayName.Should().Be("Fallback User");
         }
 
         [Fact]
         public void GetUserInfo_ShouldReturnDefaults_WhenNoHeadersPresent()
         {
+            // Arrange
             var sut = CreateSut();
             var context = new DefaultHttpContext();
 
+            // Act
             var result = sut.GetUserInfo(context);
 
+            // Assert
             result.DisplayName.Should().Be("User");
             result.Email.Should().Be("");
         }
@@ -83,20 +92,28 @@ namespace Biotrackr.UI.UnitTests.Services
         [Fact]
         public void GetUserInfo_ShouldHandleMalformedBase64_Gracefully()
         {
+            // Arrange
             var sut = CreateSut();
             var context = new DefaultHttpContext();
             context.Request.Headers["X-MS-CLIENT-PRINCIPAL"] = "!!!completely-garbage-data@@@";
 
+            // Act
             var act = () => sut.GetUserInfo(context);
 
+            // Assert
             act.Should().NotThrow();
+
+            // Act
             var result = act();
+
+            // Assert
             result.DisplayName.Should().Be("User");
         }
 
         [Fact]
         public void GetUserInfo_ShouldExtractUserId_WhenNameIdentifierClaimPresent()
         {
+            // Arrange
             var sut = CreateSut();
             var context = new DefaultHttpContext();
             context.Request.Headers["X-MS-CLIENT-PRINCIPAL"] = CreateBase64Principal(
@@ -104,8 +121,10 @@ namespace Biotrackr.UI.UnitTests.Services
                 email: "will@example.com",
                 nameIdentifier: "user-id-12345");
 
+            // Act
             var result = sut.GetUserInfo(context);
 
+            // Assert
             result.UserId.Should().Be("user-id-12345");
             result.DisplayName.Should().Be("Will Velida");
             result.Email.Should().Be("will@example.com");

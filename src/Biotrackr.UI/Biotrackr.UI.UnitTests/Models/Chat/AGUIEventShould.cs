@@ -14,6 +14,7 @@ namespace Biotrackr.UI.UnitTests.Models.Chat
         [Fact]
         public void DeserializeToolCallResultEvent()
         {
+            // Arrange
             var json = """
                 {
                     "type": "TOOL_CALL_RESULT",
@@ -23,8 +24,10 @@ namespace Biotrackr.UI.UnitTests.Models.Chat
                 }
                 """;
 
+            // Act
             var evt = JsonSerializer.Deserialize<AGUIEvent>(json, JsonOptions);
 
+            // Assert
             evt.Should().NotBeNull();
             evt!.Type.Should().Be("TOOL_CALL_RESULT");
             evt.ToolCallId.Should().Be("call_abc123");
@@ -35,6 +38,7 @@ namespace Biotrackr.UI.UnitTests.Models.Chat
         [Fact]
         public void DeserializeToolCallStartEvent()
         {
+            // Arrange
             var json = """
                 {
                     "type": "TOOL_CALL_START",
@@ -44,8 +48,10 @@ namespace Biotrackr.UI.UnitTests.Models.Chat
                 }
                 """;
 
+            // Act
             var evt = JsonSerializer.Deserialize<AGUIEvent>(json, JsonOptions);
 
+            // Assert
             evt.Should().NotBeNull();
             evt!.Type.Should().Be("TOOL_CALL_START");
             evt.ToolCallId.Should().Be("call_xyz789");
@@ -56,6 +62,7 @@ namespace Biotrackr.UI.UnitTests.Models.Chat
         [Fact]
         public void DeserializeTextMessageContentEvent_WithoutNewFields()
         {
+            // Arrange
             var json = """
                 {
                     "type": "TEXT_MESSAGE_CONTENT",
@@ -63,8 +70,10 @@ namespace Biotrackr.UI.UnitTests.Models.Chat
                 }
                 """;
 
+            // Act
             var evt = JsonSerializer.Deserialize<AGUIEvent>(json, JsonOptions);
 
+            // Assert
             evt.Should().NotBeNull();
             evt!.Type.Should().Be("TEXT_MESSAGE_CONTENT");
             evt.Delta.Should().Be("Hello, here is your report.");
@@ -76,6 +85,7 @@ namespace Biotrackr.UI.UnitTests.Models.Chat
         [Fact]
         public void DeserializeRunStartedEvent()
         {
+            // Arrange
             var json = """
                 {
                     "type": "RUN_STARTED",
@@ -84,8 +94,10 @@ namespace Biotrackr.UI.UnitTests.Models.Chat
                 }
                 """;
 
+            // Act
             var evt = JsonSerializer.Deserialize<AGUIEvent>(json, JsonOptions);
 
+            // Assert
             evt.Should().NotBeNull();
             evt!.Type.Should().Be("RUN_STARTED");
             evt.ThreadId.Should().Be("thread-123");
