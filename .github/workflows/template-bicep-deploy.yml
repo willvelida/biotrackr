@@ -30,6 +30,10 @@ on:
             environment:
                 required: true
                 type: string
+            deploy-timeout-minutes:
+                required: false
+                type: number
+                default: 45
         secrets:
             client-id:
                 required: true
@@ -49,6 +53,7 @@ jobs:
         name: Deploy Bicep Template
         runs-on: ubuntu-latest
         environment: ${{ inputs.environment }}
+        timeout-minutes: ${{ inputs.deploy-timeout-minutes }}
         steps:
         - uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
           name: Checkout Repository Code
@@ -96,6 +101,39 @@ jobs:
 
             echo "params=$PARAMS" >> "$GITHUB_OUTPUT"
 
+        - name: Compute Deployment Name
+          id: deployment-name
+          shell: bash
+          env:
+            WORKFLOW_NAME: ${{ github.workflow }}
+            RUN_NUMBER: ${{ github.run_number }}
+            RUN_ATTEMPT: ${{ github.run_attempt }}
+          run: |
+            slug=$(printf '%s' "$WORKFLOW_NAME" \
+              | tr '[:upper:]' '[:lower:]' \
+              | sed 's/[^a-z0-9]\{1,\}/-/g; s/^-//; s/-$//')
+
+            if [ -z "$slug" ]; then
+              slug="deployment"
+            fi
+
+            # Azure caps deployment names at 64 characters. Truncate the slug to
+            # whatever the "-<run_number>-<run_attempt>" suffix leaves free, so the
+            # uniqueness suffix is never the part that gets cut off.
+            suffix="-${RUN_NUMBER}-${RUN_ATTEMPT}"
+            max_slug=$(( 64 - ${#suffix} ))
+            if [ "$max_slug" -lt 1 ]; then
+              max_slug=1
+            fi
+
+            slug=$(printf '%s' "$slug" | cut -c1-"$max_slug" | sed 's/-$//')
+
+            if [ -z "$slug" ]; then
+              slug="deployment"
+            fi
+
+            echo "name=${slug}${suffix}" >> "$GITHUB_OUTPUT"
+
         - uses: azure/bicep-deploy@66910e9c5c7733c33a1cd605030d02234b3bc4ed # v2
           name: Deploy Bicep Template
           with:
@@ -107,4 +145,4 @@ jobs:
             template-file: ${{ inputs.template-file }}
             parameters-file: ${{ inputs.parameters-file }}
             parameters: ${{ steps.prepare-params.outputs.params }}
-            name: ${{ github.run_number }} 
+            name: ${{ steps.deployment-name.outputs.name }} 
