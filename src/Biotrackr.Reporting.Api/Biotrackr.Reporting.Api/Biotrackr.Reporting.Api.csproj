@@ -16,11 +16,15 @@
     <PackageReference Include="Azure.Monitor.OpenTelemetry.Exporter" Version="1.4.0" />
     <PackageReference Include="Azure.Storage.Blobs" Version="12.24.0" />
     <PackageReference Include="GitHub.Copilot.SDK" Version="0.2.2" />
+    <!-- CVE-2026-48109: pin until GitHub.Copilot.SDK pulls StreamJsonRpc >= 2.25.28, which requires MessagePack >= 2.5.302 -->
+    <PackageReference Include="MessagePack" Version="2.5.301" />
     <PackageReference Include="Microsoft.Agents.AI.Hosting" Version="1.0.0-preview.260311.1" />
     <PackageReference Include="Microsoft.Agents.AI.Hosting.A2A.AspNetCore" Version="1.0.0-preview.260311.1" />
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.5" />
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.2" />
     <PackageReference Include="Microsoft.Azure.AppConfiguration.AspNetCore" Version="8.5.0" />
+    <!-- CVE-2026-49451: pin until Microsoft.AspNetCore.OpenApi >= 10.0.11, which requires Microsoft.OpenApi >= 2.7.5 -->
+    <PackageReference Include="Microsoft.OpenApi" Version="2.7.5" />
     <!-- CVE-2026-44375: pin until Microsoft.Agents.AI.* updates to >= 1.1.62 -->
     <PackageReference Include="Nerdbank.MessagePack" Version="1.1.62" />
     <PackageReference Include="OpenTelemetry.Extensions.Hosting" Version="1.12.0" />

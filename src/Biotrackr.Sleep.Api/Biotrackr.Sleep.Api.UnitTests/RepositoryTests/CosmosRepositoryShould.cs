@@ -37,7 +37,7 @@ namespace Biotrackr.Sleep.Api.UnitTests.RepositoryTests
         }
 
         [Fact]
-        public async Task GetSleepSummaryByDate_ShouldReturnSleepDocument()
+        public async Task GetSleepSummaryByDate_ShouldReturnSleepDocument_WhenSleepDocumentExists()
         {
             // Arrange
             var date = "2022-01-01";
@@ -102,7 +102,7 @@ namespace Biotrackr.Sleep.Api.UnitTests.RepositoryTests
         }
 
         [Fact]
-        public async Task GetAllSleepDocuments_ShouldReturnPaginationResponseWithSleepDocuments()
+        public async Task GetAllSleepDocuments_ShouldReturnPaginationResponse_WhenSleepDocumentsExist()
         {
             // Arrange
             var fixture = new Fixture();
@@ -182,7 +182,7 @@ namespace Biotrackr.Sleep.Api.UnitTests.RepositoryTests
         }
 
         [Fact]
-        public async Task GetAllSleepDocuments_ShouldReturnPaginatedResults()
+        public async Task GetAllSleepDocuments_ShouldReturnPaginatedResults_WhenPaginationIsRequested()
         {
             // Arrange
             var fixture = new Fixture();
@@ -207,7 +207,7 @@ namespace Biotrackr.Sleep.Api.UnitTests.RepositoryTests
         }
 
         [Fact]
-        public async Task GetAllSleepDocuments_ShouldReturnCorrectPaginationMetadata_ForFirstPage()
+        public async Task GetAllSleepDocuments_ShouldReturnCorrectPaginationMetadata_WhenOnFirstPage()
         {
             // Arrange
             var fixture = new Fixture();
@@ -230,7 +230,7 @@ namespace Biotrackr.Sleep.Api.UnitTests.RepositoryTests
         }
 
         [Fact]
-        public async Task GetAllSleepDocuments_ShouldReturnCorrectPaginationMetadata_ForLastPage()
+        public async Task GetAllSleepDocuments_ShouldReturnCorrectPaginationMetadata_WhenOnLastPage()
         {
             // Arrange
             var fixture = new Fixture();
@@ -253,7 +253,7 @@ namespace Biotrackr.Sleep.Api.UnitTests.RepositoryTests
         }
 
         [Fact]
-        public async Task GetAllSleepDocuments_ShouldUseCorrectOffsetAndLimit()
+        public async Task GetAllSleepDocuments_ShouldUseCorrectOffsetAndLimit_WhenPaginationIsRequested()
         {
             // Arrange
             var fixture = new Fixture();
@@ -274,7 +274,7 @@ namespace Biotrackr.Sleep.Api.UnitTests.RepositoryTests
         }
 
         [Fact]
-        public async Task GetAllSleepDocuments_ShouldHandleEmptyResults()
+        public async Task GetAllSleepDocuments_ShouldReturnEmptyResults_WhenNoDocumentsExist()
         {
             // Arrange
             var request = new PaginationRequest { PageNumber = 1, PageSize = 20 };
@@ -293,7 +293,7 @@ namespace Biotrackr.Sleep.Api.UnitTests.RepositoryTests
         }
 
         [Fact]
-        public async Task GetAllSleepDocuments_ShouldUsePaginationParametersCorrectly()
+        public async Task GetAllSleepDocuments_ShouldUsePaginationParameters_WhenRequestIsProvided()
         {
             // Arrange
             var request = new PaginationRequest { PageNumber = 2, PageSize = 10 };
@@ -319,7 +319,7 @@ namespace Biotrackr.Sleep.Api.UnitTests.RepositoryTests
         }
 
         [Fact]
-        public async Task GetAllSleepDocuments_ShouldContinueWhenCountQueryFails()
+        public async Task GetAllSleepDocuments_ShouldReturnDocuments_WhenCountQueryFails()
         {
             // Arrange
             var request = new PaginationRequest { PageNumber = 1, PageSize = 5 };
@@ -362,7 +362,7 @@ namespace Biotrackr.Sleep.Api.UnitTests.RepositoryTests
         }
 
         [Fact]
-        public async Task GetSleepDocumentsByDateRange_ShouldReturnPaginationResponseWithSleepDocuments()
+        public async Task GetSleepDocumentsByDateRange_ShouldReturnPaginationResponse_WhenSleepDocumentsExistInRange()
         {
             // Arrange
             var startDate = "2022-01-01";
@@ -454,7 +454,7 @@ namespace Biotrackr.Sleep.Api.UnitTests.RepositoryTests
         }
 
         [Fact]
-        public async Task GetSleepDocumentsByDateRange_ShouldReturnCorrectPaginationMetadata()
+        public async Task GetSleepDocumentsByDateRange_ShouldReturnCorrectPaginationMetadata_WhenDocumentsExistInRange()
         {
             // Arrange
             var startDate = "2022-01-01";
@@ -481,7 +481,7 @@ namespace Biotrackr.Sleep.Api.UnitTests.RepositoryTests
         }
 
         [Fact]
-        public async Task GetSleepDocumentsByDateRange_ShouldUseCorrectDateRangeParameters()
+        public async Task GetSleepDocumentsByDateRange_ShouldUseCorrectDateRangeParameters_WhenQueryingDateRange()
         {
             // Arrange
             var startDate = "2022-01-01";
@@ -506,7 +506,7 @@ namespace Biotrackr.Sleep.Api.UnitTests.RepositoryTests
         }
 
         [Fact]
-        public async Task GetSleepDocumentsByDateRange_ShouldContinueWhenCountQueryFails()
+        public async Task GetSleepDocumentsByDateRange_ShouldReturnDocuments_WhenCountQueryFails()
         {
             // Arrange
             var startDate = "2022-01-01";
@@ -555,7 +555,7 @@ namespace Biotrackr.Sleep.Api.UnitTests.RepositoryTests
         }
 
         [Fact]
-        public async Task GetSleepDocumentsByDateRange_ShouldReturnCorrectPaginationMetadata_ForFirstPage()
+        public async Task GetSleepDocumentsByDateRange_ShouldReturnCorrectPaginationMetadata_WhenOnFirstPage()
         {
             // Arrange
             var startDate = "2022-01-01";
@@ -580,7 +580,7 @@ namespace Biotrackr.Sleep.Api.UnitTests.RepositoryTests
         }
 
         [Fact]
-        public async Task GetSleepDocumentsByDateRange_ShouldReturnCorrectPaginationMetadata_ForLastPage()
+        public async Task GetSleepDocumentsByDateRange_ShouldReturnCorrectPaginationMetadata_WhenOnLastPage()
         {
             // Arrange
             var startDate = "2022-01-01";
@@ -605,7 +605,7 @@ namespace Biotrackr.Sleep.Api.UnitTests.RepositoryTests
         }
 
         [Fact]
-        public async Task GetSleepDocumentsByDateRange_ShouldHandleEmptyResults()
+        public async Task GetSleepDocumentsByDateRange_ShouldReturnEmptyResults_WhenNoDocumentsExistInRange()
         {
             // Arrange
             var startDate = "2022-01-01";
@@ -626,7 +626,7 @@ namespace Biotrackr.Sleep.Api.UnitTests.RepositoryTests
         }
 
         [Fact]
-        public async Task GetSleepDocumentsByDateRange_ShouldLogInformationMessages()
+        public async Task GetSleepDocumentsByDateRange_ShouldLogFetchAndResultCounts_WhenQueryingDateRange()
         {
             // Arrange
             var startDate = "2022-01-01";

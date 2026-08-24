@@ -18,12 +18,15 @@ namespace Biotrackr.Reporting.Api.UnitTests.Services
         }
 
         [Fact]
-        public void CreateSessionConfigWithHooks()
+        public void CreateSessionConfig_ShouldRegisterAllHooks_WhenCalled()
         {
+            // Arrange
             var sut = CreateService();
 
+            // Act
             var config = sut.CreateSessionConfig();
 
+            // Assert
             config.Should().NotBeNull();
             config.Hooks.Should().NotBeNull();
             config.Hooks!.OnPreToolUse.Should().NotBeNull();
@@ -37,16 +40,19 @@ namespace Biotrackr.Reporting.Api.UnitTests.Services
         [InlineData("shell")]
         [InlineData("read")]
         [InlineData("write")]
-        public async Task ApproveAllowedTools(string toolName)
+        public async Task OnPreToolUse_ShouldApprove_WhenToolIsAllowed(string toolName)
         {
+            // Arrange
             var sut = CreateService();
             var config = sut.CreateSessionConfig();
 
             var input = new PreToolUseHookInput { ToolName = toolName };
             var invocation = new HookInvocation { SessionId = "test-session" };
 
+            // Act
             var result = await config.Hooks!.OnPreToolUse!(input, invocation);
 
+            // Assert
             result.Should().NotBeNull();
             result!.PermissionDecision.Should().Be("allow");
         }
@@ -58,65 +64,85 @@ namespace Biotrackr.Reporting.Api.UnitTests.Services
         [InlineData("custom_tool")]
         [InlineData("")]
         [InlineData("admin")]
-        public async Task DenyDisallowedTools(string toolName)
+        public async Task OnPreToolUse_ShouldDeny_WhenToolIsNotAllowed(string toolName)
         {
+            // Arrange
             var sut = CreateService();
             var config = sut.CreateSessionConfig();
 
             var input = new PreToolUseHookInput { ToolName = toolName };
             var invocation = new HookInvocation { SessionId = "test-session" };
 
+            // Act
             var result = await config.Hooks!.OnPreToolUse!(input, invocation);
 
+            // Assert
             result.Should().NotBeNull();
             result!.PermissionDecision.Should().Be("deny");
         }
 
         [Fact]
-        public async Task ReturnFalseForHealthCheckWhenSidecarUnreachable()
+        public async Task IsHealthyAsync_ShouldReturnFalse_WhenSidecarIsUnreachable()
         {
-            // Use a port that nobody is listening on
+            // Arrange — use a port that nobody is listening on
             var sut = CreateService(copilotCliUrl: "http://localhost:19999");
 
+            // Act
             var isHealthy = await sut.IsHealthyAsync();
 
+            // Assert
             isHealthy.Should().BeFalse();
         }
 
         [Fact]
-        public async Task DisposeCleanlyWhenClientNotCreated()
+        public async Task DisposeAsync_ShouldCompleteWithoutThrowing_WhenClientWasNeverCreated()
         {
+            // Arrange
             var sut = CreateService();
 
-            await sut.DisposeAsync();
+            // Act
+            var act = async () => await sut.DisposeAsync();
 
-            // Should not throw — no client was created
+            // Assert
+            await act.Should().NotThrowAsync(
+                "AGENT FIX: DisposeAsync must guard against a null client. "
+                + "See Biotrackr.Reporting.Api/Services/CopilotService.cs.");
+            sut.Client.Should().NotBeNull(
+                "AGENT FIX: disposing before a client is created must leave the service able "
+                + "to lazily create one on the next access to Client.");
         }
 
         [Fact]
-        public void CreateClientWithConfiguredCliUrl()
+        public void Client_ShouldCreateClient_WhenCliUrlIsConfigured()
         {
+            // Arrange
             var sut = CreateService(copilotCliUrl: "http://sidecar:4321");
 
+            // Act
             var client = sut.Client;
 
+            // Assert
             client.Should().NotBeNull();
         }
 
         [Fact]
-        public void ReturnSameClientOnMultipleAccesses()
+        public void Client_ShouldReturnSameInstance_WhenAccessedMultipleTimes()
         {
+            // Arrange
             var sut = CreateService();
 
+            // Act
             var client1 = sut.Client;
             var client2 = sut.Client;
 
+            // Assert
             client1.Should().BeSameAs(client2);
         }
 
         [Fact]
-        public async Task AllowReadToolWithTmpReportsPath()
+        public async Task OnPreToolUse_ShouldAllowRead_WhenPathIsUnderTmpReports()
         {
+            // Arrange
             var sut = CreateService();
             var config = sut.CreateSessionConfig();
 
@@ -127,15 +153,18 @@ namespace Biotrackr.Reporting.Api.UnitTests.Services
             };
             var invocation = new HookInvocation { SessionId = "test-session" };
 
+            // Act
             var result = await config.Hooks!.OnPreToolUse!(input, invocation);
 
+            // Assert
             result.Should().NotBeNull();
             result!.PermissionDecision.Should().Be("allow");
         }
 
         [Fact]
-        public async Task DenyWriteToolOutsideTmpReports()
+        public async Task OnPreToolUse_ShouldDenyWrite_WhenPathIsOutsideTmpReports()
         {
+            // Arrange
             var sut = CreateService();
             var config = sut.CreateSessionConfig();
 
@@ -146,15 +175,18 @@ namespace Biotrackr.Reporting.Api.UnitTests.Services
             };
             var invocation = new HookInvocation { SessionId = "test-session" };
 
+            // Act
             var result = await config.Hooks!.OnPreToolUse!(input, invocation);
 
+            // Assert
             result.Should().NotBeNull();
             result!.PermissionDecision.Should().Be("deny");
         }
 
         [Fact]
-        public async Task DetectDangerousPatternInPostToolUse()
+        public async Task OnPostToolUse_ShouldFlagSecurityWarning_WhenResultContainsDangerousPattern()
         {
+            // Arrange
             var sut = CreateService();
             var config = sut.CreateSessionConfig();
 
@@ -165,16 +197,19 @@ namespace Biotrackr.Reporting.Api.UnitTests.Services
             };
             var invocation = new HookInvocation { SessionId = "test-session" };
 
+            // Act
             var result = await config.Hooks!.OnPostToolUse!(input, invocation);
 
+            // Assert
             result.Should().NotBeNull();
             result!.AdditionalContext.Should().Contain("SECURITY");
             result.AdditionalContext.Should().Contain("subprocess");
         }
 
         [Fact]
-        public async Task AllowSafeCodeInPostToolUse()
+        public async Task OnPostToolUse_ShouldReturnNull_WhenResultContainsSafeCode()
         {
+            // Arrange
             var sut = CreateService();
             var config = sut.CreateSessionConfig();
 
@@ -185,14 +220,17 @@ namespace Biotrackr.Reporting.Api.UnitTests.Services
             };
             var invocation = new HookInvocation { SessionId = "test-session" };
 
+            // Act
             var result = await config.Hooks!.OnPostToolUse!(input, invocation);
 
+            // Assert
             result.Should().BeNull();
         }
 
         [Fact]
-        public async Task ReturnNullForNonShellToolInPostToolUse()
+        public async Task OnPostToolUse_ShouldReturnNull_WhenToolIsNotShell()
         {
+            // Arrange
             var sut = CreateService();
             var config = sut.CreateSessionConfig();
 
@@ -203,14 +241,17 @@ namespace Biotrackr.Reporting.Api.UnitTests.Services
             };
             var invocation = new HookInvocation { SessionId = "test-session" };
 
+            // Act
             var result = await config.Hooks!.OnPostToolUse!(input, invocation);
 
+            // Assert
             result.Should().BeNull();
         }
 
         [Fact]
-        public async Task ReturnRetryOnErrorOccurred()
+        public async Task OnErrorOccurred_ShouldReturnRetry_WhenToolExecutionFails()
         {
+            // Arrange
             var sut = CreateService();
             var config = sut.CreateSessionConfig();
 
@@ -221,42 +262,50 @@ namespace Biotrackr.Reporting.Api.UnitTests.Services
             };
             var invocation = new HookInvocation { SessionId = "test-session" };
 
+            // Act
             var result = await config.Hooks!.OnErrorOccurred!(input, invocation);
 
+            // Assert
             result.Should().NotBeNull();
             result!.ErrorHandling.Should().Be("retry");
         }
 
         [Fact]
-        public async Task ReturnNullOnSessionStart()
+        public async Task OnSessionStart_ShouldReturnNull_WhenSessionIsNew()
         {
+            // Arrange
             var sut = CreateService();
             var config = sut.CreateSessionConfig();
 
             var input = new SessionStartHookInput { Source = "new" };
             var invocation = new HookInvocation { SessionId = "test-session" };
 
+            // Act
             var result = await config.Hooks!.OnSessionStart!(input, invocation);
 
+            // Assert
             result.Should().BeNull();
         }
 
         [Fact]
-        public async Task ReturnNullOnSessionEnd()
+        public async Task OnSessionEnd_ShouldReturnNull_WhenSessionCompletes()
         {
+            // Arrange
             var sut = CreateService();
             var config = sut.CreateSessionConfig();
 
             var input = new SessionEndHookInput { Reason = "completed" };
             var invocation = new HookInvocation { SessionId = "test-session" };
 
+            // Act
             var result = await config.Hooks!.OnSessionEnd!(input, invocation);
 
+            // Assert
             result.Should().BeNull();
         }
 
         [Fact]
-        public async Task AllowReadAgentWithinPollLimit()
+        public async Task OnPreToolUse_ShouldAllowReadAgent_WhenWithinPollLimit()
         {
             // Arrange
             var sut = CreateService();
@@ -284,7 +333,7 @@ namespace Biotrackr.Reporting.Api.UnitTests.Services
         }
 
         [Fact]
-        public async Task DenyReadAgentAfterExceedingPollLimit()
+        public async Task OnPreToolUse_ShouldDenyReadAgent_WhenPollLimitIsExceeded()
         {
             // Arrange
             var sut = CreateService();
@@ -318,7 +367,7 @@ namespace Biotrackr.Reporting.Api.UnitTests.Services
         }
 
         [Fact]
-        public async Task ResetReadAgentPollCountOnSessionStart()
+        public async Task OnSessionStart_ShouldResetReadAgentPollCount_WhenSessionRestarts()
         {
             // Arrange
             var sut = CreateService();
@@ -354,7 +403,7 @@ namespace Biotrackr.Reporting.Api.UnitTests.Services
         }
 
         [Fact]
-        public async Task TrackReadAgentPollsPerAgentIndependently()
+        public async Task OnPreToolUse_ShouldTrackPollsPerAgent_WhenDifferentAgentsArePolled()
         {
             // Arrange
             var sut = CreateService();
@@ -427,24 +476,30 @@ namespace Biotrackr.Reporting.Api.UnitTests.Services
         }
 
         [Fact]
-        public void IncludeSystemPromptWhenConfigured()
+        public void CreateSessionConfig_ShouldIncludeSystemPrompt_WhenPromptIsConfigured()
         {
+            // Arrange
             var sut = CreateService(systemPrompt: "You are a report generator.");
 
+            // Act
             var config = sut.CreateSessionConfig();
 
+            // Assert
             config.SystemMessage.Should().NotBeNull();
             config.SystemMessage!.Mode.Should().Be(SystemMessageMode.Append);
             config.SystemMessage.Content.Should().Be("You are a report generator.");
         }
 
         [Fact]
-        public void ExcludeSystemPromptWhenNotConfigured()
+        public void CreateSessionConfig_ShouldExcludeSystemPrompt_WhenPromptIsNotConfigured()
         {
+            // Arrange
             var sut = CreateService();
 
+            // Act
             var config = sut.CreateSessionConfig();
 
+            // Assert
             config.SystemMessage.Should().BeNull();
         }
 
