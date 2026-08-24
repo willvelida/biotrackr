@@ -44,7 +44,7 @@ namespace Biotrackr.Chat.Api.UnitTests.Middleware
         }
 
         [Fact]
-        public async Task LogToolCallWithArguments_WhenFunctionCallContentIsYielded()
+        public async Task HandleAsync_ShouldLogToolCallWithArguments_WhenFunctionCallContentIsYielded()
         {
             // Arrange
             var arguments = new Dictionary<string, object?> { ["date"] = "2026-01-15", ["page"] = 1 };
@@ -65,7 +65,7 @@ namespace Biotrackr.Chat.Api.UnitTests.Middleware
         }
 
         [Fact]
-        public async Task LogNullArguments_WhenFunctionCallHasNoArguments()
+        public async Task HandleAsync_ShouldLogNullArguments_WhenFunctionCallHasNoArguments()
         {
             // Arrange
             var functionCall = new FunctionCallContent("call-1", "GetActivityByDate");
@@ -85,7 +85,7 @@ namespace Biotrackr.Chat.Api.UnitTests.Middleware
         }
 
         [Fact]
-        public async Task NotPersistArgumentsToCosmosDb_WhenToolCallIsLogged()
+        public async Task HandleAsync_ShouldNotPersistArgumentsToCosmosDb_WhenToolCallIsLogged()
         {
             // Arrange
             var arguments = new Dictionary<string, object?> { ["date"] = "2026-01-15" };
@@ -109,17 +109,28 @@ namespace Biotrackr.Chat.Api.UnitTests.Middleware
         }
 
         [Fact]
-        public void MaskSensitiveFields_ShouldReturnNull_WhenArgumentsAreNull()
+        public void MaskSensitiveFields_ShouldReturnNullLiteral_WhenArgumentsAreNull()
         {
-            var result = ConversationPersistenceMiddleware.MaskSensitiveFields(null);
+            // Arrange
+            object? arguments = null;
+
+            // Act
+            var result = ConversationPersistenceMiddleware.MaskSensitiveFields(arguments);
+
+            // Assert
             result.Should().Be("null");
         }
 
         [Fact]
         public void MaskSensitiveFields_ShouldSerializeArguments_WhenArgumentsAreProvided()
         {
+            // Arrange
             var arguments = new Dictionary<string, object?> { ["date"] = "2026-01-15", ["page"] = 1 };
+
+            // Act
             var result = ConversationPersistenceMiddleware.MaskSensitiveFields(arguments);
+
+            // Assert
             result.Should().Contain("2026-01-15");
             result.Should().Contain("page");
         }
