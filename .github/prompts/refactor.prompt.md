@@ -35,7 +35,10 @@ Apply the refactoring incrementally. Prefer small, focused changes over large re
 
 ### 4. Verify (deterministic)
 
+Step 1 left you in the service directory. Return to the repository root first — `scripts/` does not exist under `src/Biotrackr.*`:
+
 ```bash
+cd "$(git rev-parse --show-toplevel)"
 bash scripts/verify.sh Biotrackr.{Domain}.{Type}
 ```
 

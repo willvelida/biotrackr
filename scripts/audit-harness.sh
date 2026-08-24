@@ -793,7 +793,9 @@ done < <(
         # The marker may sit on the command line itself or on the comment line
         # directly above it, so that an exempted command stays copy-pasteable.
         index($0, marker) { exempt = 1; next }
-        index($0, "verify.sh") { exempt = 0; next }
+        # Reset the flag but keep scanning: a line may invoke the sensor in a
+        # comment while still forking it with a dotnet command of its own.
+        index($0, "verify.sh") { exempt = 0 }
         /(^|[^a-zA-Z-])dotnet[[:space:]]+(build|test)([[:space:]]|$)/ {
           if (!exempt) printf "%s:%d\n", file, FNR
           exempt = 0
@@ -832,7 +834,7 @@ while IFS= read -r f; do
   [[ -z "$f" ]] && continue
   # Match the flag, not the bare string: prose that documents the trap must not
   # be mistaken for an instruction to fall into it.
-  grep -q -- '--settings[[:space:]]\+\.\./coverage\.runsettings' "$f" 2>/dev/null || continue
+  grep -Eq -- '--settings[[:space:]]+\.\./coverage\.runsettings' "$f" 2>/dev/null || continue
   grep -qi 'service directory' "$f" 2>/dev/null || continue
   COVERAGE_MISMATCH+=("${f#$REPO/}")
 done < <(find "$REPO/.github/prompts" "$REPO/.github/agents" "$REPO/.github/instructions" \

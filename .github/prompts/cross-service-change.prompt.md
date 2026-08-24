@@ -47,13 +47,15 @@ Apply the planned modifications for this service.
 
 #### 3b. Verify (deterministic)
 
+Run from the repository root:
+
 ```bash
 bash scripts/verify.sh Biotrackr.{Domain}.{Type}
 ```
 
 Exit 0 passed. Exit 2 means the code is broken. Exit 1 means the check could not run, which is an environment problem and must not be answered by editing code.
 
-#### 3d. Fix Issues (bounded retry)
+#### 3c. Fix Issues (bounded retry)
 
 If build or tests fail, diagnose and fix. **Maximum 2 retries per service.**
 

@@ -268,6 +268,21 @@ printf '%s\n' '---' 'description: "fixture"' '---' '' 'A fresh worktree has no p
 run_audit
 assert_check C11 pass "C11 ignores an unfenced prose mention of dotnet build"
 
+# Regression: naming the sensor in a comment must not buy a pass for a dotnet
+# command on the same line. Found in review of the commit that added C11.
+setup
+printf '%s\n' '---' 'description: "fixture"' '---' '' '```bash' 'dotnet test --no-build  # see verify.sh for the real gate' '```' \
+  > "$R/.github/prompts/fixture-verify-comment.prompt.md"
+run_audit
+assert_check C11 fail "C11 still flags a dotnet gate that merely mentions verify.sh"
+
+# A genuine sensor invocation carries no dotnet command and must stay clean.
+setup
+printf '%s\n' '---' 'description: "fixture"' '---' '' '```bash' 'bash scripts/verify.sh Biotrackr.Activity.Api' '```' \
+  > "$R/.github/prompts/fixture-verify-ok.prompt.md"
+run_audit
+assert_check C11 pass "C11 passes on a plain verify.sh invocation"
+
 # --- C12: coverage settings path -----------------------------------------
 setup
 printf '%s\n' '---' 'description: "fixture"' '---' '' 'Run in the service directory:' '' '```bash' 'dotnet test --settings ../coverage.runsettings  # audit-exempt: not-a-gate' '```' \
