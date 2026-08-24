@@ -150,13 +150,11 @@ This section applies **only when the invocation produces file modifications** (c
 
 After modifying C# code, run these deterministic checks before presenting results:
 
-1. **Build check**: Run `dotnet build --no-restore -v:q` in the affected service directory
-   - If build fails, read errors and fix before proceeding
-   - Maximum 2 retry attempts on build failures
-2. **Test check** (when tests are affected): Run `dotnet test --no-build`
-   - If tests fail, read output and fix
-   - Maximum 2 retry attempts on test failures
-3. **Escalation**: If any check fails after 2 retries, present the error to the user with:
+1. **Verify**: Run `bash scripts/verify.sh` from the repository root
+   - It builds and unit-tests only the services your changes touched. Pass a service name explicitly to scope it, or `--build-only` for a faster loop that skips tests
+   - Exit 0 passed. Exit 2 means the code under test is broken: read the output and fix it. Exit 1 means the environment could not run the check, which is not a code problem and must not be "fixed" by editing code
+   - Maximum 2 retry attempts on exit 2
+2. **Escalation**: If any check fails after 2 retries, present the error to the user with:
    - The exact error message
    - What you tried
    - Your assessment of the root cause

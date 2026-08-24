@@ -23,10 +23,10 @@ Generate the handler method following Biotrackr minimal API patterns:
 
 ### 3. Build Check (deterministic)
 
-Run in the service directory:
+Run from the repository root:
 
 ```bash
-dotnet build --no-restore -v:q
+bash scripts/verify.sh Biotrackr.{Domain}.{Type} --build-only
 ```
 
 **STOP and fix any build errors before proceeding.** Do not move to test generation with a broken build.
@@ -46,8 +46,11 @@ Create unit tests following project conventions:
 Run in the service directory:
 
 ```bash
-dotnet test --no-build --collect:"XPlat Code Coverage" --settings ../coverage.runsettings
+# audit-exempt: not-a-gate — reports the coverage percentage against the 70% floor
+dotnet test --no-build --collect:"XPlat Code Coverage" --settings coverage.runsettings
 ```
+
+The settings path is relative to the service directory and carries no leading `../`. `../coverage.runsettings` resolves to a file that does not exist; the run still succeeds and still prints a coverage number, but the number is wrong.
 
 Verify:
 

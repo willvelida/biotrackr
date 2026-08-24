@@ -6,6 +6,8 @@ argument-hint: "Change description and affected services (e.g., 'Add TTL field t
 
 Coordinate a change that spans multiple Biotrackr services, validating each service independently before moving to the next.
 
+This prompt loops serially in a single context, which is the right shape when one service depends on another. To fan the work out to parallel worker agents in isolated worktrees instead, use [swarm-orchestration](swarm-orchestration.prompt.md).
+
 ## Workflow
 
 ### 1. Identify Affected Services
@@ -43,17 +45,13 @@ For each affected service, execute the following sequence:
 
 Apply the planned modifications for this service.
 
-#### 3b. Build Check (deterministic)
+#### 3b. Verify (deterministic)
 
 ```bash
-cd src/Biotrackr.{Domain}.{Type} && dotnet build --no-restore -v:q
+bash scripts/verify.sh Biotrackr.{Domain}.{Type}
 ```
 
-#### 3c. Test Check (deterministic)
-
-```bash
-dotnet test --no-build
-```
+Exit 0 passed. Exit 2 means the code is broken. Exit 1 means the check could not run, which is an environment problem and must not be answered by editing code.
 
 #### 3d. Fix Issues (bounded retry)
 

@@ -13,8 +13,11 @@ Refactor code in a Biotrackr service with baseline capture and regression verifi
 Run in the service directory before making any changes:
 
 ```bash
+# audit-exempt: not-a-gate — captures the baseline test total, does not pass/fail
 dotnet test --no-build
 ```
+
+This step reports a count rather than gating, which is why it calls `dotnet test` directly: `scripts/verify.sh` communicates through its exit code and does not print a test total. Every later step in this prompt is a gate and uses the script.
 
 Record the baseline test count and pass/fail status. This is the regression target — test count must not decrease.
 
@@ -30,19 +33,17 @@ Identify the refactoring scope:
 
 Apply the refactoring incrementally. Prefer small, focused changes over large rewrites.
 
-### 4. Build Check (deterministic)
+### 4. Verify (deterministic)
 
 ```bash
-dotnet build --no-restore -v:q
+bash scripts/verify.sh Biotrackr.{Domain}.{Type}
 ```
 
-Fix any compilation errors before proceeding.
+Exit 0 passed. Exit 2 means the code is broken; fix it before proceeding. Exit 1 means the check could not run, which is an environment problem, not a regression.
 
-### 5. Regression Check (deterministic)
+### 5. Regression Check
 
-```bash
-dotnet test --no-build
-```
+Compare the test total against the baseline captured in step 1.
 
 Verify:
 

@@ -69,12 +69,13 @@ The Code Reviewer produces a findings table and a verdict of APPROVE or REQUEST_
 
 ## Prompts
 
-Invoke a prompt by typing `/` in the chat input, or attach one with `#prompt:name`. There are 12 prompt templates.
+Invoke a prompt by typing `/` in the chat input, or attach one with `#prompt:name`. There are 13 prompt templates.
 
 | Prompt | Purpose | Agent |
 |--------|---------|-------|
 | `/new-endpoint` | Create an API endpoint with build and test gates | C# Expert |
-| `/cross-service-change` | Coordinate a change across several services | C# Expert |
+| `/cross-service-change` | Coordinate a change across several services, serially in one context | C# Expert |
+| `/swarm-orchestration` | Coordinate parallel worker agents across isolated service worktrees | — |
 | `/refactor` | Refactor with baseline capture and regression verification | C# Expert |
 | `/new-component` | Scaffold a Blazor component with accessibility built in | Front-End Designer |
 | `/sdd-6-review` | SDD quality gate review, routed to an elevated judge model | SDD Review Judge |
