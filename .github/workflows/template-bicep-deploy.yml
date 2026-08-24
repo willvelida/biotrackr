@@ -117,8 +117,22 @@ jobs:
               slug="deployment"
             fi
 
-            name=$(printf '%s-%s-%s' "$slug" "$RUN_NUMBER" "$RUN_ATTEMPT" | cut -c1-64)
-            echo "name=$name" >> "$GITHUB_OUTPUT"
+            # Azure caps deployment names at 64 characters. Truncate the slug to
+            # whatever the "-<run_number>-<run_attempt>" suffix leaves free, so the
+            # uniqueness suffix is never the part that gets cut off.
+            suffix="-${RUN_NUMBER}-${RUN_ATTEMPT}"
+            max_slug=$(( 64 - ${#suffix} ))
+            if [ "$max_slug" -lt 1 ]; then
+              max_slug=1
+            fi
+
+            slug=$(printf '%s' "$slug" | cut -c1-"$max_slug" | sed 's/-$//')
+
+            if [ -z "$slug" ]; then
+              slug="deployment"
+            fi
+
+            echo "name=${slug}${suffix}" >> "$GITHUB_OUTPUT"
 
         - uses: azure/bicep-deploy@66910e9c5c7733c33a1cd605030d02234b3bc4ed # v2
           name: Deploy Bicep Template
