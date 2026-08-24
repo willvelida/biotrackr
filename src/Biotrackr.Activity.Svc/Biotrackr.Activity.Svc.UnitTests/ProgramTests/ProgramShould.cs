@@ -81,6 +81,8 @@ namespace Biotrackr.Activity.Svc.UnitTests.ProgramTests
                     services.AddScoped<IActivityService>(_ => mockActivityService.Object);
                     services.AddScoped<IFitbitService>(_ => mockFitbitService.Object);
 
+                    services.AddSingleton(TimeProvider.System);
+
                     services.AddHostedService<ActivityWorker>();
                 })
                 .ConfigureLogging((context, logging) =>

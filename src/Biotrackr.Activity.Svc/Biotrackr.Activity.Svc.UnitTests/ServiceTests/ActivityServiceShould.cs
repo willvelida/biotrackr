@@ -14,7 +14,7 @@
         }
 
         [Fact]
-        public async Task MapAndSaveDocument_ShouldMapAndSaveDocument()
+        public async Task MapAndSaveDocument_ShouldSaveMappedDocument_WhenResponseIsValid()
         {
             // Arrange
             var date = "2023-10-01";
@@ -33,7 +33,7 @@
         }
 
         [Fact]
-        public async Task MapAndSaveDocument_ShouldThrowExceptionWhenFails()
+        public async Task MapAndSaveDocument_ShouldThrowAndLogError_WhenCreateDocumentFails()
         {
             // Arrange
             var date = "2023-10-01";
@@ -76,7 +76,7 @@
         [InlineData(typeof(TimeoutException), "Request timeout")]
         [InlineData(typeof(ArgumentException), "Invalid argument")]
         [InlineData(typeof(InvalidOperationException), "Invalid operation")]
-        public async Task MapAndSaveDocument_ShouldHandleDifferentExceptionTypes(Type exceptionType, string message)
+        public async Task MapAndSaveDocument_ShouldLogErrorAndRethrow_WhenExceptionTypeIsThrown(Type exceptionType, string message)
         {
             // Arrange
             var date = "2023-10-01";
@@ -86,10 +86,11 @@
             _mockCosmosRepository.Setup(x => x.CreateActivityDocument(It.IsAny<ActivityDocument>()))
                 .ThrowsAsync(exception);
 
-            // Act & Assert
+            // Act
             var thrownException = await Assert.ThrowsAsync(exceptionType, () =>
                 _activityService.MapAndSaveDocument(date, activityResponse));
 
+            // Assert
             thrownException.Message.Should().Be(message);
             _mockLogger.VerifyLog(logger => logger.LogError($"Exception thrown in MapAndSaveDocument: {message}"), Times.Once);
         }

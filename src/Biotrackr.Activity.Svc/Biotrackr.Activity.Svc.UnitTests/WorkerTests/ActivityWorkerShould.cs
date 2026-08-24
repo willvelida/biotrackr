@@ -2,6 +2,7 @@
 using Biotrackr.Activity.Svc.Workers;
 using Microsoft.Extensions.Hosting;
 using System.Diagnostics;
+using System.Globalization;
 using System.Reflection;
 
 namespace Biotrackr.Activity.Svc.UnitTests.WorkerTests
@@ -22,16 +23,37 @@ namespace Biotrackr.Activity.Svc.UnitTests.WorkerTests
             _loggerMock = new Mock<ILogger<ActivityWorker>>();
             _appLifetimeMock = new Mock<IHostApplicationLifetime>();
 
-            _sut = new ActivityWorker(_fitbitServiceMock.Object, _activityServiceMock.Object, _loggerMock.Object, _appLifetimeMock.Object);
+            _sut = new ActivityWorker(_fitbitServiceMock.Object, _activityServiceMock.Object, _loggerMock.Object, _appLifetimeMock.Object, TimeProvider.System);
+        }
+
+        /// <summary>
+        /// A TimeProvider fixed at a chosen instant in a chosen time zone, so date
+        /// arithmetic in the worker becomes deterministic and testable.
+        /// </summary>
+        private sealed class FixedTimeProvider : TimeProvider
+        {
+            private readonly DateTimeOffset _utcNow;
+            private readonly TimeZoneInfo _localTimeZone;
+
+            public FixedTimeProvider(DateTimeOffset utcNow, TimeSpan localOffset)
+            {
+                _utcNow = utcNow;
+                var id = $"Fixed offset {localOffset}";
+                _localTimeZone = TimeZoneInfo.CreateCustomTimeZone(id, localOffset, id, id);
+            }
+
+            public override DateTimeOffset GetUtcNow() => _utcNow;
+
+            public override TimeZoneInfo LocalTimeZone => _localTimeZone;
         }
 
         /// <summary>
         /// Helper method to properly invoke the protected ExecuteAsync method
         /// </summary>
-        private async Task<int> InvokeExecuteAsync(CancellationToken cancellationToken = default)
+        private async Task<int> InvokeExecuteAsync(CancellationToken cancellationToken = default, ActivityWorker worker = null)
         {
             var executeMethod = typeof(ActivityWorker).GetMethod("ExecuteAsync", BindingFlags.NonPublic | BindingFlags.Instance);
-            var task = (Task<int>)executeMethod.Invoke(_sut, new object[] { cancellationToken });
+            var task = (Task<int>)executeMethod.Invoke(worker ?? _sut, new object[] { cancellationToken });
             return await task;
         }
 
@@ -81,7 +103,7 @@ namespace Biotrackr.Activity.Svc.UnitTests.WorkerTests
         }
 
         [Fact]
-        public async Task ExecuteAsync_ShouldUseYesterdaysDate()
+        public async Task ExecuteAsync_ShouldRequestYesterdaysDate_WhenInvoked()
         {
             // Arrange
             var expectedDate = DateTime.Now.AddDays(-1).ToString("yyyy-MM-dd");
@@ -101,7 +123,7 @@ namespace Biotrackr.Activity.Svc.UnitTests.WorkerTests
         }
 
         [Fact]
-        public async Task ExecuteAsync_ShouldCallServicesInCorrectOrder()
+        public async Task ExecuteAsync_ShouldCallServicesInCorrectOrder_WhenSuccessful()
         {
             // Arrange
             var expectedDate = DateTime.Now.AddDays(-1).ToString("yyyy-MM-dd");
@@ -196,7 +218,7 @@ namespace Biotrackr.Activity.Svc.UnitTests.WorkerTests
         [InlineData(typeof(TimeoutException), "Request timeout")]
         [InlineData(typeof(ArgumentException), "Invalid argument")]
         [InlineData(typeof(InvalidOperationException), "Invalid operation")]
-        public async Task ExecuteAsync_ShouldHandleDifferentExceptionTypes(Type exceptionType, string message)
+        public async Task ExecuteAsync_ShouldReturn1AndLogError_WhenExceptionTypeIsThrown(Type exceptionType, string message)
         {
             // Arrange
             var expectedDate = DateTime.Now.AddDays(-1).ToString("yyyy-MM-dd");
@@ -219,7 +241,7 @@ namespace Biotrackr.Activity.Svc.UnitTests.WorkerTests
         #region Edge Cases and Null Handling Tests
 
         [Fact]
-        public async Task ExecuteAsync_ShouldHandleNullActivityResponse()
+        public async Task ExecuteAsync_ShouldReturn0_WhenActivityResponseIsNull()
         {
             // Arrange
             var expectedDate = DateTime.Now.AddDays(-1).ToString("yyyy-MM-dd");
@@ -237,15 +259,17 @@ namespace Biotrackr.Activity.Svc.UnitTests.WorkerTests
         }
 
         [Theory]
-        [InlineData(2024, 2, 29)] // Leap year - Feb 29th to Feb 28th
-        [InlineData(2024, 3, 1)]  // Day after leap day - Mar 1st to Feb 29th
-        [InlineData(2024, 1, 1)]  // New Year's Day - Jan 1st to Dec 31st
-        [InlineData(2024, 12, 31)] // New Year's Eve - Dec 31st to Dec 30th
-        public async Task ExecuteAsync_ShouldHandleDateEdgeCases(int year, int month, int day)
+        [InlineData("2024-02-29T13:00:00Z", 13, "2024-02-29")]  // Local date is already Mar 1st while UTC is still Feb 29th
+        [InlineData("2024-01-01T02:00:00Z", -8, "2023-12-30")]  // Local day is still behind UTC, in the previous year
+        [InlineData("2024-03-01T12:00:00Z", 0, "2024-02-29")]   // Leap year - Mar 1st to Feb 29th
+        [InlineData("2024-12-31T12:00:00Z", 0, "2024-12-30")]   // New Year's Eve - Dec 31st to Dec 30th
+        public async Task ExecuteAsync_ShouldRequestPreviousLocalDate_WhenClockIsAtADateBoundary(string utcNow, int localOffsetHours, string expectedPreviousDate)
         {
             // Arrange
-            var testDate = new DateTime(year, month, day);
-            var expectedPreviousDate = testDate.AddDays(-1).ToString("yyyy-MM-dd");
+            var timeProvider = new FixedTimeProvider(
+                DateTimeOffset.Parse(utcNow, CultureInfo.InvariantCulture, DateTimeStyles.AssumeUniversal | DateTimeStyles.AdjustToUniversal),
+                TimeSpan.FromHours(localOffsetHours));
+            var worker = new ActivityWorker(_fitbitServiceMock.Object, _activityServiceMock.Object, _loggerMock.Object, _appLifetimeMock.Object, timeProvider);
             var activityResponse = new ActivityResponse();
 
             _fitbitServiceMock.Setup(x => x.GetActivityResponse(expectedPreviousDate))
@@ -253,15 +277,16 @@ namespace Biotrackr.Activity.Svc.UnitTests.WorkerTests
             _activityServiceMock.Setup(x => x.MapAndSaveDocument(expectedPreviousDate, activityResponse))
                 .Returns(Task.CompletedTask);
 
-            // Note: This test assumes DateTime.Now returns our test date
-            // In a real implementation, you would inject an IDateTimeProvider
-
             // Act
-            var result = await InvokeExecuteAsync();
+            var result = await InvokeExecuteAsync(worker: worker);
 
-            // Assert - Verifies that date calculation logic works for edge cases
-            // The actual assertion depends on when the test runs, but ensures no exceptions
-            result.Should().BeOneOf(0, 1); // Should complete successfully or fail gracefully
+            // Assert
+            result.Should().Be(0);
+            _fitbitServiceMock.Verify(x => x.GetActivityResponse(expectedPreviousDate), Times.Once,
+                $"AGENT FIX: ActivityWorker must request the day before the current LOCAL date ({expectedPreviousDate}) "
+                + $"for a clock at {utcNow} in a UTC{localOffsetHours:+00;-00} zone. "
+                + "Using DateTime.UtcNow instead of local time breaks this.");
+            _activityServiceMock.Verify(x => x.MapAndSaveDocument(expectedPreviousDate, activityResponse), Times.Once);
         }
 
         #endregion
@@ -269,7 +294,7 @@ namespace Biotrackr.Activity.Svc.UnitTests.WorkerTests
         #region Cancellation Token Tests
 
         [Fact]
-        public async Task ExecuteAsync_ShouldStopApplication_EvenWhenCancellationRequested()
+        public async Task ExecuteAsync_ShouldStopApplication_WhenCancellationIsRequested()
         {
             // Arrange
             var cts = new CancellationTokenSource();
@@ -298,7 +323,7 @@ namespace Biotrackr.Activity.Svc.UnitTests.WorkerTests
         #region Performance Tests
 
         [Fact]
-        public async Task ExecuteAsync_ShouldCompleteWithinReasonableTime()
+        public async Task ExecuteAsync_ShouldCompleteWithinReasonableTime_WhenSuccessful()
         {
             // Arrange
             var expectedDate = DateTime.Now.AddDays(-1).ToString("yyyy-MM-dd");
@@ -320,7 +345,7 @@ namespace Biotrackr.Activity.Svc.UnitTests.WorkerTests
         }
 
         [Fact]
-        public async Task ExecuteAsync_ShouldHandleSlowFitbitService()
+        public async Task ExecuteAsync_ShouldReturn0_WhenFitbitServiceIsSlow()
         {
             // Arrange
             var expectedDate = DateTime.Now.AddDays(-1).ToString("yyyy-MM-dd");
@@ -349,7 +374,7 @@ namespace Biotrackr.Activity.Svc.UnitTests.WorkerTests
         #region Application Lifetime Tests
 
         [Fact]
-        public async Task ExecuteAsync_ShouldAlwaysStopApplication_RegardlessOfOutcome()
+        public async Task ExecuteAsync_ShouldStopApplication_WhenExceptionIsThrown()
         {
             // Arrange
             var expectedDate = DateTime.Now.AddDays(-1).ToString("yyyy-MM-dd");
@@ -364,7 +389,7 @@ namespace Biotrackr.Activity.Svc.UnitTests.WorkerTests
         }
 
         [Fact]
-        public async Task ExecuteAsync_ShouldStopApplication_OnSuccess()
+        public async Task ExecuteAsync_ShouldStopApplication_WhenSuccessful()
         {
             // Arrange
             var expectedDate = DateTime.Now.AddDays(-1).ToString("yyyy-MM-dd");
@@ -387,7 +412,7 @@ namespace Biotrackr.Activity.Svc.UnitTests.WorkerTests
         #region Mock Verification Tests
 
         [Fact]
-        public async Task ExecuteAsync_ShouldPassCorrectParametersToServices()
+        public async Task ExecuteAsync_ShouldPassCorrectParametersToServices_WhenSuccessful()
         {
             // Arrange
             var expectedDate = DateTime.Now.AddDays(-1).ToString("yyyy-MM-dd");
@@ -411,7 +436,7 @@ namespace Biotrackr.Activity.Svc.UnitTests.WorkerTests
         }
 
         [Fact]
-        public async Task ExecuteAsync_ShouldNotMakeAdditionalServiceCalls_OnSuccess()
+        public async Task ExecuteAsync_ShouldNotMakeAdditionalServiceCalls_WhenSuccessful()
         {
             // Arrange
             var expectedDate = DateTime.Now.AddDays(-1).ToString("yyyy-MM-dd");

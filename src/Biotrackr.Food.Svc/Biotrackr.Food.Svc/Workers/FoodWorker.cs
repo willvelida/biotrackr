@@ -15,22 +15,27 @@ namespace Biotrackr.Food.Svc.Workers
         private readonly IFoodService _foodService;
         private readonly ILogger<FoodWorker> _logger;
         private readonly IHostApplicationLifetime _appLifetime;
+        private readonly TimeProvider _timeProvider;
 
-        public FoodWorker(IFitbitService fitbitService, IFoodService foodService, ILogger<FoodWorker> logger, IHostApplicationLifetime appLifetime)
+        public FoodWorker(IFitbitService fitbitService, IFoodService foodService, ILogger<FoodWorker> logger, IHostApplicationLifetime appLifetime, TimeProvider timeProvider)
         {
             _fitbitService = fitbitService ?? throw new ArgumentNullException(nameof(fitbitService));
             _foodService = foodService ?? throw new ArgumentNullException(nameof(foodService));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _appLifetime = appLifetime ?? throw new ArgumentNullException(nameof(appLifetime));
+            _timeProvider = timeProvider ?? throw new ArgumentNullException(nameof(timeProvider));
         }
 
         protected override async Task<int> ExecuteAsync(CancellationToken stoppingToken)
         {
             try
             {
-                _logger.LogInformation($"{nameof(FoodWorker)} executed at: {DateTime.Now}");
+                // GetLocalNow preserves the local-time semantics of the DateTime.Now this replaced.
+                var now = _timeProvider.GetLocalNow();
 
-                var date = DateTime.Now.AddDays(-1).ToString("yyyy-MM-dd");
+                _logger.LogInformation($"{nameof(FoodWorker)} executed at: {now.DateTime}");
+
+                var date = now.AddDays(-1).ToString("yyyy-MM-dd");
 
                 _logger.LogInformation($"Fetching food data for date: {date}");
                 var foodResponse = await _fitbitService.GetFoodResponse(date);

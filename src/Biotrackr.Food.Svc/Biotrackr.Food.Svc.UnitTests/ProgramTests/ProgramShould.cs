@@ -155,6 +155,8 @@ namespace Biotrackr.Food.Svc.UnitTests.ProgramTests
                     services.AddHttpClient<IFitbitService, FitbitService>()
                         .AddStandardResilienceHandler();
 
+                    services.AddSingleton(TimeProvider.System);
+
                     services.AddHostedService<FoodWorker>();
                 })
                 .ConfigureLogging((context, logging) =>

@@ -71,6 +71,8 @@ IHost host = Host.CreateDefaultBuilder(args)
         services.AddHttpClient<IFitbitService, FitbitService>()
             .AddStandardResilienceHandler();
 
+        services.AddSingleton(TimeProvider.System);
+
         services.AddHostedService<FoodWorker>();
 
         services.AddOpenTelemetry()
