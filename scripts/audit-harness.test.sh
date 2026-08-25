@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Regression cases for audit-harness.sh, covering checks C7-C10 and the raw
+# Regression cases for audit-harness.sh, covering checks C7-C13 and the raw
 # record arity report.
 #
 # Each case builds a throwaway copy of the harness, breaks exactly one thing,
@@ -226,6 +226,119 @@ if cmp -s "$T/plain.out" "$T/withjson.out"; then
 else
   fail "human output is byte-identical with and without --json" "stdout differed"
 fi
+
+# --- C11: verification routed through the shared sensor ------------------
+# Both directions matter here more than usual: this check exists because a
+# forked command looks fine, so a version that never fires would be invisible.
+setup
+run_audit
+assert_check C11 pass "baseline: C11 prompts and agents gate through verify.sh"
+assert_check C12 pass "baseline: C12 no bad coverage settings path"
+assert_check C13 pass "baseline: C13 coverage blocks enter the service directory"
+
+setup
+printf '%s\n' '---' 'description: "fixture"' '---' '' 'Run in the service directory:' '' '```bash' 'dotnet build --no-restore -v:q' '```' \
+  > "$R/.github/prompts/fixture-fork.prompt.md"
+run_audit
+assert_check C11 fail "C11 fails on a fenced dotnet build gate in a prompt"
+
+setup
+printf '%s\n' '---' 'name: "Fixture"' '---' '' 'Run this:' '' '```bash' 'dotnet test --no-build' '```' \
+  > "$R/.github/agents/fixture-fork.agent.md"
+run_audit
+assert_check C11 fail "C11 fails on a fenced dotnet test gate in an agent"
+
+# The exemption must work, or the check gets worked around instead of used.
+setup
+printf '%s\n' '---' 'description: "fixture"' '---' '' '```bash' '# audit-exempt: not-a-gate — reports a count' 'dotnet test --no-build' '```' \
+  > "$R/.github/prompts/fixture-exempt.prompt.md"
+run_audit
+assert_check C11 pass "C11 honours the exemption marker on the preceding line"
+
+setup
+printf '%s\n' '---' 'description: "fixture"' '---' '' '```bash' 'dotnet test --no-build  # audit-exempt: not-a-gate' '```' \
+  > "$R/.github/prompts/fixture-exempt2.prompt.md"
+run_audit
+assert_check C11 pass "C11 honours the exemption marker on the command line"
+
+# Regression: an earlier revision flagged its own documentation. Prose that
+# names the command must not be read as an instruction to run it.
+setup
+printf '%s\n' '---' 'description: "fixture"' '---' '' 'A fresh worktree has no packages, so `dotnet build --no-restore` fails until you run a restore.' \
+  > "$R/.github/prompts/fixture-prose.prompt.md"
+run_audit
+assert_check C11 pass "C11 ignores an unfenced prose mention of dotnet build"
+
+# Regression: naming the sensor in a comment must not buy a pass for a dotnet
+# command on the same line. Found in review of the commit that added C11.
+setup
+printf '%s\n' '---' 'description: "fixture"' '---' '' '```bash' 'dotnet test --no-build  # see verify.sh for the real gate' '```' \
+  > "$R/.github/prompts/fixture-verify-comment.prompt.md"
+run_audit
+assert_check C11 fail "C11 still flags a dotnet gate that merely mentions verify.sh"
+
+# A genuine sensor invocation carries no dotnet command and must stay clean.
+setup
+printf '%s\n' '---' 'description: "fixture"' '---' '' '```bash' 'bash scripts/verify.sh Biotrackr.Activity.Api' '```' \
+  > "$R/.github/prompts/fixture-verify-ok.prompt.md"
+run_audit
+assert_check C11 pass "C11 passes on a plain verify.sh invocation"
+
+# --- C12: coverage settings path -----------------------------------------
+setup
+printf '%s\n' '---' 'description: "fixture"' '---' '' 'Run in the service directory:' '' '```bash' 'dotnet test --settings ../coverage.runsettings  # audit-exempt: not-a-gate' '```' \
+  > "$R/.github/prompts/fixture-cov.prompt.md"
+run_audit
+assert_check C12 fail "C12 fails on ../coverage.runsettings run from the service directory"
+
+# The CI workflows legitimately use ../ because their working directory is the
+# test project. Flagging that form unconditionally would be wrong.
+setup
+printf '%s\n' '---' 'description: "fixture"' '---' '' 'Run in the test project directory:' '' '```bash' 'dotnet test --settings ../coverage.runsettings  # audit-exempt: not-a-gate' '```' \
+  > "$R/.github/prompts/fixture-cov-ok.prompt.md"
+run_audit
+assert_check C12 pass "C12 allows ../coverage.runsettings from the test project directory"
+
+# Regression: documenting the trap must not count as falling into it.
+setup
+printf '%s\n' '---' 'description: "fixture"' '---' '' 'Run in the service directory. Note that `../coverage.runsettings` does not resolve there.' \
+  > "$R/.github/prompts/fixture-cov-doc.prompt.md"
+run_audit
+assert_check C12 pass "C12 ignores prose documenting the ../coverage.runsettings trap"
+
+# --- C13: coverage block working directory --------------------------------
+
+# The defect this check exists for: prose above the fence names the service
+# directory, but the fence itself never gets there, and an agent copies the
+# fence.
+setup
+printf '%s\n' '---' 'description: "fixture"' '---' '' 'Run in the service directory:' '' '```bash' 'dotnet test --no-build --collect:"XPlat Code Coverage" --settings coverage.runsettings  # audit-exempt: not-a-gate' '```' \
+  > "$R/.github/prompts/fixture-cov-nocd.prompt.md"
+run_audit
+assert_check C13 fail "C13 fails when a coverage block never enters the service directory"
+
+# The fix must actually clear it, or the check is unsatisfiable.
+setup
+printf '%s\n' '---' 'description: "fixture"' '---' '' '```bash' 'cd src/Biotrackr.Activity.Api' 'dotnet test --no-build --collect:"XPlat Code Coverage" --settings coverage.runsettings  # audit-exempt: not-a-gate' '```' \
+  > "$R/.github/prompts/fixture-cov-cd.prompt.md"
+run_audit
+assert_check C13 pass "C13 passes when the block cds into the service directory"
+
+# The cd must be inside the same fence. A cd in an earlier block does not carry
+# over, because the reader copies one block at a time.
+setup
+printf '%s\n' '---' 'description: "fixture"' '---' '' '```bash' 'cd src/Biotrackr.Activity.Api' '```' '' 'Then:' '' '```bash' 'dotnet test --no-build --collect:"XPlat Code Coverage" --settings coverage.runsettings  # audit-exempt: not-a-gate' '```' \
+  > "$R/.github/prompts/fixture-cov-splitcd.prompt.md"
+run_audit
+assert_check C13 fail "C13 does not credit a cd from a different fenced block"
+
+# The ../ form belongs to the test project directory and is C12's business.
+# C13 must not double-report it.
+setup
+printf '%s\n' '---' 'description: "fixture"' '---' '' 'Run in the test project directory:' '' '```bash' 'dotnet test --settings ../coverage.runsettings  # audit-exempt: not-a-gate' '```' \
+  > "$R/.github/prompts/fixture-cov-parent.prompt.md"
+run_audit
+assert_check C13 pass "C13 ignores the ../coverage.runsettings form"
 
 echo ""
 echo "passed=$PASS failed=$FAIL"

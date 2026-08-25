@@ -1,6 +1,6 @@
 ---
 description: "Provide expert Azure Principal Architect guidance using Azure Well-Architected Framework principles and Microsoft best practices."
-name: "Azure Principal Architect mode instructions"
+name: "Azure Principal Architect"
 tools: ["changes", "codebase", "edit/editFiles", "extensions", "fetch", "findTestFiles", "githubRepo", "new", "openSimpleBrowser", "problems", "runCommands", "runTasks", "runTests", "search", "searchResults", "terminalLastCommand", "terminalSelection", "testFailure", "usages", "vscodeAPI", "microsoft.docs.mcp", "azure_design_architecture", "azure_get_code_gen_best_practices", "azure_get_deployment_best_practices", "azure_get_swa_best_practices", "azure_query_learn"]
 ---
 
@@ -63,13 +63,11 @@ Always search Microsoft documentation first using `microsoft.docs.mcp` and `azur
 
 After generating or modifying repository artifacts (Bicep templates, C# code, configuration files, or documentation), run these deterministic checks before presenting results:
 
-1. **Build check**: Run `dotnet build --no-restore -v:q` in the affected service directory
-   - If build fails, read errors and fix before proceeding
-   - Maximum 2 retry attempts on build failures
-2. **Test check** (when tests are affected): Run `dotnet test --no-build`
-   - If tests fail, read output and fix
-   - Maximum 2 retry attempts on test failures
-3. **Escalation**: If any check fails after 2 retries, present the error to the user with:
+1. **Verify**: Run `bash scripts/verify.sh` from the repository root
+   - It builds and unit-tests only the services your changes touched. Pass a service name explicitly to scope it, or `--build-only` for a faster loop that skips tests
+   - Exit 0 passed. Exit 2 means the code under test is broken: read the output and fix it. Exit 1 means the environment could not run the check, which is not a code problem and must not be "fixed" by editing code
+   - Maximum 2 retry attempts on exit 2
+2. **Escalation**: If any check fails after 2 retries, present the error to the user with:
    - The exact error message
    - What you tried
    - Your assessment of the root cause

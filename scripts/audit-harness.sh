@@ -753,7 +753,142 @@ else
     "Front-load the distinctive trigger language and shorten: ${SKILL_DESC_LONG[*]}. Then lower BUDGET_SKILL_DESC_OVERLONG to the new figure."
 fi
 
-# ── Recent verification outcomes ── BIOTRACKR-ORIGINAL ───────────────────────
+# ═════════════════════════════════════════════════════════════════════════════
+# C11: Verification routed through the shared sensor ── BIOTRACKR-ORIGINAL
+# ═════════════════════════════════════════════════════════════════════════════
+# scripts/verify.sh is the single shared sensor: the git hooks, the post-edit
+# hook, and the agent all call it. A prompt or agent that instead spells out its
+# own `dotnet build` / `dotnet test` line forks that sensor. The fork is silent
+# and it drifts — it keeps working while quietly diverging from what the hooks
+# enforce, and it is where a wrong flag survives, which is exactly how
+# `--settings ../coverage.runsettings` came to sit in a prompt telling the agent
+# to run it from the service directory, where that path does not resolve.
+#
+# Scope is deliberately narrow: gate invocations inside prompt and agent bodies.
+# Prose that merely names the tooling is not a gate, and neither is a command
+# whose purpose is to report a number rather than to pass or fail, so both are
+# exempt via the marker below.
+header "C11: Verification Routed Through verify.sh"
+
+# A line carrying this marker is an accepted exemption. It must be justified in
+# the file itself: the reader needs the reason at the point of the exception,
+# not in this script.
+VERIFY_EXEMPT_MARKER='audit-exempt: not-a-gate'
+
+# A gate is a command the agent is told to execute, which in these files means a
+# line inside a fenced block. A backticked mention in a sentence is prose about
+# the toolchain and is not scanned: narrowing to fences is what keeps this check
+# from flagging its own documentation.
+DOTNET_FORKS=()
+while IFS= read -r hit; do
+  [[ -z "$hit" ]] && continue
+  DOTNET_FORKS+=("$hit")
+done < <(
+  find "$REPO/.github/prompts" "$REPO/.github/agents" -type f -name '*.md' 2>/dev/null \
+  | sort \
+  | while IFS= read -r f; do
+      awk -v file="${f#$REPO/}" -v marker="$VERIFY_EXEMPT_MARKER" '
+        /^[[:space:]]*```/ { fence = !fence; exempt = 0; next }
+        !fence { next }
+        # The marker may sit on the command line itself or on the comment line
+        # directly above it, so that an exempted command stays copy-pasteable.
+        index($0, marker) { exempt = 1; next }
+        # Reset the flag but keep scanning: a line may invoke the sensor in a
+        # comment while still forking it with a dotnet command of its own.
+        index($0, "verify.sh") { exempt = 0 }
+        /(^|[^a-zA-Z-])dotnet[[:space:]]+(build|test)([[:space:]]|$)/ {
+          if (!exempt) printf "%s:%d\n", file, FNR
+          exempt = 0
+          next
+        }
+        { exempt = 0 }
+      ' "$f"
+    done
+)
+
+if [[ ${#DOTNET_FORKS[@]} -eq 0 ]]; then
+  check_recommended "Prompts and agents gate through scripts/verify.sh" "pass"
+else
+  for forked in "${DOTNET_FORKS[@]}"; do
+    printf '         %sFORK%s   %s\n' "$YELLOW" "$RESET" "$forked"
+  done
+  check_recommended "Prompts and agents gate through scripts/verify.sh" "fail" \
+    "scripts/verify.sh is the single shared sensor the hooks and the agent both call. A hand-written dotnet line forks it, then drifts from what CI enforces without ever failing loudly." \
+    "Replace with 'bash scripts/verify.sh <Service>' (add --build-only to skip tests) in: ${DOTNET_FORKS[*]}. If the command reports a number rather than gating, keep it and append the marker '${VERIFY_EXEMPT_MARKER}' with the reason stated in the file."
+fi
+
+# ═════════════════════════════════════════════════════════════════════════════
+# C12: Coverage settings path ── BIOTRACKR-ORIGINAL
+# ═════════════════════════════════════════════════════════════════════════════
+header "C12: Coverage Settings Path"
+
+# ── Coverage settings path ────────────────────────────────────────────────────
+# There is no src/coverage.runsettings. From a service directory the path is
+# 'coverage.runsettings'; from a test project directory it is
+# '../coverage.runsettings', which is why the CI workflows are correct to use
+# the '../' form. Only the service-directory pairing is wrong, and it fails
+# silently: the run succeeds and still prints a number, computed with default
+# settings, so the exclusions are ignored and the figure is wrong.
+COVERAGE_MISMATCH=()
+while IFS= read -r f; do
+  [[ -z "$f" ]] && continue
+  # Match the flag, not the bare string: prose that documents the trap must not
+  # be mistaken for an instruction to fall into it.
+  grep -Eq -- '--settings[[:space:]]+\.\./coverage\.runsettings' "$f" 2>/dev/null || continue
+  grep -qi 'service directory' "$f" 2>/dev/null || continue
+  COVERAGE_MISMATCH+=("${f#$REPO/}")
+done < <(find "$REPO/.github/prompts" "$REPO/.github/agents" "$REPO/.github/instructions" \
+           -type f -name '*.md' 2>/dev/null)
+
+if [[ ${#COVERAGE_MISMATCH[@]} -eq 0 ]]; then
+  check_recommended "No '../coverage.runsettings' paired with the service directory" "pass"
+else
+  for bad in "${COVERAGE_MISMATCH[@]}"; do
+    printf '         %sPATH%s   %s\n' "$YELLOW" "$RESET" "$bad"
+  done
+  check_recommended "No '../coverage.runsettings' paired with the service directory" "fail" \
+    "src/coverage.runsettings does not exist. Run from a service directory, that path resolves to nothing, the run still succeeds, and the coverage number it prints is computed with default settings and is wrong." \
+    "Use 'coverage.runsettings' when the working directory is the service, or '../coverage.runsettings' when it is the test project, in: ${COVERAGE_MISMATCH[*]}"
+fi
+
+# ── Coverage runs need a working directory ────────────────────────────────────
+# C12 catches the wrong settings path. This catches the other half: the right
+# path in a block that never arrives in the service directory. Prose above a
+# fence saying "run in the service directory" is not enough, because an agent
+# copies the fence, not the sentence — and the surrounding prompts explicitly
+# put the shell at the repository root for the build step.
+header "C13: Coverage Block Working Directory"
+
+COVERAGE_NO_CD=()
+while IFS= read -r hit; do
+  [[ -n "$hit" ]] && COVERAGE_NO_CD+=("$hit")
+done < <(find "$REPO/.github/prompts" "$REPO/.github/agents" \
+           -type f -name '*.md' 2>/dev/null \
+  | while IFS= read -r f; do
+      awk -v rel="${f#"$REPO"/}" '
+        /^[[:space:]]*```/ {
+          if (infence) { if (hit && !cd) print rel ":" hitline; infence = 0 }
+          else { infence = 1; hit = 0; cd = 0 }
+          next
+        }
+        !infence { next }
+        /^[[:space:]]*cd[[:space:]]/ { cd = 1 }
+        /--settings[[:space:]]+coverage\.runsettings/ { hit = 1; hitline = NR }
+      ' "$f"
+    done)
+
+if [[ ${#COVERAGE_NO_CD[@]} -eq 0 ]]; then
+  check_recommended "Coverage blocks enter the service directory" "pass"
+else
+  for bad in "${COVERAGE_NO_CD[@]}"; do
+    printf '         %sCWD%s    %s\n' "$YELLOW" "$RESET" "$bad"
+  done
+  check_recommended "Coverage blocks enter the service directory" "fail" \
+    "'coverage.runsettings' is resolved against the working directory, and only src/<Service>/ has one. Run the block from anywhere else and dotnet fails outright, or picks up a different service's settings." \
+    "Add a 'cd src/Biotrackr.{Domain}.{Type}' line inside the fenced block, above the dotnet command, in: ${COVERAGE_NO_CD[*]}"
+fi
+
+
 # The checks above describe the harness's structure. This describes what it has
 # actually been doing, so one command answers "is the harness sound" and "is it
 # working" together. Reporting only: the raw store is local and optional, and a

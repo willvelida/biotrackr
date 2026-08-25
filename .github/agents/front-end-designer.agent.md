@@ -73,7 +73,7 @@ When proposing UI changes:
 
 After modifying Razor components or CSS files, verify the build compiles:
 
-1. **Build check**: Run `dotnet build --no-restore -v:q` in the Biotrackr.UI directory
-   - If build fails, read errors and fix Razor syntax or CSS issues
-   - Maximum 2 retry attempts
-2. **Escalation**: If build fails after 2 retries, present the error to the user
+1. **Verify**: Run `bash scripts/verify.sh Biotrackr.UI` from the repository root
+   - Exit 0 passed. Exit 2 means the build or tests are broken: read the output and fix the Razor syntax or CSS issue. Exit 1 means the environment could not run the check, which is not a code problem
+   - Maximum 2 retry attempts on exit 2
+2. **Escalation**: If verification fails after 2 retries, present the error to the user
