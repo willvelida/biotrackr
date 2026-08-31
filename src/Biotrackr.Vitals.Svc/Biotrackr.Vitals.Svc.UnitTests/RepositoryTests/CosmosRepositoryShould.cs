@@ -77,5 +77,109 @@ namespace Biotrackr.Vitals.Svc.UnitTests.RepositoryTests
             await repositoryAction.Should().ThrowAsync<Exception>();
             _loggerMock.VerifyLog(logger => logger.LogError($"Exception thrown in UpsertVitalsDocument: Mock Failure"));
         }
+
+        [Fact]
+        public async Task GetVitalsDocumentByDate_ShouldReturnDocument_WhenDocumentExists()
+        {
+            // Arrange
+            var fixture = new Fixture();
+            var expectedDocument = fixture.Create<VitalsDocument>();
+            expectedDocument.Date = "2024-01-15";
+
+            var feedResponseMock = new Mock<FeedResponse<VitalsDocument>>();
+            feedResponseMock.Setup(x => x.GetEnumerator())
+                .Returns(new List<VitalsDocument> { expectedDocument }.GetEnumerator());
+
+            var iteratorMock = new Mock<FeedIterator<VitalsDocument>>();
+            iteratorMock.SetupSequence(x => x.HasMoreResults)
+                .Returns(true)
+                .Returns(false);
+            iteratorMock.Setup(x => x.ReadNextAsync(It.IsAny<CancellationToken>()))
+                .ReturnsAsync(feedResponseMock.Object);
+
+            _containerMock.Setup(x => x.GetItemQueryIterator<VitalsDocument>(
+                    It.IsAny<QueryDefinition>(),
+                    It.IsAny<string>(),
+                    It.IsAny<QueryRequestOptions>()))
+                .Returns(iteratorMock.Object);
+
+            // Act
+            var result = await _cosmosRepository.GetVitalsDocumentByDate("2024-01-15");
+
+            // Assert
+            result.Should().NotBeNull();
+            result.Should().BeEquivalentTo(expectedDocument);
+        }
+
+        [Fact]
+        public async Task GetVitalsDocumentByDate_ShouldReturnNull_WhenNoDocumentExists()
+        {
+            // Arrange
+            var feedResponseMock = new Mock<FeedResponse<VitalsDocument>>();
+            feedResponseMock.Setup(x => x.GetEnumerator())
+                .Returns(new List<VitalsDocument>().GetEnumerator());
+
+            var iteratorMock = new Mock<FeedIterator<VitalsDocument>>();
+            iteratorMock.SetupSequence(x => x.HasMoreResults)
+                .Returns(true)
+                .Returns(false);
+            iteratorMock.Setup(x => x.ReadNextAsync(It.IsAny<CancellationToken>()))
+                .ReturnsAsync(feedResponseMock.Object);
+
+            _containerMock.Setup(x => x.GetItemQueryIterator<VitalsDocument>(
+                    It.IsAny<QueryDefinition>(),
+                    It.IsAny<string>(),
+                    It.IsAny<QueryRequestOptions>()))
+                .Returns(iteratorMock.Object);
+
+            // Act
+            var result = await _cosmosRepository.GetVitalsDocumentByDate("2024-01-15");
+
+            // Assert
+            result.Should().BeNull();
+        }
+
+        [Fact]
+        public async Task GetVitalsDocumentByDate_ShouldReturnNull_WhenIteratorHasNoResults()
+        {
+            // Arrange
+            var iteratorMock = new Mock<FeedIterator<VitalsDocument>>();
+            iteratorMock.Setup(x => x.HasMoreResults).Returns(false);
+
+            _containerMock.Setup(x => x.GetItemQueryIterator<VitalsDocument>(
+                    It.IsAny<QueryDefinition>(),
+                    It.IsAny<string>(),
+                    It.IsAny<QueryRequestOptions>()))
+                .Returns(iteratorMock.Object);
+
+            // Act
+            var result = await _cosmosRepository.GetVitalsDocumentByDate("2024-01-15");
+
+            // Assert
+            result.Should().BeNull();
+        }
+
+        [Fact]
+        public async Task GetVitalsDocumentByDate_ShouldThrowException_WhenQueryFails()
+        {
+            // Arrange
+            var iteratorMock = new Mock<FeedIterator<VitalsDocument>>();
+            iteratorMock.Setup(x => x.HasMoreResults).Returns(true);
+            iteratorMock.Setup(x => x.ReadNextAsync(It.IsAny<CancellationToken>()))
+                .ThrowsAsync(new Exception("Query failed"));
+
+            _containerMock.Setup(x => x.GetItemQueryIterator<VitalsDocument>(
+                    It.IsAny<QueryDefinition>(),
+                    It.IsAny<string>(),
+                    It.IsAny<QueryRequestOptions>()))
+                .Returns(iteratorMock.Object);
+
+            // Act
+            Func<Task> act = async () => await _cosmosRepository.GetVitalsDocumentByDate("2024-01-15");
+
+            // Assert
+            await act.Should().ThrowAsync<Exception>().WithMessage("Query failed");
+            _loggerMock.VerifyLog(logger => logger.LogError("Exception thrown in GetVitalsDocumentByDate: Query failed"));
+        }
     }
 }

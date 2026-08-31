@@ -199,4 +199,124 @@ public class HealthDataServiceShould
         // Assert
         await act.Should().ThrowAsync<InvalidOperationException>().WithMessage("MCP connection failed");
     }
+
+    [Fact]
+    public async Task FetchHealthDataAsync_ShouldRetryOnce_WhenFirstAttemptReturnsError()
+    {
+        // Arrange
+        var errorResponse = JsonSerializer.Serialize(new { error = "Upstream API returned 500" });
+        var validResponse = BuildPageResponse([new { date = "2024-01-01", steps = 5000 }]);
+
+        var activityCallCount = 0;
+        _mcpToolCallerMock
+            .Setup(x => x.CallToolAsync("get_activity_by_date_range", It.IsAny<Dictionary<string, object?>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(() =>
+            {
+                activityCallCount++;
+                return activityCallCount == 1 ? errorResponse : validResponse;
+            });
+
+        var singlePageResponse = BuildPageResponse([new { value = 1 }]);
+        _mcpToolCallerMock.Setup(x => x.CallToolAsync("get_food_by_date_range", It.IsAny<Dictionary<string, object?>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(singlePageResponse);
+        _mcpToolCallerMock.Setup(x => x.CallToolAsync("get_sleep_by_date_range", It.IsAny<Dictionary<string, object?>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(singlePageResponse);
+        _mcpToolCallerMock.Setup(x => x.CallToolAsync("get_vitals_by_date_range", It.IsAny<Dictionary<string, object?>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(singlePageResponse);
+
+        var service = CreateService();
+
+        // Act
+        var result = await service.FetchHealthDataAsync("2024-01-01", "2024-01-07", CancellationToken.None);
+
+        // Assert
+        result.Activity.Should().Contain("5000");
+        activityCallCount.Should().BeGreaterThanOrEqualTo(2);
+    }
+
+    [Fact]
+    public async Task FetchHealthDataAsync_ShouldReturnEmptyItems_WhenBothAttemptsReturnError()
+    {
+        // Arrange
+        var errorResponse = JsonSerializer.Serialize(new { error = "Persistent failure" });
+        var validResponse = BuildPageResponse([new { value = 1 }]);
+
+        _mcpToolCallerMock
+            .Setup(x => x.CallToolAsync("get_activity_by_date_range", It.IsAny<Dictionary<string, object?>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(errorResponse);
+
+        _mcpToolCallerMock.Setup(x => x.CallToolAsync("get_food_by_date_range", It.IsAny<Dictionary<string, object?>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(validResponse);
+        _mcpToolCallerMock.Setup(x => x.CallToolAsync("get_sleep_by_date_range", It.IsAny<Dictionary<string, object?>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(validResponse);
+        _mcpToolCallerMock.Setup(x => x.CallToolAsync("get_vitals_by_date_range", It.IsAny<Dictionary<string, object?>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(validResponse);
+
+        var service = CreateService();
+
+        // Act
+        var result = await service.FetchHealthDataAsync("2024-01-01", "2024-01-07", CancellationToken.None);
+
+        // Assert
+        result.Activity.Should().Contain("\"totalCount\":0");
+    }
+
+    [Fact]
+    public async Task FetchHealthDataAsync_ShouldHandleEmptyString_WhenToolReturnsEmpty()
+    {
+        // Arrange
+        _mcpToolCallerMock
+            .Setup(x => x.CallToolAsync(It.IsAny<string>(), It.IsAny<Dictionary<string, object?>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(string.Empty);
+
+        var service = CreateService();
+
+        // Act
+        var result = await service.FetchHealthDataAsync("2024-01-01", "2024-01-07", CancellationToken.None);
+
+        // Assert
+        result.Should().NotBeNull();
+        result.Activity.Should().Contain("\"totalCount\":0");
+    }
+
+    [Fact]
+    public async Task FetchHealthDataAsync_ShouldDisposeClient_AfterCompletion()
+    {
+        // Arrange
+        var response = BuildPageResponse([new { value = 1 }]);
+        _mcpToolCallerMock
+            .Setup(x => x.CallToolAsync(It.IsAny<string>(), It.IsAny<Dictionary<string, object?>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(response);
+
+        var service = CreateService();
+
+        // Act
+        await service.FetchHealthDataAsync("2024-01-01", "2024-01-07", CancellationToken.None);
+
+        // Assert
+        _mcpToolCallerMock.Verify(x => x.DisposeAsync(), Times.Once);
+    }
+
+    [Fact]
+    public async Task FetchHealthDataAsync_ShouldPassCorrectParameters_WhenCallingTools()
+    {
+        // Arrange
+        var response = BuildPageResponse([new { value = 1 }]);
+        _mcpToolCallerMock
+            .Setup(x => x.CallToolAsync(It.IsAny<string>(), It.IsAny<Dictionary<string, object?>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(response);
+
+        var service = CreateService();
+
+        // Act
+        await service.FetchHealthDataAsync("2024-03-01", "2024-03-31", CancellationToken.None);
+
+        // Assert
+        _mcpToolCallerMock.Verify(x => x.CallToolAsync(
+            "get_activity_by_date_range",
+            It.Is<Dictionary<string, object?>>(d =>
+                d["startDate"]!.ToString() == "2024-03-01" &&
+                d["endDate"]!.ToString() == "2024-03-31"),
+            It.IsAny<CancellationToken>()), Times.AtLeastOnce);
+    }
 }
