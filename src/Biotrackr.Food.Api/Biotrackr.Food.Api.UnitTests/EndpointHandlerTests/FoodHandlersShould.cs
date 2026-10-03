@@ -3,6 +3,7 @@ using Biotrackr.Food.Api.EndpointHandlers;
 using Biotrackr.Food.Api.Models;
 using Biotrackr.Food.Api.Repositories.Interfaces;
 using Biotrackr.Food.Api.Services;
+using Biotrackr.Food.Api.UnitTests.Fixtures;
 using FluentAssertions;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Moq;
@@ -298,6 +299,67 @@ namespace Biotrackr.Food.Api.UnitTests.EndpointHandlerTests
             result1.Result.Should().BeOfType<BadRequest>();
             result2.Result.Should().BeOfType<BadRequest>();
             _cosmosRepositoryMock.Verify(x => x.GetFoodLogsByDateRangeAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<int>(), It.IsAny<int>()), Times.Never);
+        }
+
+        private static FoodStoredDocument StoredSample(string json) =>
+            Newtonsoft.Json.JsonConvert.DeserializeObject<FoodStoredDocument>(json, new Newtonsoft.Json.JsonSerializerSettings
+            {
+                ContractResolver = new Newtonsoft.Json.Serialization.CamelCasePropertyNamesContractResolver()
+            })!;
+
+        [Fact]
+        public async Task GetFoodLogByDate_ShouldReturnTranslatedGoogleDocument_WhenStoredDocumentIsVersion2()
+        {
+            // Arrange
+            var stored = StoredSample(FoodDocumentSamples.Version2Json);
+            _cosmosRepositoryMock.Setup(x => x.GetFoodLogByDateAsync(stored.Date)).ReturnsAsync(stored);
+
+            // Act
+            var result = await FoodHandlers.GetFoodLogByDate(_cosmosRepositoryMock.Object, _translator, stored.Date);
+
+            // Assert
+            var document = result.Result.Should().BeOfType<Ok<FoodDocument>>().Subject.Value!;
+            new object[] { document.Provider, document.SchemaVersion, document.Food.Foods.Count }
+                .Should().Equal("Google", 2, 2);
+        }
+
+        [Fact]
+        public async Task GetFoodLogsByDateRange_ShouldReturnVersion1AndVersion2Together_WhenRangeSpansCutover()
+        {
+            // Arrange
+            var stored = new List<FoodStoredDocument>
+            {
+                StoredSample(FoodDocumentSamples.Version1Json),
+                StoredSample(FoodDocumentSamples.Version2Json)
+            };
+            _cosmosRepositoryMock.Setup(x => x.GetFoodLogsByDateRangeAsync("2025-12-01", "2026-01-15", 1, 20)).ReturnsAsync(stored);
+            _cosmosRepositoryMock.Setup(x => x.GetFoodLogsCountByDateRangeAsync("2025-12-01", "2026-01-15")).ReturnsAsync(2);
+
+            // Act
+            var result = await FoodHandlers.GetFoodLogsByDateRange(_cosmosRepositoryMock.Object, _translator, "2025-12-01", "2026-01-15");
+
+            // Assert
+            var page = result.Result.Should().BeOfType<Ok<PaginationResponse<FoodDocument>>>().Subject.Value!;
+            page.Items.Select(d => (d.Provider, d.SchemaVersion)).Should().Equal(("Fitbit", 1), ("Google", 2));
+        }
+
+        [Fact]
+        public async Task GetAllFoodLogs_ShouldTranslateEveryItem_WhenPageMixesVersions()
+        {
+            // Arrange
+            var stored = new List<FoodStoredDocument>
+            {
+                StoredSample(FoodDocumentSamples.Version2Json),
+                StoredSample(FoodDocumentSamples.Version1Json)
+            };
+            _cosmosRepositoryMock.Setup(x => x.GetAllFoodLogsAsync(1, 20)).ReturnsAsync(stored);
+            _cosmosRepositoryMock.Setup(x => x.GetTotalFoodLogsCountAsync()).ReturnsAsync(2);
+
+            // Act
+            var result = await FoodHandlers.GetAllFoodLogs(_cosmosRepositoryMock.Object, _translator);
+
+            // Assert
+            result.Value!.Items.Select(d => d.Provider).Should().Equal("Google", "Fitbit");
         }
     }
 }
