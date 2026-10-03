@@ -1,6 +1,9 @@
 using Biotrackr.Sleep.Api.Models;
 using Biotrackr.Sleep.Api.Models.FitbitEntities;
+using Biotrackr.Sleep.Api.UnitTests.TestData;
 using FluentAssertions;
+using System.Text.Json;
+using System.Text.Json.Nodes;
 using SleepModel = Biotrackr.Sleep.Api.Models.FitbitEntities.Sleep;
 
 namespace Biotrackr.Sleep.Api.UnitTests.ModelTests;
@@ -45,5 +48,26 @@ public class SleepDocumentShould
         document.Sleep.Sleep.Should().HaveCount(1);
         document.Date.Should().Be("2026-05-07");
         document.DocumentType.Should().Be("sleep");
+    }
+
+    [Fact]
+    public void Serialize_ShouldMatchPreMigrationResponse_WhenBuiltFromVersion1StoredDocument()
+    {
+        // Arrange
+        var stored = CosmosJson.Deserialize<SleepStoredDocument>(SleepDocumentSamples.V1Json);
+        var document = new SleepDocument
+        {
+            Id = stored.Id,
+            Sleep = stored.Sleep,
+            Date = stored.Date,
+            DocumentType = stored.DocumentType
+        };
+
+        // Act
+        var actual = JsonSerializer.SerializeToNode(document, new JsonSerializerOptions(JsonSerializerDefaults.Web));
+
+        // Assert
+        JsonNode.DeepEquals(actual, JsonNode.Parse(SleepDocumentSamples.V1PreMigrationResponseJson)).Should().BeTrue(
+            $"AGENT FIX: version 1 response must equal the pre-migration body field for field. Actual: {actual!.ToJsonString()}");
     }
 }
