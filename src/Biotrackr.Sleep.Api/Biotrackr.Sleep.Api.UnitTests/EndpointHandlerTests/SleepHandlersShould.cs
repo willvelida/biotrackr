@@ -1,7 +1,9 @@
-﻿using AutoFixture;
+using AutoFixture;
 using Biotrackr.Sleep.Api.EndpointHandlers;
 using Biotrackr.Sleep.Api.Models;
 using Biotrackr.Sleep.Api.Repositories.Interfaces;
+using Biotrackr.Sleep.Api.Services;
+using Biotrackr.Sleep.Api.UnitTests.TestData;
 using FluentAssertions;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Moq;
@@ -11,6 +13,7 @@ namespace Biotrackr.Sleep.Api.UnitTests.EndpointHandlerTests
     public class SleepHandlersShould
     {
         private readonly Mock<ICosmosRepository> _cosmosRepositoryMock;
+        private readonly SleepDocumentTranslator _translator = new();
 
         public SleepHandlersShould()
         {
@@ -22,19 +25,19 @@ namespace Biotrackr.Sleep.Api.UnitTests.EndpointHandlerTests
         {
             // Arrange
             var date = "2022-01-01";
-            var fixture = new Fixture();
-            var sleepDocument = fixture.Create<SleepDocument>();
+            var fixture = StoredDocumentFixture.Create();
+            var sleepDocument = fixture.Create<SleepStoredDocument>();
             sleepDocument.Date = date;
 
             _cosmosRepositoryMock.Setup(x => x.GetSleepSummaryByDate(date)).ReturnsAsync(sleepDocument);
 
             // Act
-            var result = await SleepHandlers.GetSleepByDate(_cosmosRepositoryMock.Object, date);
+            var result = await SleepHandlers.GetSleepByDate(_cosmosRepositoryMock.Object, _translator, date);
 
             // Assert
             result.Result.Should().BeOfType<Ok<SleepDocument>>();
             var okResult = result.Result as Ok<SleepDocument>;
-            okResult.Value.Should().BeEquivalentTo(sleepDocument);
+            okResult.Value.Should().BeEquivalentTo(_translator.Translate(sleepDocument));
             okResult.Value.Date.Should().Be(date);
         }
 
@@ -43,10 +46,10 @@ namespace Biotrackr.Sleep.Api.UnitTests.EndpointHandlerTests
         {
             // Arrange
             var date = "2022-01-01";
-            _cosmosRepositoryMock.Setup(x => x.GetSleepSummaryByDate(date)).ReturnsAsync((SleepDocument)null);
+            _cosmosRepositoryMock.Setup(x => x.GetSleepSummaryByDate(date)).ReturnsAsync((SleepStoredDocument)null);
 
             // Act
-            var result = await SleepHandlers.GetSleepByDate(_cosmosRepositoryMock.Object, date);
+            var result = await SleepHandlers.GetSleepByDate(_cosmosRepositoryMock.Object, _translator, date);
 
             // Assert
             result.Result.Should().BeOfType<NotFound>();
@@ -57,14 +60,14 @@ namespace Biotrackr.Sleep.Api.UnitTests.EndpointHandlerTests
         {
             // Arrange
             var date = "2023-05-15";
-            var fixture = new Fixture();
-            var sleepDocument = fixture.Create<SleepDocument>();
+            var fixture = StoredDocumentFixture.Create();
+            var sleepDocument = fixture.Create<SleepStoredDocument>();
             sleepDocument.Date = date;
 
             _cosmosRepositoryMock.Setup(x => x.GetSleepSummaryByDate(date)).ReturnsAsync(sleepDocument);
 
             // Act
-            await SleepHandlers.GetSleepByDate(_cosmosRepositoryMock.Object, date);
+            await SleepHandlers.GetSleepByDate(_cosmosRepositoryMock.Object, _translator, date);
 
             // Assert
             _cosmosRepositoryMock.Verify(x => x.GetSleepSummaryByDate(date), Times.Once);
@@ -82,7 +85,7 @@ namespace Biotrackr.Sleep.Api.UnitTests.EndpointHandlerTests
 
             // Act & Assert
             var actualException = await Assert.ThrowsAsync<InvalidOperationException>(
-                () => SleepHandlers.GetSleepByDate(_cosmosRepositoryMock.Object, date));
+                () => SleepHandlers.GetSleepByDate(_cosmosRepositoryMock.Object, _translator, date));
 
             actualException.Should().Be(expectedException);
             actualException.Message.Should().Be("Database connection failed");
@@ -100,7 +103,7 @@ namespace Biotrackr.Sleep.Api.UnitTests.EndpointHandlerTests
 
             // Act & Assert
             var actualException = await Assert.ThrowsAsync<ArgumentException>(
-                () => SleepHandlers.GetSleepByDate(_cosmosRepositoryMock.Object, date));
+                () => SleepHandlers.GetSleepByDate(_cosmosRepositoryMock.Object, _translator, date));
 
             actualException.Should().Be(expectedException);
             actualException.ParamName.Should().Be("date");
@@ -118,7 +121,7 @@ namespace Biotrackr.Sleep.Api.UnitTests.EndpointHandlerTests
 
             // Act & Assert
             var actualException = await Assert.ThrowsAsync<TaskCanceledException>(
-                () => SleepHandlers.GetSleepByDate(_cosmosRepositoryMock.Object, date));
+                () => SleepHandlers.GetSleepByDate(_cosmosRepositoryMock.Object, _translator, date));
 
             actualException.Should().Be(expectedException);
         }
@@ -127,9 +130,9 @@ namespace Biotrackr.Sleep.Api.UnitTests.EndpointHandlerTests
         public async Task GetAllSleeps_ShouldReturnPaginationResponseWithSleepDocuments()
         {
             // Arrange
-            var fixture = new Fixture();
-            var sleepDocuments = fixture.CreateMany<SleepDocument>(5).ToList();
-            var paginationResponse = new PaginationResponse<SleepDocument>
+            var fixture = StoredDocumentFixture.Create();
+            var sleepDocuments = fixture.CreateMany<SleepStoredDocument>(5).ToList();
+            var paginationResponse = new PaginationResponse<SleepStoredDocument>
             {
                 Items = sleepDocuments,
                 TotalCount = 10,
@@ -141,21 +144,21 @@ namespace Biotrackr.Sleep.Api.UnitTests.EndpointHandlerTests
                 .ReturnsAsync(paginationResponse);
 
             // Act
-            var result = await SleepHandlers.GetAllSleeps(_cosmosRepositoryMock.Object);
+            var result = await SleepHandlers.GetAllSleeps(_cosmosRepositoryMock.Object, _translator);
 
             // Assert
             result.Should().BeOfType<Ok<PaginationResponse<SleepDocument>>>();
             var okResult = result as Ok<PaginationResponse<SleepDocument>>;
-            okResult.Value.Should().BeEquivalentTo(paginationResponse);
+            okResult.Value.Should().BeEquivalentTo(TranslatedPage(paginationResponse));
         }
 
         [Fact]
         public async Task GetAllSleeps_ShouldReturnPaginatedResult_WhenPaginationParametersProvided()
         {
             // Arrange
-            var fixture = new Fixture();
-            var sleepDocuments = fixture.CreateMany<SleepDocument>(10).ToList();
-            var paginatedResponse = new PaginationResponse<SleepDocument>
+            var fixture = StoredDocumentFixture.Create();
+            var sleepDocuments = fixture.CreateMany<SleepStoredDocument>(10).ToList();
+            var paginatedResponse = new PaginationResponse<SleepStoredDocument>
             {
                 Items = sleepDocuments,
                 PageNumber = 2,
@@ -167,22 +170,22 @@ namespace Biotrackr.Sleep.Api.UnitTests.EndpointHandlerTests
                                 .ReturnsAsync(paginatedResponse);
 
             // Act
-            var result = await SleepHandlers.GetAllSleeps(_cosmosRepositoryMock.Object, 2, 10);
+            var result = await SleepHandlers.GetAllSleeps(_cosmosRepositoryMock.Object, _translator, 2, 10);
 
             // Assert
             result.Should().BeOfType<Ok<PaginationResponse<SleepDocument>>>();
             var okResult = result as Ok<PaginationResponse<SleepDocument>>;
-            okResult.Value.Should().BeEquivalentTo(paginatedResponse);
+            okResult.Value.Should().BeEquivalentTo(TranslatedPage(paginatedResponse));
         }
 
         [Fact]
         public async Task GetAllSleeps_ShouldUseDefaultPaginationParameters_WhenNotProvided()
         {
             // Arrange
-            var fixture = new Fixture();
-            var paginationResponse = new PaginationResponse<SleepDocument>
+            var fixture = StoredDocumentFixture.Create();
+            var paginationResponse = new PaginationResponse<SleepStoredDocument>
             {
-                Items = fixture.CreateMany<SleepDocument>().ToList(),
+                Items = fixture.CreateMany<SleepStoredDocument>().ToList(),
                 TotalCount = 5,
                 PageNumber = 1,
                 PageSize = 20
@@ -193,7 +196,7 @@ namespace Biotrackr.Sleep.Api.UnitTests.EndpointHandlerTests
                 .ReturnsAsync(paginationResponse);
 
             // Act
-            var result = await SleepHandlers.GetAllSleeps(_cosmosRepositoryMock.Object);
+            var result = await SleepHandlers.GetAllSleeps(_cosmosRepositoryMock.Object, _translator);
 
             // Assert
             result.Should().BeOfType<Ok<PaginationResponse<SleepDocument>>>();
@@ -207,10 +210,10 @@ namespace Biotrackr.Sleep.Api.UnitTests.EndpointHandlerTests
             // Arrange
             var pageNumber = 2;
             var pageSize = 10;
-            var fixture = new Fixture();
-            var paginationResponse = new PaginationResponse<SleepDocument>
+            var fixture = StoredDocumentFixture.Create();
+            var paginationResponse = new PaginationResponse<SleepStoredDocument>
             {
-                Items = fixture.CreateMany<SleepDocument>().ToList(),
+                Items = fixture.CreateMany<SleepStoredDocument>().ToList(),
                 TotalCount = 25,
                 PageNumber = pageNumber,
                 PageSize = pageSize
@@ -221,7 +224,7 @@ namespace Biotrackr.Sleep.Api.UnitTests.EndpointHandlerTests
                 .ReturnsAsync(paginationResponse);
 
             // Act
-            var result = await SleepHandlers.GetAllSleeps(_cosmosRepositoryMock.Object, pageNumber, pageSize);
+            var result = await SleepHandlers.GetAllSleeps(_cosmosRepositoryMock.Object, _translator, pageNumber, pageSize);
 
             // Assert
             result.Should().BeOfType<Ok<PaginationResponse<SleepDocument>>>();
@@ -237,10 +240,10 @@ namespace Biotrackr.Sleep.Api.UnitTests.EndpointHandlerTests
         public async Task GetAllSleeps_ShouldUseDefaultPageSize_WhenOnlyPageNumberProvided()
         {
             // Arrange
-            var fixture = new Fixture();
-            var paginatedResponse = new PaginationResponse<SleepDocument>
+            var fixture = StoredDocumentFixture.Create();
+            var paginatedResponse = new PaginationResponse<SleepStoredDocument>
             {
-                Items = fixture.CreateMany<SleepDocument>(20).ToList(),
+                Items = fixture.CreateMany<SleepStoredDocument>(20).ToList(),
                 PageNumber = 2,
                 PageSize = 20,
                 TotalCount = 100
@@ -251,7 +254,7 @@ namespace Biotrackr.Sleep.Api.UnitTests.EndpointHandlerTests
                                 .ReturnsAsync(paginatedResponse);
 
             // Act
-            var result = await SleepHandlers.GetAllSleeps(_cosmosRepositoryMock.Object, 2, null);
+            var result = await SleepHandlers.GetAllSleeps(_cosmosRepositoryMock.Object, _translator, 2, null);
 
             // Assert
             result.Should().BeOfType<Ok<PaginationResponse<SleepDocument>>>();
@@ -264,10 +267,10 @@ namespace Biotrackr.Sleep.Api.UnitTests.EndpointHandlerTests
         {
             // Arrange
             var pageSize = 15;
-            var fixture = new Fixture();
-            var paginationResponse = new PaginationResponse<SleepDocument>
+            var fixture = StoredDocumentFixture.Create();
+            var paginationResponse = new PaginationResponse<SleepStoredDocument>
             {
-                Items = fixture.CreateMany<SleepDocument>().ToList(),
+                Items = fixture.CreateMany<SleepStoredDocument>().ToList(),
                 TotalCount = 30,
                 PageNumber = 1,
                 PageSize = pageSize
@@ -278,7 +281,7 @@ namespace Biotrackr.Sleep.Api.UnitTests.EndpointHandlerTests
                 .ReturnsAsync(paginationResponse);
 
             // Act
-            var result = await SleepHandlers.GetAllSleeps(_cosmosRepositoryMock.Object, null, pageSize);
+            var result = await SleepHandlers.GetAllSleeps(_cosmosRepositoryMock.Object, _translator, null, pageSize);
 
             // Assert
             result.Should().BeOfType<Ok<PaginationResponse<SleepDocument>>>();
@@ -292,10 +295,10 @@ namespace Biotrackr.Sleep.Api.UnitTests.EndpointHandlerTests
             // Arrange
             var pageNumber = 3;
             var pageSize = 25;
-            var fixture = new Fixture();
-            var paginationResponse = new PaginationResponse<SleepDocument>
+            var fixture = StoredDocumentFixture.Create();
+            var paginationResponse = new PaginationResponse<SleepStoredDocument>
             {
-                Items = fixture.CreateMany<SleepDocument>().ToList(),
+                Items = fixture.CreateMany<SleepStoredDocument>().ToList(),
                 TotalCount = 100,
                 PageNumber = pageNumber,
                 PageSize = pageSize
@@ -305,7 +308,7 @@ namespace Biotrackr.Sleep.Api.UnitTests.EndpointHandlerTests
                 .ReturnsAsync(paginationResponse);
 
             // Act
-            await SleepHandlers.GetAllSleeps(_cosmosRepositoryMock.Object, pageNumber, pageSize);
+            await SleepHandlers.GetAllSleeps(_cosmosRepositoryMock.Object, _translator, pageNumber, pageSize);
 
             // Assert
             _cosmosRepositoryMock.Verify(x => x.GetAllSleepDocuments(
@@ -325,7 +328,7 @@ namespace Biotrackr.Sleep.Api.UnitTests.EndpointHandlerTests
 
             // Act & Assert
             var actualException = await Assert.ThrowsAsync<InvalidOperationException>(
-                () => SleepHandlers.GetAllSleeps(_cosmosRepositoryMock.Object));
+                () => SleepHandlers.GetAllSleeps(_cosmosRepositoryMock.Object, _translator));
 
             actualException.Should().Be(expectedException);
             actualException.Message.Should().Be("Database connection failed");
@@ -342,7 +345,7 @@ namespace Biotrackr.Sleep.Api.UnitTests.EndpointHandlerTests
 
             // Act & Assert
             var actualException = await Assert.ThrowsAsync<ArgumentException>(
-                () => SleepHandlers.GetAllSleeps(_cosmosRepositoryMock.Object, 2, 10));
+                () => SleepHandlers.GetAllSleeps(_cosmosRepositoryMock.Object, _translator, 2, 10));
 
             actualException.Should().Be(expectedException);
             actualException.Message.Should().Be("Invalid pagination parameters");
@@ -359,7 +362,7 @@ namespace Biotrackr.Sleep.Api.UnitTests.EndpointHandlerTests
 
             // Act & Assert
             var actualException = await Assert.ThrowsAsync<TimeoutException>(
-                () => SleepHandlers.GetAllSleeps(_cosmosRepositoryMock.Object, 1, 20));
+                () => SleepHandlers.GetAllSleeps(_cosmosRepositoryMock.Object, _translator, 1, 20));
 
             actualException.Should().Be(expectedException);
             actualException.Message.Should().Be("Request timed out");
@@ -376,7 +379,7 @@ namespace Biotrackr.Sleep.Api.UnitTests.EndpointHandlerTests
 
             // Act & Assert
             var actualException = await Assert.ThrowsAsync<TaskCanceledException>(
-                () => SleepHandlers.GetAllSleeps(_cosmosRepositoryMock.Object));
+                () => SleepHandlers.GetAllSleeps(_cosmosRepositoryMock.Object, _translator));
 
             actualException.Should().Be(expectedException);
         }
@@ -392,7 +395,7 @@ namespace Biotrackr.Sleep.Api.UnitTests.EndpointHandlerTests
 
             // Act & Assert
             await Assert.ThrowsAsync<InvalidOperationException>(
-                () => SleepHandlers.GetAllSleeps(_cosmosRepositoryMock.Object, 1, 10));
+                () => SleepHandlers.GetAllSleeps(_cosmosRepositoryMock.Object, _translator, 1, 10));
 
             // Verify the repository was still called with correct parameters
             _cosmosRepositoryMock.Verify(x => x.GetAllSleepDocuments(
@@ -405,9 +408,9 @@ namespace Biotrackr.Sleep.Api.UnitTests.EndpointHandlerTests
             // Arrange
             var startDate = "2022-01-01";
             var endDate = "2022-01-31";
-            var fixture = new Fixture();
-            var sleepDocuments = fixture.CreateMany<SleepDocument>(5).ToList();
-            var paginationResponse = new PaginationResponse<SleepDocument>
+            var fixture = StoredDocumentFixture.Create();
+            var sleepDocuments = fixture.CreateMany<SleepStoredDocument>(5).ToList();
+            var paginationResponse = new PaginationResponse<SleepStoredDocument>
             {
                 Items = sleepDocuments,
                 TotalCount = 10,
@@ -419,12 +422,12 @@ namespace Biotrackr.Sleep.Api.UnitTests.EndpointHandlerTests
                 .ReturnsAsync(paginationResponse);
 
             // Act
-            var result = await SleepHandlers.GetSleepsByDateRange(_cosmosRepositoryMock.Object, startDate, endDate);
+            var result = await SleepHandlers.GetSleepsByDateRange(_cosmosRepositoryMock.Object, _translator, startDate, endDate);
 
             // Assert
             result.Result.Should().BeOfType<Ok<PaginationResponse<SleepDocument>>>();
             var okResult = result.Result as Ok<PaginationResponse<SleepDocument>>;
-            okResult.Value.Should().BeEquivalentTo(paginationResponse);
+            okResult.Value.Should().BeEquivalentTo(TranslatedPage(paginationResponse));
         }
 
         [Fact]
@@ -435,7 +438,7 @@ namespace Biotrackr.Sleep.Api.UnitTests.EndpointHandlerTests
             var endDate = "2022-01-31";
 
             // Act
-            var result = await SleepHandlers.GetSleepsByDateRange(_cosmosRepositoryMock.Object, startDate, endDate);
+            var result = await SleepHandlers.GetSleepsByDateRange(_cosmosRepositoryMock.Object, _translator, startDate, endDate);
 
             // Assert
             result.Result.Should().BeOfType<BadRequest>();
@@ -450,7 +453,7 @@ namespace Biotrackr.Sleep.Api.UnitTests.EndpointHandlerTests
             var endDate = "invalid-date";
 
             // Act
-            var result = await SleepHandlers.GetSleepsByDateRange(_cosmosRepositoryMock.Object, startDate, endDate);
+            var result = await SleepHandlers.GetSleepsByDateRange(_cosmosRepositoryMock.Object, _translator, startDate, endDate);
 
             // Assert
             result.Result.Should().BeOfType<BadRequest>();
@@ -465,7 +468,7 @@ namespace Biotrackr.Sleep.Api.UnitTests.EndpointHandlerTests
             var endDate = "invalid-end-date";
 
             // Act
-            var result = await SleepHandlers.GetSleepsByDateRange(_cosmosRepositoryMock.Object, startDate, endDate);
+            var result = await SleepHandlers.GetSleepsByDateRange(_cosmosRepositoryMock.Object, _translator, startDate, endDate);
 
             // Assert
             result.Result.Should().BeOfType<BadRequest>();
@@ -480,7 +483,7 @@ namespace Biotrackr.Sleep.Api.UnitTests.EndpointHandlerTests
             var endDate = "2022-01-01";
 
             // Act
-            var result = await SleepHandlers.GetSleepsByDateRange(_cosmosRepositoryMock.Object, startDate, endDate);
+            var result = await SleepHandlers.GetSleepsByDateRange(_cosmosRepositoryMock.Object, _translator, startDate, endDate);
 
             // Assert
             result.Result.Should().BeOfType<BadRequest>();
@@ -493,9 +496,9 @@ namespace Biotrackr.Sleep.Api.UnitTests.EndpointHandlerTests
             // Arrange
             var startDate = "2022-01-15";
             var endDate = "2022-01-15";
-            var fixture = new Fixture();
-            var sleepDocuments = fixture.CreateMany<SleepDocument>(2).ToList();
-            var paginationResponse = new PaginationResponse<SleepDocument>
+            var fixture = StoredDocumentFixture.Create();
+            var sleepDocuments = fixture.CreateMany<SleepStoredDocument>(2).ToList();
+            var paginationResponse = new PaginationResponse<SleepStoredDocument>
             {
                 Items = sleepDocuments,
                 TotalCount = 2,
@@ -507,12 +510,12 @@ namespace Biotrackr.Sleep.Api.UnitTests.EndpointHandlerTests
                 .ReturnsAsync(paginationResponse);
 
             // Act
-            var result = await SleepHandlers.GetSleepsByDateRange(_cosmosRepositoryMock.Object, startDate, endDate);
+            var result = await SleepHandlers.GetSleepsByDateRange(_cosmosRepositoryMock.Object, _translator, startDate, endDate);
 
             // Assert
             result.Result.Should().BeOfType<Ok<PaginationResponse<SleepDocument>>>();
             var okResult = result.Result as Ok<PaginationResponse<SleepDocument>>;
-            okResult.Value.Should().BeEquivalentTo(paginationResponse);
+            okResult.Value.Should().BeEquivalentTo(TranslatedPage(paginationResponse));
         }
 
         [Fact]
@@ -521,10 +524,10 @@ namespace Biotrackr.Sleep.Api.UnitTests.EndpointHandlerTests
             // Arrange
             var startDate = "2022-01-01";
             var endDate = "2022-01-31";
-            var fixture = new Fixture();
-            var paginationResponse = new PaginationResponse<SleepDocument>
+            var fixture = StoredDocumentFixture.Create();
+            var paginationResponse = new PaginationResponse<SleepStoredDocument>
             {
-                Items = fixture.CreateMany<SleepDocument>().ToList(),
+                Items = fixture.CreateMany<SleepStoredDocument>().ToList(),
                 TotalCount = 5,
                 PageNumber = 1,
                 PageSize = 20
@@ -535,7 +538,7 @@ namespace Biotrackr.Sleep.Api.UnitTests.EndpointHandlerTests
                 .ReturnsAsync(paginationResponse);
 
             // Act
-            var result = await SleepHandlers.GetSleepsByDateRange(_cosmosRepositoryMock.Object, startDate, endDate);
+            var result = await SleepHandlers.GetSleepsByDateRange(_cosmosRepositoryMock.Object, _translator, startDate, endDate);
 
             // Assert
             result.Result.Should().BeOfType<Ok<PaginationResponse<SleepDocument>>>();
@@ -551,10 +554,10 @@ namespace Biotrackr.Sleep.Api.UnitTests.EndpointHandlerTests
             var endDate = "2022-01-31";
             var pageNumber = 2;
             var pageSize = 10;
-            var fixture = new Fixture();
-            var paginationResponse = new PaginationResponse<SleepDocument>
+            var fixture = StoredDocumentFixture.Create();
+            var paginationResponse = new PaginationResponse<SleepStoredDocument>
             {
-                Items = fixture.CreateMany<SleepDocument>().ToList(),
+                Items = fixture.CreateMany<SleepStoredDocument>().ToList(),
                 TotalCount = 25,
                 PageNumber = pageNumber,
                 PageSize = pageSize
@@ -565,7 +568,7 @@ namespace Biotrackr.Sleep.Api.UnitTests.EndpointHandlerTests
                 .ReturnsAsync(paginationResponse);
 
             // Act
-            var result = await SleepHandlers.GetSleepsByDateRange(_cosmosRepositoryMock.Object, startDate, endDate, pageNumber, pageSize);
+            var result = await SleepHandlers.GetSleepsByDateRange(_cosmosRepositoryMock.Object, _translator, startDate, endDate, pageNumber, pageSize);
 
             // Assert
             result.Result.Should().BeOfType<Ok<PaginationResponse<SleepDocument>>>();
@@ -584,10 +587,10 @@ namespace Biotrackr.Sleep.Api.UnitTests.EndpointHandlerTests
             var startDate = "2022-01-01";
             var endDate = "2022-01-31";
             var pageNumber = 3;
-            var fixture = new Fixture();
-            var paginationResponse = new PaginationResponse<SleepDocument>
+            var fixture = StoredDocumentFixture.Create();
+            var paginationResponse = new PaginationResponse<SleepStoredDocument>
             {
-                Items = fixture.CreateMany<SleepDocument>(20).ToList(),
+                Items = fixture.CreateMany<SleepStoredDocument>(20).ToList(),
                 PageNumber = pageNumber,
                 PageSize = 20,
                 TotalCount = 100
@@ -598,7 +601,7 @@ namespace Biotrackr.Sleep.Api.UnitTests.EndpointHandlerTests
                 .ReturnsAsync(paginationResponse);
 
             // Act
-            var result = await SleepHandlers.GetSleepsByDateRange(_cosmosRepositoryMock.Object, startDate, endDate, pageNumber, null);
+            var result = await SleepHandlers.GetSleepsByDateRange(_cosmosRepositoryMock.Object, _translator, startDate, endDate, pageNumber, null);
 
             // Assert
             result.Result.Should().BeOfType<Ok<PaginationResponse<SleepDocument>>>();
@@ -613,10 +616,10 @@ namespace Biotrackr.Sleep.Api.UnitTests.EndpointHandlerTests
             var startDate = "2022-01-01";
             var endDate = "2022-01-31";
             var pageSize = 15;
-            var fixture = new Fixture();
-            var paginationResponse = new PaginationResponse<SleepDocument>
+            var fixture = StoredDocumentFixture.Create();
+            var paginationResponse = new PaginationResponse<SleepStoredDocument>
             {
-                Items = fixture.CreateMany<SleepDocument>().ToList(),
+                Items = fixture.CreateMany<SleepStoredDocument>().ToList(),
                 TotalCount = 30,
                 PageNumber = 1,
                 PageSize = pageSize
@@ -627,7 +630,7 @@ namespace Biotrackr.Sleep.Api.UnitTests.EndpointHandlerTests
                 .ReturnsAsync(paginationResponse);
 
             // Act
-            var result = await SleepHandlers.GetSleepsByDateRange(_cosmosRepositoryMock.Object, startDate, endDate, null, pageSize);
+            var result = await SleepHandlers.GetSleepsByDateRange(_cosmosRepositoryMock.Object, _translator, startDate, endDate, null, pageSize);
 
             // Assert
             result.Result.Should().BeOfType<Ok<PaginationResponse<SleepDocument>>>();
@@ -643,10 +646,10 @@ namespace Biotrackr.Sleep.Api.UnitTests.EndpointHandlerTests
             var endDate = "2022-01-31";
             var pageNumber = 3;
             var pageSize = 25;
-            var fixture = new Fixture();
-            var paginationResponse = new PaginationResponse<SleepDocument>
+            var fixture = StoredDocumentFixture.Create();
+            var paginationResponse = new PaginationResponse<SleepStoredDocument>
             {
-                Items = fixture.CreateMany<SleepDocument>().ToList(),
+                Items = fixture.CreateMany<SleepStoredDocument>().ToList(),
                 TotalCount = 100,
                 PageNumber = pageNumber,
                 PageSize = pageSize
@@ -656,7 +659,7 @@ namespace Biotrackr.Sleep.Api.UnitTests.EndpointHandlerTests
                 .ReturnsAsync(paginationResponse);
 
             // Act
-            await SleepHandlers.GetSleepsByDateRange(_cosmosRepositoryMock.Object, startDate, endDate, pageNumber, pageSize);
+            await SleepHandlers.GetSleepsByDateRange(_cosmosRepositoryMock.Object, _translator, startDate, endDate, pageNumber, pageSize);
 
             // Assert
             _cosmosRepositoryMock.Verify(x => x.GetSleepDocumentsByDateRange(
@@ -673,9 +676,9 @@ namespace Biotrackr.Sleep.Api.UnitTests.EndpointHandlerTests
             // Arrange
             var startDate = "2022-01-01";
             var endDate = "2022-01-31";
-            var paginationResponse = new PaginationResponse<SleepDocument>
+            var paginationResponse = new PaginationResponse<SleepStoredDocument>
             {
-                Items = new List<SleepDocument>(),
+                Items = new List<SleepStoredDocument>(),
                 TotalCount = 0,
                 PageNumber = 1,
                 PageSize = 20
@@ -685,7 +688,7 @@ namespace Biotrackr.Sleep.Api.UnitTests.EndpointHandlerTests
                 .ReturnsAsync(paginationResponse);
 
             // Act
-            var result = await SleepHandlers.GetSleepsByDateRange(_cosmosRepositoryMock.Object, startDate, endDate);
+            var result = await SleepHandlers.GetSleepsByDateRange(_cosmosRepositoryMock.Object, _translator, startDate, endDate);
 
             // Assert
             result.Result.Should().BeOfType<Ok<PaginationResponse<SleepDocument>>>();
@@ -707,7 +710,7 @@ namespace Biotrackr.Sleep.Api.UnitTests.EndpointHandlerTests
 
             // Act & Assert
             var actualException = await Assert.ThrowsAsync<InvalidOperationException>(
-                () => SleepHandlers.GetSleepsByDateRange(_cosmosRepositoryMock.Object, startDate, endDate));
+                () => SleepHandlers.GetSleepsByDateRange(_cosmosRepositoryMock.Object, _translator, startDate, endDate));
 
             actualException.Should().Be(expectedException);
             actualException.Message.Should().Be("Database connection failed");
@@ -726,7 +729,7 @@ namespace Biotrackr.Sleep.Api.UnitTests.EndpointHandlerTests
 
             // Act & Assert
             var actualException = await Assert.ThrowsAsync<ArgumentException>(
-                () => SleepHandlers.GetSleepsByDateRange(_cosmosRepositoryMock.Object, startDate, endDate, 1, 20));
+                () => SleepHandlers.GetSleepsByDateRange(_cosmosRepositoryMock.Object, _translator, startDate, endDate, 1, 20));
 
             actualException.Should().Be(expectedException);
             actualException.Message.Should().Be("Invalid date range parameters");
@@ -745,7 +748,7 @@ namespace Biotrackr.Sleep.Api.UnitTests.EndpointHandlerTests
 
             // Act & Assert
             var actualException = await Assert.ThrowsAsync<TimeoutException>(
-                () => SleepHandlers.GetSleepsByDateRange(_cosmosRepositoryMock.Object, startDate, endDate, 1, 20));
+                () => SleepHandlers.GetSleepsByDateRange(_cosmosRepositoryMock.Object, _translator, startDate, endDate, 1, 20));
 
             actualException.Should().Be(expectedException);
             actualException.Message.Should().Be("Request timed out");
@@ -764,7 +767,7 @@ namespace Biotrackr.Sleep.Api.UnitTests.EndpointHandlerTests
 
             // Act & Assert
             var actualException = await Assert.ThrowsAsync<TaskCanceledException>(
-                () => SleepHandlers.GetSleepsByDateRange(_cosmosRepositoryMock.Object, startDate, endDate));
+                () => SleepHandlers.GetSleepsByDateRange(_cosmosRepositoryMock.Object, _translator, startDate, endDate));
 
             actualException.Should().Be(expectedException);
         }
@@ -783,10 +786,10 @@ namespace Biotrackr.Sleep.Api.UnitTests.EndpointHandlerTests
 
             foreach (var (startDate, endDate) in testCases)
             {
-                var fixture = new Fixture();
-                var paginationResponse = new PaginationResponse<SleepDocument>
+                var fixture = StoredDocumentFixture.Create();
+                var paginationResponse = new PaginationResponse<SleepStoredDocument>
                 {
-                    Items = fixture.CreateMany<SleepDocument>(2).ToList(),
+                    Items = fixture.CreateMany<SleepStoredDocument>(2).ToList(),
                     TotalCount = 2,
                     PageNumber = 1,
                     PageSize = 20
@@ -796,7 +799,7 @@ namespace Biotrackr.Sleep.Api.UnitTests.EndpointHandlerTests
                     .ReturnsAsync(paginationResponse);
 
                 // Act
-                var result = await SleepHandlers.GetSleepsByDateRange(_cosmosRepositoryMock.Object, startDate, endDate);
+                var result = await SleepHandlers.GetSleepsByDateRange(_cosmosRepositoryMock.Object, _translator, startDate, endDate);
 
                 // Assert
                 result.Result.Should().BeOfType<Ok<PaginationResponse<SleepDocument>>>();
@@ -826,7 +829,7 @@ namespace Biotrackr.Sleep.Api.UnitTests.EndpointHandlerTests
             foreach (var (startDate, endDate) in invalidDateCases)
             {
                 // Act
-                var result = await SleepHandlers.GetSleepsByDateRange(_cosmosRepositoryMock.Object, startDate, endDate);
+                var result = await SleepHandlers.GetSleepsByDateRange(_cosmosRepositoryMock.Object, _translator, startDate, endDate);
 
                 // Assert
                 result.Result.Should().BeOfType<BadRequest>($"Expected BadRequest for dates: {startDate}, {endDate}");
@@ -849,11 +852,19 @@ namespace Biotrackr.Sleep.Api.UnitTests.EndpointHandlerTests
 
             // Act & Assert
             await Assert.ThrowsAsync<InvalidOperationException>(
-                () => SleepHandlers.GetSleepsByDateRange(_cosmosRepositoryMock.Object, startDate, endDate, 1, 10));
+                () => SleepHandlers.GetSleepsByDateRange(_cosmosRepositoryMock.Object, _translator, startDate, endDate, 1, 10));
 
             // Verify the repository was still called with correct parameters
             _cosmosRepositoryMock.Verify(x => x.GetSleepDocumentsByDateRange(startDate, endDate,
                 It.Is<PaginationRequest>(r => r.PageNumber == 1 && r.PageSize == 10)), Times.Once);
         }
+
+        private PaginationResponse<SleepDocument> TranslatedPage(PaginationResponse<SleepStoredDocument> storedPage) => new()
+        {
+            Items = storedPage.Items.Select(_translator.Translate).ToList(),
+            TotalCount = storedPage.TotalCount,
+            PageNumber = storedPage.PageNumber,
+            PageSize = storedPage.PageSize
+        };
     }
 }

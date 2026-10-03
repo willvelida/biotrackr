@@ -1,7 +1,8 @@
-﻿using AutoFixture;
+using AutoFixture;
 using Biotrackr.Sleep.Api.Configuration;
 using Biotrackr.Sleep.Api.Models;
 using Biotrackr.Sleep.Api.Repositories;
+using Biotrackr.Sleep.Api.UnitTests.TestData;
 using FluentAssertions;
 using Microsoft.Azure.Cosmos;
 using Microsoft.Extensions.Logging;
@@ -41,18 +42,18 @@ namespace Biotrackr.Sleep.Api.UnitTests.RepositoryTests
         {
             // Arrange
             var date = "2022-01-01";
-            var fixture = new Fixture();
-            var sleepDocument = fixture.Create<SleepDocument>();
+            var fixture = StoredDocumentFixture.Create();
+            var sleepDocument = fixture.Create<SleepStoredDocument>();
             sleepDocument.Date = date;
 
-            var feedResponse = new Mock<FeedResponse<SleepDocument>>();
-            feedResponse.Setup(x => x.GetEnumerator()).Returns(new List<SleepDocument> { sleepDocument }.GetEnumerator());
+            var feedResponse = new Mock<FeedResponse<SleepStoredDocument>>();
+            feedResponse.Setup(x => x.GetEnumerator()).Returns(new List<SleepStoredDocument> { sleepDocument }.GetEnumerator());
 
-            var iterator = new Mock<FeedIterator<SleepDocument>>();
+            var iterator = new Mock<FeedIterator<SleepStoredDocument>>();
             iterator.SetupSequence(x => x.HasMoreResults).Returns(true).Returns(false);
             iterator.Setup(x => x.ReadNextAsync(default)).ReturnsAsync(feedResponse.Object);
 
-            _containerMock.Setup(x => x.GetItemQueryIterator<SleepDocument>(It.IsAny<QueryDefinition>(), It.IsAny<string>(), It.IsAny<QueryRequestOptions>())).Returns(iterator.Object);
+            _containerMock.Setup(x => x.GetItemQueryIterator<SleepStoredDocument>(It.IsAny<QueryDefinition>(), It.IsAny<string>(), It.IsAny<QueryRequestOptions>())).Returns(iterator.Object);
 
             // Act
             var result = await _repository.GetSleepSummaryByDate(date);
@@ -68,14 +69,14 @@ namespace Biotrackr.Sleep.Api.UnitTests.RepositoryTests
             // Arrange
             var date = "2022-01-01";
 
-            var feedResponse = new Mock<FeedResponse<SleepDocument>>();
-            feedResponse.Setup(x => x.GetEnumerator()).Returns(new List<SleepDocument>().GetEnumerator());
+            var feedResponse = new Mock<FeedResponse<SleepStoredDocument>>();
+            feedResponse.Setup(x => x.GetEnumerator()).Returns(new List<SleepStoredDocument>().GetEnumerator());
 
-            var iterator = new Mock<FeedIterator<SleepDocument>>();
+            var iterator = new Mock<FeedIterator<SleepStoredDocument>>();
             iterator.SetupSequence(x => x.HasMoreResults).Returns(true).Returns(false);
             iterator.Setup(x => x.ReadNextAsync(default)).ReturnsAsync(feedResponse.Object);
 
-            _containerMock.Setup(x => x.GetItemQueryIterator<SleepDocument>(It.IsAny<QueryDefinition>(), It.IsAny<string>(), It.IsAny<QueryRequestOptions>())).Returns(iterator.Object);
+            _containerMock.Setup(x => x.GetItemQueryIterator<SleepStoredDocument>(It.IsAny<QueryDefinition>(), It.IsAny<string>(), It.IsAny<QueryRequestOptions>())).Returns(iterator.Object);
 
             // Act
             var result = await _repository.GetSleepSummaryByDate(date);
@@ -90,7 +91,7 @@ namespace Biotrackr.Sleep.Api.UnitTests.RepositoryTests
             // Arrange
             var date = "2022-01-01";
             var exceptionMessage = "Test Exception";
-            _containerMock.Setup(c => c.GetItemQueryIterator<SleepDocument>(It.IsAny<QueryDefinition>(), It.IsAny<string>(), It.IsAny<QueryRequestOptions>()))
+            _containerMock.Setup(c => c.GetItemQueryIterator<SleepStoredDocument>(It.IsAny<QueryDefinition>(), It.IsAny<string>(), It.IsAny<QueryRequestOptions>()))
                           .Throws(new Exception(exceptionMessage));
 
             // Act
@@ -105,8 +106,8 @@ namespace Biotrackr.Sleep.Api.UnitTests.RepositoryTests
         public async Task GetAllSleepDocuments_ShouldReturnPaginationResponse_WhenSleepDocumentsExist()
         {
             // Arrange
-            var fixture = new Fixture();
-            var sleepDocuments = fixture.CreateMany<SleepDocument>(5).ToList();
+            var fixture = StoredDocumentFixture.Create();
+            var sleepDocuments = fixture.CreateMany<SleepStoredDocument>(5).ToList();
             var totalCount = 10;
             var request = new PaginationRequest { PageNumber = 1, PageSize = 5 };
 
@@ -129,7 +130,7 @@ namespace Biotrackr.Sleep.Api.UnitTests.RepositoryTests
             // Arrange
             var request = new PaginationRequest { PageNumber = 1, PageSize = 5 };
 
-            SetupMocksForPagination(new List<SleepDocument>(), 0);
+            SetupMocksForPagination(new List<SleepStoredDocument>(), 0);
 
             // Act
             var result = await _repository.GetAllSleepDocuments(request);
@@ -167,7 +168,7 @@ namespace Biotrackr.Sleep.Api.UnitTests.RepositoryTests
                 .Returns(mockCountIterator.Object);
 
             // Setup main query to throw exception
-            _containerMock.Setup(c => c.GetItemQueryIterator<SleepDocument>(
+            _containerMock.Setup(c => c.GetItemQueryIterator<SleepStoredDocument>(
                 It.Is<QueryDefinition>(q => q.QueryText.Contains("ORDER BY")),
                 It.IsAny<string>(),
                 It.IsAny<QueryRequestOptions>()))
@@ -185,8 +186,8 @@ namespace Biotrackr.Sleep.Api.UnitTests.RepositoryTests
         public async Task GetAllSleepDocuments_ShouldReturnPaginatedResults_WhenPaginationIsRequested()
         {
             // Arrange
-            var fixture = new Fixture();
-            var sleepDocuments = fixture.CreateMany<SleepDocument>(10).ToList();
+            var fixture = StoredDocumentFixture.Create();
+            var sleepDocuments = fixture.CreateMany<SleepStoredDocument>(10).ToList();
             var totalCount = 100;
             var request = new PaginationRequest { PageNumber = 2, PageSize = 10 };
 
@@ -210,8 +211,8 @@ namespace Biotrackr.Sleep.Api.UnitTests.RepositoryTests
         public async Task GetAllSleepDocuments_ShouldReturnCorrectPaginationMetadata_WhenOnFirstPage()
         {
             // Arrange
-            var fixture = new Fixture();
-            var sleepDocuments = fixture.CreateMany<SleepDocument>(20).ToList();
+            var fixture = StoredDocumentFixture.Create();
+            var sleepDocuments = fixture.CreateMany<SleepStoredDocument>(20).ToList();
             var totalCount = 50;
             var request = new PaginationRequest { PageNumber = 1, PageSize = 20 };
 
@@ -233,8 +234,8 @@ namespace Biotrackr.Sleep.Api.UnitTests.RepositoryTests
         public async Task GetAllSleepDocuments_ShouldReturnCorrectPaginationMetadata_WhenOnLastPage()
         {
             // Arrange
-            var fixture = new Fixture();
-            var sleepDocuments = fixture.CreateMany<SleepDocument>(10).ToList();
+            var fixture = StoredDocumentFixture.Create();
+            var sleepDocuments = fixture.CreateMany<SleepStoredDocument>(10).ToList();
             var totalCount = 50;
             var request = new PaginationRequest { PageNumber = 3, PageSize = 20 };
 
@@ -256,8 +257,8 @@ namespace Biotrackr.Sleep.Api.UnitTests.RepositoryTests
         public async Task GetAllSleepDocuments_ShouldUseCorrectOffsetAndLimit_WhenPaginationIsRequested()
         {
             // Arrange
-            var fixture = new Fixture();
-            var sleepDocuments = fixture.CreateMany<SleepDocument>(15).ToList();
+            var fixture = StoredDocumentFixture.Create();
+            var sleepDocuments = fixture.CreateMany<SleepStoredDocument>(15).ToList();
             var request = new PaginationRequest { PageNumber = 3, PageSize = 15 };
 
             SetupMocksForPagination(sleepDocuments, 100);
@@ -266,7 +267,7 @@ namespace Biotrackr.Sleep.Api.UnitTests.RepositoryTests
             await _repository.GetAllSleepDocuments(request);
 
             // Assert
-            _containerMock.Verify(x => x.GetItemQueryIterator<SleepDocument>(
+            _containerMock.Verify(x => x.GetItemQueryIterator<SleepStoredDocument>(
                 It.Is<QueryDefinition>(q =>
                     q.QueryText.Contains("OFFSET @offset LIMIT @limit")),
                 It.IsAny<string>(),
@@ -279,7 +280,7 @@ namespace Biotrackr.Sleep.Api.UnitTests.RepositoryTests
             // Arrange
             var request = new PaginationRequest { PageNumber = 1, PageSize = 20 };
 
-            SetupMocksForPagination(new List<SleepDocument>(), 0);
+            SetupMocksForPagination(new List<SleepStoredDocument>(), 0);
 
             // Act
             var result = await _repository.GetAllSleepDocuments(request);
@@ -297,7 +298,7 @@ namespace Biotrackr.Sleep.Api.UnitTests.RepositoryTests
         {
             // Arrange
             var request = new PaginationRequest { PageNumber = 2, PageSize = 10 };
-            var sleepDocuments = new List<SleepDocument>();
+            var sleepDocuments = new List<SleepStoredDocument>();
             var totalCount = 25;
 
             SetupMocksForPagination(sleepDocuments, totalCount);
@@ -312,7 +313,7 @@ namespace Biotrackr.Sleep.Api.UnitTests.RepositoryTests
             result.TotalCount.Should().Be(totalCount);
 
             // Verify that the correct query was constructed with pagination parameters
-            _containerMock.Verify(c => c.GetItemQueryIterator<SleepDocument>(
+            _containerMock.Verify(c => c.GetItemQueryIterator<SleepStoredDocument>(
                 It.Is<QueryDefinition>(q => q.QueryText.Contains("OFFSET") && q.QueryText.Contains("LIMIT")),
                 It.IsAny<string>(),
                 It.IsAny<QueryRequestOptions>()), Times.Once);
@@ -323,8 +324,8 @@ namespace Biotrackr.Sleep.Api.UnitTests.RepositoryTests
         {
             // Arrange
             var request = new PaginationRequest { PageNumber = 1, PageSize = 5 };
-            var fixture = new Fixture();
-            var sleepDocuments = fixture.CreateMany<SleepDocument>(3).ToList();
+            var fixture = StoredDocumentFixture.Create();
+            var sleepDocuments = fixture.CreateMany<SleepStoredDocument>(3).ToList();
 
             // Setup count query to fail (GetTotalSleepCount will return 0)
             _containerMock.Setup(c => c.GetItemQueryIterator<int>(
@@ -334,17 +335,17 @@ namespace Biotrackr.Sleep.Api.UnitTests.RepositoryTests
                 .Throws(new Exception("Count query failed"));
 
             // Setup for sleep documents query to succeed
-            var feedResponse = new Mock<FeedResponse<SleepDocument>>();
+            var feedResponse = new Mock<FeedResponse<SleepStoredDocument>>();
             feedResponse.Setup(f => f.GetEnumerator()).Returns(sleepDocuments.GetEnumerator());
 
-            var mockFeedIterator = new Mock<FeedIterator<SleepDocument>>();
+            var mockFeedIterator = new Mock<FeedIterator<SleepStoredDocument>>();
             mockFeedIterator.SetupSequence(i => i.HasMoreResults)
                 .Returns(true)
                 .Returns(false);
             mockFeedIterator.Setup(i => i.ReadNextAsync(default))
                 .ReturnsAsync(feedResponse.Object);
 
-            _containerMock.Setup(c => c.GetItemQueryIterator<SleepDocument>(
+            _containerMock.Setup(c => c.GetItemQueryIterator<SleepStoredDocument>(
                 It.Is<QueryDefinition>(q => q.QueryText.Contains("ORDER BY")),
                 It.IsAny<string>(),
                 It.IsAny<QueryRequestOptions>()))
@@ -368,8 +369,8 @@ namespace Biotrackr.Sleep.Api.UnitTests.RepositoryTests
             var startDate = "2022-01-01";
             var endDate = "2022-01-31";
             var request = new PaginationRequest { PageNumber = 1, PageSize = 5 };
-            var fixture = new Fixture();
-            var sleepDocuments = fixture.CreateMany<SleepDocument>(5).ToList();
+            var fixture = StoredDocumentFixture.Create();
+            var sleepDocuments = fixture.CreateMany<SleepStoredDocument>(5).ToList();
             var totalCount = 10;
 
             SetupMocksForDateRangePagination(sleepDocuments, totalCount, startDate, endDate);
@@ -393,7 +394,7 @@ namespace Biotrackr.Sleep.Api.UnitTests.RepositoryTests
             var endDate = "2022-01-31";
             var request = new PaginationRequest { PageNumber = 1, PageSize = 5 };
 
-            SetupMocksForDateRangePagination(new List<SleepDocument>(), 0, startDate, endDate);
+            SetupMocksForDateRangePagination(new List<SleepStoredDocument>(), 0, startDate, endDate);
 
             // Act
             var result = await _repository.GetSleepDocumentsByDateRange(startDate, endDate, request);
@@ -435,7 +436,7 @@ namespace Biotrackr.Sleep.Api.UnitTests.RepositoryTests
                 .Returns(mockCountIterator.Object);
 
             // Setup main query to throw exception
-            _containerMock.Setup(c => c.GetItemQueryIterator<SleepDocument>(
+            _containerMock.Setup(c => c.GetItemQueryIterator<SleepStoredDocument>(
                 It.Is<QueryDefinition>(q => q.QueryText.Contains("c.date >= @startDate") &&
                                            q.QueryText.Contains("c.date <= @endDate") &&
                                            q.QueryText.Contains("ORDER BY") &&
@@ -460,8 +461,8 @@ namespace Biotrackr.Sleep.Api.UnitTests.RepositoryTests
             var startDate = "2022-01-01";
             var endDate = "2022-01-31";
             var request = new PaginationRequest { PageNumber = 2, PageSize = 10 };
-            var fixture = new Fixture();
-            var sleepDocuments = fixture.CreateMany<SleepDocument>(10).ToList();
+            var fixture = StoredDocumentFixture.Create();
+            var sleepDocuments = fixture.CreateMany<SleepStoredDocument>(10).ToList();
             var totalCount = 25;
 
             SetupMocksForDateRangePagination(sleepDocuments, totalCount, startDate, endDate);
@@ -487,8 +488,8 @@ namespace Biotrackr.Sleep.Api.UnitTests.RepositoryTests
             var startDate = "2022-01-01";
             var endDate = "2022-01-31";
             var request = new PaginationRequest { PageNumber = 1, PageSize = 10 };
-            var fixture = new Fixture();
-            var sleepDocuments = fixture.CreateMany<SleepDocument>(5).ToList();
+            var fixture = StoredDocumentFixture.Create();
+            var sleepDocuments = fixture.CreateMany<SleepStoredDocument>(5).ToList();
 
             SetupMocksForDateRangePagination(sleepDocuments, 5, startDate, endDate);
 
@@ -496,7 +497,7 @@ namespace Biotrackr.Sleep.Api.UnitTests.RepositoryTests
             await _repository.GetSleepDocumentsByDateRange(startDate, endDate, request);
 
             // Assert
-            _containerMock.Verify(x => x.GetItemQueryIterator<SleepDocument>(
+            _containerMock.Verify(x => x.GetItemQueryIterator<SleepStoredDocument>(
                 It.Is<QueryDefinition>(q =>
                     q.QueryText.Contains("c.date >= @startDate") &&
                     q.QueryText.Contains("c.date <= @endDate") &&
@@ -512,8 +513,8 @@ namespace Biotrackr.Sleep.Api.UnitTests.RepositoryTests
             var startDate = "2022-01-01";
             var endDate = "2022-01-31";
             var request = new PaginationRequest { PageNumber = 1, PageSize = 5 };
-            var fixture = new Fixture();
-            var sleepDocuments = fixture.CreateMany<SleepDocument>(3).ToList();
+            var fixture = StoredDocumentFixture.Create();
+            var sleepDocuments = fixture.CreateMany<SleepStoredDocument>(3).ToList();
 
             // Setup count query to fail
             _containerMock.Setup(c => c.GetItemQueryIterator<int>(
@@ -525,17 +526,17 @@ namespace Biotrackr.Sleep.Api.UnitTests.RepositoryTests
                 .Throws(new Exception("Count query failed"));
 
             // Setup for sleep documents query to succeed
-            var feedResponse = new Mock<FeedResponse<SleepDocument>>();
+            var feedResponse = new Mock<FeedResponse<SleepStoredDocument>>();
             feedResponse.Setup(f => f.GetEnumerator()).Returns(sleepDocuments.GetEnumerator());
 
-            var mockFeedIterator = new Mock<FeedIterator<SleepDocument>>();
+            var mockFeedIterator = new Mock<FeedIterator<SleepStoredDocument>>();
             mockFeedIterator.SetupSequence(i => i.HasMoreResults)
                 .Returns(true)
                 .Returns(false);
             mockFeedIterator.Setup(i => i.ReadNextAsync(default))
                 .ReturnsAsync(feedResponse.Object);
 
-            _containerMock.Setup(c => c.GetItemQueryIterator<SleepDocument>(
+            _containerMock.Setup(c => c.GetItemQueryIterator<SleepStoredDocument>(
                 It.Is<QueryDefinition>(q => q.QueryText.Contains("c.date >= @startDate") &&
                                            q.QueryText.Contains("c.date <= @endDate") &&
                                            q.QueryText.Contains("ORDER BY")),
@@ -561,8 +562,8 @@ namespace Biotrackr.Sleep.Api.UnitTests.RepositoryTests
             var startDate = "2022-01-01";
             var endDate = "2022-01-31";
             var request = new PaginationRequest { PageNumber = 1, PageSize = 20 };
-            var fixture = new Fixture();
-            var sleepDocuments = fixture.CreateMany<SleepDocument>(20).ToList();
+            var fixture = StoredDocumentFixture.Create();
+            var sleepDocuments = fixture.CreateMany<SleepStoredDocument>(20).ToList();
             var totalCount = 50;
 
             SetupMocksForDateRangePagination(sleepDocuments, totalCount, startDate, endDate);
@@ -586,8 +587,8 @@ namespace Biotrackr.Sleep.Api.UnitTests.RepositoryTests
             var startDate = "2022-01-01";
             var endDate = "2022-01-31";
             var request = new PaginationRequest { PageNumber = 3, PageSize = 20 };
-            var fixture = new Fixture();
-            var sleepDocuments = fixture.CreateMany<SleepDocument>(10).ToList();
+            var fixture = StoredDocumentFixture.Create();
+            var sleepDocuments = fixture.CreateMany<SleepStoredDocument>(10).ToList();
             var totalCount = 50;
 
             SetupMocksForDateRangePagination(sleepDocuments, totalCount, startDate, endDate);
@@ -612,7 +613,7 @@ namespace Biotrackr.Sleep.Api.UnitTests.RepositoryTests
             var endDate = "2022-01-31";
             var request = new PaginationRequest { PageNumber = 1, PageSize = 20 };
 
-            SetupMocksForDateRangePagination(new List<SleepDocument>(), 0, startDate, endDate);
+            SetupMocksForDateRangePagination(new List<SleepStoredDocument>(), 0, startDate, endDate);
 
             // Act
             var result = await _repository.GetSleepDocumentsByDateRange(startDate, endDate, request);
@@ -632,8 +633,8 @@ namespace Biotrackr.Sleep.Api.UnitTests.RepositoryTests
             var startDate = "2022-01-01";
             var endDate = "2022-01-31";
             var request = new PaginationRequest { PageNumber = 1, PageSize = 5 };
-            var fixture = new Fixture();
-            var sleepDocuments = fixture.CreateMany<SleepDocument>(3).ToList();
+            var fixture = StoredDocumentFixture.Create();
+            var sleepDocuments = fixture.CreateMany<SleepStoredDocument>(3).ToList();
             var totalCount = 10;
 
             SetupMocksForDateRangePagination(sleepDocuments, totalCount, startDate, endDate);
@@ -646,7 +647,7 @@ namespace Biotrackr.Sleep.Api.UnitTests.RepositoryTests
             _loggerMock.VerifyLog(logger => logger.LogInformation($"Fetched {sleepDocuments.Count} sleep documents out of {totalCount} total records."));
         }
 
-        private void SetupMocksForPagination(List<SleepDocument> sleepDocuments, int totalCount)
+        private void SetupMocksForPagination(List<SleepStoredDocument> sleepDocuments, int totalCount)
         {
             // Mock the count query
             var countFeedResponse = new Mock<FeedResponse<int>>();
@@ -657,10 +658,10 @@ namespace Biotrackr.Sleep.Api.UnitTests.RepositoryTests
             countIterator.Setup(x => x.ReadNextAsync(default)).ReturnsAsync(countFeedResponse.Object);
 
             // Mock the data query
-            var dataFeedResponse = new Mock<FeedResponse<SleepDocument>>();
+            var dataFeedResponse = new Mock<FeedResponse<SleepStoredDocument>>();
             dataFeedResponse.Setup(x => x.GetEnumerator()).Returns(sleepDocuments.GetEnumerator());
 
-            var dataIterator = new Mock<FeedIterator<SleepDocument>>();
+            var dataIterator = new Mock<FeedIterator<SleepStoredDocument>>();
             dataIterator.SetupSequence(x => x.HasMoreResults).Returns(true).Returns(false);
             dataIterator.Setup(x => x.ReadNextAsync(default)).ReturnsAsync(dataFeedResponse.Object);
 
@@ -670,14 +671,14 @@ namespace Biotrackr.Sleep.Api.UnitTests.RepositoryTests
                 It.IsAny<QueryRequestOptions>()))
                 .Returns(countIterator.Object);
 
-            _containerMock.Setup(x => x.GetItemQueryIterator<SleepDocument>(
+            _containerMock.Setup(x => x.GetItemQueryIterator<SleepStoredDocument>(
                 It.Is<QueryDefinition>(q => q.QueryText.Contains("OFFSET") && q.QueryText.Contains("LIMIT")),
                 It.IsAny<string>(),
                 It.IsAny<QueryRequestOptions>()))
                 .Returns(dataIterator.Object);
         }
 
-        private void SetupMocksForDateRangePagination(List<SleepDocument> sleepDocuments, int totalCount, string startDate, string endDate)
+        private void SetupMocksForDateRangePagination(List<SleepStoredDocument> sleepDocuments, int totalCount, string startDate, string endDate)
         {
             // Mock the count query for date range
             var countFeedResponse = new Mock<FeedResponse<int>>();
@@ -688,10 +689,10 @@ namespace Biotrackr.Sleep.Api.UnitTests.RepositoryTests
             countIterator.Setup(x => x.ReadNextAsync(default)).ReturnsAsync(countFeedResponse.Object);
 
             // Mock the data query for date range
-            var dataFeedResponse = new Mock<FeedResponse<SleepDocument>>();
+            var dataFeedResponse = new Mock<FeedResponse<SleepStoredDocument>>();
             dataFeedResponse.Setup(x => x.GetEnumerator()).Returns(sleepDocuments.GetEnumerator());
 
-            var dataIterator = new Mock<FeedIterator<SleepDocument>>();
+            var dataIterator = new Mock<FeedIterator<SleepStoredDocument>>();
             dataIterator.SetupSequence(x => x.HasMoreResults).Returns(true).Returns(false);
             dataIterator.Setup(x => x.ReadNextAsync(default)).ReturnsAsync(dataFeedResponse.Object);
 
@@ -703,7 +704,7 @@ namespace Biotrackr.Sleep.Api.UnitTests.RepositoryTests
                 It.IsAny<QueryRequestOptions>()))
                 .Returns(countIterator.Object);
 
-            _containerMock.Setup(x => x.GetItemQueryIterator<SleepDocument>(
+            _containerMock.Setup(x => x.GetItemQueryIterator<SleepStoredDocument>(
                 It.Is<QueryDefinition>(q => q.QueryText.Contains("c.date >= @startDate") &&
                                            q.QueryText.Contains("c.date <= @endDate") &&
                                            q.QueryText.Contains("OFFSET") &&

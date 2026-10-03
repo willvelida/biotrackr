@@ -1,11 +1,11 @@
-﻿using Biotrackr.Sleep.Api.Models;
+using Biotrackr.Sleep.Api.Models;
 
 namespace Biotrackr.Sleep.Api.Repositories.Interfaces
 {
     public interface ICosmosRepository
     {
-        Task<SleepDocument> GetSleepSummaryByDate(string date);
-        Task<PaginationResponse<SleepDocument>> GetAllSleepDocuments(PaginationRequest request);
-        Task<PaginationResponse<SleepDocument>> GetSleepDocumentsByDateRange(string startDate, string endDate, PaginationRequest request);
+        Task<SleepStoredDocument> GetSleepSummaryByDate(string date);
+        Task<PaginationResponse<SleepStoredDocument>> GetAllSleepDocuments(PaginationRequest request);
+        Task<PaginationResponse<SleepStoredDocument>> GetSleepDocumentsByDateRange(string startDate, string endDate, PaginationRequest request);
     }
 }
