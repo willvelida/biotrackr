@@ -5,9 +5,11 @@ using Biotrackr.Activity.Api.Models.FitbitEntities;
 using FluentAssertions;
 using Microsoft.Azure.Cosmos;
 using Microsoft.Extensions.DependencyInjection;
+using Newtonsoft.Json.Linq;
 using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
+using System.Text.Json.Nodes;
 using Xunit;
 using FitbitActivity = Biotrackr.Activity.Api.Models.FitbitEntities.Activity;
 
@@ -96,7 +98,7 @@ public class ActivityEndpointsTests : IAsyncLifetime
     {
         var testDocuments = new[]
         {
-            new ActivityDocument
+            new ActivityStoredDocument
             {
                 Id = Guid.NewGuid().ToString(),
                 DocumentType = "Activity",
@@ -169,7 +171,7 @@ public class ActivityEndpointsTests : IAsyncLifetime
                     }
                 }
             },
-            new ActivityDocument
+            new ActivityStoredDocument
             {
                 Id = Guid.NewGuid().ToString(),
                 DocumentType = "Activity",
@@ -242,7 +244,7 @@ public class ActivityEndpointsTests : IAsyncLifetime
                     }
                 }
             },
-            new ActivityDocument
+            new ActivityStoredDocument
             {
                 Id = Guid.NewGuid().ToString(),
                 DocumentType = "Activity",
@@ -322,7 +324,67 @@ public class ActivityEndpointsTests : IAsyncLifetime
             await _container.CreateItemAsync(doc, new PartitionKey(doc.DocumentType));
             _testDocumentIds.Add(doc.Id);
         }
+
+        // Version 2 (Google) document in the C1 storage shape, inside the seeded January range.
+        var version2 = JObject.Parse(Version2DocumentJson);
+        await _container.CreateItemAsync(version2, new PartitionKey("Activity"));
+        _testDocumentIds.Add(Version2Id);
     }
+
+    private const string Version2Date = "2024-01-20";
+    private const string Version2Id = "e2e00000-0000-4000-8000-000000000002";
+
+    // Synthetic values only; shape follows the masked Google Health API v4 responses (plan contract C1).
+    private const string Version2DocumentJson = """
+        {
+          "id": "e2e00000-0000-4000-8000-000000000002",
+          "date": "2024-01-20",
+          "documentType": "Activity",
+          "provider": "Google",
+          "schemaVersion": 2,
+          "google": {
+            "steps": { "rollupDataPoints": [ { "steps": { "countSum": "8432" } } ] },
+            "totalCalories": { "rollupDataPoints": [ { "totalCalories": { "kcalSum": 2456.7 } } ] },
+            "activeEnergyBurned": { "rollupDataPoints": [ { "activeEnergyBurned": { "kcalSum": 812.4 } } ] },
+            "distance": { "rollupDataPoints": [ { "distance": { "millimetersSum": "6215000" } } ] },
+            "floors": { "rollupDataPoints": [ { "floors": { "countSum": "12" } } ] },
+            "altitude": { "rollupDataPoints": [ { "altitude": { "gainMillimetersSum": "36576" } } ] },
+            "activeMinutes": { "rollupDataPoints": [ { "activeMinutes": { "activeMinutesRollupByActivityLevel": [
+              { "activityLevel": "LIGHT", "activeMinutesSum": "184" },
+              { "activityLevel": "MODERATE", "activeMinutesSum": "22" },
+              { "activityLevel": "VIGOROUS", "activeMinutesSum": "17" } ] } } ] },
+            "sedentaryPeriod": { "rollupDataPoints": [ { "sedentaryPeriod": { "durationSum": "41490s" } } ] },
+            "activeZoneMinutes": { "rollupDataPoints": [ { "activeZoneMinutes": {
+              "sumInCardioHeartZone": "18", "sumInPeakHeartZone": "4", "sumInFatBurnHeartZone": "14" } } ] },
+            "timeInHeartRateZone": { "rollupDataPoints": [ { "timeInHeartRateZone": { "timeInHeartRateZones": [
+              { "heartRateZone": "LIGHT", "duration": "5430s" },
+              { "heartRateZone": "MODERATE", "duration": "1320s" },
+              { "heartRateZone": "VIGOROUS", "duration": "600s" } ] } } ] },
+            "caloriesInHeartRateZone": { "rollupDataPoints": [ { "caloriesInHeartRateZone": { "caloriesInHeartRateZones": [
+              { "heartRateZone": "LIGHT", "kcal": 410.5 },
+              { "heartRateZone": "MODERATE", "kcal": 150.25 },
+              { "heartRateZone": "VIGOROUS", "kcal": 98 } ] } } ] },
+            "dailyRestingHeartRate": { "dataPoints": [ {
+              "dailyRestingHeartRate": { "date": { "year": 2024, "month": 1, "day": 20 }, "beatsPerMinute": "58" } } ] },
+            "dailyHeartRateZones": { "dataPoints": [ {
+              "dailyHeartRateZones": { "date": { "year": 2024, "month": 1, "day": 20 }, "heartRateZones": [
+                { "heartRateZoneType": "LIGHT", "minBeatsPerMinute": "96", "maxBeatsPerMinute": "115" },
+                { "heartRateZoneType": "MODERATE", "minBeatsPerMinute": "116", "maxBeatsPerMinute": "134" },
+                { "heartRateZoneType": "VIGOROUS", "minBeatsPerMinute": "135", "maxBeatsPerMinute": "159" },
+                { "heartRateZoneType": "PEAK", "minBeatsPerMinute": "160", "maxBeatsPerMinute": "220" } ] } } ] },
+            "exercise": { "dataPoints": [ {
+              "exercise": {
+                "interval": { "startTime": "2024-01-19T21:30:00Z", "startUtcOffset": "39600s",
+                              "endTime": "2024-01-19T22:15:00Z", "endUtcOffset": "39600s" },
+                "exerciseType": "WALKING",
+                "metricsSummary": { "caloriesKcal": 215.6, "distanceMillimeters": 3820000, "steps": "5120",
+                  "averageHeartRateBeatsPerMinute": "112", "activeZoneMinutes": "9" },
+                "displayName": "Morning Walk",
+                "activeDuration": "2580s",
+                "updateTime": "2024-01-19T22:20:00Z" } } ] }
+          }
+        }
+        """;
 
     /// <summary>
     /// T087: Test GET /activity endpoint with valid date range returns 200 OK
@@ -341,10 +403,10 @@ public class ActivityEndpointsTests : IAsyncLifetime
         response.StatusCode.Should().Be(HttpStatusCode.OK);
         var result = await response.Content.ReadFromJsonAsync<PaginationResponse<ActivityDocument>>();
         result.Should().NotBeNull();
-        result!.Items.Should().HaveCount(3, "we seeded 3 test documents");
+        result!.Items.Should().HaveCount(4, "we seeded 3 version 1 documents and 1 version 2 document");
         result.PageNumber.Should().Be(1);
         result.PageSize.Should().Be(10);
-        result.TotalCount.Should().Be(3);
+        result.TotalCount.Should().Be(4);
     }
 
     /// <summary>
@@ -449,7 +511,7 @@ public class ActivityEndpointsTests : IAsyncLifetime
         response.StatusCode.Should().Be(HttpStatusCode.OK);
         var result = await response.Content.ReadFromJsonAsync<PaginationResponse<ActivityDocument>>();
         result.Should().NotBeNull();
-        result!.Items.Should().HaveCount(3, "all seeded documents are in range");
+        result!.Items.Should().HaveCount(4, "all seeded documents, both schema versions, are in range");
         result.Items.Should().AllSatisfy(item =>
         {
             (string.Compare(item.Date, startDate, StringComparison.Ordinal) >= 0).Should().BeTrue();
@@ -507,7 +569,7 @@ public class ActivityEndpointsTests : IAsyncLifetime
             .WithParameter("@date", testDate)
             .WithParameter("@type", "Activity");
 
-        using var iterator = _container.GetItemQueryIterator<ActivityDocument>(query);
+        using var iterator = _container.GetItemQueryIterator<ActivityStoredDocument>(query);
         var dbResponse = await iterator.ReadNextAsync();
         var dbResult = dbResponse.FirstOrDefault();
 
@@ -516,7 +578,7 @@ public class ActivityEndpointsTests : IAsyncLifetime
         dbResult.Should().NotBeNull();
         apiResult!.Id.Should().Be(dbResult!.Id);
         apiResult.Date.Should().Be(dbResult.Date);
-        apiResult.Activity.activities.Count.Should().Be(dbResult.Activity.activities.Count);
+        apiResult.Activity.activities.Count.Should().Be(dbResult.Activity!.activities.Count);
     }
 
     /// <summary>
@@ -527,7 +589,7 @@ public class ActivityEndpointsTests : IAsyncLifetime
     {
         // Arrange
         var testId = Guid.NewGuid().ToString();
-        var testDoc = new ActivityDocument
+        var testDoc = new ActivityStoredDocument
         {
             Id = testId,
             DocumentType = "Activity",
@@ -549,7 +611,7 @@ public class ActivityEndpointsTests : IAsyncLifetime
         await _container.DeleteItemAsync<ActivityDocument>(testId, new PartitionKey("Activity"));
 
         // Assert - Document should not exist
-        Func<Task> act = async () => await _container.ReadItemAsync<ActivityDocument>(
+        Func<Task> act = async () => await _container.ReadItemAsync<ActivityStoredDocument>(
             testId, 
             new PartitionKey("Activity"));
         
@@ -583,9 +645,11 @@ public class ActivityEndpointsTests : IAsyncLifetime
             item.Date.Should().NotBeNullOrWhiteSpace();
             item.Activity.Should().NotBeNull();
             item.Activity.activities.Should().NotBeNull();
-            item.Activity.goals.Should().NotBeNull();
             item.Activity.summary.Should().NotBeNull();
         });
+        // Contract C2: goals exist for Fitbit-era (version 1) days only.
+        result.Items.Where(i => i.SchemaVersion == 1).Should().AllSatisfy(item => item.Activity.goals.Should().NotBeNull());
+        result.Items.Where(i => i.SchemaVersion == 2).Should().ContainSingle().Which.Activity.goals.Should().BeNull();
     }
 
     /// <summary>
@@ -608,5 +672,89 @@ public class ActivityEndpointsTests : IAsyncLifetime
         response.StatusCode.Should().Be(HttpStatusCode.OK);
         stopwatch.ElapsedMilliseconds.Should().BeLessThan(5000, 
             "API should respond within 5 seconds for small datasets");
+    }
+
+    [Fact]
+    public async Task GetActivityByDate_Should_Return_Fitbit_Version1_When_Document_Has_No_SchemaVersion()
+    {
+        // Arrange
+        var client = _fixture.Client;
+
+        // Act
+        var response = await client.GetAsync("/2024-01-01");
+
+        // Assert
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        var json = JsonNode.Parse(await response.Content.ReadAsStringAsync())!;
+        json["provider"]!.GetValue<string>().Should().Be("Fitbit", "AGENT FIX: version 1 documents report provider Fitbit (AC 17)");
+        json["schemaVersion"]!.GetValue<int>().Should().Be(1);
+        json["activityEnrichment"].Should().BeNull("AGENT FIX: enrichment is null for version 1 (AC 27)");
+        json["activity"]!["summary"]!["steps"]!.GetValue<int>().Should().Be(6000);
+        json["activity"]!["goals"]!["steps"]!.GetValue<int>().Should().Be(10000);
+    }
+
+    [Fact]
+    public async Task GetActivityByDate_Should_Return_Translated_Google_Document_When_Version2()
+    {
+        // Arrange
+        var client = _fixture.Client;
+
+        // Act
+        var response = await client.GetAsync($"/{Version2Date}");
+
+        // Assert
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        var result = await response.Content.ReadFromJsonAsync<ActivityDocument>();
+        result!.Provider.Should().Be("Google");
+        result.SchemaVersion.Should().Be(2);
+        result.Activity.goals.Should().BeNull();
+        result.Activity.summary.Should().BeEquivalentTo(new
+        {
+            steps = 8432,
+            caloriesOut = 2457,
+            activityCalories = 812,
+            caloriesBMR = 1645,
+            restingHeartRate = 58,
+            sedentaryMinutes = 691
+        }, "AGENT FIX: version 2 summary is mapped from the Google payload per contract C2 (AC 20, AC 22)");
+        result.Activity.summary.heartRateZones.Select(z => z.name).Should().Equal("Light", "Moderate", "Vigorous", "Peak");
+        result.ActivityEnrichment!.ActiveZoneMinutes!.Total.Should().Be(36);
+        result.ActivityEnrichment.Workouts.Should().ContainSingle().Which.StartTime.Should().Be("2024-01-20T08:30:00",
+            "AGENT FIX: workouts are exposed for version 2 days (AC 26)");
+    }
+
+    [Fact]
+    public async Task GetActivityByDate_Should_Not_Expose_Raw_Google_Payload_When_Version2()
+    {
+        // Arrange
+        var client = _fixture.Client;
+
+        // Act
+        var response = await client.GetAsync($"/{Version2Date}");
+
+        // Assert
+        var json = JsonNode.Parse(await response.Content.ReadAsStringAsync())!.AsObject();
+        json.Select(p => p.Key).Should().BeEquivalentTo(
+            ["id", "activity", "date", "documentType", "provider", "schemaVersion", "activityEnrichment"],
+            "AGENT FIX: handlers must translate the stored document; never return the 'google' JObject (D-03)");
+    }
+
+    [Fact]
+    public async Task GetActivitiesByDateRange_Should_Return_Both_Versions_When_Range_Spans_Cutover()
+    {
+        // Arrange
+        var client = _fixture.Client;
+
+        // Act
+        var response = await client.GetAsync("/range/2024-01-15/2024-01-31?pageNumber=1&pageSize=10");
+
+        // Assert
+        response.StatusCode.Should().Be(HttpStatusCode.OK, "AGENT FIX: a range containing v1 and v2 documents must not error (AC 18)");
+        var result = await response.Content.ReadFromJsonAsync<PaginationResponse<ActivityDocument>>();
+        result!.Items.Select(i => (i.Date, i.Provider, i.SchemaVersion)).Should().Equal(
+            ("2024-01-15", "Fitbit", 1),
+            ("2024-01-20", "Google", 2),
+            ("2024-01-31", "Fitbit", 1));
+        result.TotalCount.Should().Be(3);
     }
 }
