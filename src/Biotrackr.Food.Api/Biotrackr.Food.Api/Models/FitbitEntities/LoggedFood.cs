@@ -17,7 +17,7 @@ public class LoggedFood
     public int Calories { get; set; }
 
     [JsonPropertyName("foodId")]
-    public int FoodId { get; set; }
+    public int? FoodId { get; set; } = 0;
 
     [JsonPropertyName("locale")]
     public string Locale { get; set; } = string.Empty;
@@ -32,5 +32,5 @@ public class LoggedFood
     public Unit Unit { get; set; } = new();
 
     [JsonPropertyName("units")]
-    public List<int> Units { get; set; } = new();
+    public List<int>? Units { get; set; } = new();
 }

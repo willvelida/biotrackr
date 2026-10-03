@@ -8,7 +8,7 @@ public class FoodResponse
     public List<Food> Foods { get; set; } = new();
 
     [JsonPropertyName("goals")]
-    public Goals Goals { get; set; } = new();
+    public Goals? Goals { get; set; } = new();
 
     [JsonPropertyName("summary")]
     public Summary Summary { get; set; } = new();

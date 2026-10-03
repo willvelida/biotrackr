@@ -5,7 +5,7 @@ namespace Biotrackr.Food.Api.Models.FitbitEntities;
 public class Unit
 {
     [JsonPropertyName("id")]
-    public int Id { get; set; }
+    public int? Id { get; set; } = 0;
 
     [JsonPropertyName("name")]
     public string Name { get; set; } = string.Empty;
