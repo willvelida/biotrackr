@@ -19,7 +19,7 @@ namespace Biotrackr.Activity.Api.Repositories
             _logger = logger;
         }
 
-        public async Task<PaginationResponse<ActivityDocument>> GetActivitiesByDateRange(string startDate, string endDate, PaginationRequest paginationRequest)
+        public async Task<PaginationResponse<ActivityStoredDocument>> GetActivitiesByDateRange(string startDate, string endDate, PaginationRequest paginationRequest)
         {
             try
             {
@@ -41,8 +41,8 @@ namespace Biotrackr.Activity.Api.Repositories
                     PartitionKey = new PartitionKey("Activity")
                 };
 
-                var iterator = _container.GetItemQueryIterator<ActivityDocument>(queryDefinition, requestOptions: queryRequestOptions);
-                var results = new List<ActivityDocument>();
+                var iterator = _container.GetItemQueryIterator<ActivityStoredDocument>(queryDefinition, requestOptions: queryRequestOptions);
+                var results = new List<ActivityStoredDocument>();
 
                 while (iterator.HasMoreResults)
                 {
@@ -52,7 +52,7 @@ namespace Biotrackr.Activity.Api.Repositories
 
                 _logger.LogInformation($"Found {results.Count} activity documents in date range (page {paginationRequest.PageNumber})");
 
-                return new PaginationResponse<ActivityDocument>
+                return new PaginationResponse<ActivityStoredDocument>
                 {
                     Items = results,
                     TotalCount = totalCount,
@@ -67,7 +67,7 @@ namespace Biotrackr.Activity.Api.Repositories
             }
         }
 
-        public async Task<ActivityDocument> GetActivitySummaryByDate(string date)
+        public async Task<ActivityStoredDocument> GetActivitySummaryByDate(string date)
         {
             try
             {
@@ -79,8 +79,8 @@ namespace Biotrackr.Activity.Api.Repositories
                     PartitionKey = new PartitionKey("Activity")
                 };
 
-                var iterator = _container.GetItemQueryIterator<ActivityDocument>(queryDefinition, null, queryRequestOptions);
-                var results = new List<ActivityDocument>();
+                var iterator = _container.GetItemQueryIterator<ActivityStoredDocument>(queryDefinition, null, queryRequestOptions);
+                var results = new List<ActivityStoredDocument>();
 
                 while (iterator.HasMoreResults)
                 {
@@ -97,7 +97,7 @@ namespace Biotrackr.Activity.Api.Repositories
             }
         }
 
-        public async Task<PaginationResponse<ActivityDocument>> GetAllActivitySummaries(PaginationRequest request)
+        public async Task<PaginationResponse<ActivityStoredDocument>> GetAllActivitySummaries(PaginationRequest request)
         {
             try
             {
@@ -114,8 +114,8 @@ namespace Biotrackr.Activity.Api.Repositories
                     PartitionKey = new PartitionKey("Activity")
                 };
 
-                var iterator = _container.GetItemQueryIterator<ActivityDocument>(queryDefinition, null, queryRequestOptions);
-                var results = new List<ActivityDocument>();
+                var iterator = _container.GetItemQueryIterator<ActivityStoredDocument>(queryDefinition, null, queryRequestOptions);
+                var results = new List<ActivityStoredDocument>();
 
                 while (iterator.HasMoreResults)
                 {
@@ -125,7 +125,7 @@ namespace Biotrackr.Activity.Api.Repositories
 
                 _logger.LogInformation($"Retrieved {results.Count} activity summaries for page: {request.PageNumber}");
 
-                return new PaginationResponse<ActivityDocument>
+                return new PaginationResponse<ActivityStoredDocument>
                 {
                     Items = results,
                     PageNumber = request.PageNumber,

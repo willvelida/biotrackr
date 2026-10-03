@@ -1,5 +1,6 @@
 ﻿using Biotrackr.Activity.Api.Models;
 using Biotrackr.Activity.Api.Repositories.Interfaces;
+using Biotrackr.Activity.Api.Services.Interfaces;
 using Microsoft.AspNetCore.Http.HttpResults;
 
 namespace Biotrackr.Activity.Api.EndpointHandlers
@@ -8,6 +9,7 @@ namespace Biotrackr.Activity.Api.EndpointHandlers
     {
         public static async Task<Results<BadRequest, NotFound, Ok<ActivityDocument>>> GetActivityByDate(
             ICosmosRepository cosmosRepository,
+            IActivityDocumentTranslator translator,
             string date)
         {
             // Validate date format
@@ -21,11 +23,12 @@ namespace Biotrackr.Activity.Api.EndpointHandlers
             {
                 return TypedResults.NotFound();
             }
-            return TypedResults.Ok(activity);
+            return TypedResults.Ok(translator.Translate(activity));
         }
 
         public static async Task<Ok<PaginationResponse<ActivityDocument>>> GetAllActivities(
             ICosmosRepository cosmosRepository,
+            IActivityDocumentTranslator translator,
             int? pageNumber = null,
             int? pageSize = null)
         {
@@ -36,11 +39,12 @@ namespace Biotrackr.Activity.Api.EndpointHandlers
             };
 
             var activities = await cosmosRepository.GetAllActivitySummaries(paginationRequest);
-            return TypedResults.Ok(activities);
+            return TypedResults.Ok(Translate(activities, translator));
         }
 
         public static async Task<Results<BadRequest, Ok<PaginationResponse<ActivityDocument>>>> GetActivitiesByDateRange(
             ICosmosRepository cosmosRepository,
+            IActivityDocumentTranslator translator,
             string startDate,
             string endDate,
             int? pageNumber = null,
@@ -66,7 +70,28 @@ namespace Biotrackr.Activity.Api.EndpointHandlers
             };
 
             var activityDocuments = await cosmosRepository.GetActivitiesByDateRange(startDate, endDate, paginationRequest);
-            return TypedResults.Ok(activityDocuments);
+            return TypedResults.Ok(Translate(activityDocuments, translator));
+        }
+
+        // Stored documents hold Newtonsoft JObjects, so every page is translated before it reaches System.Text.Json.
+        private static PaginationResponse<ActivityDocument> Translate(
+            PaginationResponse<ActivityStoredDocument> storedPage,
+            IActivityDocumentTranslator translator)
+        {
+            // O(n) over one page (n <= 100)
+            var items = new List<ActivityDocument>(storedPage.Items.Count);
+            foreach (var storedDocument in storedPage.Items)
+            {
+                items.Add(translator.Translate(storedDocument));
+            }
+
+            return new PaginationResponse<ActivityDocument>
+            {
+                Items = items,
+                TotalCount = storedPage.TotalCount,
+                PageNumber = storedPage.PageNumber,
+                PageSize = storedPage.PageSize
+            };
         }
     }
 }
