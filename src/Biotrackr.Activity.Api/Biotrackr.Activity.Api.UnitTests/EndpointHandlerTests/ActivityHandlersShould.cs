@@ -3,6 +3,7 @@ using Biotrackr.Activity.Api.EndpointHandlers;
 using Biotrackr.Activity.Api.Models;
 using Biotrackr.Activity.Api.Repositories.Interfaces;
 using Biotrackr.Activity.Api.Services;
+using static Biotrackr.Activity.Api.UnitTests.TestData.ActivityDocumentSamples;
 using FluentAssertions;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Moq;
@@ -336,6 +337,93 @@ namespace Biotrackr.Activity.Api.UnitTests.EndpointHandlerTests
             result1.Result.Should().BeOfType<BadRequest>();
             result2.Result.Should().BeOfType<BadRequest>();
             _cosmosRepositoryMock.Verify(x => x.GetActivitiesByDateRange(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<PaginationRequest>()), Times.Never);
+        }
+
+        [Fact]
+        public async Task GetActivityByDate_ShouldReturnFitbitVersion1_WhenStoredDocumentHasNoSchemaVersion()
+        {
+            // Arrange
+            var stored = DeserializeLikeCosmos<ActivityStoredDocument>(Version1Document);
+            _cosmosRepositoryMock.Setup(x => x.GetActivitySummaryByDate("2024-03-05")).ReturnsAsync(stored);
+
+            // Act
+            var result = await ActivityHandlers.GetActivityByDate(_cosmosRepositoryMock.Object, _translator, "2024-03-05");
+
+            // Assert
+            var document = result.Result.Should().BeOfType<Ok<ActivityDocument>>().Subject.Value!;
+            document.Provider.Should().Be("Fitbit", "AGENT FIX: version 1 documents are returned with provider Fitbit (AC 17)");
+            document.SchemaVersion.Should().Be(1);
+            document.ActivityEnrichment.Should().BeNull();
+            document.Activity.Should().BeSameAs(stored.Activity);
+        }
+
+        [Fact]
+        public async Task GetActivityByDate_ShouldReturnTranslatedGoogleDocument_WhenStoredDocumentIsVersion2()
+        {
+            // Arrange
+            var stored = DeserializeLikeCosmos<ActivityStoredDocument>(Version2Document);
+            _cosmosRepositoryMock.Setup(x => x.GetActivitySummaryByDate(Version2Date)).ReturnsAsync(stored);
+
+            // Act
+            var result = await ActivityHandlers.GetActivityByDate(_cosmosRepositoryMock.Object, _translator, Version2Date);
+
+            // Assert
+            var document = result.Result.Should().BeOfType<Ok<ActivityDocument>>().Subject.Value!;
+            document.Provider.Should().Be("Google");
+            document.SchemaVersion.Should().Be(2);
+            document.Activity.summary.steps.Should().Be(8432);
+            document.ActivityEnrichment!.Workouts.Should().ContainSingle(
+                "AGENT FIX: handlers must return the translated v2 document, never the stored one (D-03)");
+        }
+
+        [Fact]
+        public async Task GetActivitiesByDateRange_ShouldTranslateEveryItem_WhenRangeContainsBothVersions()
+        {
+            // Arrange
+            var storedPage = new PaginationResponse<ActivityStoredDocument>
+            {
+                Items =
+                [
+                    DeserializeLikeCosmos<ActivityStoredDocument>(Version1Document),
+                    DeserializeLikeCosmos<ActivityStoredDocument>(Version2Document),
+                    DeserializeLikeCosmos<ActivityStoredDocument>(Version2EmptyDocument)
+                ],
+                PageNumber = 1,
+                PageSize = 3,
+                TotalCount = 7
+            };
+            _cosmosRepositoryMock.Setup(x => x.GetActivitiesByDateRange("2024-03-01", "2026-10-31", It.IsAny<PaginationRequest>()))
+                .ReturnsAsync(storedPage);
+
+            // Act
+            var result = await ActivityHandlers.GetActivitiesByDateRange(_cosmosRepositoryMock.Object, _translator, "2024-03-01", "2026-10-31", 1, 3);
+
+            // Assert
+            var page = result.Result.Should().BeOfType<Ok<PaginationResponse<ActivityDocument>>>().Subject.Value!;
+            page.Items.Select(i => (i.Provider, i.SchemaVersion)).Should().Equal(
+                [("Fitbit", 1), ("Google", 2), ("Google", 2)],
+                "AGENT FIX: a range spanning both versions returns every document in one page (AC 18)");
+            page.Should().BeEquivalentTo(new { TotalCount = 7, PageNumber = 1, PageSize = 3, TotalPages = 3, HasNextPage = true, HasPreviousPage = false });
+        }
+
+        [Fact]
+        public async Task GetAllActivities_ShouldTranslateEveryItem_WhenPageContainsVersion2()
+        {
+            // Arrange
+            var storedPage = new PaginationResponse<ActivityStoredDocument>
+            {
+                Items = [DeserializeLikeCosmos<ActivityStoredDocument>(Version2Document)],
+                PageNumber = 1,
+                PageSize = 20,
+                TotalCount = 1
+            };
+            _cosmosRepositoryMock.Setup(x => x.GetAllActivitySummaries(It.IsAny<PaginationRequest>())).ReturnsAsync(storedPage);
+
+            // Act
+            var result = await ActivityHandlers.GetAllActivities(_cosmosRepositoryMock.Object, _translator);
+
+            // Assert
+            result.Value!.Items.Should().ContainSingle().Which.Activity.goals.Should().BeNull();
         }
     }
 }

@@ -7,6 +7,7 @@ using Microsoft.Azure.Cosmos;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Moq;
+using static Biotrackr.Activity.Api.UnitTests.TestData.ActivityDocumentSamples;
 
 namespace Biotrackr.Activity.Api.UnitTests.RepositoryTests
 {
@@ -637,6 +638,24 @@ namespace Biotrackr.Activity.Api.UnitTests.RepositoryTests
             // Assert - GetActivityCountForDateRange catches exception and returns 0
             result.TotalCount.Should().Be(0);
             _loggerMock.VerifyLog(logger => logger.LogError($"Exception thrown in GetActivityCountForDateRange: {exceptionMessage}"));
+        }
+
+        [Fact]
+        public async Task GetActivitiesByDateRange_ShouldReturnBothSchemaVersions_WhenRangeSpansCutover()
+        {
+            // Arrange
+            var version1 = DeserializeLikeCosmos<ActivityStoredDocument>(Version1Document);
+            var version2 = DeserializeLikeCosmos<ActivityStoredDocument>(Version2Document);
+            SetupMocksForDateRange([version1, version2], 2);
+            var request = new PaginationRequest { PageNumber = 1, PageSize = 10 };
+
+            // Act
+            var result = await _repository.GetActivitiesByDateRange("2024-03-05", "2026-10-20", request);
+
+            // Assert
+            result.Items.Select(d => d.SchemaVersion).Should().Equal(null, 2);
+            result.Items[1].Google.Should().BeSameAs(version2.Google,
+                "AGENT FIX: the repository must hand the raw Google payload to the translator untouched");
         }
 
         private void SetupMocksForDateRange(List<ActivityStoredDocument> activityDocuments, int totalCount)
