@@ -138,7 +138,23 @@ public static class FoodDocumentSamples
                       "foodMeasurementUnitDisplayName": "serving",
                       "foodMeasurementUnitDisplayNamePlural": "servings",
                       "multiplier": 1
-                    }
+                    },
+                    "servings": [
+                      {
+                        "amount": 1,
+                        "foodMeasurementUnit": "users/me/dataTypes/food-measurement-unit/dataPoints/147",
+                        "foodMeasurementUnitDisplayName": "gram",
+                        "foodMeasurementUnitDisplayNamePlural": "grams",
+                        "multiplier": 0.01
+                      },
+                      {
+                        "amount": 1,
+                        "foodMeasurementUnit": "users/me/dataTypes/food-measurement-unit/dataPoints/304",
+                        "foodMeasurementUnitDisplayName": "bowl",
+                        "foodMeasurementUnitDisplayNamePlural": "bowls",
+                        "multiplier": 1
+                      }
+                    ]
                   }
                 }
               ]

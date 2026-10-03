@@ -8,8 +8,8 @@ public class Unit
     public int? Id { get; set; } = 0;
 
     [JsonPropertyName("name")]
-    public string Name { get; set; } = string.Empty;
+    public string? Name { get; set; } = string.Empty;
 
     [JsonPropertyName("plural")]
-    public string Plural { get; set; } = string.Empty;
+    public string? Plural { get; set; } = string.Empty;
 }

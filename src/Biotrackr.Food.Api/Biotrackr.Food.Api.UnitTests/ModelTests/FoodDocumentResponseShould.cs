@@ -50,6 +50,20 @@ public class FoodDocumentResponseShould
     }
 
     [Fact]
+    public void Serialize_ShouldWriteWholeNumberAmountAndCaloriesWithoutDecimals_WhenDocumentIsVersion1()
+    {
+        // Arrange
+        var document = JsonConvert.DeserializeObject<FoodDocument>(FoodDocumentSamples.Version1Json, CosmosSettings)!;
+
+        // Act
+        var json = System.Text.Json.JsonSerializer.Serialize(document.Food.Foods[0].LoggedFood, WebOptions);
+
+        // Assert
+        json.Should().Contain("\"amount\":1,").And.Contain("\"calories\":105,",
+            "amount and calories became double; whole numbers must still serialize as before (no .0)");
+    }
+
+    [Fact]
     public void Serialize_ShouldEmitPreMigrationDefaults_WhenVersion1EntryOmitsNullableFields()
     {
         // Arrange
