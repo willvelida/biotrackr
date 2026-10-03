@@ -16,10 +16,10 @@ public class SleepShould
         sleep.DateOfSleep.Should().BeNull();
         sleep.Duration.Should().Be(0);
         sleep.Efficiency.Should().Be(0);
-        sleep.InfoCode.Should().Be(0);
+        sleep.InfoCode.Should().BeNull();
         sleep.IsMainSleep.Should().BeFalse();
         sleep.Levels.Should().BeNull();
-        sleep.LogId.Should().Be(0);
+        sleep.LogId.Should().BeNull();
         sleep.MinutesAfterWakeup.Should().Be(0);
         sleep.MinutesAsleep.Should().Be(0);
         sleep.MinutesAwake.Should().Be(0);

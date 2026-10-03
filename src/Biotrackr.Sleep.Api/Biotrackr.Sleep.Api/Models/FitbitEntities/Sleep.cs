@@ -13,13 +13,13 @@ namespace Biotrackr.Sleep.Api.Models.FitbitEntities
         [JsonPropertyName("endTime")]
         public DateTime EndTime { get; set; }
         [JsonPropertyName("infoCode")]
-        public int InfoCode { get; set; }
+        public int? InfoCode { get; set; }
         [JsonPropertyName("isMainSleep")]
         public bool IsMainSleep { get; set; }
         [JsonPropertyName("levels")]
         public Levels Levels { get; set; }
         [JsonPropertyName("logId")]
-        public long LogId { get; set; }
+        public long? LogId { get; set; }
         [JsonPropertyName("minutesAfterWakeup")]
         public int MinutesAfterWakeup { get; set; }
         [JsonPropertyName("minutesAsleep")]

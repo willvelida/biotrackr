@@ -9,6 +9,6 @@ namespace Biotrackr.Sleep.Api.Models.FitbitEntities
         [JsonPropertyName("minutes")]
         public int Minutes { get; set; }
         [JsonPropertyName("thirtyDayAvgMinutes")]
-        public int ThirtyDayAvgMinutes { get; set; }
+        public int? ThirtyDayAvgMinutes { get; set; }
     }
 }
