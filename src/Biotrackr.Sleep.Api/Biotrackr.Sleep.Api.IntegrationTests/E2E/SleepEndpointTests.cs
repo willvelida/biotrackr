@@ -1,9 +1,12 @@
 using Biotrackr.Sleep.Api.IntegrationTests.Collections;
 using Biotrackr.Sleep.Api.IntegrationTests.Fixtures;
+using Biotrackr.Sleep.Api.IntegrationTests.Helpers;
 using FluentAssertions;
 using Microsoft.Azure.Cosmos;
 using System.Net;
+using System.Text;
 using System.Text.Json;
+using System.Text.Json.Nodes;
 using Xunit;
 
 namespace Biotrackr.Sleep.Api.IntegrationTests.E2E;
@@ -118,6 +121,81 @@ public class SleepEndpointTests
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+    }
+
+    [Fact]
+    public async Task GetSleepByDate_WithVersion1Document_ShouldReturnFitbitFieldsUnchangedPlusAdditions()
+    {
+        // Arrange
+        await ClearContainerAsync();
+        await SeedRawAsync(SleepDocumentSamples.V1Json);
+
+        // Act
+        var response = await _fixture.Client.GetAsync($"/{SleepDocumentSamples.V1Date}");
+
+        // Assert
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        var body = JsonNode.Parse(await response.Content.ReadAsStringAsync())!;
+        body["provider"]!.GetValue<string>().Should().Be("Fitbit");
+        body["schemaVersion"]!.GetValue<int>().Should().Be(1);
+        body.AsObject().ContainsKey("sleepEnrichment").Should().BeTrue("AGENT FIX: sleepEnrichment must be emitted as null for version 1 (AC 15, C2).");
+        body["sleepEnrichment"].Should().BeNull();
+        var session = body["sleep"]!["sleep"]![0]!;
+        session["logId"]!.GetValue<long>().Should().Be(123456789L);
+        session["efficiency"]!.GetValue<int>().Should().Be(93);
+        session["startTime"]!.GetValue<string>().Should().Be("2025-01-09T23:00:00");
+    }
+
+    [Fact]
+    public async Task GetSleepByDate_WithVersion2Document_ShouldReturnTranslatedGoogleData()
+    {
+        // Arrange
+        await ClearContainerAsync();
+        await SeedRawAsync(SleepDocumentSamples.V2Json);
+
+        // Act
+        var response = await _fixture.Client.GetAsync($"/{SleepDocumentSamples.V2Date}");
+
+        // Assert
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        var body = JsonNode.Parse(await response.Content.ReadAsStringAsync())!;
+        body["provider"]!.GetValue<string>().Should().Be("Google");
+        body["schemaVersion"]!.GetValue<int>().Should().Be(2);
+        body.AsObject().ContainsKey("google").Should().BeFalse("AGENT FIX: the raw Google payload must never be returned (D-03).");
+        var session = body["sleep"]!["sleep"]![0]!;
+        session["efficiency"]!.GetValue<int>().Should().Be(90, "AC 21: round(432 / 480 * 100)");
+        session["logId"].Should().BeNull();
+        session["startTime"]!.GetValue<string>().Should().Be("2026-03-14T23:30:00");
+        session["levels"]!["data"]![0]!["level"]!.GetValue<string>().Should().Be("wake");
+        body["sleepEnrichment"]!["respiratoryRate"]!["breathsPerMinute"]!.GetValue<double>().Should().Be(14.2);
+        body["sleepEnrichment"]!["oxygenSaturation"].Should().BeNull();
+        body["sleepEnrichment"]!["shortAwakenings"]!.AsArray().Should().ContainSingle();
+    }
+
+    [Fact]
+    public async Task GetSleepsByDateRange_WithVersion1AndVersion2Documents_ShouldReturnBothInOnePage()
+    {
+        // Arrange
+        await ClearContainerAsync();
+        await SeedRawAsync(SleepDocumentSamples.V1Json);
+        await SeedRawAsync(SleepDocumentSamples.V2Json);
+
+        // Act
+        var response = await _fixture.Client.GetAsync($"/range/{SleepDocumentSamples.V1Date}/{SleepDocumentSamples.V2Date}?pageNumber=1&pageSize=20");
+
+        // Assert
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        var body = JsonNode.Parse(await response.Content.ReadAsStringAsync())!;
+        body["totalCount"]!.GetValue<int>().Should().Be(2);
+        body["items"]!.AsArray().Select(item => item!["provider"]!.GetValue<string>())
+            .Should().BeEquivalentTo(["Fitbit", "Google"], "AGENT FIX: AC 18 requires v1 and v2 documents in one page without error.");
+    }
+
+    private async Task SeedRawAsync(string json)
+    {
+        using var stream = new MemoryStream(Encoding.UTF8.GetBytes(json));
+        using var response = await _fixture.Container.CreateItemStreamAsync(stream, new PartitionKey("Sleep"));
+        response.IsSuccessStatusCode.Should().BeTrue($"seeding the emulator failed with {response.StatusCode}: {response.ErrorMessage}");
     }
 
     /// <summary>
