@@ -5,6 +5,9 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using Biotrackr.Activity.Api.Configuration;
 using Biotrackr.Activity.Api.Repositories.Interfaces;
+using Biotrackr.Activity.Api.Services;
+using Biotrackr.Activity.Api.Services.Interfaces;
+using System.Text.Json.Nodes;
 using Biotrackr.Activity.Api.IntegrationTests.Collections;
 using Biotrackr.Activity.Api.IntegrationTests.Fixtures;
 using Xunit;
@@ -286,5 +289,46 @@ public class ProgramStartupTests
         // Additional validation: Verify Settings has expected values from test configuration
         options.Value.DatabaseName.Should().Be("biotrackr-test", "Test config should be loaded");
         options.Value.ContainerName.Should().Be("activity-test", "Test config should be loaded");
+    }
+
+    [Fact]
+    public void ActivityDocumentTranslator_Should_Be_Registered_As_Singleton()
+    {
+        // Arrange
+        var services = _fixture.Factory.Services;
+
+        // Act
+        var translator1 = services.GetService<IActivityDocumentTranslator>();
+        IActivityDocumentTranslator? translator2;
+        using (var scope = services.CreateScope())
+        {
+            translator2 = scope.ServiceProvider.GetService<IActivityDocumentTranslator>();
+        }
+
+        // Assert
+        translator1.Should().BeOfType<ActivityDocumentTranslator>(
+            "AGENT FIX: register builder.Services.AddSingleton<IActivityDocumentTranslator, ActivityDocumentTranslator>() in Program.cs");
+        translator1.Should().BeSameAs(translator2,
+            "AGENT FIX: the translator is stateless and must be a singleton; see .github/instructions/csharp-conventions.instructions.md");
+    }
+
+    [Theory]
+    [InlineData("/")]
+    [InlineData("/{date}")]
+    [InlineData("/range/{startDate}/{endDate}")]
+    public async Task OpenApi_Should_Not_Expose_Translator_As_A_Parameter(string route)
+    {
+        // Arrange
+        using var client = _fixture.Factory.CreateClient();
+
+        // Act
+        var document = JsonNode.Parse(await client.GetStringAsync("/openapi/v1.json"))!;
+
+        // Assert
+        var operation = document["paths"]![route]!["get"]!;
+        operation["requestBody"].Should().BeNull(
+            "AGENT FIX: IActivityDocumentTranslator must bind from DI, not the request body; keep it registered in Program.cs");
+        (operation["parameters"]?.AsArray().Select(p => p!["name"]!.GetValue<string>()) ?? [])
+            .Should().NotContain("translator", "AGENT FIX: routes and their parameters must stay unchanged (AC 19)");
     }
 }
