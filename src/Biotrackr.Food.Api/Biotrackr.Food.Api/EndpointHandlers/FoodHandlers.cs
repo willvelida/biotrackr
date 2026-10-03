@@ -1,5 +1,6 @@
 using Biotrackr.Food.Api.Models;
 using Biotrackr.Food.Api.Repositories.Interfaces;
+using Biotrackr.Food.Api.Services.Interfaces;
 using Microsoft.AspNetCore.Http.HttpResults;
 
 namespace Biotrackr.Food.Api.EndpointHandlers;
@@ -8,6 +9,7 @@ public static class FoodHandlers
 {
     public static async Task<Results<BadRequest, NotFound, Ok<FoodDocument>>> GetFoodLogByDate(
         ICosmosRepository cosmosRepository,
+        IFoodDocumentTranslator translator,
         string date)
     {
         // Validate date format
@@ -21,11 +23,12 @@ public static class FoodHandlers
         {
             return TypedResults.NotFound();
         }
-        return TypedResults.Ok(foodLog);
+        return TypedResults.Ok(translator.Translate(foodLog));
     }
 
     public static async Task<Ok<PaginationResponse<FoodDocument>>> GetAllFoodLogs(
         ICosmosRepository cosmosRepository,
+        IFoodDocumentTranslator translator,
         int? pageNumber = null,
         int? pageSize = null)
     {
@@ -40,7 +43,7 @@ public static class FoodHandlers
 
         var response = new PaginationResponse<FoodDocument>
         {
-            Items = foodLogs,
+            Items = foodLogs.ConvertAll(translator.Translate),
             TotalCount = totalCount,
             PageNumber = paginationRequest.PageNumber,
             PageSize = paginationRequest.PageSize
@@ -51,6 +54,7 @@ public static class FoodHandlers
 
     public static async Task<Results<BadRequest, Ok<PaginationResponse<FoodDocument>>>> GetFoodLogsByDateRange(
         ICosmosRepository cosmosRepository,
+        IFoodDocumentTranslator translator,
         string startDate,
         string endDate,
         int? pageNumber = null,
@@ -80,7 +84,7 @@ public static class FoodHandlers
 
         var response = new PaginationResponse<FoodDocument>
         {
-            Items = foodLogs,
+            Items = foodLogs.ConvertAll(translator.Translate),
             TotalCount = totalCount,
             PageNumber = paginationRequest.PageNumber,
             PageSize = paginationRequest.PageSize

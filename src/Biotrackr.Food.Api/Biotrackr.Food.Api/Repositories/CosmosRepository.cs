@@ -24,7 +24,7 @@ public class CosmosRepository : ICosmosRepository
         _logger = logger;
     }
 
-    public async Task<List<FoodDocument>> GetAllFoodLogsAsync(int pageNumber, int pageSize)
+    public async Task<List<FoodStoredDocument>> GetAllFoodLogsAsync(int pageNumber, int pageSize)
     {
         try
         {
@@ -44,8 +44,8 @@ public class CosmosRepository : ICosmosRepository
                 PartitionKey = new PartitionKey("Food")
             };
 
-            var iterator = _container.GetItemQueryIterator<FoodDocument>(queryDefinition, requestOptions: queryRequestOptions);
-            var results = new List<FoodDocument>();
+            var iterator = _container.GetItemQueryIterator<FoodStoredDocument>(queryDefinition, requestOptions: queryRequestOptions);
+            var results = new List<FoodStoredDocument>();
 
             while (iterator.HasMoreResults)
             {
@@ -63,7 +63,7 @@ public class CosmosRepository : ICosmosRepository
         }
     }
 
-    public async Task<FoodDocument?> GetFoodLogByDateAsync(string date)
+    public async Task<FoodStoredDocument?> GetFoodLogByDateAsync(string date)
     {
         try
         {
@@ -79,8 +79,8 @@ public class CosmosRepository : ICosmosRepository
                 PartitionKey = new PartitionKey("Food")
             };
 
-            var iterator = _container.GetItemQueryIterator<FoodDocument>(queryDefinition, requestOptions: queryRequestOptions);
-            var results = new List<FoodDocument>();
+            var iterator = _container.GetItemQueryIterator<FoodStoredDocument>(queryDefinition, requestOptions: queryRequestOptions);
+            var results = new List<FoodStoredDocument>();
 
             while (iterator.HasMoreResults)
             {
@@ -97,7 +97,7 @@ public class CosmosRepository : ICosmosRepository
         }
     }
 
-    public async Task<List<FoodDocument>> GetFoodLogsByDateRangeAsync(string startDate, string endDate, int pageNumber, int pageSize)
+    public async Task<List<FoodStoredDocument>> GetFoodLogsByDateRangeAsync(string startDate, string endDate, int pageNumber, int pageSize)
     {
         try
         {
@@ -119,8 +119,8 @@ public class CosmosRepository : ICosmosRepository
                 PartitionKey = new PartitionKey("Food")
             };
 
-            var iterator = _container.GetItemQueryIterator<FoodDocument>(queryDefinition, requestOptions: queryRequestOptions);
-            var results = new List<FoodDocument>();
+            var iterator = _container.GetItemQueryIterator<FoodStoredDocument>(queryDefinition, requestOptions: queryRequestOptions);
+            var results = new List<FoodStoredDocument>();
 
             while (iterator.HasMoreResults)
             {

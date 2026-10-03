@@ -42,16 +42,16 @@ namespace Biotrackr.Food.Api.UnitTests.RepositoryTests
             var pageNumber = 1;
             var pageSize = 20;
             var fixture = new Fixture();
-            var foodDocuments = fixture.CreateMany<FoodDocument>(10).ToList();
+            var foodDocuments = fixture.Build<FoodStoredDocument>().Without(x => x.Google).CreateMany(10).ToList();
 
-            var feedResponse = new Mock<FeedResponse<FoodDocument>>();
+            var feedResponse = new Mock<FeedResponse<FoodStoredDocument>>();
             feedResponse.Setup(x => x.GetEnumerator()).Returns(foodDocuments.GetEnumerator());
 
-            var iterator = new Mock<FeedIterator<FoodDocument>>();
+            var iterator = new Mock<FeedIterator<FoodStoredDocument>>();
             iterator.SetupSequence(x => x.HasMoreResults).Returns(true).Returns(false);
             iterator.Setup(x => x.ReadNextAsync(default)).ReturnsAsync(feedResponse.Object);
 
-            _containerMock.Setup(x => x.GetItemQueryIterator<FoodDocument>(
+            _containerMock.Setup(x => x.GetItemQueryIterator<FoodStoredDocument>(
                 It.IsAny<QueryDefinition>(), 
                 It.IsAny<string>(), 
                 It.IsAny<QueryRequestOptions>())).Returns(iterator.Object);
@@ -71,14 +71,14 @@ namespace Biotrackr.Food.Api.UnitTests.RepositoryTests
             var pageNumber = 1;
             var pageSize = 20;
 
-            var feedResponse = new Mock<FeedResponse<FoodDocument>>();
-            feedResponse.Setup(x => x.GetEnumerator()).Returns(new List<FoodDocument>().GetEnumerator());
+            var feedResponse = new Mock<FeedResponse<FoodStoredDocument>>();
+            feedResponse.Setup(x => x.GetEnumerator()).Returns(new List<FoodStoredDocument>().GetEnumerator());
 
-            var iterator = new Mock<FeedIterator<FoodDocument>>();
+            var iterator = new Mock<FeedIterator<FoodStoredDocument>>();
             iterator.SetupSequence(x => x.HasMoreResults).Returns(true).Returns(false);
             iterator.Setup(x => x.ReadNextAsync(default)).ReturnsAsync(feedResponse.Object);
 
-            _containerMock.Setup(x => x.GetItemQueryIterator<FoodDocument>(
+            _containerMock.Setup(x => x.GetItemQueryIterator<FoodStoredDocument>(
                 It.IsAny<QueryDefinition>(), 
                 It.IsAny<string>(), 
                 It.IsAny<QueryRequestOptions>())).Returns(iterator.Object);
@@ -98,7 +98,7 @@ namespace Biotrackr.Food.Api.UnitTests.RepositoryTests
             var pageSize = 20;
             var exceptionMessage = "Test Exception";
 
-            _containerMock.Setup(x => x.GetItemQueryIterator<FoodDocument>(
+            _containerMock.Setup(x => x.GetItemQueryIterator<FoodStoredDocument>(
                 It.IsAny<QueryDefinition>(), 
                 It.IsAny<string>(), 
                 It.IsAny<QueryRequestOptions>()))
@@ -117,17 +117,17 @@ namespace Biotrackr.Food.Api.UnitTests.RepositoryTests
             // Arrange
             var date = "2022-01-01";
             var fixture = new Fixture();
-            var foodDocument = fixture.Create<FoodDocument>();
-            foodDocument.Date = date;
+            var FoodStoredDocument = fixture.Build<FoodStoredDocument>().Without(x => x.Google).Create();
+            FoodStoredDocument.Date = date;
 
-            var feedResponse = new Mock<FeedResponse<FoodDocument>>();
-            feedResponse.Setup(x => x.GetEnumerator()).Returns(new List<FoodDocument> { foodDocument }.GetEnumerator());
+            var feedResponse = new Mock<FeedResponse<FoodStoredDocument>>();
+            feedResponse.Setup(x => x.GetEnumerator()).Returns(new List<FoodStoredDocument> { FoodStoredDocument }.GetEnumerator());
 
-            var iterator = new Mock<FeedIterator<FoodDocument>>();
+            var iterator = new Mock<FeedIterator<FoodStoredDocument>>();
             iterator.SetupSequence(x => x.HasMoreResults).Returns(true).Returns(false);
             iterator.Setup(x => x.ReadNextAsync(default)).ReturnsAsync(feedResponse.Object);
 
-            _containerMock.Setup(x => x.GetItemQueryIterator<FoodDocument>(
+            _containerMock.Setup(x => x.GetItemQueryIterator<FoodStoredDocument>(
                 It.IsAny<QueryDefinition>(), 
                 It.IsAny<string>(), 
                 It.IsAny<QueryRequestOptions>())).Returns(iterator.Object);
@@ -137,7 +137,7 @@ namespace Biotrackr.Food.Api.UnitTests.RepositoryTests
 
             // Assert
             result.Should().NotBeNull();
-            result.Should().BeEquivalentTo(foodDocument);
+            result.Should().BeEquivalentTo(FoodStoredDocument);
             result!.Date.Should().Be(date);
         }
 
@@ -147,14 +147,14 @@ namespace Biotrackr.Food.Api.UnitTests.RepositoryTests
             // Arrange
             var date = "2022-01-01";
 
-            var feedResponse = new Mock<FeedResponse<FoodDocument>>();
-            feedResponse.Setup(x => x.GetEnumerator()).Returns(new List<FoodDocument>().GetEnumerator());
+            var feedResponse = new Mock<FeedResponse<FoodStoredDocument>>();
+            feedResponse.Setup(x => x.GetEnumerator()).Returns(new List<FoodStoredDocument>().GetEnumerator());
 
-            var iterator = new Mock<FeedIterator<FoodDocument>>();
+            var iterator = new Mock<FeedIterator<FoodStoredDocument>>();
             iterator.SetupSequence(x => x.HasMoreResults).Returns(true).Returns(false);
             iterator.Setup(x => x.ReadNextAsync(default)).ReturnsAsync(feedResponse.Object);
 
-            _containerMock.Setup(x => x.GetItemQueryIterator<FoodDocument>(
+            _containerMock.Setup(x => x.GetItemQueryIterator<FoodStoredDocument>(
                 It.IsAny<QueryDefinition>(), 
                 It.IsAny<string>(), 
                 It.IsAny<QueryRequestOptions>())).Returns(iterator.Object);
@@ -173,7 +173,7 @@ namespace Biotrackr.Food.Api.UnitTests.RepositoryTests
             var date = "2022-01-01";
             var exceptionMessage = "Test Exception";
 
-            _containerMock.Setup(x => x.GetItemQueryIterator<FoodDocument>(
+            _containerMock.Setup(x => x.GetItemQueryIterator<FoodStoredDocument>(
                 It.IsAny<QueryDefinition>(), 
                 It.IsAny<string>(), 
                 It.IsAny<QueryRequestOptions>()))
@@ -195,16 +195,16 @@ namespace Biotrackr.Food.Api.UnitTests.RepositoryTests
             var pageNumber = 1;
             var pageSize = 20;
             var fixture = new Fixture();
-            var foodDocuments = fixture.CreateMany<FoodDocument>(5).ToList();
+            var foodDocuments = fixture.Build<FoodStoredDocument>().Without(x => x.Google).CreateMany(5).ToList();
 
-            var feedResponse = new Mock<FeedResponse<FoodDocument>>();
+            var feedResponse = new Mock<FeedResponse<FoodStoredDocument>>();
             feedResponse.Setup(x => x.GetEnumerator()).Returns(foodDocuments.GetEnumerator());
 
-            var iterator = new Mock<FeedIterator<FoodDocument>>();
+            var iterator = new Mock<FeedIterator<FoodStoredDocument>>();
             iterator.SetupSequence(x => x.HasMoreResults).Returns(true).Returns(false);
             iterator.Setup(x => x.ReadNextAsync(default)).ReturnsAsync(feedResponse.Object);
 
-            _containerMock.Setup(x => x.GetItemQueryIterator<FoodDocument>(
+            _containerMock.Setup(x => x.GetItemQueryIterator<FoodStoredDocument>(
                 It.IsAny<QueryDefinition>(), 
                 It.IsAny<string>(), 
                 It.IsAny<QueryRequestOptions>())).Returns(iterator.Object);
@@ -226,14 +226,14 @@ namespace Biotrackr.Food.Api.UnitTests.RepositoryTests
             var pageNumber = 1;
             var pageSize = 20;
 
-            var feedResponse = new Mock<FeedResponse<FoodDocument>>();
-            feedResponse.Setup(x => x.GetEnumerator()).Returns(new List<FoodDocument>().GetEnumerator());
+            var feedResponse = new Mock<FeedResponse<FoodStoredDocument>>();
+            feedResponse.Setup(x => x.GetEnumerator()).Returns(new List<FoodStoredDocument>().GetEnumerator());
 
-            var iterator = new Mock<FeedIterator<FoodDocument>>();
+            var iterator = new Mock<FeedIterator<FoodStoredDocument>>();
             iterator.SetupSequence(x => x.HasMoreResults).Returns(true).Returns(false);
             iterator.Setup(x => x.ReadNextAsync(default)).ReturnsAsync(feedResponse.Object);
 
-            _containerMock.Setup(x => x.GetItemQueryIterator<FoodDocument>(
+            _containerMock.Setup(x => x.GetItemQueryIterator<FoodStoredDocument>(
                 It.IsAny<QueryDefinition>(), 
                 It.IsAny<string>(), 
                 It.IsAny<QueryRequestOptions>())).Returns(iterator.Object);
@@ -255,7 +255,7 @@ namespace Biotrackr.Food.Api.UnitTests.RepositoryTests
             var pageSize = 20;
             var exceptionMessage = "Test Exception";
 
-            _containerMock.Setup(x => x.GetItemQueryIterator<FoodDocument>(
+            _containerMock.Setup(x => x.GetItemQueryIterator<FoodStoredDocument>(
                 It.IsAny<QueryDefinition>(), 
                 It.IsAny<string>(), 
                 It.IsAny<QueryRequestOptions>()))
