@@ -525,6 +525,32 @@ public class SleepDocumentTranslatorShould
         result.Sleep.Sleep.Should().BeEmpty();
     }
 
+    [Theory]
+    [InlineData(Newtonsoft.Json.DateParseHandling.None)]
+    [InlineData(Newtonsoft.Json.DateParseHandling.DateTime)]
+    [InlineData(Newtonsoft.Json.DateParseHandling.DateTimeOffset)]
+    public void Translate_ShouldReadTimestamps_WhenGoogleTimestampTokensAreStringDateOrDateTimeOffset(Newtonsoft.Json.DateParseHandling dateParseHandling)
+    {
+        // Arrange
+        using var reader = new Newtonsoft.Json.JsonTextReader(new StringReader(SleepDocumentSamples.V2Json)) { DateParseHandling = dateParseHandling };
+        var raw = JObject.Load(reader);
+        var stored = new SleepStoredDocument
+        {
+            Id = "x",
+            Date = "2026-03-15",
+            DocumentType = "Sleep",
+            SchemaVersion = 2,
+            Google = (JObject)raw["google"]!
+        };
+
+        // Act
+        var main = _translator.Translate(stored).Sleep.Sleep[0];
+
+        // Assert
+        main.StartTime.Should().Be(new DateTime(2026, 3, 14, 23, 30, 0),
+            $"AGENT FIX: timestamps must read identically when Newtonsoft parses them as {dateParseHandling}.");
+    }
+
     [Fact]
     public void Translate_ShouldReadTimestamps_WhenGooglePayloadKeepsIsoStrings()
     {
