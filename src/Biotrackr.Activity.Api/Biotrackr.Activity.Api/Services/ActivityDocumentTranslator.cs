@@ -171,8 +171,8 @@ public class ActivityDocumentTranslator : IActivityDocumentTranslator
             result.Add(new HeartRateZone
             {
                 name = name,
-                min = RoundToInt(ReadNumber(boundary?["minBeatsPerMinute"])),
-                max = RoundToInt(ReadNumber(boundary?["maxBeatsPerMinute"])),
+                min = ReadOptionalInt(boundary?["minBeatsPerMinute"]),
+                max = ReadOptionalInt(boundary?["maxBeatsPerMinute"]),
                 minutes = zoneMinutes,
                 caloriesOut = zoneCalories
             });
@@ -235,11 +235,11 @@ public class ActivityDocumentTranslator : IActivityDocumentTranslator
                 LocalStart: ToLocal(start, interval?["startUtcOffset"]),
                 LocalEnd: ToLocal(end, interval?["endUtcOffset"]),
                 DurationSeconds: durationSeconds,
-                Calories: RoundToInt(ReadNumber(metrics?["caloriesKcal"])),
-                Steps: RoundToInt(ReadNumber(metrics?["steps"])),
-                DistanceKm: ReadNumber(metrics?["distanceMillimeters"]) / MillimetresPerKilometre,
-                AverageHeartRate: RoundToInt(ReadNumber(metrics?["averageHeartRateBeatsPerMinute"])),
-                ActiveZoneMinutes: metrics?["activeZoneMinutes"] is { Type: not JTokenType.Null } azm ? RoundToInt(ReadNumber(azm)) : null,
+                Calories: ReadOptionalInt(metrics?["caloriesKcal"]),
+                Steps: ReadOptionalInt(metrics?["steps"]),
+                DistanceKm: ReadOptionalNumber(metrics?["distanceMillimeters"]) / MillimetresPerKilometre,
+                AverageHeartRate: ReadOptionalInt(metrics?["averageHeartRateBeatsPerMinute"]),
+                ActiveZoneMinutes: ReadOptionalInt(metrics?["activeZoneMinutes"]),
                 LastModified: ReadTimestamp(exercise["updateTime"])?.UtcDateTime ?? default));
         }
 
@@ -257,17 +257,18 @@ public class ActivityDocumentTranslator : IActivityDocumentTranslator
         Steps = session.Steps,
         DistanceKm = session.DistanceKm,
         AverageHeartRate = session.AverageHeartRate,
-        ActiveZoneMinutes = session.ActiveZoneMinutes ?? 0
+        ActiveZoneMinutes = session.ActiveZoneMinutes
     };
 
+    // activities[] keeps the confirmed C2 defaults (0) for omitted metrics; only workouts[] exposes null.
     private static FitbitActivity ToFitbitActivity(ExerciseSession session) => new()
     {
         activityId = null,
         activityParentId = null,
         activityParentName = session.DisplayName,
-        calories = session.Calories,
+        calories = session.Calories ?? 0,
         description = null,
-        distance = session.DistanceKm,
+        distance = session.DistanceKm ?? 0d,
         duration = (int)Math.Round(session.DurationSeconds * 1000d, MidpointRounding.AwayFromZero),
         hasActiveZoneMinutes = session.ActiveZoneMinutes is not null,
         hasStartTime = session.LocalStart is not null,
@@ -277,7 +278,7 @@ public class ActivityDocumentTranslator : IActivityDocumentTranslator
         name = session.DisplayName,
         startDate = session.LocalStart?.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture),
         startTime = session.LocalStart?.ToString("HH:mm", CultureInfo.InvariantCulture),
-        steps = session.Steps
+        steps = session.Steps ?? 0
     };
 
     private static JObject? RollupValue(JObject? google, string sourceKey) =>
@@ -288,8 +289,13 @@ public class ActivityDocumentTranslator : IActivityDocumentTranslator
     private static IEnumerable<JObject> DataPoints(JObject? google, string sourceKey) =>
         ((google?[sourceKey] as JObject)?["dataPoints"] as JArray)?.OfType<JObject>() ?? [];
 
-    private static double ReadNumber(JToken? token) =>
-        token is null || token.Type == JTokenType.Null ? 0d : (double)token;
+    private static double ReadNumber(JToken? token) => ReadOptionalNumber(token) ?? 0d;
+
+    private static double? ReadOptionalNumber(JToken? token) =>
+        token is null || token.Type == JTokenType.Null ? null : (double)token;
+
+    private static int? ReadOptionalInt(JToken? token) =>
+        ReadOptionalNumber(token) is { } value ? RoundToInt(value) : null;
 
     private static int RoundToInt(double value) => (int)Math.Round(value, MidpointRounding.AwayFromZero);
 
@@ -348,10 +354,10 @@ public class ActivityDocumentTranslator : IActivityDocumentTranslator
         DateTime? LocalStart,
         DateTime? LocalEnd,
         double DurationSeconds,
-        int Calories,
-        int Steps,
-        double DistanceKm,
-        int AverageHeartRate,
+        int? Calories,
+        int? Steps,
+        double? DistanceKm,
+        int? AverageHeartRate,
         int? ActiveZoneMinutes,
         DateTime LastModified);
 }

@@ -99,6 +99,23 @@ public class ActivityDocumentTranslatorShould
     }
 
     [Fact]
+    public void Translate_ShouldKeepVersion1ZeroZoneBoundsAsZero_WhenSerialisedForHttp()
+    {
+        // Arrange
+        var stored = ActivityDocumentSamples.DeserializeLikeCosmos<ActivityStoredDocument>(ActivityDocumentSamples.Version1Document);
+        stored.Activity!.summary.heartRateZones[0].min = 0;
+        stored.Activity.summary.heartRateZones[0].max = 0;
+
+        // Act
+        var json = JsonNode.Parse(JsonSerializer.Serialize(_translator.Translate(stored), JsonSerializerOptions.Web))!;
+
+        // Assert
+        var zone = json["activity"]!["summary"]!["heartRateZones"]![0]!;
+        zone["min"]!.GetValue<int>().Should().Be(0, "AGENT FIX: nullable min/max must not change v1 output (AC 15, AC 17)");
+        zone["max"]!.GetValue<int>().Should().Be(0);
+    }
+
+    [Fact]
     public void Translate_ShouldStampGoogleVersion2_WhenSchemaVersionIsTwo()
     {
         // Arrange
@@ -262,10 +279,28 @@ public class ActivityDocumentTranslatorShould
         // Assert
         zones.Should().BeEquivalentTo(new[]
         {
-            new { name = "Light", min = 0, max = 0, minutes = 90 },
-            new { name = "Moderate", min = 0, max = 0, minutes = 22 },
-            new { name = "Vigorous", min = 0, max = 0, minutes = 10 }
-        }, options => options.WithStrictOrdering());
+            new { name = "Light", min = (int?)null, max = (int?)null, minutes = 90 },
+            new { name = "Moderate", min = (int?)null, max = (int?)null, minutes = 22 },
+            new { name = "Vigorous", min = (int?)null, max = (int?)null, minutes = 10 }
+        }, options => options.WithStrictOrdering(),
+            "AGENT FIX: zone min/max are null, not 0, when Google returned no boundaries (C2)");
+    }
+
+    [Fact]
+    public void Translate_ShouldKeepZoneWithZeroMinutesAndNullBounds_WhenOnlyCaloriesExist()
+    {
+        // Arrange
+        var stored = Version2With(google =>
+        {
+            google["dailyHeartRateZones"] = new JObject();
+            google["timeInHeartRateZone"] = new JObject();
+        });
+
+        // Act
+        var light = _translator.Translate(stored).Activity.summary.heartRateZones.First();
+
+        // Assert
+        light.Should().BeEquivalentTo(new { name = "Light", min = (int?)null, max = (int?)null, minutes = 0, caloriesOut = 410.5 });
     }
 
     [Fact]
@@ -419,11 +454,47 @@ public class ActivityDocumentTranslatorShould
         {
             StartTime = (string?)null,
             EndTime = (string?)null,
-            Calories = 0,
-            ActiveZoneMinutes = 0
-        });
+            Calories = (int?)null,
+            Steps = (int?)null,
+            DistanceKm = (double?)null,
+            AverageHeartRate = (int?)null,
+            ActiveZoneMinutes = (int?)null
+        }, "AGENT FIX: workout metrics Google omits are null, not 0 (C2)");
+        result.Activity.activities.Single().Should().BeEquivalentTo(new { calories = 0, steps = 0, distance = (double?)0d },
+            "AGENT FIX: activities[] keeps 0 for omitted metrics; only workouts[] is nullable");
         result.Activity.activities.Single().hasStartTime.Should().BeFalse();
         result.Activity.activities.Single().hasActiveZoneMinutes.Should().BeFalse();
+    }
+
+    [Fact]
+    public void Translate_ShouldNullOnlyTheOmittedWorkoutMetric_WhenHeartRateIsMissing()
+    {
+        // Arrange
+        var stored = Version2With(google =>
+            ((JObject)google.SelectToken("exercise.dataPoints[0].exercise.metricsSummary")!).Remove("averageHeartRateBeatsPerMinute"));
+
+        // Act
+        var workout = _translator.Translate(stored).ActivityEnrichment!.Workouts.Single();
+
+        // Assert
+        workout.Should().BeEquivalentTo(new { AverageHeartRate = (int?)null, Calories = (int?)216, Steps = (int?)5120, ActiveZoneMinutes = (int?)9 });
+    }
+
+    [Fact]
+    public void Translate_ShouldSerialiseOmittedWorkoutMetricsAsJsonNull_WhenGoogleOmitsThem()
+    {
+        // Arrange
+        var stored = Version2With(google =>
+            ((JObject)google.SelectToken("exercise.dataPoints[0].exercise")!).Remove("metricsSummary"));
+
+        // Act
+        var json = JsonNode.Parse(JsonSerializer.Serialize(_translator.Translate(stored), JsonSerializerOptions.Web))!;
+
+        // Assert
+        var workout = json["activityEnrichment"]!["workouts"]![0]!.AsObject();
+        workout.Where(p => p.Value is null).Select(p => p.Key).Should().Contain(
+            ["calories", "steps", "distanceKm", "averageHeartRate", "activeZoneMinutes"],
+            "AGENT FIX: omitted workout metrics are emitted as JSON null (C2)");
     }
 
     [Fact]
