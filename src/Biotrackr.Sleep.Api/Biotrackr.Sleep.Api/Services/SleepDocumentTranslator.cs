@@ -15,6 +15,10 @@ namespace Biotrackr.Sleep.Api.Services
         private const string FitbitProvider = "Fitbit";
         private const string GoogleProvider = "Google";
 
+        private const string ManualLogType = "manual";
+        private const string AutoDetectedLogType = "auto_detected";
+        private const string ShortAwakeningLevel = "wake";
+
         private const string SleepSource = "sleep";
         private const string HeartRateVariabilitySource = "dailyHeartRateVariability";
         private const string OxygenSaturationSource = "dailyOxygenSaturation";
@@ -60,7 +64,8 @@ namespace Biotrackr.Sleep.Api.Services
                 }
 
                 var sessionShortAwakenings = Intervals(session["shortAwakenings"]);
-                sessions.Add(TranslateSession(session, sessionShortAwakenings));
+                var recordingMethod = (dataPoint["dataSource"] as JObject)?["recordingMethod"]?.Value<string>();
+                sessions.Add(TranslateSession(session, recordingMethod, sessionShortAwakenings));
                 shortAwakenings.AddRange(sessionShortAwakenings.Select(a => new ShortAwakening
                 {
                     StartTime = a.LocalStart,
@@ -109,7 +114,8 @@ namespace Biotrackr.Sleep.Api.Services
                         {
                             NightlyCelsius = ReadDouble(temperature["nightlyTemperatureCelsius"]),
                             BaselineCelsius = ReadDouble(temperature["baselineTemperatureCelsius"]),
-                            DeviationCelsius = ReadDouble(temperature["relativeNightlyStddev30dCelsius"])
+                            DeviationCelsius = Subtract(ReadDouble(temperature["nightlyTemperatureCelsius"]), ReadDouble(temperature["baselineTemperatureCelsius"])),
+                            VariabilityCelsius = ReadDouble(temperature["relativeNightlyStddev30dCelsius"])
                         }
                         : null,
                     ShortAwakenings = shortAwakenings.Count > 0 ? shortAwakenings : null
@@ -117,7 +123,7 @@ namespace Biotrackr.Sleep.Api.Services
             };
         }
 
-        private static SleepRecord TranslateSession(JObject session, List<Interval> shortAwakenings)
+        private static SleepRecord TranslateSession(JObject session, string? recordingMethod, List<Interval> shortAwakenings)
         {
             var interval = ReadInterval(session["interval"]);
             var summary = session["summary"] as JObject;
@@ -138,7 +144,7 @@ namespace Biotrackr.Sleep.Api.Services
                 Levels = new Levels
                 {
                     Data = Intervals(session["stages"]).Select(ToSleepData).ToList(),
-                    ShortData = shortAwakenings.Select(ToSleepData).ToList(),
+                    ShortData = shortAwakenings.Select(ToShortSleepData).ToList(),
                     Summary = new Summary
                     {
                         Stages = ToStages(stageMinutes),
@@ -151,7 +157,7 @@ namespace Biotrackr.Sleep.Api.Services
                 MinutesAsleep = ToInt32(minutesAsleep),
                 MinutesAwake = ToInt32(ReadInt64(summary?["minutesAwake"]) ?? 0),
                 MinutesToFallAsleep = ToInt32(ReadInt64(summary?["minutesToFallAsleep"]) ?? 0),
-                LogType = null,
+                LogType = recordingMethod == "MANUAL" ? ManualLogType : AutoDetectedLogType,
                 TimeInBed = ToInt32(minutesInSleepPeriod),
                 Type = session["type"]?.Value<string>()?.ToLowerInvariant()
             };
@@ -237,6 +243,20 @@ namespace Biotrackr.Sleep.Api.Services
             Level = MapLevel(interval.Type),
             Seconds = interval.Seconds
         };
+
+        // Fitbit-era shortData entries are always wake; Google's short-awakening type stays in the stored document.
+        private static SleepData ToShortSleepData(Interval interval) => new()
+        {
+            DateTime = interval.LocalStart,
+            Level = ShortAwakeningLevel,
+            Seconds = interval.Seconds
+        };
+
+        // Decimal arithmetic keeps the result exact for the values Google sent (33.1 - 33.4 = -0.3, not -0.2999...).
+        private static double? Subtract(double? minuend, double? subtrahend) =>
+            minuend is { } left && subtrahend is { } right
+                ? (double)((decimal)left - (decimal)right)
+                : null;
 
         private static IEnumerable<JObject> DataPoints(JObject? google, string sourceKey) =>
             (google?[sourceKey] as JObject)?["dataPoints"] is JArray dataPoints

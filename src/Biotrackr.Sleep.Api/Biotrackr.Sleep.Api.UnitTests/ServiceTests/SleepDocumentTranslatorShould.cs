@@ -247,7 +247,7 @@ public class SleepDocumentTranslatorShould
         // Assert
         shortData.Should().BeEquivalentTo(new[]
         {
-            new SleepData { DateTime = new DateTime(2026, 3, 15, 0, 10, 0), Level = "light", Seconds = 90 }
+            new SleepData { DateTime = new DateTime(2026, 3, 15, 0, 10, 0), Level = "wake", Seconds = 90 }
         });
     }
 
@@ -320,7 +320,49 @@ public class SleepDocumentTranslatorShould
         var main = _translator.Translate(stored).Sleep.Sleep[0];
 
         // Assert
-        main.Should().BeEquivalentTo(new { LogId = (long?)null, InfoCode = (int?)null, LogType = (string?)null });
+        main.Should().BeEquivalentTo(new { LogId = (long?)null, InfoCode = (int?)null });
+    }
+
+    [Theory]
+    [InlineData("MANUAL", "manual")]
+    [InlineData("DERIVED", "auto_detected")]
+    [InlineData("PASSIVELY_MEASURED", "auto_detected")]
+    public void Translate_ShouldDeriveLogTypeFromRecordingMethod_WhenDataSourceIsPresent(string recordingMethod, string expected)
+    {
+        // Arrange
+        var stored = BuildVersion2(Session().Replace("\"sleep\": {", $"\"dataSource\": {{ \"recordingMethod\": \"{recordingMethod}\" }}, \"sleep\": {{"));
+
+        // Act
+        var logType = _translator.Translate(stored).Sleep.Sleep.Single().LogType;
+
+        // Assert
+        logType.Should().Be(expected, "AGENT FIX: C2 logType is manual only when dataSource.recordingMethod is MANUAL.");
+    }
+
+    [Fact]
+    public void Translate_ShouldSetLogTypeAutoDetected_WhenDataSourceIsMissing()
+    {
+        // Arrange
+        var stored = BuildVersion2(Session());
+
+        // Act
+        var logType = _translator.Translate(stored).Sleep.Sleep.Single().LogType;
+
+        // Assert
+        logType.Should().Be("auto_detected");
+    }
+
+    [Fact]
+    public void Translate_ShouldIgnoreManuallyEditedMetadata_WhenDerivingLogType()
+    {
+        // Arrange
+        var stored = BuildVersion2(Session().Replace("\"type\": \"STAGES\",", "\"type\": \"STAGES\", \"metadata\": { \"manuallyEdited\": true },"));
+
+        // Act
+        var logType = _translator.Translate(stored).Sleep.Sleep.Single().LogType;
+
+        // Assert
+        logType.Should().Be("auto_detected");
     }
 
     [Theory]
@@ -463,7 +505,25 @@ public class SleepDocumentTranslatorShould
         var temperature = _translator.Translate(stored).SleepEnrichment!.SkinTemperature;
 
         // Assert
-        temperature.Should().Be(new SkinTemperatureEnrichment { NightlyCelsius = 33.1, BaselineCelsius = 33.4, DeviationCelsius = 0.3 });
+        temperature.Should().Be(new SkinTemperatureEnrichment { NightlyCelsius = 33.1, BaselineCelsius = 33.4, DeviationCelsius = -0.3, VariabilityCelsius = 0.3 });
+    }
+
+    [Fact]
+    public void Translate_ShouldReturnNullBaselineAndDeviation_WhenBaselineIsMissing()
+    {
+        // Arrange
+        var stored = BuildVersion2(
+            sessionsJson: string.Empty,
+            extraSources: """
+                "dailySleepTemperatureDerivations": { "dataPoints": [ { "dailySleepTemperatureDerivations": { "date": { "year": 2026, "month": 3, "day": 15 }, "nightlyTemperatureCelsius": 33.1 } } ] }
+                """);
+
+        // Act
+        var temperature = _translator.Translate(stored).SleepEnrichment!.SkinTemperature;
+
+        // Assert
+        temperature.Should().Be(new SkinTemperatureEnrichment { NightlyCelsius = 33.1, BaselineCelsius = null, DeviationCelsius = null, VariabilityCelsius = null },
+            "AGENT FIX: C2 deviationCelsius is nightly minus baseline and null when baseline is missing.");
     }
 
     [Fact]

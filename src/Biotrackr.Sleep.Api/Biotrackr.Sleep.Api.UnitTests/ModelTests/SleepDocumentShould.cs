@@ -108,7 +108,7 @@ public class SleepDocumentShould
                 HeartRateVariability = new HeartRateVariabilityEnrichment { AverageMs = 40.5, DeepSleepRmssdMs = 50.0 },
                 OxygenSaturation = new OxygenSaturationEnrichment { AveragePercent = 96.0, LowerBoundPercent = 94.0, UpperBoundPercent = 98.0 },
                 RespiratoryRate = new RespiratoryRateEnrichment { BreathsPerMinute = 14.0 },
-                SkinTemperature = new SkinTemperatureEnrichment { NightlyCelsius = 33.0, BaselineCelsius = 33.5, DeviationCelsius = 0.2 },
+                SkinTemperature = new SkinTemperatureEnrichment { NightlyCelsius = 33.0, BaselineCelsius = 33.5, DeviationCelsius = -0.5, VariabilityCelsius = 0.2 },
                 ShortAwakenings = [new ShortAwakening { StartTime = new DateTime(2026, 3, 15, 0, 10, 0), EndTime = new DateTime(2026, 3, 15, 0, 11, 30), Seconds = 90 }]
             }
         };
@@ -117,7 +117,7 @@ public class SleepDocumentShould
               "heartRateVariability": { "averageMs": 40.5, "deepSleepRmssdMs": 50.0 },
               "oxygenSaturation": { "averagePercent": 96.0, "lowerBoundPercent": 94.0, "upperBoundPercent": 98.0 },
               "respiratoryRate": { "breathsPerMinute": 14.0 },
-              "skinTemperature": { "nightlyCelsius": 33.0, "baselineCelsius": 33.5, "deviationCelsius": 0.2 },
+              "skinTemperature": { "nightlyCelsius": 33.0, "baselineCelsius": 33.5, "deviationCelsius": -0.5, "variabilityCelsius": 0.2 },
               "shortAwakenings": [ { "startTime": "2026-03-15T00:10:00", "endTime": "2026-03-15T00:11:30", "seconds": 90 } ]
             }
             """);

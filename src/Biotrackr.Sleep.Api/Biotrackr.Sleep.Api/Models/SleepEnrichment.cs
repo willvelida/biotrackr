@@ -59,8 +59,13 @@ namespace Biotrackr.Sleep.Api.Models
         [JsonPropertyName("baselineCelsius")]
         public double? BaselineCelsius { get; init; }
 
+        /// <summary>Nightly minus baseline; null when either is missing.</summary>
         [JsonPropertyName("deviationCelsius")]
         public double? DeviationCelsius { get; init; }
+
+        /// <summary>Standard deviation of relative nightly temperature over the past 30 days.</summary>
+        [JsonPropertyName("variabilityCelsius")]
+        public double? VariabilityCelsius { get; init; }
     }
 
     public sealed record ShortAwakening
