@@ -1,6 +1,8 @@
 using Biotrackr.Sleep.Api.Configuration;
 using Biotrackr.Sleep.Api.IntegrationTests.Fixtures;
 using Biotrackr.Sleep.Api.Repositories.Interfaces;
+using Biotrackr.Sleep.Api.Services;
+using Biotrackr.Sleep.Api.Services.Interfaces;
 using FluentAssertions;
 using Microsoft.Azure.Cosmos;
 using Microsoft.Extensions.DependencyInjection;
@@ -82,6 +84,26 @@ public class ServiceRegistrationTests
     }
 
     [Fact]
+    public void SleepDocumentTranslator_ShouldBeRegisteredAsSingleton()
+    {
+        // Arrange
+        var serviceProvider = _fixture.Factory.Services;
+
+        // Act
+        using var scope1 = serviceProvider.CreateScope();
+        using var scope2 = serviceProvider.CreateScope();
+        var translator1 = scope1.ServiceProvider.GetService<ISleepDocumentTranslator>();
+        var translator2 = scope2.ServiceProvider.GetService<ISleepDocumentTranslator>();
+
+        // Assert
+        translator1.Should().NotBeNull(
+            "AGENT FIX: register ISleepDocumentTranslator in Program.cs with AddSingleton<ISleepDocumentTranslator, SleepDocumentTranslator>(); handlers resolve it from DI.");
+        translator1.Should().BeOfType<SleepDocumentTranslator>();
+        translator1.Should().BeSameAs(translator2,
+            "AGENT FIX: SleepDocumentTranslator is stateless and must be a singleton. See .github/instructions/csharp-conventions.instructions.md.");
+    }
+
+    [Fact]
     public void Services_ShouldNotHaveDuplicateRegistrations()
     {
         // Arrange
@@ -94,5 +116,6 @@ public class ServiceRegistrationTests
 
         // Assert - Should have exactly one registration
         repositoryDescriptors.Should().HaveCount(1);
+        serviceProvider.GetServices<ISleepDocumentTranslator>().Should().HaveCount(1);
     }
 }

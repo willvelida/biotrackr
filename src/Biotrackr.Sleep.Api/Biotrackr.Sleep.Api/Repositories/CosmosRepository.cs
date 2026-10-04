@@ -1,4 +1,4 @@
-﻿using Biotrackr.Sleep.Api.Configuration;
+using Biotrackr.Sleep.Api.Configuration;
 using Biotrackr.Sleep.Api.Models;
 using Biotrackr.Sleep.Api.Repositories.Interfaces;
 using Microsoft.Azure.Cosmos;
@@ -21,7 +21,7 @@ namespace Biotrackr.Sleep.Api.Repositories
             _logger = logger;
         }
 
-        public async Task<PaginationResponse<SleepDocument>> GetAllSleepDocuments(PaginationRequest request)
+        public async Task<PaginationResponse<SleepStoredDocument>> GetAllSleepDocuments(PaginationRequest request)
         {
             try
             {
@@ -38,8 +38,8 @@ namespace Biotrackr.Sleep.Api.Repositories
                     PartitionKey = new PartitionKey("Sleep")
                 };
 
-                var iterator = _container.GetItemQueryIterator<SleepDocument>(queryDefinition, requestOptions: queryRequestOptions);
-                var results = new List<SleepDocument>();
+                var iterator = _container.GetItemQueryIterator<SleepStoredDocument>(queryDefinition, requestOptions: queryRequestOptions);
+                var results = new List<SleepStoredDocument>();
 
                 while (iterator.HasMoreResults)
                 {
@@ -49,7 +49,7 @@ namespace Biotrackr.Sleep.Api.Repositories
 
                 _logger.LogInformation($"Fetched {results.Count} sleep documents out of {totalSleepCount} total records.");
 
-                return new PaginationResponse<SleepDocument>
+                return new PaginationResponse<SleepStoredDocument>
                 {
                     Items = results,
                     TotalCount = totalSleepCount,
@@ -64,7 +64,7 @@ namespace Biotrackr.Sleep.Api.Repositories
             }
         }
 
-        public async Task<SleepDocument> GetSleepSummaryByDate(string date)
+        public async Task<SleepStoredDocument> GetSleepSummaryByDate(string date)
         {
             try
             {
@@ -75,12 +75,12 @@ namespace Biotrackr.Sleep.Api.Repositories
                     PartitionKey = new PartitionKey("Sleep")
                 };
 
-                var iterator = _container.GetItemQueryIterator<SleepDocument>(queryDefinition, requestOptions: queryRequestOptions);
-                List<SleepDocument> results = new List<SleepDocument>();
+                var iterator = _container.GetItemQueryIterator<SleepStoredDocument>(queryDefinition, requestOptions: queryRequestOptions);
+                List<SleepStoredDocument> results = new List<SleepStoredDocument>();
 
                 while (iterator.HasMoreResults)
                 {
-                    FeedResponse<SleepDocument> response = await iterator.ReadNextAsync();
+                    FeedResponse<SleepStoredDocument> response = await iterator.ReadNextAsync();
                     results.AddRange(response);
                 }
 
@@ -120,7 +120,7 @@ namespace Biotrackr.Sleep.Api.Repositories
             }
         }
 
-        public async Task<PaginationResponse<SleepDocument>> GetSleepDocumentsByDateRange(string startDate, string endDate, PaginationRequest request)
+        public async Task<PaginationResponse<SleepStoredDocument>> GetSleepDocumentsByDateRange(string startDate, string endDate, PaginationRequest request)
         {
             try
             {
@@ -139,8 +139,8 @@ namespace Biotrackr.Sleep.Api.Repositories
                     PartitionKey = new PartitionKey("Sleep")
                 };
 
-                var iterator = _container.GetItemQueryIterator<SleepDocument>(queryDefinition, requestOptions: queryRequestOptions);
-                var results = new List<SleepDocument>();
+                var iterator = _container.GetItemQueryIterator<SleepStoredDocument>(queryDefinition, requestOptions: queryRequestOptions);
+                var results = new List<SleepStoredDocument>();
 
                 while (iterator.HasMoreResults)
                 {
@@ -150,7 +150,7 @@ namespace Biotrackr.Sleep.Api.Repositories
 
                 _logger.LogInformation($"Fetched {results.Count} sleep documents out of {totalSleepCount} total records.");
 
-                return new PaginationResponse<SleepDocument>
+                return new PaginationResponse<SleepStoredDocument>
                 {
                     Items = results,
                     TotalCount = totalSleepCount,

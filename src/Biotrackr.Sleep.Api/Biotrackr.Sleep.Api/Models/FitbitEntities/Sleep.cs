@@ -1,4 +1,4 @@
-﻿using System.Text.Json.Serialization;
+using System.Text.Json.Serialization;
 
 namespace Biotrackr.Sleep.Api.Models.FitbitEntities
 {
@@ -13,13 +13,13 @@ namespace Biotrackr.Sleep.Api.Models.FitbitEntities
         [JsonPropertyName("endTime")]
         public DateTime EndTime { get; set; }
         [JsonPropertyName("infoCode")]
-        public int InfoCode { get; set; }
+        public int? InfoCode { get; set; }
         [JsonPropertyName("isMainSleep")]
         public bool IsMainSleep { get; set; }
         [JsonPropertyName("levels")]
         public Levels Levels { get; set; }
         [JsonPropertyName("logId")]
-        public long LogId { get; set; }
+        public long? LogId { get; set; }
         [JsonPropertyName("minutesAfterWakeup")]
         public int MinutesAfterWakeup { get; set; }
         [JsonPropertyName("minutesAsleep")]
@@ -29,12 +29,12 @@ namespace Biotrackr.Sleep.Api.Models.FitbitEntities
         [JsonPropertyName("minutesToFallAsleep")]
         public int MinutesToFallAsleep { get; set; }
         [JsonPropertyName("logType")]
-        public string LogType { get; set; }
+        public string? LogType { get; set; }
         [JsonPropertyName("startTime")]
         public DateTime StartTime { get; set; }
         [JsonPropertyName("timeInBed")]
         public int TimeInBed { get; set; }
         [JsonPropertyName("type")]
-        public string Type { get; set; }
+        public string? Type { get; set; }
     }
 }

@@ -4,6 +4,8 @@ using Biotrackr.Sleep.Api.Configuration;
 using Biotrackr.Sleep.Api.Extensions;
 using Biotrackr.Sleep.Api.Repositories;
 using Biotrackr.Sleep.Api.Repositories.Interfaces;
+using Biotrackr.Sleep.Api.Services;
+using Biotrackr.Sleep.Api.Services.Interfaces;
 using Microsoft.Azure.Cosmos;
 using Microsoft.Extensions.Configuration.AzureAppConfiguration;
 using OpenTelemetry.Metrics;
@@ -70,6 +72,7 @@ else
 }
 builder.Services.AddSingleton(cosmosClient);
 builder.Services.AddScoped<ICosmosRepository, CosmosRepository>();
+builder.Services.AddSingleton<ISleepDocumentTranslator, SleepDocumentTranslator>();
 
 builder.Services.AddOpenApi();
 

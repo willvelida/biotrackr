@@ -15,7 +15,7 @@ public class SleepDetailsShould
         // Assert
         sleepDetails.Count.Should().Be(0);
         sleepDetails.Minutes.Should().Be(0);
-        sleepDetails.ThirtyDayAvgMinutes.Should().Be(0);
+        sleepDetails.ThirtyDayAvgMinutes.Should().BeNull();
     }
 
     [Fact]
