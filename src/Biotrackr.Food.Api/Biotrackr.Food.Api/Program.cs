@@ -37,6 +37,7 @@ if (!string.IsNullOrWhiteSpace(azureAppConfigEndpoint))
 
 // Add Cosmos DB services
 builder.Services.AddCosmosDb(builder.Configuration);
+builder.Services.AddFoodDocumentTranslator();
 
 builder.Services.AddOpenApi();
 

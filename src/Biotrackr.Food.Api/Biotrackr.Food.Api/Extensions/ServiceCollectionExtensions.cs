@@ -2,6 +2,8 @@ using Azure.Identity;
 using Biotrackr.Food.Api.Configuration;
 using Biotrackr.Food.Api.Repositories;
 using Biotrackr.Food.Api.Repositories.Interfaces;
+using Biotrackr.Food.Api.Services;
+using Biotrackr.Food.Api.Services.Interfaces;
 using Microsoft.Azure.Cosmos;
 
 namespace Biotrackr.Food.Api.Extensions;
@@ -52,6 +54,14 @@ public static class ServiceCollectionExtensions
 
         // Register repository as Scoped
         services.AddScoped<ICosmosRepository, CosmosRepository>();
+
+        return services;
+    }
+
+    public static IServiceCollection AddFoodDocumentTranslator(this IServiceCollection services)
+    {
+        // Stateless, so Singleton
+        services.AddSingleton<IFoodDocumentTranslator, FoodDocumentTranslator>();
 
         return services;
     }

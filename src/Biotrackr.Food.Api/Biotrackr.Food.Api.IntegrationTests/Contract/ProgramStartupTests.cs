@@ -5,6 +5,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using Biotrackr.Food.Api.Configuration;
 using Biotrackr.Food.Api.Repositories.Interfaces;
+using Biotrackr.Food.Api.Services.Interfaces;
 using Biotrackr.Food.Api.IntegrationTests.Collections;
 using Biotrackr.Food.Api.IntegrationTests.Fixtures;
 using Xunit;
@@ -139,6 +140,25 @@ public class ProgramStartupTests
 
         // Assert - IOptions<T> should return same instance (Singleton)
         settings1.Should().BeSameAs(settings2);
+    }
+
+    [Fact]
+    public void FoodDocumentTranslator_Should_Be_Registered_As_Singleton()
+    {
+        // Arrange
+        var services = _fixture.Factory.Services;
+
+        // Act
+        var translator1 = services.GetService<IFoodDocumentTranslator>();
+        using var scope = services.CreateScope();
+        var translator2 = scope.ServiceProvider.GetService<IFoodDocumentTranslator>();
+
+        // Assert
+        translator1.Should().NotBeNull(
+            "AGENT FIX: call builder.Services.AddFoodDocumentTranslator() in Program.cs; handlers need IFoodDocumentTranslator.");
+        translator1.Should().BeSameAs(translator2,
+            "AGENT FIX: IFoodDocumentTranslator is stateless and must be registered as a Singleton. "
+            + "See .github/instructions/csharp-conventions.instructions.md.");
     }
 
     [Fact]

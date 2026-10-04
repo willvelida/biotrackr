@@ -18,6 +18,8 @@ namespace Biotrackr.Food.Api.UnitTests.ModelTests
             doc.Date.Should().BeEmpty();
             doc.DocumentType.Should().Be("Food");
             doc.Food.Should().NotBeNull();
+            doc.Provider.Should().Be("Fitbit");
+            doc.SchemaVersion.Should().Be(1);
         }
 
         [Fact]

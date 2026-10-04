@@ -54,7 +54,7 @@ public class FoodEndpointsTests : IAsyncLifetime
         {
             try
             {
-                await _container.DeleteItemAsync<FoodDocument>(id, new PartitionKey("Food"));
+                await _container.DeleteItemAsync<FoodStoredDocument>(id, new PartitionKey("Food"));
             }
             catch (Exception ex)
             {
@@ -98,7 +98,7 @@ public class FoodEndpointsTests : IAsyncLifetime
     {
         var testDocuments = new[]
         {
-            new FoodDocument
+            new FoodStoredDocument
             {
                 Id = Guid.NewGuid().ToString(),
                 DocumentType = "Food",
@@ -157,7 +157,7 @@ public class FoodEndpointsTests : IAsyncLifetime
                     }
                 }
             },
-            new FoodDocument
+            new FoodStoredDocument
             {
                 Id = Guid.NewGuid().ToString(),
                 DocumentType = "Food",
@@ -216,7 +216,7 @@ public class FoodEndpointsTests : IAsyncLifetime
                     }
                 }
             },
-            new FoodDocument
+            new FoodStoredDocument
             {
                 Id = Guid.NewGuid().ToString(),
                 DocumentType = "Food",
@@ -543,5 +543,165 @@ public class FoodEndpointsTests : IAsyncLifetime
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.OK);
+    }
+
+    private const string Version1RawJson = """
+        {
+          "id": "e2e-v1-no-schema",
+          "date": "2025-06-01",
+          "documentType": "Food",
+          "food": {
+            "foods": [
+              {
+                "isFavorite": false,
+                "logDate": "2025-06-01",
+                "logId": 111222333,
+                "loggedFood": {
+                  "accessLevel": "PUBLIC", "amount": 1, "brand": "Synthetic Farms", "calories": 95,
+                  "foodId": 5150, "locale": "en_AU", "mealTypeId": 1, "name": "Synthetic Apple",
+                  "unit": { "id": 304, "name": "serving", "plural": "servings" }, "units": [ 304 ]
+                },
+                "nutritionalValues": { "calories": 95, "carbs": 25, "fat": 0.3, "fiber": 4.4, "protein": 0.5, "sodium": 2 }
+              }
+            ],
+            "goals": { "calories": 2000 },
+            "summary": { "calories": 95, "carbs": 25, "fat": 0.3, "fiber": 4.4, "protein": 0.5, "sodium": 2, "water": 500 }
+          }
+        }
+        """;
+
+    private const string Version2RawJson = """
+        {
+          "id": "e2e-v2-google",
+          "date": "2025-06-02",
+          "documentType": "Food",
+          "provider": "Google",
+          "schemaVersion": 2,
+          "google": {
+            "nutritionLog": {
+              "dataPoints": [
+                {
+                  "name": "users/me/dataTypes/nutrition-log/dataPoints/e2e-1",
+                  "nutritionLog": {
+                    "interval": { "civilStartTime": { "date": { "year": 2025, "month": 6, "day": 2 }, "time": { "hours": 8 } } },
+                    "nutrients": [
+                      { "quantity": { "grams": 3 }, "nutrient": "DIETARY_FIBER" },
+                      { "quantity": { "grams": 10 }, "nutrient": "PROTEIN" },
+                      { "quantity": { "grams": 0.25 }, "nutrient": "SODIUM" }
+                    ],
+                    "energy": { "kcal": 320 },
+                    "totalCarbohydrate": { "grams": 40 },
+                    "totalFat": { "grams": 12 },
+                    "mealType": "LUNCH",
+                    "serving": { "amount": 1.5, "foodMeasurementUnit": "users/me/dataTypes/food-measurement-unit/dataPoints/304" },
+                    "food": "users/me/foods/e2e-food",
+                    "foodDisplayName": "Synthetic Wrap"
+                  }
+                }
+              ]
+            },
+            "hydrationLog": {
+              "dataPoints": [
+                { "hydrationLog": { "amountConsumed": { "milliliters": 600 } } },
+                { "hydrationLog": { "amountConsumed": { "milliliters": 400 } } }
+              ]
+            },
+            "foods": {
+              "items": [
+                {
+                  "name": "users/me/foods/e2e-food",
+                  "food": {
+                    "displayName": "Synthetic Wrap", "brand": "Synthetic Deli", "accessLevel": "FOOD_ACCESS_LEVEL_PRIVATE",
+                    "languageCode": "en_AU",
+                    "servings": [
+                      { "foodMeasurementUnit": "users/me/dataTypes/food-measurement-unit/dataPoints/304",
+                        "foodMeasurementUnitDisplayName": "wrap", "foodMeasurementUnitDisplayNamePlural": "wraps" }
+                    ]
+                  }
+                }
+              ]
+            }
+          }
+        }
+        """;
+
+    private async Task SeedRawAsync(string json)
+    {
+        using var stream = new MemoryStream(System.Text.Encoding.UTF8.GetBytes(json));
+        using var response = await _container.CreateItemStreamAsync(stream, new PartitionKey("Food"));
+        response.IsSuccessStatusCode.Should().BeTrue($"seeding a raw document should succeed but returned {response.StatusCode}");
+        _testDocumentIds.Add(System.Text.Json.Nodes.JsonNode.Parse(json)!["id"]!.GetValue<string>());
+    }
+
+    /// <summary>
+    /// AC 17: a pre-cutover document without schemaVersion keeps every field and gains provider Fitbit, schemaVersion 1
+    /// </summary>
+    [Fact]
+    public async Task GetFoodLogByDate_Should_Return_Version1_Unchanged_When_Document_Has_No_SchemaVersion()
+    {
+        // Arrange
+        await SeedRawAsync(Version1RawJson);
+        var expectedFood = System.Text.Json.Nodes.JsonNode.Parse(Version1RawJson)!["food"];
+
+        // Act
+        var response = await _fixture.Client.GetAsync("/2025-06-01");
+
+        // Assert
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        var body = System.Text.Json.Nodes.JsonNode.Parse(await response.Content.ReadAsStringAsync())!;
+        body["provider"]!.GetValue<string>().Should().Be("Fitbit");
+        body["schemaVersion"]!.GetValue<int>().Should().Be(1);
+        System.Text.Json.Nodes.JsonNode.DeepEquals(body["food"], expectedFood).Should().BeTrue(
+            $"version 1 food must match the stored document. Expected {expectedFood!.ToJsonString()} but got {body["food"]!.ToJsonString()}");
+    }
+
+    /// <summary>
+    /// AC 20, 23: a version 2 document is translated from the raw Google payloads per contract C2
+    /// </summary>
+    [Fact]
+    public async Task GetFoodLogByDate_Should_Return_Translated_Version2_When_Document_Is_Google()
+    {
+        // Arrange
+        await SeedRawAsync(Version2RawJson);
+
+        // Act
+        var response = await _fixture.Client.GetAsync("/2025-06-02");
+
+        // Assert
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        var body = System.Text.Json.Nodes.JsonNode.Parse(await response.Content.ReadAsStringAsync())!;
+        var entry = body["food"]!["foods"]![0]!;
+        new object?[]
+        {
+            body["provider"]!.GetValue<string>(), body["schemaVersion"]!.GetValue<int>(), body["google"],
+            body["food"]!["goals"], entry["loggedFood"]!["name"]!.GetValue<string>(),
+            entry["loggedFood"]!["brand"]!.GetValue<string>(), entry["loggedFood"]!["mealTypeId"]!.GetValue<int>(),
+            entry["loggedFood"]!["amount"]!.GetValue<double>(), entry["loggedFood"]!["unit"]!["name"]!.GetValue<string>(),
+            entry["nutritionalValues"]!["sodium"]!.GetValue<double>(), body["food"]!["summary"]!["water"]!.GetValue<double>()
+        }.Should().Equal(new object?[]
+        {
+            "Google", 2, null, null, "Synthetic Wrap", "Synthetic Deli", 3, 1.5, "wrap", 250.0, 1000.0
+        }, "the response must follow C2 and never expose the raw google payload");
+    }
+
+    /// <summary>
+    /// AC 18: a range spanning both versions returns every document in one paginated response
+    /// </summary>
+    [Fact]
+    public async Task GetFoodLogsByDateRange_Should_Return_Both_Versions_When_Range_Spans_Cutover()
+    {
+        // Arrange
+        await SeedRawAsync(Version1RawJson);
+        await SeedRawAsync(Version2RawJson);
+
+        // Act
+        var response = await _fixture.Client.GetAsync("/range/2025-06-01/2025-06-02");
+
+        // Assert
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        var result = await response.Content.ReadFromJsonAsync<PaginationResponse<FoodDocument>>();
+        result!.TotalCount.Should().Be(2);
+        result.Items.Select(i => (i.Date, i.Provider, i.SchemaVersion))
+            .Should().Equal(("2025-06-01", "Fitbit", 1), ("2025-06-02", "Google", 2));
     }
 }

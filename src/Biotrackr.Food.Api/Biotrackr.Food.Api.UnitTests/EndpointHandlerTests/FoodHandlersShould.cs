@@ -2,6 +2,8 @@ using AutoFixture;
 using Biotrackr.Food.Api.EndpointHandlers;
 using Biotrackr.Food.Api.Models;
 using Biotrackr.Food.Api.Repositories.Interfaces;
+using Biotrackr.Food.Api.Services;
+using Biotrackr.Food.Api.UnitTests.Fixtures;
 using FluentAssertions;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Moq;
@@ -11,6 +13,7 @@ namespace Biotrackr.Food.Api.UnitTests.EndpointHandlerTests
     public class FoodHandlersShould
     {
         private readonly Mock<ICosmosRepository> _cosmosRepositoryMock;
+        private readonly FoodDocumentTranslator _translator = new();
 
         public FoodHandlersShould()
         {
@@ -23,13 +26,13 @@ namespace Biotrackr.Food.Api.UnitTests.EndpointHandlerTests
             // Arrange
             var date = "2022-01-01";
             var fixture = new Fixture();
-            var foodDocument = fixture.Create<FoodDocument>();
+            var foodDocument = fixture.Build<FoodStoredDocument>().Without(x => x.Google).Without(x => x.SchemaVersion).Create();
             foodDocument.Date = date;
 
             _cosmosRepositoryMock.Setup(x => x.GetFoodLogByDateAsync(date)).ReturnsAsync(foodDocument);
 
             // Act
-            var result = await FoodHandlers.GetFoodLogByDate(_cosmosRepositoryMock.Object, date);
+            var result = await FoodHandlers.GetFoodLogByDate(_cosmosRepositoryMock.Object, _translator, date);
 
             // Assert
             result.Result.Should().BeOfType<Ok<FoodDocument>>();
@@ -41,10 +44,10 @@ namespace Biotrackr.Food.Api.UnitTests.EndpointHandlerTests
             // Arrange
             var date = "2022-01-01";
             _cosmosRepositoryMock.Setup(x => x.GetFoodLogByDateAsync(date))
-                .ReturnsAsync((FoodDocument)null);
+                .ReturnsAsync((FoodStoredDocument?)null);
 
             // Act
-            var result = await FoodHandlers.GetFoodLogByDate(_cosmosRepositoryMock.Object, date);
+            var result = await FoodHandlers.GetFoodLogByDate(_cosmosRepositoryMock.Object, _translator, date);
 
             // Assert
             result.Result.Should().BeOfType<NotFound>();
@@ -57,7 +60,7 @@ namespace Biotrackr.Food.Api.UnitTests.EndpointHandlerTests
             var invalidDate = "invalid-date-format";
 
             // Act
-            var result = await FoodHandlers.GetFoodLogByDate(_cosmosRepositoryMock.Object, invalidDate);
+            var result = await FoodHandlers.GetFoodLogByDate(_cosmosRepositoryMock.Object, _translator, invalidDate);
 
             // Assert
             result.Result.Should().BeOfType<BadRequest>();
@@ -69,7 +72,7 @@ namespace Biotrackr.Food.Api.UnitTests.EndpointHandlerTests
         {
             // Arrange
             var fixture = new Fixture();
-            var foodDocuments = fixture.CreateMany<FoodDocument>(10).ToList();
+            var foodDocuments = fixture.Build<FoodStoredDocument>().Without(x => x.Google).Without(x => x.SchemaVersion).CreateMany(10).ToList();
             var totalCount = 50;
 
             _cosmosRepositoryMock.Setup(x => x.GetAllFoodLogsAsync(2, 10))
@@ -78,7 +81,7 @@ namespace Biotrackr.Food.Api.UnitTests.EndpointHandlerTests
                                 .ReturnsAsync(totalCount);
 
             // Act
-            var result = await FoodHandlers.GetAllFoodLogs(_cosmosRepositoryMock.Object, 2, 10);
+            var result = await FoodHandlers.GetAllFoodLogs(_cosmosRepositoryMock.Object, _translator, 2, 10);
 
             // Assert
             result.Should().BeOfType<Ok<PaginationResponse<FoodDocument>>>();
@@ -95,7 +98,7 @@ namespace Biotrackr.Food.Api.UnitTests.EndpointHandlerTests
         {
             // Arrange
             var fixture = new Fixture();
-            var foodDocuments = fixture.CreateMany<FoodDocument>(20).ToList();
+            var foodDocuments = fixture.Build<FoodStoredDocument>().Without(x => x.Google).Without(x => x.SchemaVersion).CreateMany(20).ToList();
             var totalCount = 100;
 
             _cosmosRepositoryMock.Setup(x => x.GetAllFoodLogsAsync(2, 20))
@@ -104,7 +107,7 @@ namespace Biotrackr.Food.Api.UnitTests.EndpointHandlerTests
                                 .ReturnsAsync(totalCount);
 
             // Act
-            var result = await FoodHandlers.GetAllFoodLogs(_cosmosRepositoryMock.Object, 2, null);
+            var result = await FoodHandlers.GetAllFoodLogs(_cosmosRepositoryMock.Object, _translator, 2, null);
 
             // Assert
             result.Should().BeOfType<Ok<PaginationResponse<FoodDocument>>>();
@@ -116,7 +119,7 @@ namespace Biotrackr.Food.Api.UnitTests.EndpointHandlerTests
         {
             // Arrange
             var fixture = new Fixture();
-            var foodDocuments = fixture.CreateMany<FoodDocument>(50).ToList();
+            var foodDocuments = fixture.Build<FoodStoredDocument>().Without(x => x.Google).Without(x => x.SchemaVersion).CreateMany(50).ToList();
             var totalCount = 100;
 
             _cosmosRepositoryMock.Setup(x => x.GetAllFoodLogsAsync(1, 50))
@@ -125,7 +128,7 @@ namespace Biotrackr.Food.Api.UnitTests.EndpointHandlerTests
                                 .ReturnsAsync(totalCount);
 
             // Act
-            var result = await FoodHandlers.GetAllFoodLogs(_cosmosRepositoryMock.Object, null, 50);
+            var result = await FoodHandlers.GetAllFoodLogs(_cosmosRepositoryMock.Object, _translator, null, 50);
 
             // Assert
             result.Should().BeOfType<Ok<PaginationResponse<FoodDocument>>>();
@@ -139,7 +142,7 @@ namespace Biotrackr.Food.Api.UnitTests.EndpointHandlerTests
             var startDate = "2023-01-01";
             var endDate = "2023-01-31";
             var fixture = new Fixture();
-            var foodDocuments = fixture.CreateMany<FoodDocument>(5).ToList();
+            var foodDocuments = fixture.Build<FoodStoredDocument>().Without(x => x.Google).Without(x => x.SchemaVersion).CreateMany(5).ToList();
             var totalCount = 5;
 
             _cosmosRepositoryMock.Setup(x => x.GetFoodLogsByDateRangeAsync(startDate, endDate, 1, 20))
@@ -148,7 +151,7 @@ namespace Biotrackr.Food.Api.UnitTests.EndpointHandlerTests
                                 .ReturnsAsync(totalCount);
 
             // Act
-            var result = await FoodHandlers.GetFoodLogsByDateRange(_cosmosRepositoryMock.Object, startDate, endDate);
+            var result = await FoodHandlers.GetFoodLogsByDateRange(_cosmosRepositoryMock.Object, _translator, startDate, endDate);
 
             // Assert
             result.Result.Should().BeOfType<Ok<PaginationResponse<FoodDocument>>>();
@@ -166,7 +169,7 @@ namespace Biotrackr.Food.Api.UnitTests.EndpointHandlerTests
             var endDate = "2023-01-31";
 
             // Act
-            var result = await FoodHandlers.GetFoodLogsByDateRange(_cosmosRepositoryMock.Object, invalidStartDate, endDate);
+            var result = await FoodHandlers.GetFoodLogsByDateRange(_cosmosRepositoryMock.Object, _translator, invalidStartDate, endDate);
 
             // Assert
             result.Result.Should().BeOfType<BadRequest>();
@@ -181,7 +184,7 @@ namespace Biotrackr.Food.Api.UnitTests.EndpointHandlerTests
             var invalidEndDate = "invalid-date";
 
             // Act
-            var result = await FoodHandlers.GetFoodLogsByDateRange(_cosmosRepositoryMock.Object, startDate, invalidEndDate);
+            var result = await FoodHandlers.GetFoodLogsByDateRange(_cosmosRepositoryMock.Object, _translator, startDate, invalidEndDate);
 
             // Assert
             result.Result.Should().BeOfType<BadRequest>();
@@ -196,7 +199,7 @@ namespace Biotrackr.Food.Api.UnitTests.EndpointHandlerTests
             var endDate = "2023-01-01";
 
             // Act
-            var result = await FoodHandlers.GetFoodLogsByDateRange(_cosmosRepositoryMock.Object, startDate, endDate);
+            var result = await FoodHandlers.GetFoodLogsByDateRange(_cosmosRepositoryMock.Object, _translator, startDate, endDate);
 
             // Assert
             result.Result.Should().BeOfType<BadRequest>();
@@ -210,7 +213,7 @@ namespace Biotrackr.Food.Api.UnitTests.EndpointHandlerTests
             var startDate = "2023-01-01";
             var endDate = "2023-01-31";
             var fixture = new Fixture();
-            var foodDocuments = fixture.CreateMany<FoodDocument>(20).ToList();
+            var foodDocuments = fixture.Build<FoodStoredDocument>().Without(x => x.Google).Without(x => x.SchemaVersion).CreateMany(20).ToList();
             var totalCount = 20;
 
             _cosmosRepositoryMock.Setup(x => x.GetFoodLogsByDateRangeAsync(startDate, endDate, 1, 20))
@@ -219,7 +222,7 @@ namespace Biotrackr.Food.Api.UnitTests.EndpointHandlerTests
                                 .ReturnsAsync(totalCount);
 
             // Act
-            var result = await FoodHandlers.GetFoodLogsByDateRange(_cosmosRepositoryMock.Object, startDate, endDate);
+            var result = await FoodHandlers.GetFoodLogsByDateRange(_cosmosRepositoryMock.Object, _translator, startDate, endDate);
 
             // Assert
             result.Result.Should().BeOfType<Ok<PaginationResponse<FoodDocument>>>();
@@ -235,7 +238,7 @@ namespace Biotrackr.Food.Api.UnitTests.EndpointHandlerTests
             var pageNumber = 3;
             var pageSize = 15;
             var fixture = new Fixture();
-            var foodDocuments = fixture.CreateMany<FoodDocument>(15).ToList();
+            var foodDocuments = fixture.Build<FoodStoredDocument>().Without(x => x.Google).Without(x => x.SchemaVersion).CreateMany(15).ToList();
             var totalCount = 45;
 
             _cosmosRepositoryMock.Setup(x => x.GetFoodLogsByDateRangeAsync(startDate, endDate, pageNumber, pageSize))
@@ -244,7 +247,7 @@ namespace Biotrackr.Food.Api.UnitTests.EndpointHandlerTests
                                 .ReturnsAsync(totalCount);
 
             // Act
-            var result = await FoodHandlers.GetFoodLogsByDateRange(_cosmosRepositoryMock.Object, startDate, endDate, pageNumber, pageSize);
+            var result = await FoodHandlers.GetFoodLogsByDateRange(_cosmosRepositoryMock.Object, _translator, startDate, endDate, pageNumber, pageSize);
 
             // Assert
             result.Result.Should().BeOfType<Ok<PaginationResponse<FoodDocument>>>();
@@ -261,7 +264,7 @@ namespace Biotrackr.Food.Api.UnitTests.EndpointHandlerTests
             // Arrange
             var sameDate = "2023-01-15";
             var fixture = new Fixture();
-            var foodDocuments = fixture.CreateMany<FoodDocument>(2).ToList();
+            var foodDocuments = fixture.Build<FoodStoredDocument>().Without(x => x.Google).Without(x => x.SchemaVersion).CreateMany(2).ToList();
             var totalCount = 2;
 
             _cosmosRepositoryMock.Setup(x => x.GetFoodLogsByDateRangeAsync(sameDate, sameDate, 1, 20))
@@ -270,7 +273,7 @@ namespace Biotrackr.Food.Api.UnitTests.EndpointHandlerTests
                                 .ReturnsAsync(totalCount);
 
             // Act
-            var result = await FoodHandlers.GetFoodLogsByDateRange(_cosmosRepositoryMock.Object, sameDate, sameDate);
+            var result = await FoodHandlers.GetFoodLogsByDateRange(_cosmosRepositoryMock.Object, _translator, sameDate, sameDate);
 
             // Assert
             result.Result.Should().BeOfType<Ok<PaginationResponse<FoodDocument>>>();
@@ -287,15 +290,76 @@ namespace Biotrackr.Food.Api.UnitTests.EndpointHandlerTests
             var validDate = "2023-01-01";
 
             // Act - Test with invalid start date
-            var result1 = await FoodHandlers.GetFoodLogsByDateRange(_cosmosRepositoryMock.Object, invalidDate, validDate);
+            var result1 = await FoodHandlers.GetFoodLogsByDateRange(_cosmosRepositoryMock.Object, _translator, invalidDate, validDate);
             
             // Act - Test with invalid end date
-            var result2 = await FoodHandlers.GetFoodLogsByDateRange(_cosmosRepositoryMock.Object, validDate, invalidDate);
+            var result2 = await FoodHandlers.GetFoodLogsByDateRange(_cosmosRepositoryMock.Object, _translator, validDate, invalidDate);
 
             // Assert
             result1.Result.Should().BeOfType<BadRequest>();
             result2.Result.Should().BeOfType<BadRequest>();
             _cosmosRepositoryMock.Verify(x => x.GetFoodLogsByDateRangeAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<int>(), It.IsAny<int>()), Times.Never);
+        }
+
+        private static FoodStoredDocument StoredSample(string json) =>
+            Newtonsoft.Json.JsonConvert.DeserializeObject<FoodStoredDocument>(json, new Newtonsoft.Json.JsonSerializerSettings
+            {
+                ContractResolver = new Newtonsoft.Json.Serialization.CamelCasePropertyNamesContractResolver()
+            })!;
+
+        [Fact]
+        public async Task GetFoodLogByDate_ShouldReturnTranslatedGoogleDocument_WhenStoredDocumentIsVersion2()
+        {
+            // Arrange
+            var stored = StoredSample(FoodDocumentSamples.Version2Json);
+            _cosmosRepositoryMock.Setup(x => x.GetFoodLogByDateAsync(stored.Date)).ReturnsAsync(stored);
+
+            // Act
+            var result = await FoodHandlers.GetFoodLogByDate(_cosmosRepositoryMock.Object, _translator, stored.Date);
+
+            // Assert
+            var document = result.Result.Should().BeOfType<Ok<FoodDocument>>().Subject.Value!;
+            new object[] { document.Provider, document.SchemaVersion, document.Food.Foods.Count }
+                .Should().Equal("Google", 2, 2);
+        }
+
+        [Fact]
+        public async Task GetFoodLogsByDateRange_ShouldReturnVersion1AndVersion2Together_WhenRangeSpansCutover()
+        {
+            // Arrange
+            var stored = new List<FoodStoredDocument>
+            {
+                StoredSample(FoodDocumentSamples.Version1Json),
+                StoredSample(FoodDocumentSamples.Version2Json)
+            };
+            _cosmosRepositoryMock.Setup(x => x.GetFoodLogsByDateRangeAsync("2025-12-01", "2026-01-15", 1, 20)).ReturnsAsync(stored);
+            _cosmosRepositoryMock.Setup(x => x.GetFoodLogsCountByDateRangeAsync("2025-12-01", "2026-01-15")).ReturnsAsync(2);
+
+            // Act
+            var result = await FoodHandlers.GetFoodLogsByDateRange(_cosmosRepositoryMock.Object, _translator, "2025-12-01", "2026-01-15");
+
+            // Assert
+            var page = result.Result.Should().BeOfType<Ok<PaginationResponse<FoodDocument>>>().Subject.Value!;
+            page.Items.Select(d => (d.Provider, d.SchemaVersion)).Should().Equal(("Fitbit", 1), ("Google", 2));
+        }
+
+        [Fact]
+        public async Task GetAllFoodLogs_ShouldTranslateEveryItem_WhenPageMixesVersions()
+        {
+            // Arrange
+            var stored = new List<FoodStoredDocument>
+            {
+                StoredSample(FoodDocumentSamples.Version2Json),
+                StoredSample(FoodDocumentSamples.Version1Json)
+            };
+            _cosmosRepositoryMock.Setup(x => x.GetAllFoodLogsAsync(1, 20)).ReturnsAsync(stored);
+            _cosmosRepositoryMock.Setup(x => x.GetTotalFoodLogsCountAsync()).ReturnsAsync(2);
+
+            // Act
+            var result = await FoodHandlers.GetAllFoodLogs(_cosmosRepositoryMock.Object, _translator);
+
+            // Assert
+            result.Value!.Items.Select(d => d.Provider).Should().Equal("Google", "Fitbit");
         }
     }
 }
