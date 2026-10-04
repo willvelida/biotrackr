@@ -7,6 +7,7 @@ using Microsoft.Azure.Cosmos;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Moq;
+using static Biotrackr.Activity.Api.UnitTests.TestData.ActivityDocumentSamples;
 
 namespace Biotrackr.Activity.Api.UnitTests.RepositoryTests
 {
@@ -42,23 +43,23 @@ namespace Biotrackr.Activity.Api.UnitTests.RepositoryTests
             // Arrange
             var date = "2022-01-01";
             var fixture = new Fixture();
-            var activityDocument = fixture.Create<ActivityDocument>();
-            activityDocument.Date = date;
+            var ActivityStoredDocument = fixture.Create<ActivityStoredDocument>();
+            ActivityStoredDocument.Date = date;
 
-            var feedResponse = new Mock<FeedResponse<ActivityDocument>>();
-            feedResponse.Setup(x => x.GetEnumerator()).Returns(new List<ActivityDocument> { activityDocument }.GetEnumerator());
+            var feedResponse = new Mock<FeedResponse<ActivityStoredDocument>>();
+            feedResponse.Setup(x => x.GetEnumerator()).Returns(new List<ActivityStoredDocument> { ActivityStoredDocument }.GetEnumerator());
 
-            var iterator = new Mock<FeedIterator<ActivityDocument>>();
+            var iterator = new Mock<FeedIterator<ActivityStoredDocument>>();
             iterator.SetupSequence(x => x.HasMoreResults).Returns(true).Returns(false);
             iterator.Setup(x => x.ReadNextAsync(default)).ReturnsAsync(feedResponse.Object);
 
-            _containerMock.Setup(x => x.GetItemQueryIterator<ActivityDocument>(It.IsAny<QueryDefinition>(), It.IsAny<string>(), It.IsAny<QueryRequestOptions>())).Returns(iterator.Object);
+            _containerMock.Setup(x => x.GetItemQueryIterator<ActivityStoredDocument>(It.IsAny<QueryDefinition>(), It.IsAny<string>(), It.IsAny<QueryRequestOptions>())).Returns(iterator.Object);
 
             // Act
             var result = await _repository.GetActivitySummaryByDate(date);
 
             // Assert
-            result.Should().BeEquivalentTo(activityDocument);
+            result.Should().BeEquivalentTo(ActivityStoredDocument);
             result.Date.Should().Be(date);
         }
 
@@ -68,14 +69,14 @@ namespace Biotrackr.Activity.Api.UnitTests.RepositoryTests
             // Arrange
             var date = "2022-01-01";
 
-            var feedResponse = new Mock<FeedResponse<ActivityDocument>>();
-            feedResponse.Setup(x => x.GetEnumerator()).Returns(new List<ActivityDocument>().GetEnumerator());
+            var feedResponse = new Mock<FeedResponse<ActivityStoredDocument>>();
+            feedResponse.Setup(x => x.GetEnumerator()).Returns(new List<ActivityStoredDocument>().GetEnumerator());
 
-            var iterator = new Mock<FeedIterator<ActivityDocument>>();
+            var iterator = new Mock<FeedIterator<ActivityStoredDocument>>();
             iterator.SetupSequence(x => x.HasMoreResults).Returns(true).Returns(false);
             iterator.Setup(x => x.ReadNextAsync(default)).ReturnsAsync(feedResponse.Object);
 
-            _containerMock.Setup(x => x.GetItemQueryIterator<ActivityDocument>(It.IsAny<QueryDefinition>(), It.IsAny<string>(), It.IsAny<QueryRequestOptions>())).Returns(iterator.Object);
+            _containerMock.Setup(x => x.GetItemQueryIterator<ActivityStoredDocument>(It.IsAny<QueryDefinition>(), It.IsAny<string>(), It.IsAny<QueryRequestOptions>())).Returns(iterator.Object);
 
             // Act
             var result = await _repository.GetActivitySummaryByDate(date);
@@ -90,7 +91,7 @@ namespace Biotrackr.Activity.Api.UnitTests.RepositoryTests
             // Arrange
             var date = "2022-01-01";
             var exceptionMessage = "Test Exception";
-            _containerMock.Setup(c => c.GetItemQueryIterator<ActivityDocument>(It.IsAny<QueryDefinition>(), It.IsAny<string>(), It.IsAny<QueryRequestOptions>()))
+            _containerMock.Setup(c => c.GetItemQueryIterator<ActivityStoredDocument>(It.IsAny<QueryDefinition>(), It.IsAny<string>(), It.IsAny<QueryRequestOptions>()))
                           .Throws(new Exception(exceptionMessage));
 
             // Act
@@ -106,7 +107,7 @@ namespace Biotrackr.Activity.Api.UnitTests.RepositoryTests
         {
             // Arrange
             var fixture = new Fixture();
-            var activityDocuments = fixture.CreateMany<ActivityDocument>(10).ToList();
+            var activityDocuments = fixture.CreateMany<ActivityStoredDocument>(10).ToList();
             var totalCount = 100;
             var request = new PaginationRequest { PageNumber = 2, PageSize = 10 };
 
@@ -119,10 +120,10 @@ namespace Biotrackr.Activity.Api.UnitTests.RepositoryTests
             countIterator.Setup(x => x.ReadNextAsync(default)).ReturnsAsync(countFeedResponse.Object);
 
             // Mock the data query
-            var dataFeedResponse = new Mock<FeedResponse<ActivityDocument>>();
+            var dataFeedResponse = new Mock<FeedResponse<ActivityStoredDocument>>();
             dataFeedResponse.Setup(x => x.GetEnumerator()).Returns(activityDocuments.GetEnumerator());
 
-            var dataIterator = new Mock<FeedIterator<ActivityDocument>>();
+            var dataIterator = new Mock<FeedIterator<ActivityStoredDocument>>();
             dataIterator.SetupSequence(x => x.HasMoreResults).Returns(true).Returns(false);
             dataIterator.Setup(x => x.ReadNextAsync(default)).ReturnsAsync(dataFeedResponse.Object);
 
@@ -132,7 +133,7 @@ namespace Biotrackr.Activity.Api.UnitTests.RepositoryTests
                 It.IsAny<QueryRequestOptions>()))
                 .Returns(countIterator.Object);
 
-            _containerMock.Setup(x => x.GetItemQueryIterator<ActivityDocument>(
+            _containerMock.Setup(x => x.GetItemQueryIterator<ActivityStoredDocument>(
                 It.Is<QueryDefinition>(q => q.QueryText.Contains("OFFSET") && q.QueryText.Contains("LIMIT")),
                 It.IsAny<string>(),
                 It.IsAny<QueryRequestOptions>()))
@@ -157,7 +158,7 @@ namespace Biotrackr.Activity.Api.UnitTests.RepositoryTests
         {
             // Arrange
             var fixture = new Fixture();
-            var activityDocuments = fixture.CreateMany<ActivityDocument>(20).ToList();
+            var activityDocuments = fixture.CreateMany<ActivityStoredDocument>(20).ToList();
             var totalCount = 50;
             var request = new PaginationRequest { PageNumber = 1, PageSize = 20 };
 
@@ -180,7 +181,7 @@ namespace Biotrackr.Activity.Api.UnitTests.RepositoryTests
         {
             // Arrange
             var fixture = new Fixture();
-            var activityDocuments = fixture.CreateMany<ActivityDocument>(10).ToList();
+            var activityDocuments = fixture.CreateMany<ActivityStoredDocument>(10).ToList();
             var totalCount = 50;
             var request = new PaginationRequest { PageNumber = 3, PageSize = 20 };
 
@@ -203,7 +204,7 @@ namespace Biotrackr.Activity.Api.UnitTests.RepositoryTests
         {
             // Arrange
             var fixture = new Fixture();
-            var activityDocuments = fixture.CreateMany<ActivityDocument>(15).ToList();
+            var activityDocuments = fixture.CreateMany<ActivityStoredDocument>(15).ToList();
             var request = new PaginationRequest { PageNumber = 3, PageSize = 15 };
 
             SetupMocksForPagination(activityDocuments, 100);
@@ -212,7 +213,7 @@ namespace Biotrackr.Activity.Api.UnitTests.RepositoryTests
             await _repository.GetAllActivitySummaries(request);
 
             // Assert
-            _containerMock.Verify(x => x.GetItemQueryIterator<ActivityDocument>(
+            _containerMock.Verify(x => x.GetItemQueryIterator<ActivityStoredDocument>(
                 It.Is<QueryDefinition>(q =>
                     q.QueryText.Contains("OFFSET @offset LIMIT @limit")),
                 It.IsAny<string>(),
@@ -225,7 +226,7 @@ namespace Biotrackr.Activity.Api.UnitTests.RepositoryTests
             // Arrange
             var request = new PaginationRequest { PageNumber = 1, PageSize = 20 };
 
-            SetupMocksForPagination(new List<ActivityDocument>(), 0);
+            SetupMocksForPagination(new List<ActivityStoredDocument>(), 0);
 
             // Act
             var result = await _repository.GetAllActivitySummaries(request);
@@ -246,7 +247,7 @@ namespace Biotrackr.Activity.Api.UnitTests.RepositoryTests
             var exceptionMessage = "Test Exception";
 
             // Mock the main query to throw an exception, not the count query
-            _containerMock.Setup(c => c.GetItemQueryIterator<ActivityDocument>(It.IsAny<QueryDefinition>(), It.IsAny<string>(), It.IsAny<QueryRequestOptions>()))
+            _containerMock.Setup(c => c.GetItemQueryIterator<ActivityStoredDocument>(It.IsAny<QueryDefinition>(), It.IsAny<string>(), It.IsAny<QueryRequestOptions>()))
                           .Throws(new Exception(exceptionMessage));
 
             // Mock the count query to succeed so we get to the main query
@@ -286,14 +287,14 @@ namespace Biotrackr.Activity.Api.UnitTests.RepositoryTests
                 .Returns(countIterator.Object);
 
             // Setup data query to succeed (GetAllActivitySummaries will continue after count fails)
-            var dataFeedResponse = new Mock<FeedResponse<ActivityDocument>>();
-            dataFeedResponse.Setup(x => x.GetEnumerator()).Returns(new List<ActivityDocument>().GetEnumerator());
+            var dataFeedResponse = new Mock<FeedResponse<ActivityStoredDocument>>();
+            dataFeedResponse.Setup(x => x.GetEnumerator()).Returns(new List<ActivityStoredDocument>().GetEnumerator());
 
-            var dataIterator = new Mock<FeedIterator<ActivityDocument>>();
+            var dataIterator = new Mock<FeedIterator<ActivityStoredDocument>>();
             dataIterator.SetupSequence(x => x.HasMoreResults).Returns(true).Returns(false);
             dataIterator.Setup(x => x.ReadNextAsync(default)).ReturnsAsync(dataFeedResponse.Object);
 
-            _containerMock.Setup(x => x.GetItemQueryIterator<ActivityDocument>(
+            _containerMock.Setup(x => x.GetItemQueryIterator<ActivityStoredDocument>(
                 It.IsAny<QueryDefinition>(),
                 It.IsAny<string>(),
                 It.IsAny<QueryRequestOptions>()))
@@ -307,7 +308,7 @@ namespace Biotrackr.Activity.Api.UnitTests.RepositoryTests
             _loggerMock.VerifyLog(logger => logger.LogError($"Exception thrown in GetTotalActivityCount: {exceptionMessage}"));
         }
 
-        private void SetupMocksForPagination(List<ActivityDocument> activityDocuments, int totalCount)
+        private void SetupMocksForPagination(List<ActivityStoredDocument> activityDocuments, int totalCount)
         {
             // Mock the count query
             var countFeedResponse = new Mock<FeedResponse<int>>();
@@ -318,10 +319,10 @@ namespace Biotrackr.Activity.Api.UnitTests.RepositoryTests
             countIterator.Setup(x => x.ReadNextAsync(default)).ReturnsAsync(countFeedResponse.Object);
 
             // Mock the data query
-            var dataFeedResponse = new Mock<FeedResponse<ActivityDocument>>();
+            var dataFeedResponse = new Mock<FeedResponse<ActivityStoredDocument>>();
             dataFeedResponse.Setup(x => x.GetEnumerator()).Returns(activityDocuments.GetEnumerator());
 
-            var dataIterator = new Mock<FeedIterator<ActivityDocument>>();
+            var dataIterator = new Mock<FeedIterator<ActivityStoredDocument>>();
             dataIterator.SetupSequence(x => x.HasMoreResults).Returns(true).Returns(false);
             dataIterator.Setup(x => x.ReadNextAsync(default)).ReturnsAsync(dataFeedResponse.Object);
 
@@ -331,7 +332,7 @@ namespace Biotrackr.Activity.Api.UnitTests.RepositoryTests
                 It.IsAny<QueryRequestOptions>()))
                 .Returns(countIterator.Object);
 
-            _containerMock.Setup(x => x.GetItemQueryIterator<ActivityDocument>(
+            _containerMock.Setup(x => x.GetItemQueryIterator<ActivityStoredDocument>(
                 It.Is<QueryDefinition>(q => q.QueryText.Contains("OFFSET") && q.QueryText.Contains("LIMIT")),
                 It.IsAny<string>(),
                 It.IsAny<QueryRequestOptions>()))
@@ -347,7 +348,7 @@ namespace Biotrackr.Activity.Api.UnitTests.RepositoryTests
             var fixture = new Fixture();
             var startDate = "2023-01-01";
             var endDate = "2023-01-31";
-            var activityDocuments = fixture.CreateMany<ActivityDocument>(5).ToList();
+            var activityDocuments = fixture.CreateMany<ActivityStoredDocument>(5).ToList();
             var totalCount = 15;
             var request = new PaginationRequest { PageNumber = 1, PageSize = 5 };
 
@@ -360,10 +361,10 @@ namespace Biotrackr.Activity.Api.UnitTests.RepositoryTests
             countIterator.Setup(x => x.ReadNextAsync(default)).ReturnsAsync(countFeedResponse.Object);
 
             // Mock the data query for date range
-            var dataFeedResponse = new Mock<FeedResponse<ActivityDocument>>();
+            var dataFeedResponse = new Mock<FeedResponse<ActivityStoredDocument>>();
             dataFeedResponse.Setup(x => x.GetEnumerator()).Returns(activityDocuments.GetEnumerator());
 
-            var dataIterator = new Mock<FeedIterator<ActivityDocument>>();
+            var dataIterator = new Mock<FeedIterator<ActivityStoredDocument>>();
             dataIterator.SetupSequence(x => x.HasMoreResults).Returns(true).Returns(false);
             dataIterator.Setup(x => x.ReadNextAsync(default)).ReturnsAsync(dataFeedResponse.Object);
 
@@ -376,7 +377,7 @@ namespace Biotrackr.Activity.Api.UnitTests.RepositoryTests
                 It.IsAny<QueryRequestOptions>()))
                 .Returns(countIterator.Object);
 
-            _containerMock.Setup(x => x.GetItemQueryIterator<ActivityDocument>(
+            _containerMock.Setup(x => x.GetItemQueryIterator<ActivityStoredDocument>(
                 It.Is<QueryDefinition>(q => 
                     q.QueryText.Contains("c.documentType = 'Activity'") &&
                     q.QueryText.Contains("c.date >= @startDate") && 
@@ -408,7 +409,7 @@ namespace Biotrackr.Activity.Api.UnitTests.RepositoryTests
             var fixture = new Fixture();
             var startDate = "2023-01-01";
             var endDate = "2023-01-31";
-            var activityDocuments = fixture.CreateMany<ActivityDocument>(3).ToList();
+            var activityDocuments = fixture.CreateMany<ActivityStoredDocument>(3).ToList();
             var request = new PaginationRequest { PageNumber = 1, PageSize = 10 };
 
             SetupMocksForDateRange(activityDocuments, 3);
@@ -423,7 +424,7 @@ namespace Biotrackr.Activity.Api.UnitTests.RepositoryTests
                 It.Is<QueryRequestOptions>(opts => 
                     opts.PartitionKey.Equals(new PartitionKey("Activity")))), Times.Once);
 
-            _containerMock.Verify(x => x.GetItemQueryIterator<ActivityDocument>(
+            _containerMock.Verify(x => x.GetItemQueryIterator<ActivityStoredDocument>(
                 It.IsAny<QueryDefinition>(),
                 It.IsAny<string>(),
                 It.Is<QueryRequestOptions>(opts => 
@@ -437,7 +438,7 @@ namespace Biotrackr.Activity.Api.UnitTests.RepositoryTests
             var fixture = new Fixture();
             var startDate = "2023-01-01";
             var endDate = "2023-01-31";
-            var activityDocuments = fixture.CreateMany<ActivityDocument>(3).ToList();
+            var activityDocuments = fixture.CreateMany<ActivityStoredDocument>(3).ToList();
             var request = new PaginationRequest { PageNumber = 2, PageSize = 10 };
 
             SetupMocksForDateRange(activityDocuments, 25);
@@ -447,7 +448,7 @@ namespace Biotrackr.Activity.Api.UnitTests.RepositoryTests
 
             // Assert
             // Verify the data query contains correct parameters
-            _containerMock.Verify(x => x.GetItemQueryIterator<ActivityDocument>(
+            _containerMock.Verify(x => x.GetItemQueryIterator<ActivityStoredDocument>(
                 It.Is<QueryDefinition>(q => 
                     q.QueryText.Contains("@startDate") && 
                     q.QueryText.Contains("@endDate") &&
@@ -472,7 +473,7 @@ namespace Biotrackr.Activity.Api.UnitTests.RepositoryTests
             var fixture = new Fixture();
             var startDate = "2023-01-01";
             var endDate = "2023-01-31";
-            var activityDocuments = fixture.CreateMany<ActivityDocument>(10).ToList();
+            var activityDocuments = fixture.CreateMany<ActivityStoredDocument>(10).ToList();
             var totalCount = 50;
             var request = new PaginationRequest { PageNumber = 3, PageSize = 10 };
 
@@ -498,7 +499,7 @@ namespace Biotrackr.Activity.Api.UnitTests.RepositoryTests
             var endDate = "2023-01-31";
             var request = new PaginationRequest { PageNumber = 1, PageSize = 10 };
 
-            SetupMocksForDateRange(new List<ActivityDocument>(), 0);
+            SetupMocksForDateRange(new List<ActivityStoredDocument>(), 0);
 
             // Act
             var result = await _repository.GetActivitiesByDateRange(startDate, endDate, request);
@@ -518,7 +519,7 @@ namespace Biotrackr.Activity.Api.UnitTests.RepositoryTests
             var fixture = new Fixture();
             var startDate = "2023-01-01";
             var endDate = "2023-01-31";
-            var activityDocuments = fixture.CreateMany<ActivityDocument>(5).ToList();
+            var activityDocuments = fixture.CreateMany<ActivityStoredDocument>(5).ToList();
             var request = new PaginationRequest { PageNumber = 1, PageSize = 5 };
 
             SetupMocksForDateRange(activityDocuments, 5);
@@ -558,7 +559,7 @@ namespace Biotrackr.Activity.Api.UnitTests.RepositoryTests
                 .Returns(countIterator.Object);
 
             // Setup the data query to throw an exception
-            _containerMock.Setup(x => x.GetItemQueryIterator<ActivityDocument>(
+            _containerMock.Setup(x => x.GetItemQueryIterator<ActivityStoredDocument>(
                 It.Is<QueryDefinition>(q => 
                     q.QueryText.Contains("c.documentType = 'Activity'") &&
                     q.QueryText.Contains("c.date >= @startDate")),
@@ -580,7 +581,7 @@ namespace Biotrackr.Activity.Api.UnitTests.RepositoryTests
             // Arrange
             var fixture = new Fixture();
             var sameDate = "2023-01-15";
-            var activityDocuments = fixture.CreateMany<ActivityDocument>(2).ToList();
+            var activityDocuments = fixture.CreateMany<ActivityStoredDocument>(2).ToList();
             var request = new PaginationRequest { PageNumber = 1, PageSize = 10 };
 
             SetupMocksForDateRange(activityDocuments, 2);
@@ -616,14 +617,14 @@ namespace Biotrackr.Activity.Api.UnitTests.RepositoryTests
                 .Returns(countIterator.Object);
 
             // Setup data query to succeed (GetActivitiesByDateRange will continue after count fails)
-            var dataFeedResponse = new Mock<FeedResponse<ActivityDocument>>();
-            dataFeedResponse.Setup(x => x.GetEnumerator()).Returns(new List<ActivityDocument>().GetEnumerator());
+            var dataFeedResponse = new Mock<FeedResponse<ActivityStoredDocument>>();
+            dataFeedResponse.Setup(x => x.GetEnumerator()).Returns(new List<ActivityStoredDocument>().GetEnumerator());
 
-            var dataIterator = new Mock<FeedIterator<ActivityDocument>>();
+            var dataIterator = new Mock<FeedIterator<ActivityStoredDocument>>();
             dataIterator.SetupSequence(x => x.HasMoreResults).Returns(true).Returns(false);
             dataIterator.Setup(x => x.ReadNextAsync(default)).ReturnsAsync(dataFeedResponse.Object);
 
-            _containerMock.Setup(x => x.GetItemQueryIterator<ActivityDocument>(
+            _containerMock.Setup(x => x.GetItemQueryIterator<ActivityStoredDocument>(
                 It.Is<QueryDefinition>(q => 
                     q.QueryText.Contains("c.documentType = 'Activity'") &&
                     q.QueryText.Contains("c.date >= @startDate")),
@@ -639,7 +640,25 @@ namespace Biotrackr.Activity.Api.UnitTests.RepositoryTests
             _loggerMock.VerifyLog(logger => logger.LogError($"Exception thrown in GetActivityCountForDateRange: {exceptionMessage}"));
         }
 
-        private void SetupMocksForDateRange(List<ActivityDocument> activityDocuments, int totalCount)
+        [Fact]
+        public async Task GetActivitiesByDateRange_ShouldReturnBothSchemaVersions_WhenRangeSpansCutover()
+        {
+            // Arrange
+            var version1 = DeserializeLikeCosmos<ActivityStoredDocument>(Version1Document);
+            var version2 = DeserializeLikeCosmos<ActivityStoredDocument>(Version2Document);
+            SetupMocksForDateRange([version1, version2], 2);
+            var request = new PaginationRequest { PageNumber = 1, PageSize = 10 };
+
+            // Act
+            var result = await _repository.GetActivitiesByDateRange("2024-03-05", "2026-10-20", request);
+
+            // Assert
+            result.Items.Select(d => d.SchemaVersion).Should().Equal(null, 2);
+            result.Items[1].Google.Should().BeSameAs(version2.Google,
+                "AGENT FIX: the repository must hand the raw Google payload to the translator untouched");
+        }
+
+        private void SetupMocksForDateRange(List<ActivityStoredDocument> activityDocuments, int totalCount)
         {
             // Mock the count query for date range
             var countFeedResponse = new Mock<FeedResponse<int>>();
@@ -650,10 +669,10 @@ namespace Biotrackr.Activity.Api.UnitTests.RepositoryTests
             countIterator.Setup(x => x.ReadNextAsync(default)).ReturnsAsync(countFeedResponse.Object);
 
             // Mock the data query for date range
-            var dataFeedResponse = new Mock<FeedResponse<ActivityDocument>>();
+            var dataFeedResponse = new Mock<FeedResponse<ActivityStoredDocument>>();
             dataFeedResponse.Setup(x => x.GetEnumerator()).Returns(activityDocuments.GetEnumerator());
 
-            var dataIterator = new Mock<FeedIterator<ActivityDocument>>();
+            var dataIterator = new Mock<FeedIterator<ActivityStoredDocument>>();
             dataIterator.SetupSequence(x => x.HasMoreResults).Returns(true).Returns(false);
             dataIterator.Setup(x => x.ReadNextAsync(default)).ReturnsAsync(dataFeedResponse.Object);
 
@@ -666,7 +685,7 @@ namespace Biotrackr.Activity.Api.UnitTests.RepositoryTests
                 It.IsAny<QueryRequestOptions>()))
                 .Returns(countIterator.Object);
 
-            _containerMock.Setup(x => x.GetItemQueryIterator<ActivityDocument>(
+            _containerMock.Setup(x => x.GetItemQueryIterator<ActivityStoredDocument>(
                 It.Is<QueryDefinition>(q => 
                     q.QueryText.Contains("c.documentType = 'Activity'") &&
                     q.QueryText.Contains("c.date >= @startDate") && 

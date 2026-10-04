@@ -4,6 +4,8 @@ using Biotrackr.Activity.Api.Configuration;
 using Biotrackr.Activity.Api.Extensions;
 using Biotrackr.Activity.Api.Repositories;
 using Biotrackr.Activity.Api.Repositories.Interfaces;
+using Biotrackr.Activity.Api.Services;
+using Biotrackr.Activity.Api.Services.Interfaces;
 using Microsoft.Azure.Cosmos;
 using Microsoft.Extensions.Configuration.AzureAppConfiguration;
 using OpenTelemetry.Metrics;
@@ -69,6 +71,7 @@ else
 }
 builder.Services.AddSingleton(cosmosClient);
 builder.Services.AddScoped<ICosmosRepository, CosmosRepository>();
+builder.Services.AddSingleton<IActivityDocumentTranslator, ActivityDocumentTranslator>();
 
 builder.Services.AddOpenApi();
 

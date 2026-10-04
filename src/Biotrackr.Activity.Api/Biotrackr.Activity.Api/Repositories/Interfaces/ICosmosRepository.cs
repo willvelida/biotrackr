@@ -4,8 +4,8 @@ namespace Biotrackr.Activity.Api.Repositories.Interfaces
 {
     public interface ICosmosRepository
     {
-        Task<ActivityDocument> GetActivitySummaryByDate(string date);
-        Task<PaginationResponse<ActivityDocument>> GetAllActivitySummaries(PaginationRequest request);
-        Task<PaginationResponse<ActivityDocument>> GetActivitiesByDateRange(string startDate, string endDate, PaginationRequest request);
+        Task<ActivityStoredDocument> GetActivitySummaryByDate(string date);
+        Task<PaginationResponse<ActivityStoredDocument>> GetAllActivitySummaries(PaginationRequest request);
+        Task<PaginationResponse<ActivityStoredDocument>> GetActivitiesByDateRange(string startDate, string endDate, PaginationRequest request);
     }
 }
